@@ -28,6 +28,7 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
           <button type="button" class="hero-subtab-btn active" data-subtab="main">👑 1. Hero Banner</button>
           <button type="button" class="hero-subtab-btn" data-subtab="voice">🎙️ 2. Small Voice Widget</button>
           <button type="button" class="hero-subtab-btn" data-subtab="music">🎵 3. Background Music</button>
+          <button type="button" class="hero-subtab-btn" data-subtab="theme">🎨 4. Theme & Wallpaper</button>
         </div>
 
         <!-- PANE 1: MAIN HERO BANNER & CLOCKS -->

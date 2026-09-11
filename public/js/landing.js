@@ -469,19 +469,38 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnMobileMenuToggle = document.getElementById("btnMobileMenuToggle");
   const navLinks = document.getElementById("navLinks");
   if (btnMobileMenuToggle && navLinks) {
-    btnMobileMenuToggle.addEventListener("click", () => {
-      const isVisible = navLinks.style.display === "flex";
-      navLinks.style.display = isVisible ? "none" : "flex";
-      navLinks.style.position = "absolute";
-      navLinks.style.top = "65px";
-      navLinks.style.left = "0";
-      navLinks.style.right = "0";
-      navLinks.style.background = "#030712";
-      navLinks.style.flexDirection = "column";
-      navLinks.style.padding = "24px";
-      navLinks.style.gap = "18px";
-      navLinks.style.borderBottom = "1px solid rgba(255,255,255,0.12)";
+    const toggleMenu = (open) => {
+      const shouldOpen = open !== undefined ? open : !navLinks.classList.contains("mobile-open");
+      navLinks.classList.toggle("mobile-open", shouldOpen);
+      btnMobileMenuToggle.textContent = shouldOpen ? "✕" : "☰";
+      btnMobileMenuToggle.setAttribute("aria-expanded", String(shouldOpen));
+    };
+
+    btnMobileMenuToggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleMenu();
     });
+
+    navLinks.querySelectorAll("a, button").forEach(item => {
+      item.addEventListener("click", () => toggleMenu(false));
+    });
+
+    document.addEventListener("click", (e) => {
+      if (navLinks.classList.contains("mobile-open") && !navLinks.contains(e.target) && e.target !== btnMobileMenuToggle) {
+        toggleMenu(false);
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 900 && navLinks.classList.contains("mobile-open")) {
+        toggleMenu(false);
+      }
+    });
+  }
+
+  const btnMobileSignIn = document.getElementById("btnMobileSignIn");
+  if (btnMobileSignIn) {
+    btnMobileSignIn.addEventListener("click", () => openModal(signInModal));
   }
 
   // ------------------------------------------------------------------
@@ -532,6 +551,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const btnNavGetStarted = document.getElementById("btnNavGetStarted");
   if (btnNavGetStarted) btnNavGetStarted.addEventListener("click", () => openCheckoutModal("vip"));
+
+  const btnMobileGetStarted = document.getElementById("btnMobileGetStarted");
+  if (btnMobileGetStarted) btnMobileGetStarted.addEventListener("click", () => openCheckoutModal("vip"));
 
   const btnCloseCheckoutModal = document.getElementById("btnCloseCheckoutModal");
   if (btnCloseCheckoutModal) {

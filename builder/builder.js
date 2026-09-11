@@ -2854,6 +2854,7 @@ function switchToTab(tabId) {
     }
   }
 }
+window.switchToTab = switchToTab;
 
 function renderSiteSettingsUI() {
   const container = document.getElementById("siteSettingsContainer");
@@ -2881,17 +2882,17 @@ function renderSiteSettingsUI() {
   ];
 
   const imageBackgroundThemes = [
-    { id: "theme-img-gold-hearts", name: "Watercolor Gold Hearts 💛", desc: "Gold leaf hearts & blush wash on fine textured paper", color: "#d97706" },
-    { id: "theme-img-love-letter", name: "Love Letter Envelope 💌", desc: "Cute pink love letter with floating hearts & brush accents", color: "#fb7185" },
-    { id: "theme-img-be-mine", name: "Be Mine Sunset Sky 🌅", desc: "Golden sunset sky with sparkling heart trail & warm bokeh", color: "#f43f5e" },
-    { id: "theme-img-sweet-couple", name: "Embracing Couple 👩‍❤️‍👨", desc: "Minimalist aesthetic illustration of couple hugging", color: "#0284c7" },
-    { id: "theme-img-line-hearts", name: "Minimalist Line Hearts ✍️", desc: "Continuous ink doodle hearts on blush pink backdrop", color: "#ec4899" },
-    { id: "theme-img-stitched-hearts", name: "Stitched Dual Pink 💕", desc: "Two-tone stitched craft paper with hatched hearts", color: "#db2777" },
-    { id: "theme-img-heart-podiums", name: "3D Heart Podiums 🎁", desc: "Studio 3D pastel pink heart sculpture podiums", color: "#ec4899" },
-    { id: "theme-img-paper-sunset", name: "Sunset Paper Hearts 🌇", desc: "Warm sunset gradient with layered paper cutout hearts", color: "#f97316" },
-    { id: "theme-img-watercolor-frame", name: "Watercolor Frame 🖼️", desc: "Pastel watercolor frame with balloons & arrows", color: "#fb7185" },
-    { id: "theme-img-pop-stickers", name: "Pop Love Stickers 💋", desc: "Cartoon sticker pattern: lips, potions & wings", color: "#ff007f" },
-    { id: "theme-img-doodle-tapestry", name: "Love Sketch Tapestry 🧸", desc: "Monoline crimson sketch toile wallpaper", color: "#e11d48" }
+    { id: "theme-img-gold-hearts", name: "Watercolor Gold Hearts 💛", desc: "Gold leaf hearts & blush wash", color: "#d97706", img: "/images/themes/bg-watercolor-gold.jpeg" },
+    { id: "theme-img-love-letter", name: "Love Letter Envelope 💌", desc: "Pink letter & floating hearts", color: "#fb7185", img: "/images/themes/bg-love-letter.jpg" },
+    { id: "theme-img-be-mine", name: "Be Mine Sunset Sky 🌅", desc: "Sunset sky & sparkling heart trail", color: "#f43f5e", img: "/images/themes/bg-be-mine-sky.jpg" },
+    { id: "theme-img-sweet-couple", name: "Embracing Couple 👩‍❤️‍👨", desc: "Minimalist couple hug illustration", color: "#0284c7", img: "/images/themes/bg-sweet-couple.jpg" },
+    { id: "theme-img-line-hearts", name: "Minimalist Line Hearts ✍️", desc: "Continuous ink doodle hearts", color: "#ec4899", img: "/images/themes/bg-line-hearts.jpg" },
+    { id: "theme-img-stitched-hearts", name: "Stitched Dual Pink 💕", desc: "Two-tone stitched craft paper", color: "#db2777", img: "/images/themes/bg-stitched-pink.jpeg" },
+    { id: "theme-img-heart-podiums", name: "3D Heart Podiums 🎁", desc: "Studio 3D pastel pink heart sculpture", color: "#ec4899", img: "/images/themes/bg-heart-podiums.webp" },
+    { id: "theme-img-paper-sunset", name: "Sunset Paper Hearts 🌇", desc: "Warm sunset & layered paper cutouts", color: "#f97316", img: "/images/themes/bg-paper-sunset.jpg" },
+    { id: "theme-img-watercolor-frame", name: "Watercolor Frame 🖼️", desc: "Pastel frame with balloons & arrows", color: "#fb7185", img: "/images/themes/bg-watercolor-frame.png" },
+    { id: "theme-img-pop-stickers", name: "Pop Love Stickers 💋", desc: "Sticker pattern: lips, potions & wings", color: "#ff007f", img: "/images/themes/bg-pop-stickers.png" },
+    { id: "theme-img-doodle-tapestry", name: "Love Sketch Tapestry 🧸", desc: "Monoline crimson sketch toile", color: "#e11d48", img: "/images/themes/bg-doodle-tapestry.png" }
   ];
 
   const otherOccasions = [
@@ -2981,16 +2982,37 @@ function renderSiteSettingsUI() {
         `).join("")}
       </div>
 
-      <div class="settings-group-title" style="font-size: 12px; opacity: 0.9; margin-top: 6px;"><span>🖼️</span> Real Image Background Wallpapers (From Your Uploads)</div>
-      <div style="font-size: 11px; color: var(--text-muted, #64748b); margin-bottom: 10px;">High-resolution photographic & illustrated image backgrounds:</div>
-      <div class="theme-chips-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 16px;">
+      <div class="settings-group-title" style="font-size: 13px; font-weight: 700; margin-top: 14px;"><span>🖼️</span> Background Wallpaper & Imagery</div>
+      <div style="font-size: 11px; color: var(--text-muted, #64748b); margin-bottom: 10px;">Select an illustrated wallpaper preset or upload your own romantic background:</div>
+
+      <div class="custom-bg-picker-card" style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color, rgba(255,255,255,0.1)); border-radius: 10px; padding: 12px; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <strong style="font-size: 12px;">Custom Background Wallpaper</strong>
+          ${state.customBgUrl ? `<button type="button" id="btnClearCustomBg" style="background:none; border:1px solid rgba(239,68,68,0.4); color:#ef4444; font-size:11px; padding:2px 8px; border-radius:4px; cursor:pointer;">✕ Reset to Preset</button>` : ''}
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="text" id="site_customBgUrl" placeholder="Image URL or upload..." value="${escapeHtml(state.customBgUrl || '')}" style="flex: 1; font-size: 12px; padding: 6px 10px;">
+          <button type="button" id="btnPickBgFromLibrary" class="btn-sm btn-secondary" style="white-space: nowrap; padding: 6px 12px; font-size: 12px; cursor: pointer;">📁 Library</button>
+          <label class="file-upload-btn" style="cursor: pointer; display: inline-flex; align-items: center; padding: 6px 12px; background: var(--primary); color: #fff; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap;">
+            <span>⬆️ Upload</span>
+            <input type="file" id="uploadCustomBgFile" accept="image/*" style="display: none;">
+          </label>
+        </div>
+        ${state.customBgUrl ? `
+          <div style="margin-top: 10px; width: 100%; height: 95px; background: url('${escapeHtml(state.customBgUrl)}') center/cover no-repeat; border-radius: 8px; border: 2px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
+        ` : ''}
+      </div>
+
+      <div style="font-size: 11px; font-weight: 600; color: var(--text-muted, #64748b); margin-bottom: 8px;">Wallpaper Presets (Click to apply):</div>
+      <div class="theme-chips-grid" style="grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;">
         ${imageBackgroundThemes.map(t => `
-          <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 10px 10px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 4px;">
+          <button type="button" class="theme-chip-btn ${(!state.customBgUrl && currentTheme === t.id) ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden;">
+            <div style="width: 100%; height: 75px; background: url('${t.img}') center/cover no-repeat; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1);"></div>
             <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
               <span class="theme-color-dot" style="background: ${t.color}"></span>
-              <span style="font-weight: 700; font-size: 0.82rem;">${t.name}</span>
+              <span style="font-weight: 700; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.name}</span>
             </div>
-            <span style="font-size: 10px; color: var(--text-muted, #64748b); font-weight: normal; line-height: 1.25;">${t.desc}</span>
+            <span style="font-size: 10px; color: var(--text-muted, #64748b); font-weight: normal; line-height: 1.2;">${t.desc}</span>
           </button>
         `).join("")}
       </div>
@@ -3120,15 +3142,83 @@ function renderSiteSettingsUI() {
   // Bind unified media and audio settings controls
   bindMediaSettingsControls(container, "site_");
 
+  // Bind custom background wallpaper controls
+  const btnPickBg = document.getElementById("btnPickBgFromLibrary");
+  if (btnPickBg) {
+    btnPickBg.onclick = () => {
+      openMediaPicker({
+        filter: "image",
+        onSelect: (url) => {
+          state.customBgUrl = url;
+          if (previewIframe && previewIframe.contentWindow) {
+            previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, "*");
+          }
+          renderSiteSettingsUI();
+          debouncedLiveUpdate(true);
+          debouncedAutoSaveLayout();
+        }
+      });
+    };
+  }
+
+  const bgUploadInput = document.getElementById("uploadCustomBgFile");
+  if (bgUploadInput) {
+    bgUploadInput.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const uploaded = await uploadFileToR2(file, file.name);
+        if (uploaded && uploaded.url) {
+          state.customBgUrl = uploaded.url;
+          if (previewIframe && previewIframe.contentWindow) {
+            previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, "*");
+          }
+          renderSiteSettingsUI();
+          debouncedLiveUpdate(true);
+          debouncedAutoSaveLayout();
+        }
+      } catch (err) {
+        alert("Failed to upload background image: " + err.message);
+      }
+    };
+  }
+
+  const btnClearBg = document.getElementById("btnClearCustomBg");
+  if (btnClearBg) {
+    btnClearBg.onclick = () => {
+      state.customBgUrl = "";
+      if (previewIframe && previewIframe.contentWindow) {
+        previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: "" }, "*");
+      }
+      renderSiteSettingsUI();
+      debouncedLiveUpdate(true);
+      debouncedAutoSaveLayout();
+    };
+  }
+
+  const inputCustomBg = document.getElementById("site_customBgUrl");
+  if (inputCustomBg) {
+    inputCustomBg.onchange = (e) => {
+      state.customBgUrl = e.target.value.trim();
+      if (previewIframe && previewIframe.contentWindow) {
+        previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, "*");
+      }
+      debouncedLiveUpdate(true);
+      debouncedAutoSaveLayout();
+    };
+  }
+
   // Bind theme clicks
   container.querySelectorAll(".theme-chip-btn").forEach(btn => {
     btn.onclick = () => {
       container.querySelectorAll(".theme-chip-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       state.themeId = btn.getAttribute("data-theme");
+      state.customBgUrl = "";
       if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId }, "*");
+        previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: "" }, "*");
       }
+      renderSiteSettingsUI();
       debouncedLiveUpdate(true);
       debouncedAutoSaveLayout();
     };
@@ -3289,6 +3379,30 @@ function initDeviceSwitcher() {
   }
 }
 
+function initMobileWorkspaceToggle() {
+  const btnEditor = document.getElementById("btnMobileShowEditor");
+  const btnPreview = document.getElementById("btnMobileShowPreview");
+  const workspace = document.getElementById("builderWorkspace");
+  if (!workspace || !btnEditor || !btnPreview) return;
+
+  const setWorkspaceMode = (mode) => {
+    if (mode === "editor") {
+      workspace.classList.add("show-editor");
+      workspace.classList.remove("show-preview");
+      btnEditor.classList.add("active");
+      btnPreview.classList.remove("active");
+    } else {
+      workspace.classList.add("show-preview");
+      workspace.classList.remove("show-editor");
+      btnPreview.classList.add("active");
+      btnEditor.classList.remove("active");
+    }
+  };
+
+  btnEditor.addEventListener("click", () => setWorkspaceMode("editor"));
+  btnPreview.addEventListener("click", () => setWorkspaceMode("preview"));
+}
+
 function initPresetsToggle() {
   const btnToggle = document.getElementById("btnTogglePresets");
   const wrapper = document.getElementById("presetGridWrapper");
@@ -3342,6 +3456,7 @@ function setupEventListeners() {
   initAddSectionModalControls();
   initSidebarResizer();
   initDeviceSwitcher();
+  initMobileWorkspaceToggle();
   initPresetsToggle();
   initCopyLiveLink();
   initKeyboardShortcuts();

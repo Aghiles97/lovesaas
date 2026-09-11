@@ -572,6 +572,78 @@ body.theme-img-doodle-tapestry {
   --text-muted: #6b2137;
 }
 
+/* --- THEME: REAL IMAGE THEME 1 (RESPONSIVE 16:9 & 9:16) 🎀 --- */
+[data-theme="theme-img-theme1"],
+[data-theme="img-theme1"],
+body[data-theme="theme-img-theme1"],
+body[data-theme="img-theme1"],
+body.theme-img-theme1,
+[data-theme="theme-img-theme1-16-9"],
+[data-theme="img-theme1-16-9"],
+body[data-theme="theme-img-theme1-16-9"],
+body[data-theme="img-theme1-16-9"],
+body.theme-img-theme1-16-9 {
+  --primary: #e11d48;
+  --primary-rgb: 225, 29, 72;
+  --primary-light: #fff1f2;
+  --primary-dark: #9f1239;
+  --primary-hover: #be123c;
+  --primary-gradient: linear-gradient(135deg, #e11d48 0%, #fb7185 50%, #fda4af 100%);
+  --accent-gold: #fb7185;
+  --accent-purple: #f472b6;
+  --bg-gradient: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.95) 45%, #fff1f2 75%, #fce7f3 100%);
+  --bg-pattern: url("/images/themes/theme1-16-9.PNG");
+  --bg-pattern-size: cover;
+  --bg-pattern-position: center center;
+  --bg-pattern-repeat: no-repeat;
+  --surface: rgba(255, 255, 255, 0.93);
+  --surface-solid: #ffffff;
+  --surface-border: rgba(225, 29, 72, 0.25);
+  --primary-glow: rgba(225, 29, 72, 0.35);
+  --primary-border: rgba(225, 29, 72, 0.28);
+  --primary-subtle: rgba(225, 29, 72, 0.12);
+  --text-main: #4c0519;
+  --text-muted: #881337;
+}
+
+[data-theme="theme-img-theme1-9-16"],
+[data-theme="img-theme1-9-16"],
+body[data-theme="theme-img-theme1-9-16"],
+body[data-theme="img-theme1-9-16"],
+body.theme-img-theme1-9-16 {
+  --primary: #e11d48;
+  --primary-rgb: 225, 29, 72;
+  --primary-light: #fff1f2;
+  --primary-dark: #9f1239;
+  --primary-hover: #be123c;
+  --primary-gradient: linear-gradient(135deg, #e11d48 0%, #fb7185 50%, #fda4af 100%);
+  --accent-gold: #fb7185;
+  --accent-purple: #f472b6;
+  --bg-gradient: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.95) 45%, #fff1f2 75%, #fce7f3 100%);
+  --bg-pattern: url("/images/themes/theme1-9-16.PNG");
+  --bg-pattern-size: cover;
+  --bg-pattern-position: center center;
+  --bg-pattern-repeat: no-repeat;
+  --surface: rgba(255, 255, 255, 0.93);
+  --surface-solid: #ffffff;
+  --surface-border: rgba(225, 29, 72, 0.25);
+  --primary-glow: rgba(225, 29, 72, 0.35);
+  --primary-border: rgba(225, 29, 72, 0.28);
+  --primary-subtle: rgba(225, 29, 72, 0.12);
+  --text-main: #4c0519;
+  --text-muted: #881337;
+}
+
+@media (max-width: 768px), (orientation: portrait) {
+  [data-theme="theme-img-theme1"],
+  [data-theme="img-theme1"],
+  body[data-theme="theme-img-theme1"],
+  body[data-theme="img-theme1"],
+  body.theme-img-theme1 {
+    --bg-pattern: url("/images/themes/theme1-9-16.PNG");
+  }
+}
+
 /* --- THEME: REAL IMAGE WATERCOLOR GOLD HEARTS 💛 --- */
 [data-theme="theme-img-gold-hearts"],
 [data-theme="img-gold-hearts"],
@@ -1591,6 +1663,119 @@ body.letter-unsealed .floating-controls {
   background: var(--primary);
   color: #ffffff;
   transform: scale(1.15);
+}
+
+/* Opening Flowers Selector Bar */
+.flower-selector-bar {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(255, 182, 193, 0.6);
+  border-radius: 18px;
+  padding: 10px 14px;
+  box-shadow: 0 8px 24px rgba(255, 105, 135, 0.1);
+  width: 100%;
+  max-width: 720px;
+  box-sizing: border-box;
+  z-index: 2;
+  margin-top: 8px;
+}
+
+.flower-bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 7px;
+}
+
+.flower-badge-req {
+  font-size: 0.63rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--primary-gradient);
+  padding: 2px 7px;
+  border-radius: 999px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-left: 6px;
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.flower-chips-grid {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.flower-chip {
+  flex: 1 1 135px;
+  min-width: 125px;
+  max-width: 160px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1.5px solid var(--surface-border);
+  border-radius: 12px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-align: left;
+  user-select: none;
+}
+
+.flower-chip:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(255, 105, 135, 0.18);
+}
+
+.flower-chip.selected {
+  background: linear-gradient(135deg, #fff0f3 0%, #ffffff 100%);
+  border-color: var(--primary);
+  box-shadow: 0 5px 16px rgba(255, 67, 101, 0.22);
+}
+
+.flower-chip .flower-chip-emoji {
+  font-size: 1.25rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.flower-chip .chip-name {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.flower-chip .chip-sub {
+  display: block;
+  font-size: 0.62rem;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 480px) {
+  .flower-selector-bar {
+    padding: 8px 10px;
+  }
+  .flower-chip {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 110px;
+    padding: 5px 6px;
+  }
 }
 
 

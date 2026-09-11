@@ -49,8 +49,18 @@
     </a>
   </div>
 
+  <!-- MOBILE WORKSPACE MODE SWITCHER (Visible on screens <= 820px) -->
+  <div class="mobile-workspace-toggle" id="mobileWorkspaceToggle">
+    <button type="button" class="mobile-toggle-btn active" id="btnMobileShowEditor">
+      <span>🎛️</span> Editor Controls
+    </button>
+    <button type="button" class="mobile-toggle-btn" id="btnMobileShowPreview">
+      <span>👁️</span> Live Preview
+    </button>
+  </div>
+
   <!-- WORKSPACE SPLIT SCREEN -->
-  <div class="builder-workspace" id="builderWorkspace">
+  <div class="builder-workspace show-editor" id="builderWorkspace">
     <!-- LEFT CONTROLS -->
     <aside class="builder-sidebar" id="builderSidebar">
       
