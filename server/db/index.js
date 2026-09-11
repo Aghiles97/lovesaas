@@ -1132,11 +1132,15 @@ async function getTenantBySlug(slug) {
 async function verifyTenantAccess({ slug, pin, token }) {
   if (!slug) return { authorized: false, error: "Missing slug" };
   const tenant = await getTenantBySlug(slug);
-  if (!tenant) return { authorized: false, error: "Tenant not found" };
-  if (slug === "demo") return { authorized: true, tenant, isDemo: true };
-
   const pinMatches = pin && String(tenant.adminPin).trim() === String(pin).trim();
   const tokenMatches = token && tenant.authToken && String(tenant.authToken).trim() === String(token).trim();
+
+  if (slug === "demo") {
+    if (pinMatches || tokenMatches) {
+      return { authorized: true, tenant, isDemo: false };
+    }
+    return { authorized: true, tenant, isDemo: true };
+  }
 
   if (pinMatches || tokenMatches) {
     return { authorized: true, tenant };

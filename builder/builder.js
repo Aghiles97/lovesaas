@@ -193,12 +193,6 @@ async function checkBuilderAccess() {
     targetSlug = "demo";
   }
 
-  if (targetSlug === "demo") {
-    state.slug = "demo";
-    showDemoBanner(true);
-    return true;
-  }
-
   const tokenToTest = paramToken || (localAuth && localAuth.slug === targetSlug ? localAuth.authToken : null);
   const pinToTest = paramPin || (localAuth && localAuth.slug === targetSlug ? localAuth.adminPin : null);
 
@@ -219,10 +213,16 @@ async function checkBuilderAccess() {
           adminPin: pinToTest || "",
           plan: data.plan
         }));
-        showDemoBanner(false);
+        showDemoBanner(data.isDemo === true);
         return true;
       }
     } catch (e) {}
+  }
+
+  if (targetSlug === "demo") {
+    state.slug = "demo";
+    showDemoBanner(true);
+    return true;
   }
 
   showAccessGateModal(targetSlug);
