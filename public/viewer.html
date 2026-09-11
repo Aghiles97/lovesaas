@@ -1072,13 +1072,35 @@
         const urlParams = new URLSearchParams(window.location.search);
         const isIframe = window.parent && window.parent !== window;
         const isBuilderPreview = isIframe || urlParams.get("preview") === "builder" || urlParams.get("builder") === "1";
+        const isLayoutEmpty = Array.isArray(data.layoutOrder) && data.layoutOrder.length === 0;
+
+        if (isLayoutEmpty) {
+          document.body.classList.add("letter-unsealed");
+          const env = document.getElementById("envelopeScreen");
+          if (env) {
+            env.classList.add("opened");
+            env.style.display = "none";
+          }
+          const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
+          if (app) app.classList.add("app-revealed");
+          const bgAudio = document.getElementById("bgAudioPlayer");
+          if (bgAudio) {
+            bgAudio.pause();
+            bgAudio.currentTime = 0;
+            bgAudio.src = "";
+          }
+        }
+
         if (isBuilderPreview) {
           document.body.classList.add("builder-mode", "in-builder-preview");
-          if (urlParams.get("unsealed") === "1" || urlParams.get("skip_intro") === "1") {
+          if (urlParams.get("unsealed") === "1" || urlParams.get("skip_intro") === "1" || isLayoutEmpty) {
             document.body.classList.add("letter-unsealed");
             const env = document.getElementById("envelopeScreen");
-            if (env) env.classList.add("opened");
-            const app = document.getElementById("modularGridContainer");
+            if (env) {
+              env.classList.add("opened");
+              if (isLayoutEmpty) env.style.display = "none";
+            }
+            const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
             if (app) app.classList.add("app-revealed");
           }
 
@@ -1099,7 +1121,7 @@
           if (editBtn) editBtn.href = `/builder?slug=${encodeURIComponent(slug)}`;
         }
 
-        if (typeof setupIntroSoundtrackSelector === "function") {
+        if (!isLayoutEmpty && typeof setupIntroSoundtrackSelector === "function") {
           setupIntroSoundtrackSelector(data.sectionsData && data.sectionsData.hero);
         }
 

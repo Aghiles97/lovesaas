@@ -17,14 +17,13 @@
       <span class="live-status-pill" title="Real-time live sync active"><span class="live-status-dot"></span> Live Sync</span>
     </div>
     <div class="tenant-bar">
-      <button type="button" class="tenant-selector-btn" id="btnSwitchTenant" title="Switch or create couple site">
-        <span class="tenant-label">Site:</span>
+      <div class="tenant-static-badge" style="display: inline-flex; align-items: center; gap: 6px; background: var(--bg-subtle, rgba(255,255,255,0.06)); border: 1px solid var(--border, rgba(255,255,255,0.12)); padding: 4px 10px; border-radius: var(--radius-full, 9999px); font-size: 0.8rem; font-weight: 600;">
+        <span class="tenant-label" style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;">Site:</span>
         <span class="tenant-pill" id="currentTenantBadge">demo</span>
-        <span class="tenant-chevron">▾</span>
-      </button>
-      <button type="button" class="role-badge role-visitor" id="roleStatusBadge" title="Click to switch account or role">
+      </div>
+      <button type="button" class="role-badge role-visitor" id="roleStatusBadge" title="Role status" style="display: none;">
         <span id="roleStatusIcon">👀</span>
-        <span id="roleStatusText">Visitor (Demo)</span>
+        <span id="roleStatusText">Visitor</span>
       </button>
       <div class="auto-save-indicator" id="autoSaveIndicator">
         <span class="indicator-dot"></span>
@@ -41,10 +40,15 @@
       <button type="button" id="btnHeaderNewProject" class="btn-secondary" title="Create a new couple site" style="display: none; align-items: center; gap: 4px; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.08); color: #fda4af;">
         <span>💖</span> + New Site
       </button>
-      <a id="builderUserBadge" href="/welcome" class="btn-secondary" title="Account, Designs & Orders" style="display: none; align-items: center; gap: 6px; text-decoration: none; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.08);">
-        <span id="builderUserAvatar">👤</span>
-        <span id="builderUserName">My Account</span>
-      </a>
+      <div id="builderUserBadge" class="btn-secondary" style="display: none; align-items: center; gap: 8px; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.08); padding: 4px 10px; border-radius: var(--radius-full, 9999px);">
+        <a href="/welcome" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: inherit; font-size: 0.82rem; font-weight: 600;" title="Account, Designs & Orders">
+          <span id="builderUserAvatar">👤</span>
+          <span id="builderUserName">My Account</span>
+        </a>
+        <button type="button" id="btnBuilderLogout" style="background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 0.78rem; padding: 2px 4px; border-left: 1px solid var(--border); margin-left: 2px;" title="Logout">
+          Logout
+        </button>
+      </div>
       <button type="button" class="btn-primary btn-save" id="btnSaveConfig" title="Save changes (Ctrl+S / Cmd+S)">
         <span class="btn-save-icon" id="btnSaveIcon">💾</span>
         <span class="btn-save-text" id="btnSaveText">Save & Publish</span>
@@ -534,6 +538,9 @@
 
       <button type="button" class="btn-primary" id="btnCreateProjectSubmit" style="width: 100%; justify-content: center; padding: 12px; font-size: 0.95rem; font-weight: 700; background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);">
         <span>🚀 Create Website & Launch Studio</span>
+      </button>
+      <button type="button" id="btnExploreDemoPreview" style="background: none; border: none; color: #94a3b8; font-size: 0.8rem; text-decoration: underline; cursor: pointer; margin-top: 10px; width: 100%; text-align: center;">
+        👀 Or explore demo preview first
       </button>
     </div>
   </div>

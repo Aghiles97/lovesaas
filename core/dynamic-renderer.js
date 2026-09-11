@@ -45,6 +45,29 @@ class DynamicRenderer {
     if (!this.container) return;
     this.container.innerHTML = "";
     const { layoutOrder = [], sectionsData = {} } = config;
+    const isEmptyLayout = Array.isArray(layoutOrder) && layoutOrder.length === 0;
+
+    if (isEmptyLayout) {
+      if (typeof document !== "undefined") {
+        document.body.classList.add("letter-unsealed");
+        const env = document.getElementById("envelopeScreen");
+        if (env) {
+          env.classList.add("opened");
+          env.style.display = "none";
+        }
+        const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
+        if (app) app.classList.add("app-revealed");
+        const bgAudio = document.getElementById("bgAudioPlayer");
+        if (bgAudio) {
+          bgAudio.pause();
+          bgAudio.currentTime = 0;
+          bgAudio.src = "";
+        }
+      }
+      if (typeof window !== "undefined" && typeof window.stopMusic === "function") {
+        try { window.stopMusic(); } catch (e) {}
+      }
+    }
 
     this.ensureWidgetAssets(layoutOrder);
 
@@ -66,7 +89,7 @@ class DynamicRenderer {
           }
         }
       }
-      if (hero.voiceAudio) {
+      if (hero.voiceAudio && !isEmptyLayout) {
         state.voiceAudio = hero.voiceAudio;
         const voiceAudio = document.getElementById("voiceAudioPlayer");
         if (voiceAudio && !voiceAudio.src.endsWith(hero.voiceAudio)) {
@@ -74,7 +97,7 @@ class DynamicRenderer {
           voiceAudio.load();
         }
       }
-      if (hero.musicTrackUrl) {
+      if (hero.musicTrackUrl && !isEmptyLayout) {
         state.customMusicAudio = hero.musicTrackUrl;
         const bgAudio = document.getElementById("bgAudioPlayer");
         if (bgAudio) {
@@ -478,7 +501,7 @@ class DynamicRenderer {
     }
 
     // 14. Audio, Vinyl Disc, & Equalizer
-    if (typeof setupAudioVisualizerAndVolume === "function") {
+    if (typeof setupAudioVisualizerAndVolume === "function" && layoutOrder.length > 0) {
       try { setupAudioVisualizerAndVolume(); } catch (e) {}
     }
 

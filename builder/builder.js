@@ -276,25 +276,12 @@ async function checkBuilderAccess() {
   const paramToken = urlParams.get("token");
   const paramPin = urlParams.get("pin");
   const paramRole = urlParams.get("role");
+  const paramCreate = urlParams.get("create");
 
-  let localAuth = null;
-  try {
-    const raw = localStorage.getItem("lovesaas_auth");
-    if (raw) localAuth = JSON.parse(raw);
-  } catch (e) {}
-
-  let targetSlug = paramSlug;
-  if (!targetSlug && localAuth && localAuth.slug) {
-    targetSlug = localAuth.slug;
-  }
-  if (!targetSlug) {
-    targetSlug = "demo";
-  }
-
-  const tokenToTest = paramToken || (localAuth && (localAuth.role === "admin" || localAuth.slug === targetSlug) ? localAuth.authToken : null);
-  const pinToTest = paramPin || (localAuth && (localAuth.role === "admin" || localAuth.slug === targetSlug) ? localAuth.adminPin : null);
-
+  const localAuth = JSON.parse(localStorage.getItem("lovesaas_auth") || "null");
   const userToken = localStorage.getItem("lovesaas_user_token");
+
+  // 1. Authenticated User Session
   if (userToken) {
     try {
       const uRes = await fetch("/api/auth/user-me", {
@@ -306,7 +293,16 @@ async function checkBuilderAccess() {
           state.currentUser = uData.user;
           const isAdmin = uData.user.role === "admin";
 
-          // Fetch user's designs
+          // Header account pill
+          const userBadge = document.getElementById("builderUserBadge");
+          const userNameEl = document.getElementById("builderUserName");
+          const userAvatarEl = document.getElementById("builderUserAvatar");
+          const displayName = uData.user.name || uData.user.email.split("@")[0];
+          if (userNameEl) userNameEl.textContent = displayName;
+          if (userAvatarEl) userAvatarEl.textContent = displayName ? displayName[0].toUpperCase() : "👤";
+          if (userBadge) userBadge.style.display = "inline-flex";
+
+          // Fetch user's sites
           let userDesigns = [];
           try {
             const desRes = await fetch("/api/user/designs", {
@@ -319,16 +315,15 @@ async function checkBuilderAccess() {
           } catch (e) {}
           state.userDesigns = userDesigns;
 
-          const paramCreate = urlParams.get("create");
-
-          // Case 1: User has NO projects/designs (or create=1 requested)
+          // Case A: Explicit creation requested or zero projects -> prompt onboarding modal
           if (userDesigns.length === 0 || paramCreate === "1") {
             state.slug = (paramSlug && paramSlug !== "demo") ? paramSlug : "demo";
-            state.userRole = isAdmin ? "admin" : "user";
-            state.isPurchased = true;
+            state.userRole = isAdmin ? "admin" : (userDesigns.length === 0 ? "visitor" : "user");
+            state.isPurchased = isAdmin || userDesigns.length > 0;
             if (isAdmin) {
               state.adminPin = "admin1234";
               state.authToken = "master-admin-token-lovesaas";
+              state.userRole = "admin";
             }
             updateRoleUI();
             setTimeout(() => {
@@ -339,14 +334,15 @@ async function checkBuilderAccess() {
             return true;
           }
 
-          // Case 2: User has projects -> load target or latest project
+          // Case B: User has projects -> load target or first design
+          let targetProject = null;
           if (paramSlug && paramSlug !== "demo") {
-            targetSlug = paramSlug;
-          } else {
-            targetSlug = userDesigns[0].slug;
+            targetProject = userDesigns.find(d => d.slug === paramSlug);
+          }
+          if (!targetProject) {
+            targetProject = userDesigns[0];
           }
 
-          const targetProject = userDesigns.find(d => d.slug === targetSlug) || userDesigns[0];
           state.slug = targetProject.slug;
           state.userRole = isAdmin ? "admin" : "user";
           state.isPurchased = true;
@@ -363,9 +359,16 @@ async function checkBuilderAccess() {
           updateRoleUI();
           return true;
         }
+      } else {
+        localStorage.removeItem("lovesaas_user_token");
       }
     } catch (e) {}
   }
+
+  // 2. Admin URL parameters or local admin auth
+  let targetSlug = paramSlug || (localAuth && localAuth.slug) || "demo";
+  const tokenToTest = paramToken || (localAuth && (localAuth.role === "admin" || localAuth.slug === targetSlug) ? localAuth.authToken : null);
+  const pinToTest = paramPin || (localAuth && (localAuth.role === "admin" || localAuth.slug === targetSlug) ? localAuth.adminPin : null);
 
   if (paramRole === "admin" || (localAuth && localAuth.role === "admin") || pinToTest === "admin1234" || tokenToTest === "master-admin-token-lovesaas") {
     try {
@@ -375,26 +378,20 @@ async function checkBuilderAccess() {
         body: JSON.stringify({ slug: targetSlug, token: tokenToTest, pin: pinToTest || "admin1234" })
       });
       const data = await res.json();
-      if (res.ok && data.authorized && data.isAdmin) {
+      if (res.ok && data.authorized) {
         state.slug = targetSlug;
+        state.authToken = data.authToken || tokenToTest || "master-admin-token-lovesaas";
+        state.adminPin = pinToTest || "admin1234";
         state.userRole = "admin";
         state.isPurchased = true;
-        state.adminPin = pinToTest || "admin1234";
-        state.authToken = data.authToken;
-        localStorage.setItem("lovesaas_auth", JSON.stringify({
-          slug: targetSlug,
-          role: "admin",
-          authToken: data.authToken,
-          adminPin: state.adminPin,
-          plan: data.plan
-        }));
         updateRoleUI();
         return true;
       }
     } catch (e) {}
   }
 
-  if (tokenToTest || pinToTest) {
+  // 3. Pin/token for specific couple site
+  if (targetSlug !== "demo" && (tokenToTest || pinToTest)) {
     try {
       const res = await fetch("/api/auth/verify-access", {
         method: "POST",
@@ -404,34 +401,23 @@ async function checkBuilderAccess() {
       const data = await res.json();
       if (res.ok && data.authorized) {
         state.slug = targetSlug;
+        state.authToken = data.authToken || tokenToTest || "";
         state.adminPin = pinToTest || "";
-        state.authToken = data.authToken;
+        state.userRole = data.role || (data.isAdmin ? "admin" : "user");
         state.isPurchased = data.isPurchased !== false;
-        state.userRole = data.role || (data.isAdmin ? "admin" : (state.isPurchased ? "user" : "visitor"));
-
-        localStorage.setItem("lovesaas_auth", JSON.stringify({
-          slug: targetSlug,
-          role: state.userRole,
-          authToken: data.authToken,
-          adminPin: pinToTest || "",
-          plan: data.plan
-        }));
         updateRoleUI();
         return true;
       }
     } catch (e) {}
   }
 
-  if (targetSlug === "demo") {
-    state.slug = "demo";
-    state.userRole = "visitor";
-    state.isPurchased = false;
-    updateRoleUI();
-    return true;
-  }
-
-  showAccessGateModal(targetSlug);
-  return false;
+  // 4. Fallback: visitor demo preview
+  state.slug = "demo";
+  state.userRole = "visitor";
+  state.isPurchased = false;
+  state.adminPin = "1234";
+  updateRoleUI();
+  return true;
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -605,6 +591,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const parsed = parseInt(insertParam, 10);
     setTimeout(() => openAddSectionModal(isNaN(parsed) ? state.layoutOrder.length : parsed), 350);
   }
+
+  window.addEventListener("storage", (e) => {
+    if (e.key === "lovesaas_user_token") {
+      checkBuilderAccess().then(() => {
+        loadTenantData(state.slug);
+      });
+    }
+  });
 });
 
 async function loadTenantData(slug) {
@@ -625,7 +619,7 @@ async function loadTenantData(slug) {
     }
     state.templatePreset = data.templatePreset || "storyteller";
     state.themeId = (data.themeId === "romantic-rose" || !data.themeId) ? "theme-pink" : data.themeId;
-    state.layoutOrder = data.layoutOrder || PRESETS.storyteller.widgets;
+    state.layoutOrder = Array.isArray(data.layoutOrder) ? data.layoutOrder : (PRESETS.storyteller?.widgets || []);
     state.sectionsData = data.sectionsData || {};
 
     if (state.sectionsData.hero) {
@@ -649,10 +643,10 @@ async function loadTenantData(slug) {
     updateRoleUI();
     renderPresetsUI();
     renderWidgetTray();
-    if (state.activeInspectorWidget) {
-      selectWidgetForInspector(state.activeInspectorWidget);
-    } else {
+    if (state.layoutOrder.length === 0 || !state.activeInspectorWidget) {
       renderInspectorEmptyState();
+    } else {
+      selectWidgetForInspector(state.activeInspectorWidget);
     }
     reloadPreview();
   } catch (err) {
@@ -1858,9 +1852,16 @@ function reloadPreview() {
 // 5. SAVE & PUBLISH API (POSTGRESQL PERSISTENCE)
 // ----------------------------------------------------
 async function saveConfig() {
-  if (state.userRole === "visitor") {
-    showToast("🛍️ Purchase now to customize and publish your couple site!", "info");
-    window.open("/welcome#pricing", "_blank");
+  if (state.userRole === "visitor" || (state.slug === "demo" && state.userRole !== "admin")) {
+    if (state.currentUser) {
+      showToast("💡 Demo preview cannot be overwritten. Create your site to publish!", "info");
+      if (typeof window.openNewProjectModal === "function") {
+        window.openNewProjectModal(false);
+      }
+    } else {
+      showToast("🛍️ Purchase now to customize and publish your couple site!", "info");
+      window.open("/welcome#pricing", "_blank");
+    }
     return;
   }
 
@@ -4215,7 +4216,6 @@ function initKeyboardShortcuts() {
       e.preventDefault();
       saveConfig();
     } else if (e.key === "Escape") {
-      document.getElementById("tenantModal")?.classList.add("hidden");
       document.getElementById("mediaLightboxModal")?.classList.add("hidden");
       document.getElementById("mediaPickerModal")?.classList.add("hidden");
       document.getElementById("addSectionModal")?.classList.add("hidden");
@@ -4314,75 +4314,112 @@ function setupEventListeners() {
   initMediaTabControls();
 
   // Tenant switch modal
-  const modal = document.getElementById("tenantModal");
-  document.getElementById("btnSwitchTenant").onclick = () => {
-    initBuilderUserSession();
-    modal.classList.remove("hidden");
-  };
-  document.getElementById("btnModalCancel").onclick = () => modal.classList.add("hidden");
+  const tenantModal = document.getElementById("tenantModal");
+  const btnSwitch = document.getElementById("btnSwitchTenant");
+  if (btnSwitch && tenantModal) {
+    btnSwitch.onclick = () => {
+      initBuilderUserSession();
+      tenantModal.classList.remove("hidden");
+    };
+  }
+  const btnModalCancel = document.getElementById("btnModalCancel");
+  if (btnModalCancel && tenantModal) {
+    btnModalCancel.onclick = () => tenantModal.classList.add("hidden");
+  }
 
-  document.getElementById("btnModalSubmit").onclick = async () => {
-    const slug = document.getElementById("modalSlug").value.trim().toLowerCase();
-    let pin = document.getElementById("modalPin").value.trim();
-    const p1 = document.getElementById("modalP1").value.trim();
-    const p2 = document.getElementById("modalP2").value.trim();
+  const btnModalSubmit = document.getElementById("btnModalSubmit");
+  if (btnModalSubmit && tenantModal) {
+    btnModalSubmit.onclick = async () => {
+      const slug = document.getElementById("modalSlug")?.value.trim().toLowerCase();
+      let pin = document.getElementById("modalPin")?.value.trim();
+      const p1 = document.getElementById("modalP1")?.value.trim();
+      const p2 = document.getElementById("modalP2")?.value.trim();
 
-    if (state.userRole === "admin" && !pin) {
-      pin = state.adminPin || "admin1234";
-    }
-
-    if (!slug || !pin) return showToast("Slug and PIN required", "error");
-
-    try {
-      const authRes = await fetch("/api/auth/verify-access", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, pin, token: state.authToken })
-      });
-      const authData = await authRes.json();
-      if (authRes.ok && authData.authorized) {
-        state.slug = slug;
-        state.adminPin = pin;
-        state.authToken = authData.authToken;
-        state.isPurchased = authData.isPurchased !== false;
-        state.userRole = authData.role || (authData.isAdmin ? "admin" : (state.isPurchased ? "user" : "visitor"));
-        localStorage.setItem("lovesaas_auth", JSON.stringify({
-          slug,
-          role: state.userRole,
-          authToken: state.authToken,
-          adminPin: pin
-        }));
-        modal.classList.add("hidden");
-        updateRoleUI();
-        window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(slug)}`);
-        await loadTenantData(slug);
-        showToast(`Loaded site "${slug}" (${state.userRole})`, "success");
-      } else {
-        const createHeaders = { "Content-Type": "application/json" };
-        if (state.adminPin) createHeaders["X-Admin-Pin"] = state.adminPin;
-        if (state.authToken) createHeaders["X-Auth-Token"] = state.authToken;
-        const create = await fetch("/api/tenants", {
-          method: "POST",
-          headers: createHeaders,
-          body: JSON.stringify({ slug, adminPin: pin, partner1: p1 || "Partner 1", partner2: p2 || "Partner 2" })
-        });
-        if (!create.ok) throw new Error("Could not load or create site");
-        state.slug = slug;
-        state.adminPin = pin;
-        state.userRole = state.userRole === "admin" ? "admin" : "user";
-        state.isPurchased = true;
-        modal.classList.add("hidden");
-        updateRoleUI();
-        window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(slug)}`);
-        await loadTenantData(slug);
-        showToast(`Created new site "${slug}"!`, "success");
+      if (state.userRole === "admin" && !pin) {
+        pin = state.adminPin || "admin1234";
       }
-    } catch (e) {
-      showToast(e.message, "error");
-    }
-  };
 
-  // User authentication & designs awareness in builder
+      if (!slug || !pin) return showToast("Slug and PIN required", "error");
+
+      try {
+        const authRes = await fetch("/api/auth/verify-access", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug, pin, token: state.authToken })
+        });
+        const authData = await authRes.json();
+        if (authRes.ok && authData.authorized) {
+          state.slug = slug;
+          state.adminPin = pin;
+          state.authToken = authData.authToken;
+          state.isPurchased = authData.isPurchased !== false;
+          state.userRole = authData.role || (authData.isAdmin ? "admin" : (state.isPurchased ? "user" : "visitor"));
+          localStorage.setItem("lovesaas_auth", JSON.stringify({
+            slug,
+            role: state.userRole,
+            authToken: state.authToken,
+            adminPin: pin
+          }));
+          tenantModal.classList.add("hidden");
+          updateRoleUI();
+          window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(slug)}`);
+          await loadTenantData(slug);
+          showToast(`Loaded site "${slug}" (${state.userRole})`, "success");
+        } else {
+          const createHeaders = { "Content-Type": "application/json" };
+          if (state.adminPin) createHeaders["X-Admin-Pin"] = state.adminPin;
+          if (state.authToken) createHeaders["X-Auth-Token"] = state.authToken;
+          const create = await fetch("/api/tenants", {
+            method: "POST",
+            headers: createHeaders,
+            body: JSON.stringify({ slug, adminPin: pin, partner1: p1 || "Partner 1", partner2: p2 || "Partner 2" })
+          });
+          if (!create.ok) throw new Error("Could not load or create site");
+          state.slug = slug;
+          state.adminPin = pin;
+          state.userRole = state.userRole === "admin" ? "admin" : "user";
+          state.isPurchased = true;
+          tenantModal.classList.add("hidden");
+          updateRoleUI();
+          window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(slug)}`);
+          await loadTenantData(slug);
+          showToast(`Created new site "${slug}"!`, "success");
+        }
+      } catch (e) {
+        showToast(e.message, "error");
+      }
+    };
+  }
+
+  // Builder Logout handler
+  const btnLogout = document.getElementById("btnBuilderLogout");
+  if (btnLogout) {
+    btnLogout.onclick = async () => {
+      try {
+        const token = localStorage.getItem("lovesaas_user_token");
+        if (token) {
+          await fetch("/api/auth/logout", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}`, "X-User-Token": token }
+          });
+        }
+      } catch (e) {}
+      localStorage.removeItem("lovesaas_user_token");
+      localStorage.removeItem("lovesaas_auth");
+      state.currentUser = null;
+      state.userDesigns = [];
+      state.userRole = "visitor";
+      state.isPurchased = false;
+      const userBadge = document.getElementById("builderUserBadge");
+      if (userBadge) userBadge.style.display = "none";
+      const btnHeaderNew = document.getElementById("btnHeaderNewProject");
+      if (btnHeaderNew) btnHeaderNew.style.display = "none";
+      updateRoleUI();
+      showToast("Signed out successfully", "info");
+      window.location.href = "/welcome";
+    };
+  }
+
   async function initBuilderUserSession() {
     const userToken = localStorage.getItem("lovesaas_user_token");
     const badgeEl = document.getElementById("builderUserBadge");
@@ -4405,6 +4442,7 @@ function setupEventListeners() {
       if (nameEl) nameEl.textContent = displayName;
       if (avatarEl) avatarEl.textContent = displayName ? displayName[0].toUpperCase() : "👤";
       if (badgeEl) badgeEl.style.display = "inline-flex";
+
       const btnHeaderNew = document.getElementById("btnHeaderNewProject");
       if (btnHeaderNew) btnHeaderNew.style.display = "inline-flex";
 
@@ -4428,7 +4466,7 @@ function setupEventListeners() {
             const targetToken = btn.dataset.switchToken;
             const targetPin = btn.dataset.switchPin;
 
-            modal.classList.add("hidden");
+            if (tenantModal) tenantModal.classList.add("hidden");
             state.slug = targetSlug;
             state.authToken = targetToken;
             state.adminPin = targetPin;
@@ -4463,17 +4501,48 @@ function setupNewProjectModal() {
   const inP2 = document.getElementById("npPartner2");
   const inSlug = document.getElementById("npSlug");
   const inPin = document.getElementById("npPin");
+  const slugFeedback = document.getElementById("npSlugFeedback");
   const errEl = document.getElementById("npErrorMsg");
   const btnSubmit = document.getElementById("btnCreateProjectSubmit");
   const subtitleEl = document.getElementById("newProjectModalSubtitle");
   const btnHeaderNew = document.getElementById("btnHeaderNewProject");
   const btnTenantCreate = document.getElementById("btnTenantModalCreateNew");
+  const btnExplore = document.getElementById("btnExploreDemoPreview");
 
   if (!modal) return;
 
   let selectedMode = "template";
   let selectedPreset = "storyteller";
   let slugUserEdited = false;
+  let slugCheckTimeout = null;
+
+  function checkSlugAvailability(slug) {
+    if (!slugFeedback) return;
+    if (!slug) {
+      slugFeedback.textContent = "Enter lowercase letters, numbers, or dashes";
+      slugFeedback.style.color = "#94a3b8";
+      return;
+    }
+    slugFeedback.textContent = "Checking availability...";
+    slugFeedback.style.color = "#94a3b8";
+    clearTimeout(slugCheckTimeout);
+    slugCheckTimeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/check-slug?slug=${encodeURIComponent(slug)}`);
+        const data = await res.json();
+        if (data.available) {
+          slugFeedback.textContent = `✓ /sites/${slug} is available!`;
+          slugFeedback.style.color = "#34d399";
+        } else {
+          slugFeedback.textContent = `✕ /sites/${slug} is already taken`;
+          slugFeedback.style.color = "#f87171";
+        }
+      } catch (e) {
+        slugFeedback.textContent = "Could not check availability";
+        slugFeedback.style.color = "#94a3b8";
+      }
+    }, 250);
+  }
 
   function autoSuggestSlug() {
     if (slugUserEdited) return;
@@ -4481,6 +4550,7 @@ function setupNewProjectModal() {
     const p2 = (inP2?.value || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
     if (p1 && p2 && inSlug) {
       inSlug.value = `${p1}-and-${p2}`;
+      checkSlugAvailability(inSlug.value);
     }
   }
 
@@ -4490,6 +4560,7 @@ function setupNewProjectModal() {
     inSlug.addEventListener("input", () => {
       slugUserEdited = true;
       inSlug.value = inSlug.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+      checkSlugAvailability(inSlug.value);
     });
   }
 
@@ -4542,6 +4613,13 @@ function setupNewProjectModal() {
   if (btnClose) {
     btnClose.addEventListener("click", () => {
       modal.classList.add("hidden");
+    });
+  }
+
+  if (btnExplore) {
+    btnExplore.addEventListener("click", () => {
+      modal.classList.add("hidden");
+      showToast("Exploring demo preview. Click '+ New Site' whenever you are ready!", "info");
     });
   }
 
