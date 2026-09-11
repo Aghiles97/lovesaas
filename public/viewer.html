@@ -996,11 +996,14 @@
         const isIframe = window.parent && window.parent !== window;
         const isBuilderPreview = isIframe || urlParams.get("preview") === "builder" || urlParams.get("builder") === "1";
         if (isBuilderPreview) {
-          document.body.classList.add("builder-mode", "in-builder-preview", "letter-unsealed");
-          const env = document.getElementById("envelopeScreen");
-          if (env) env.classList.add("opened");
-          const app = document.getElementById("modularGridContainer");
-          if (app) app.classList.add("app-revealed");
+          document.body.classList.add("builder-mode", "in-builder-preview");
+          if (urlParams.get("unsealed") === "1" || urlParams.get("skip_intro") === "1") {
+            document.body.classList.add("letter-unsealed");
+            const env = document.getElementById("envelopeScreen");
+            if (env) env.classList.add("opened");
+            const app = document.getElementById("modularGridContainer");
+            if (app) app.classList.add("app-revealed");
+          }
 
           const bgAudioEl = document.getElementById("bgAudioPlayer");
           if (bgAudioEl) {
@@ -1218,7 +1221,28 @@
           if (e.data && e.data.type === "PLAYFUL_RESET" && typeof window.playfulReset === "function") {
             window.playfulReset();
           }
+          if (e.data && e.data.type === "INTRO_ENVELOPE_UNSEAL") {
+            document.body.classList.add("letter-unsealed");
+            const env = document.getElementById("envelopeScreen");
+            if (env) env.classList.add("opened");
+            const app = document.getElementById("modularGridContainer");
+            if (app) app.classList.add("app-revealed");
+          }
+          if (e.data && e.data.type === "INTRO_ENVELOPE_RESEAL") {
+            document.body.classList.remove("letter-unsealed");
+            const env = document.getElementById("envelopeScreen");
+            if (env) env.classList.remove("opened");
+            const app = document.getElementById("modularGridContainer");
+            if (app) app.classList.remove("app-revealed");
+          }
           if (e.data && e.data.type === "SCROLL_TO_WIDGET" && e.data.widgetId) {
+            const env = document.getElementById("envelopeScreen");
+            const app = document.getElementById("modularGridContainer");
+            if (env && !env.classList.contains("opened")) {
+              document.body.classList.add("letter-unsealed");
+              env.classList.add("opened");
+              if (app) app.classList.add("app-revealed");
+            }
             const target = document.getElementById("section-" + e.data.widgetId) || document.querySelector(`[data-widget-id="${e.data.widgetId}"]`);
             if (target) {
               target.scrollIntoView({ behavior: "smooth", block: "start" });
