@@ -158,7 +158,7 @@
     if (btnTestPlay) {
       btnTestPlay.onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "CAPSULE_TOGGLE" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "CAPSULE_TOGGLE" }, window.location.origin);
           try { previewIframe.contentWindow.capsuleToggle?.(); } catch (e) {}
         }
       };

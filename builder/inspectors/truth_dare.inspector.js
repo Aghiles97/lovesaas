@@ -32,7 +32,7 @@
 
     const sendTodMsg = (payload) => {
       if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage(payload, "*");
+        previewIframe.contentWindow.postMessage(payload, window.location.origin);
       }
     };
 

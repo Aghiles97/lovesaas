@@ -582,7 +582,7 @@ async function saveAllReasonsFromModal() {
   closeEditAllReasonsModal();
 
   if (window.parent && window.parent !== window) {
-    window.parent.postMessage({ type: "SYNC_REASONS", reasons: REASONS }, "*");
+    window.parent.postMessage({ type: "SYNC_REASONS", reasons: REASONS }, window.location.origin);
   }
 
   audio.playChimeCascade();

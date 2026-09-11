@@ -156,11 +156,15 @@ function selectAndPlaySong(song) {
 
   const bgAudio = document.getElementById("bgAudioPlayer");
   if (bgAudio) {
-    bgAudio.src = song.src;
-    bgAudio.currentTime = 0;
-    const savedVol = parseInt(localStorage.getItem("gf_volume") || "80", 10) / 100;
-    bgAudio.volume = Math.min(Math.max(savedVol, 0), 1);
-    bgAudio.play().catch(() => {});
+    const cur = bgAudio.currentSrc || bgAudio.src || "";
+    const isDiff = !cur || (!cur.endsWith(song.src) && cur !== song.src);
+    if (isDiff) {
+      bgAudio.src = song.src;
+      bgAudio.currentTime = 0;
+      const savedVol = parseInt(localStorage.getItem("gf_volume") || "80", 10) / 100;
+      bgAudio.volume = Math.min(Math.max(savedVol, 0), 1);
+      bgAudio.play().catch(() => {});
+    }
   }
 
   state.musicPlaying = true;

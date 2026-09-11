@@ -169,13 +169,13 @@ if (Array.isArray(state.sectionsData.quiz)) {
 
       document.getElementById("btnTestQuizReset").onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "QUIZ_RESET" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "QUIZ_RESET" }, window.location.origin);
         }
       };
 
       document.getElementById("btnTestQuizOpenCert").onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "QUIZ_OPEN_CERT" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "QUIZ_OPEN_CERT" }, window.location.origin);
         }
       };
 
@@ -225,7 +225,7 @@ if (Array.isArray(state.sectionsData.quiz)) {
         if (previewBtn) {
           previewBtn.onclick = () => {
             if (previewIframe && previewIframe.contentWindow) {
-              previewIframe.contentWindow.postMessage({ type: "QUIZ_JUMP_STEP", step: idx }, "*");
+              previewIframe.contentWindow.postMessage({ type: "QUIZ_JUMP_STEP", step: idx }, window.location.origin);
             }
           };
         }

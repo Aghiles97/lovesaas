@@ -1021,6 +1021,36 @@
     </svg>
   `);
 
+  // 26. VALENTINE SCRATCH-OFF & ITINERARY
+  PREVIEWS.valentine_scratch = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <rect width="800" height="480" fill="#fff5f7"/>
+      <text x="400" y="60" fill="#e11d48" font-family="Georgia, serif" font-size="28" font-weight="700" text-anchor="middle">💝 Valentine Scratch-Off &amp; Secret Date</text>
+      <text x="400" y="88" fill="#64748b" font-family="-apple-system, sans-serif" font-size="14" text-anchor="middle">Interactive Canvas Scratch • Secret Itinerary • Dress Code &amp; Love Message</text>
+      
+      <!-- Scratch Card Box -->
+      <rect x="220" y="115" width="360" height="260" rx="18" fill="#ffffff" stroke="#fecdd3" stroke-width="2"/>
+      
+      <!-- Secret Itinerary Inside -->
+      <rect x="240" y="135" width="320" height="220" rx="12" fill="#fff1f2"/>
+      <text x="400" y="168" fill="#e11d48" font-family="-apple-system, sans-serif" font-size="15" font-weight="800" text-anchor="middle">💌 SECRET DATE ITINERARY</text>
+      <text x="260" y="200" fill="#334155" font-family="-apple-system, sans-serif" font-size="13" font-weight="600">📍 Location: A Magical Secret Rooftop ✨</text>
+      <text x="260" y="225" fill="#334155" font-family="-apple-system, sans-serif" font-size="13" font-weight="600">📅 Date: February 14, 2026</text>
+      <text x="260" y="250" fill="#334155" font-family="-apple-system, sans-serif" font-size="13" font-weight="600">⏰ Time: 7:30 PM</text>
+      <text x="260" y="275" fill="#334155" font-family="-apple-system, sans-serif" font-size="13" font-weight="600">👗 Dress Code: Dress to impress 💃🕺</text>
+      <text x="400" y="315" fill="#e11d48" font-family="Georgia, serif" font-size="13" font-style="italic" text-anchor="middle">"Every single day with you is Valentine's Day! ❤️"</text>
+
+      <!-- Scratch Overlay Simulated -->
+      <path d="M 400 135 L 560 135 L 560 355 L 430 355 Z" fill="#e84393" opacity="0.9"/>
+      <text x="490" y="245" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" text-anchor="middle">✨ Scratch Here ✨</text>
+
+      <!-- Progress Bar -->
+      <rect x="280" y="395" width="240" height="12" rx="6" fill="#f1f5f9"/>
+      <rect x="280" y="395" width="140" height="12" rx="6" fill="#e11d48"/>
+      <text x="400" y="425" fill="#64748b" font-family="-apple-system, sans-serif" font-size="12" text-anchor="middle">58% scratched • Almost revealed!</text>
+    </svg>
+  `);
+
   window.WIDGET_PREVIEWS = PREVIEWS;
   window.getWidgetPreviewImage = function(widgetId) {
     return PREVIEWS[widgetId] || null;

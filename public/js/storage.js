@@ -476,7 +476,8 @@ async function saveCityPhotoData(key, imgDataOrImages, caption, desc, fallbackKe
         const fname = `${uniqueId}.jpg`;
         const saved = await saveFileToDisk(imgItem, fname);
         if (saved) {
-          diskPath = `images/${fname}`;
+          const slug = (typeof window !== "undefined" && window.CURRENT_TENANT_SLUG) || "demo";
+          diskPath = (typeof saved === "string" && !saved.startsWith("data:")) ? saved : `/uploads/${slug}/${fname}`;
         } else {
           hadDiskSaveFailure = true;
           diskPath = imgItem;
@@ -540,8 +541,8 @@ async function saveCityPhotoData(key, imgDataOrImages, caption, desc, fallbackKe
     }
   }
   for (const oldImg of oldImages) {
-    if (typeof oldImg === "string" && oldImg.startsWith("images/") && !allReferenced.has(oldImg)) {
-      const bn = oldImg.replace("images/", "");
+    if (typeof oldImg === "string" && oldImg && !allReferenced.has(oldImg)) {
+      const bn = oldImg.replace(/^.*[\/\\]/, "");
       const isStock = ["china.jpg", "algeria.jpg", "guangzhou.jpg", "shenzhen.jpg", "chongqing.jpg", "chengdu.jpg", "dagu.jpg", "bipenggou.jpg", "jiuzhaigou.jpg", "huanglong.jpg", "nansha.jpg", "wuhan.jpg", "nanjing.jpg", "shanghai.jpg", "vietnam.jpg", "jakarta.jpg", "indonesia.jpg"].includes(bn);
       if (!isStock) {
         await deleteFileFromDisk(oldImg);
@@ -583,6 +584,16 @@ function loadStoredMemories() {
 
 async function sendApiRequest(endpoint, options = {}) {
   const clean = endpoint.replace(/^\//, "");
+  const authData = (() => {
+    try { return JSON.parse(localStorage.getItem('lovesaas_auth') || '{}'); } catch { return {}; }
+  })();
+  const userToken = typeof localStorage !== 'undefined' ? localStorage.getItem('lovesaas_user_token') : null;
+  options.headers = options.headers || {};
+  if (authData.authToken && !options.headers['X-Auth-Token']) options.headers['X-Auth-Token'] = authData.authToken;
+  if (userToken && !options.headers['X-User-Token']) {
+    options.headers['X-User-Token'] = userToken;
+    options.headers['Authorization'] = `Bearer ${userToken}`;
+  }
   const urls = [];
   if (typeof window !== "undefined" && window.location?.protocol.startsWith("http")) {
     const p = window.location.pathname.replace(/\/index\.html$/i, "").replace(/\/$/, "");

@@ -45,7 +45,7 @@ async function persistMemoriesOrder() {
     await saveToComputer({ gf_memories: JSON.stringify(safeMemories), memories: safeMemories, _source: "memory_editor" });
   }
   if (window.parent && window.parent !== window) {
-    window.parent.postMessage({ type: "SYNC_MEMORIES", memories: safeMemories }, "*");
+    window.parent.postMessage({ type: "SYNC_MEMORIES", memories: safeMemories }, window.location.origin);
   }
 }
 
@@ -324,6 +324,17 @@ async function renderProjectImagesGrid(selectedImg) {
 function openDirectMemoryEditor(memId) {
   if (typeof isAdminEditAllowed === "function" && !isAdminEditAllowed()) return;
   currentEditingMemoryId = memId;
+
+  const isIframe = window.parent && window.parent !== window;
+  if (isIframe) {
+    window.parent.postMessage({
+      type: "SELECT_WIDGET",
+      widgetId: "memories",
+      memoryId: memId
+    }, window.location.origin);
+    return;
+  }
+
   const modal = document.getElementById("directMemoryModal");
   if (!modal) return;
 
@@ -627,10 +638,9 @@ function initDirectMemoryEditor() {
           const fname = `${uniqueId}.jpg`;
           const saved = await saveFileToDisk(finalImg, fname);
           if (saved) {
-            diskPath = (typeof saved === "string" && !saved.startsWith("/uploads/")) ? saved : `images/${fname}`;
+            const slug = (typeof window !== "undefined" && window.CURRENT_TENANT_SLUG) || "demo";
+            diskPath = (typeof saved === "string" && !saved.startsWith("data:")) ? saved : `/uploads/${slug}/${fname}`;
           }
-        } else if (finalImg && finalImg.startsWith("/uploads/")) {
-          diskPath = finalImg.replace(/^\/uploads\/[^\/]+\//, "images/");
         }
 
         let mem = state.memories.find(m => m.id === activeId);
@@ -639,6 +649,9 @@ function initDirectMemoryEditor() {
         }
 
         if (mem) {
+          if (mem.img && diskPath && mem.img !== diskPath && typeof deleteFileFromDisk === "function") {
+            await deleteFileFromDisk(mem.img);
+          }
           mem.id = activeId;
           if (title) mem.title = title;
           mem.desc = desc;
@@ -684,7 +697,7 @@ function initDirectMemoryEditor() {
           await saveToComputer({ gf_memories: JSON.stringify(safeMemories), memories: safeMemories, _source: "memory_editor" });
         }
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: "SYNC_MEMORIES", memories: safeMemories }, "*");
+          window.parent.postMessage({ type: "SYNC_MEMORIES", memories: safeMemories }, window.location.origin);
         }
 
         cachedProjectImages = null;
@@ -709,13 +722,8 @@ function initDirectMemoryEditor() {
         return;
       }
       const memToDelete = state.memories.find(m => m.id === currentEditingMemoryId);
-      if (memToDelete && memToDelete.img && memToDelete.img.startsWith("images/")) {
-        const fname = memToDelete.img.split("/").pop();
-        if (fname && !/^mem-[1-5]\.jpg$/i.test(fname)) {
-          if (typeof deleteFileFromDisk === "function") {
-            await deleteFileFromDisk(fname);
-          }
-        }
+      if (memToDelete && memToDelete.img && typeof deleteFileFromDisk === "function") {
+        await deleteFileFromDisk(memToDelete.img);
       }
       delete LOCAL_IMG_CACHE[`mem_${currentEditingMemoryId}`];
       delete LOCAL_IMG_CACHE[currentEditingMemoryId];
@@ -734,7 +742,7 @@ function initDirectMemoryEditor() {
         await saveToComputer({ gf_memories: JSON.stringify(safeMemories), memories: safeMemories, _source: "memory_editor" });
       }
       if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: "SYNC_MEMORIES", memories: safeMemories }, "*");
+        window.parent.postMessage({ type: "SYNC_MEMORIES", memories: safeMemories }, window.location.origin);
       }
       cachedProjectImages = null;
       renderPolaroids();

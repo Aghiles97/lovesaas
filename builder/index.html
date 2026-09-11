@@ -4,58 +4,165 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Couple Site Builder Studio</title>
-  <link rel="stylesheet" href="/builder/builder.css?v=2.3.0">
+  <link rel="stylesheet" href="/builder/builder.css?v=2.5.4">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script>
+    (function() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!urlParams.get("slug")) {
+          document.documentElement.classList.add("builder-gate-active");
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
 
   <!-- TOP NAV -->
   <header class="builder-nav">
     <div class="brand-box">
-      <span class="brand-icon">💍</span>
-      <span class="brand-title">LoveSaas <span class="brand-badge">Studio</span></span>
-      <span class="live-status-pill" title="Real-time live sync active"><span class="live-status-dot"></span> Live Sync</span>
-    </div>
-    <div class="tenant-bar">
-      <div class="tenant-static-badge" style="display: inline-flex; align-items: center; gap: 6px; background: var(--bg-subtle, rgba(255,255,255,0.06)); border: 1px solid var(--border, rgba(255,255,255,0.12)); padding: 4px 10px; border-radius: var(--radius-full, 9999px); font-size: 0.8rem; font-weight: 600;">
-        <span class="tenant-label" style="color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;">Site:</span>
-        <span class="tenant-pill" id="currentTenantBadge">demo</span>
+      <a href="/welcome" class="brand-logo-link" title="Return to Dashboard">
+        <span class="brand-icon">💍</span>
+        <span class="brand-title">LoveSaas <span class="brand-badge">Studio</span></span>
+      </a>
+
+      <!-- Project Switcher Dropdown -->
+      <div class="project-switcher" id="projectSwitcher">
+        <button type="button" class="project-switcher-btn" id="btnProjectSwitcher" aria-haspopup="true" aria-expanded="false" title="Switch between projects">
+          <span class="project-switcher-icon">📂</span>
+          <span class="tenant-label">Site:</span>
+          <span class="tenant-pill" id="currentTenantBadge">demo</span>
+          <span class="project-switcher-chevron">▾</span>
+        </button>
+        <div class="project-switcher-dropdown hidden" id="projectSwitcherDropdown" role="menu">
+          <div class="project-dropdown-header">
+            <span class="project-dropdown-title">My Projects</span>
+            <button type="button" class="btn-dropdown-new-site" id="btnProjectDropdownNew" title="Create a new site">+ New Site</button>
+          </div>
+          <div class="project-dropdown-list" id="projectDropdownList">
+            <!-- Populated dynamically with user projects -->
+          </div>
+          <div class="project-dropdown-footer">
+            <button type="button" class="project-dropdown-action-btn" id="btnViewAllProjects">
+              <span>✨</span> View All Sites / Templates
+            </button>
+          </div>
+        </div>
       </div>
+
+      <div class="live-status-pill" title="Real-time live sync active">
+        <span class="live-status-dot"></span> Live Sync
+      </div>
+
+      <div class="auto-save-indicator" id="autoSaveIndicator" title="Changes auto-sync continuously (⌘S to force sync)">
+        <span class="indicator-dot"></span>
+        <span class="indicator-text">All changes saved</span>
+      </div>
+
       <button type="button" class="role-badge role-visitor" id="roleStatusBadge" title="Role status" style="display: none;">
         <span id="roleStatusIcon">👀</span>
         <span id="roleStatusText">Visitor</span>
       </button>
-      <div class="auto-save-indicator" id="autoSaveIndicator">
-        <span class="indicator-dot"></span>
-        <span class="indicator-text">All changes saved</span>
-      </div>
     </div>
+
     <div class="nav-actions">
       <button type="button" id="btnCopyLiveLink" class="btn-secondary" title="Copy public website link">
-        <span class="btn-icon">📋</span> Copy Link
+        <span class="btn-icon">📋</span> <span class="btn-text-responsive">Copy Link</span>
       </button>
       <a id="btnViewLive" href="/sites/demo" target="_blank" class="btn-secondary" title="Open live site in new tab">
-        <span class="btn-icon">↗</span> View Live
+        <span class="btn-icon">↗</span> <span class="btn-text-responsive">View Live</span>
       </a>
-      <button type="button" id="btnHeaderNewProject" class="btn-secondary" title="Create a new couple site" style="display: none; align-items: center; gap: 4px; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.08); color: #fda4af;">
-        <span>💖</span> + New Site
+      <button type="button" id="btnHeaderNewProject" class="btn-secondary btn-header-new-project" title="Create a new couple site" style="display: none;">
+        <span>💖</span> <span class="btn-text-responsive">+ New Site</span>
       </button>
-      <div id="builderUserBadge" class="btn-secondary" style="display: none; align-items: center; gap: 8px; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.08); padding: 4px 10px; border-radius: var(--radius-full, 9999px);">
-        <a href="/welcome" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; color: inherit; font-size: 0.82rem; font-weight: 600;" title="Account, Designs & Orders">
-          <span id="builderUserAvatar">👤</span>
-          <span id="builderUserName">My Account</span>
-        </a>
-        <button type="button" id="btnBuilderLogout" style="background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 0.78rem; padding: 2px 4px; border-left: 1px solid var(--border); margin-left: 2px;" title="Logout">
-          Logout
+
+      <!-- User / Account Dropdown Menu (Functional on all screen sizes) -->
+      <div class="header-user-menu" id="headerUserMenu">
+        <button type="button" class="btn-secondary btn-user-menu" id="btnUserMenuToggle" aria-haspopup="true" aria-expanded="false" title="Account & Options">
+          <span class="user-menu-avatar" id="headerUserAvatar">👤</span>
+          <span class="user-menu-name" id="headerUserName">Account</span>
+          <span class="user-menu-chevron">▾</span>
         </button>
+        <div class="user-menu-dropdown hidden" id="userMenuDropdown" role="menu">
+          <div class="user-menu-info" id="userMenuInfo">
+            <div class="user-menu-display-name" id="userMenuDisplayName">My Account</div>
+            <div class="user-menu-role" id="userMenuRoleBadge">User</div>
+          </div>
+          <div class="dropdown-divider"></div>
+          <button type="button" class="user-dropdown-item" id="btnUserMenuSwitchProject">
+            <span class="item-icon">📂</span> Switch Project
+          </button>
+          <button type="button" class="user-dropdown-item" id="btnUserMenuNewProject">
+            <span class="item-icon">💖</span> + Create New Site
+          </button>
+          <a href="/welcome" class="user-dropdown-item" id="btnUserMenuDashboard">
+            <span class="item-icon">📊</span> Designs & Orders
+          </a>
+          <button type="button" class="user-dropdown-item" id="btnUserMenuCopyLink">
+            <span class="item-icon">📋</span> Copy Live Link
+          </button>
+          <div class="dropdown-divider"></div>
+          <button type="button" class="user-dropdown-item danger" id="btnBuilderLogout">
+            <span class="item-icon">🚪</span> Logout
+          </button>
+        </div>
       </div>
-      <button type="button" class="btn-primary btn-save" id="btnSaveConfig" title="Save changes (Ctrl+S / Cmd+S)">
+
+      <!-- Hidden compatibility elements -->
+      <button type="button" id="btnSaveConfig" style="display: none;" title="Save changes (Ctrl+S / Cmd+S)">
         <span class="btn-save-icon" id="btnSaveIcon">💾</span>
-        <span class="btn-save-text" id="btnSaveText">Save & Publish</span>
+        <span class="btn-save-text" id="btnSaveText">Save</span>
         <kbd class="kbd-shortcut" id="btnSaveKbd">⌘S</kbd>
       </button>
+      <button type="button" id="btnMobileNavMenu" style="display: none;"></button>
     </div>
   </header>
+
+  <!-- MOBILE ACTION MENU DRAWER / BOTTOM SHEET -->
+  <div class="mobile-menu-backdrop hidden" id="builderMobileMenuBackdrop">
+    <div class="mobile-menu-sheet" id="builderMobileMenuSheet" role="dialog" aria-modal="true" aria-label="Mobile Navigation Menu">
+      <div class="mobile-menu-header">
+        <div class="mobile-menu-site-info">
+          <span class="brand-icon" style="font-size: 1.3rem;">💍</span>
+          <div>
+            <div class="mobile-menu-site-name">LoveSaas <span class="brand-badge" style="font-size: 0.65rem; padding: 1px 5px; background: rgba(244,63,94,0.1); color: var(--primary); border-radius: 4px;">Studio</span></div>
+            <div class="mobile-menu-site-slug"><span class="tenant-label">Site:</span> <strong id="mobileMenuTenantBadge">demo</strong></div>
+          </div>
+        </div>
+        <button type="button" class="btn-mobile-menu-close" id="btnCloseMobileMenu" aria-label="Close menu">✕</button>
+      </div>
+      <div class="mobile-menu-sync-row">
+        <div class="auto-save-indicator" id="mobileAutoSaveIndicator">
+          <span class="indicator-dot"></span>
+          <span class="indicator-text">All changes saved</span>
+        </div>
+        <div class="live-status-pill" style="display: inline-flex;"><span class="live-status-dot"></span> Live Sync Active</div>
+      </div>
+      <div class="mobile-menu-actions">
+        <a id="btnMobileViewLive" href="/sites/demo" target="_blank" class="mobile-menu-item">
+          <span class="menu-item-icon">↗</span>
+          <span class="menu-item-label">View Live Website</span>
+        </a>
+        <button type="button" id="btnMobileCopyLiveLink" class="mobile-menu-item">
+          <span class="menu-item-icon">📋</span>
+          <span class="menu-item-label">Copy Live Link</span>
+        </button>
+        <button type="button" id="btnMobileNewProject" class="mobile-menu-item highlight">
+          <span class="menu-item-icon">💖</span>
+          <span class="menu-item-label">+ New Couple Site</span>
+        </button>
+        <a id="btnMobileUserAccount" href="/welcome" class="mobile-menu-item">
+          <span class="menu-item-icon">👤</span>
+          <span class="menu-item-label" id="mobileMenuUserName">My Account & Orders</span>
+        </a>
+        <button type="button" id="btnMobileLogout" class="mobile-menu-item danger">
+          <span class="menu-item-icon">🚪</span>
+          <span class="menu-item-label">Logout</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- DEMO MODE NOTIFICATION BANNER -->
   <div class="demo-banner-bar" id="demoBannerBar" style="display: none; background: linear-gradient(90deg, #1e293b 0%, #be123c 100%); color: #fff; padding: 7px 16px; font-size: 0.85rem; font-weight: 600; text-align: center; justify-content: center; align-items: center; gap: 12px; z-index: 50; border-bottom: 1px solid rgba(255,255,255,0.1);">
@@ -143,9 +250,11 @@
               <button type="button" id="btnClearWidgetSearch" class="btn-clear-search hidden" title="Clear search">✕</button>
             </div>
             <div class="widget-filter-chips">
-              <button type="button" class="filter-chip active" data-filter="all">All <span id="filterCountAll">25</span></button>
+              <button type="button" class="filter-chip active" data-filter="all">All <span id="filterCountAll">26</span></button>
               <button type="button" class="filter-chip" data-filter="active">Active <span id="filterCountActive">0</span></button>
               <button type="button" class="filter-chip" data-filter="birthday">🎂 Birthday</button>
+              <button type="button" class="filter-chip" data-filter="valentine">💝 Valentine</button>
+              <button type="button" class="filter-chip" data-filter="anniversary">💍 Anniversary</button>
               <button type="button" class="filter-chip" data-filter="inactive">Off <span id="filterCountInactive">0</span></button>
             </div>
           </div>
@@ -362,6 +471,9 @@
           <button type="button" class="device-btn" id="btnRefreshPreview" title="Refresh preview iframe">
             <span class="refresh-icon">🔄</span> Reload
           </button>
+          <button type="button" class="btn-preview-back-editor" id="btnPreviewBackToEditor" title="Back to Editor">
+            <span>🎛️</span> Edit
+          </button>
         </div>
       </div>
       <div class="preview-iframe-wrapper" id="previewIframeWrapper">
@@ -401,10 +513,6 @@
           <label style="font-size: 0.82rem; font-weight: 600; color: #cbd5e1;">Couple Website Slug</label>
           <input type="text" id="gateSlugInput" placeholder="e.g. alex-and-sam">
         </div>
-        <div class="input-group" style="margin-bottom: 8px;">
-          <label style="font-size: 0.82rem; font-weight: 600; color: #cbd5e1;">Admin PIN (4 Digits)</label>
-          <input type="password" id="gatePinInput" placeholder="1234" maxlength="8">
-        </div>
         <button type="button" class="btn-primary" id="btnGateUnlock" style="width: 100%; justify-content: center; padding: 10px; font-weight: 700; margin-top: 10px;">
           <span>Open My Design</span> <span>🔑</span>
         </button>
@@ -425,10 +533,6 @@
         <p style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 10px;">
           🛡️ Master Admin has full rights across all sites with zero demo banners.
         </p>
-        <div class="input-group" style="margin-bottom: 10px;">
-          <label style="font-size: 0.82rem; font-weight: 600; color: #cbd5e1;">Master Admin PIN</label>
-          <input type="password" id="gateAdminPinInput" placeholder="Enter admin PIN (default: admin1234)">
-        </div>
         <div class="input-group" style="margin-bottom: 8px;">
           <label style="font-size: 0.82rem; font-weight: 600; color: #cbd5e1;">Target Site Slug</label>
           <input type="text" id="gateAdminSlugInput" placeholder="demo (or any couple slug)" value="demo">
@@ -460,86 +564,99 @@
 
   <!-- ONBOARDING / NEW PROJECT PROMPT MODAL -->
   <div class="modal-backdrop hidden" id="builderNewProjectModal" style="z-index: 10080;">
-    <div class="modal-box" style="max-width: 500px; text-align: left; padding: 24px; border: 1px solid rgba(244, 63, 94, 0.4); box-shadow: 0 25px 60px -15px rgba(0,0,0,0.8), 0 0 40px -10px rgba(244,63,94,0.25);">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
+    <div class="modal-box new-project-modal-box">
+      <div class="np-modal-header">
         <div>
-          <h3 style="margin: 0 0 4px 0; font-size: 1.25rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
-            <span>💖</span> Start Your Couple Website
+          <h3 class="np-modal-title">
+            <span class="np-title-icon">💖</span> Create Couple Website
           </h3>
-          <p style="margin: 0; font-size: 0.82rem; color: #94a3b8;" id="newProjectModalSubtitle">
-            You don't have any websites yet. How would you like to start?
+          <p class="np-modal-subtitle" id="newProjectModalSubtitle">
+            Choose templates or start clean from scratch:
           </p>
         </div>
-        <button type="button" id="btnCloseNewProjectModal" style="background: transparent; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer; padding: 2px 6px;">✕</button>
+        <button type="button" id="btnCloseNewProjectModal" class="np-modal-close" aria-label="Close modal">✕</button>
       </div>
 
       <!-- 1. Start Option -->
-      <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #cbd5e1; margin-bottom: 8px;">1. Choose Setup Style</label>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
-        <div class="project-mode-card active" id="modeCardScratch" style="cursor: pointer; padding: 12px; border-radius: 8px; border: 2px solid var(--primary, #f43f5e); background: rgba(244, 63, 94, 0.12); transition: all 0.2s;">
-          <div style="font-size: 1.2rem; margin-bottom: 4px;">✨</div>
-          <div style="font-weight: 700; font-size: 0.88rem; color: #fff; margin-bottom: 2px;">Blank Canvas</div>
-          <div style="font-size: 0.74rem; color: #fda4af;">Clean slate (0 widgets, no music). Add sections exactly as you want.</div>
-        </div>
-        <div class="project-mode-card" id="modeCardTemplate" style="cursor: pointer; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.03); transition: all 0.2s;">
-          <div style="font-size: 1.2rem; margin-bottom: 4px;">🎨</div>
-          <div style="font-weight: 700; font-size: 0.88rem; color: #fff; margin-bottom: 2px;">Use Templates</div>
-          <div style="font-size: 0.74rem; color: #94a3b8;">Pre-built romantic layouts with timeline, audio letter & games.</div>
+      <div class="np-section">
+        <label class="np-section-label">1. Choose Setup Style</label>
+        <div class="np-mode-grid">
+          <div class="project-mode-card active" id="modeCardScratch">
+            <div class="mode-card-header">
+              <span class="mode-card-icon">✨</span>
+              <span class="mode-card-title">Blank Canvas</span>
+            </div>
+            <p class="mode-card-desc">Clean slate (0 widgets). Add sections exactly as you want.</p>
+          </div>
+          <div class="project-mode-card" id="modeCardTemplate">
+            <div class="mode-card-header">
+              <span class="mode-card-icon">🎨</span>
+              <span class="mode-card-title">Use Templates</span>
+            </div>
+            <p class="mode-card-desc">Pre-built romantic layouts with timeline, audio letter & games.</p>
+          </div>
         </div>
       </div>
 
       <!-- 1b. Preset Selection for Template Mode -->
-      <div id="newProjectPresetPickerWrap" style="margin-bottom: 14px; display: none;">
-        <label style="display: block; font-size: 0.78rem; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">Select Starting Template:</label>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;" id="npPresetChips">
-          <button type="button" class="np-preset-chip active" data-preset="blank" style="padding: 7px 10px; border-radius: 6px; border: 1px solid #f43f5e; background: rgba(244, 63, 94, 0.15); color: #fff; font-size: 0.78rem; font-weight: 600; text-align: left; cursor: pointer;">
-            ✨ Blank (0 Widgets)
+      <div id="newProjectPresetPickerWrap" class="np-preset-wrap" style="display: none;">
+        <label class="np-preset-label">Select Starting Template:</label>
+        <div class="np-preset-grid" id="npPresetChips">
+          <button type="button" class="np-preset-chip active" data-preset="blank">
+            <span class="chip-icon">✨</span> Blank (0 Sections)
           </button>
-          <button type="button" class="np-preset-chip" data-preset="storyteller" style="padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: #cbd5e1; font-size: 0.78rem; text-align: left; cursor: pointer;">
-            📖 Storyteller (Travels)
+          <button type="button" class="np-preset-chip" data-preset="birthday">
+            <span class="chip-icon">🎂</span> Birthday Bash
           </button>
-          <button type="button" class="np-preset-chip" data-preset="playful" style="padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: #cbd5e1; font-size: 0.78rem; text-align: left; cursor: pointer;">
-            🎮 Playful (Games & Coupons)
+          <button type="button" class="np-preset-chip" data-preset="valentine">
+            <span class="chip-icon">💝</span> Valentine Romance
           </button>
-          <button type="button" class="np-preset-chip" data-preset="complete" style="padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: #cbd5e1; font-size: 0.78rem; text-align: left; cursor: pointer;">
-            💖 Complete VIP (All 13)
+          <button type="button" class="np-preset-chip" data-preset="anniversary">
+            <span class="chip-icon">💍</span> Anniversary Odyssey
+          </button>
+          <button type="button" class="np-preset-chip" data-preset="storyteller">
+            <span class="chip-icon">📖</span> Storyteller (Travels)
+          </button>
+          <button type="button" class="np-preset-chip" data-preset="playful">
+            <span class="chip-icon">🎮</span> Playful (Games & Fun)
+          </button>
+          <button type="button" class="np-preset-chip full-width" data-preset="complete">
+            <span class="chip-icon">💖</span> Complete VIP (All Modules)
           </button>
         </div>
       </div>
 
       <!-- 2. Couple Names & Info -->
-      <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #cbd5e1; margin-bottom: 8px;">2. Couple Information</label>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-        <div class="input-group">
-          <label style="font-size: 0.78rem; color: #94a3b8;">Partner 1 (You)</label>
-          <input type="text" id="npPartner1" placeholder="e.g., Alex" required>
-        </div>
-        <div class="input-group">
-          <label style="font-size: 0.78rem; color: #94a3b8;">Partner 2 (Sweetheart)</label>
-          <input type="text" id="npPartner2" placeholder="e.g., Sam" required>
+      <div class="np-section">
+        <label class="np-section-label">2. Couple Information</label>
+        <div class="np-couple-grid">
+          <div class="np-input-group">
+            <label class="np-input-label" for="npPartner1">Partner 1 (You)</label>
+            <input type="text" id="npPartner1" class="np-input" placeholder="e.g., Alex" required>
+          </div>
+          <div class="np-input-group">
+            <label class="np-input-label" for="npPartner2">Partner 2 (Sweetheart)</label>
+            <input type="text" id="npPartner2" class="np-input" placeholder="e.g., Sam" required>
+          </div>
         </div>
       </div>
 
-      <div class="input-group" style="margin-bottom: 10px;">
-        <label style="font-size: 0.78rem; color: #94a3b8;">Website URL Slug</label>
-        <div style="display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; overflow: hidden;">
-          <span style="padding: 0 10px; font-size: 0.78rem; color: #fda4af; opacity: 0.8;">/sites/</span>
-          <input type="text" id="npSlug" placeholder="alex-and-sam" style="border: none; background: transparent; padding: 8px 10px; color: #fff; width: 100%;">
+      <!-- 3. Website URL Slug -->
+      <div class="np-section">
+        <label class="np-section-label" for="npSlug">3. Website URL</label>
+        <div class="np-slug-box">
+          <span class="np-slug-prefix">/sites/</span>
+          <input type="text" id="npSlug" class="np-slug-input" placeholder="alex-and-sam" autocomplete="off" spellcheck="false">
         </div>
-        <div id="npSlugFeedback" style="font-size: 0.72rem; color: #94a3b8; margin-top: 4px;">Enter lowercase letters, numbers, or dashes</div>
+        <div id="npSlugFeedback" class="np-slug-feedback">Enter lowercase letters, numbers, or dashes</div>
       </div>
 
-      <div class="input-group" style="margin-bottom: 16px;">
-        <label style="font-size: 0.78rem; color: #94a3b8;">Admin PIN (4 Digits)</label>
-        <input type="password" id="npPin" placeholder="1234" value="1234" maxlength="8">
-      </div>
+      <div id="npErrorMsg" class="np-error-msg" style="display: none;"></div>
 
-      <div id="npErrorMsg" style="color: #ef4444; font-size: 0.8rem; margin-bottom: 10px; display: none;"></div>
-
-      <button type="button" class="btn-primary" id="btnCreateProjectSubmit" style="width: 100%; justify-content: center; padding: 12px; font-size: 0.95rem; font-weight: 700; background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);">
+      <button type="button" class="btn-primary np-submit-btn" id="btnCreateProjectSubmit">
         <span>🚀 Create Website & Launch Studio</span>
       </button>
-      <button type="button" id="btnExploreDemoPreview" style="background: none; border: none; color: #94a3b8; font-size: 0.8rem; text-decoration: underline; cursor: pointer; margin-top: 10px; width: 100%; text-align: center;">
+      <button type="button" id="btnExploreDemoPreview" class="np-explore-link">
         👀 Or explore demo preview first
       </button>
     </div>
@@ -553,13 +670,16 @@
         <p id="designPickerSubtitle">Select a design to edit, or create a new one</p>
       </div>
       <div class="design-picker-grid" id="designPickerGrid">
-        <!-- Cards injected by JS -->
+        <div class="dp-loading-card" id="dpLoadingCard">
+          <div class="dp-spinner"></div>
+          <p>Fetching your couple websites...</p>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- BUILDER AUTH LOGIN / REGISTER MODAL -->
-  <div class="modal-backdrop hidden" id="builderAuthModal" style="z-index: 10090; backdrop-filter: blur(8px); background: rgba(15, 23, 42, 0.85);">
+  <div class="modal-backdrop hidden" id="builderAuthModal" style="z-index: 10200; backdrop-filter: blur(8px); background: rgba(15, 23, 42, 0.85);">
     <div class="modal-box" style="max-width: 400px; width: 90%; background: #1e293b; border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 26px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); color: #fff;">
       <div style="text-align: center; margin-bottom: 18px;">
         <span style="font-size: 2rem; display: block; margin-bottom: 4px;">💍</span>
@@ -590,7 +710,7 @@
   </div>
 
   <!-- BUILDER FORBIDDEN / ACCESS DENIED MODAL -->
-  <div class="modal-backdrop hidden" id="builderForbiddenModal" style="z-index: 10090; backdrop-filter: blur(8px); background: rgba(15, 23, 42, 0.85);">
+  <div class="modal-backdrop hidden" id="builderForbiddenModal" style="z-index: 10200; backdrop-filter: blur(8px); background: rgba(15, 23, 42, 0.85);">
     <div class="modal-box" style="max-width: 420px; width: 90%; background: #1e293b; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 16px; padding: 26px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); color: #fff; text-align: center;">
       <span style="font-size: 2.4rem; display: block; margin-bottom: 8px;">🔒</span>
       <h3 style="margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 700; color: #fca5a5;">Access Denied</h3>
@@ -678,13 +798,14 @@
       </div>
 
       <div class="add-section-filter-chips" id="addSectionFilterChips">
-        <button type="button" class="add-sec-filter-chip active" data-cat="all">All (<span id="addSecCountAll">25</span>)</button>
+        <button type="button" class="add-sec-filter-chip active" data-cat="all">All (<span id="addSecCountAll">26</span>)</button>
         <button type="button" class="add-sec-filter-chip" data-cat="story">📖 Story</button>
         <button type="button" class="add-sec-filter-chip" data-cat="interactive">⚡ Interactive</button>
         <button type="button" class="add-sec-filter-chip" data-cat="games">🎮 Games</button>
         <button type="button" class="add-sec-filter-chip" data-cat="gallery">📸 Gallery</button>
         <button type="button" class="add-sec-filter-chip" data-cat="letter">💌 Letter</button>
         <button type="button" class="add-sec-filter-chip" data-cat="birthday">🎂 Birthday</button>
+        <button type="button" class="add-sec-filter-chip" data-cat="valentine">💝 Valentine</button>
         <button type="button" class="add-sec-filter-chip" data-cat="anniversary">💍 Anniversary</button>
       </div>
 
@@ -794,13 +915,6 @@
           </div>
         </div>
 
-        <!-- Admin Passcode Field -->
-        <div class="input-group" style="background: rgba(225,29,72,0.04); border: 1px solid rgba(225,29,72,0.2); border-radius: 8px; padding: 12px;">
-          <label style="font-size: 12px; font-weight: 700; color: var(--primary);">Admin PIN Verification 🔒</label>
-          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Theme management requires couple administrator PIN.</div>
-          <input type="password" id="customThemeAdminPin" placeholder="Enter 4-digit Admin PIN" maxlength="8" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px;">
-        </div>
-
         <div id="customThemeStatus" style="font-size: 12px; display: none;"></div>
       </div>
 
@@ -841,6 +955,7 @@
   <script src="/core/templates/bucket_list.template.js"></script>
   <script src="/core/templates/audio_capsule.template.js"></script>
   <script src="/core/templates/milestone_odyssey.template.js"></script>
+  <script src="/core/templates/valentine_scratch.template.js"></script>
   <script src="/core/widget-templates.js"></script>
 
   <!-- Modular Widget Inspectors -->
@@ -869,9 +984,10 @@
   <script src="/builder/inspectors/bucket_list.inspector.js"></script>
   <script src="/builder/inspectors/audio_capsule.inspector.js"></script>
   <script src="/builder/inspectors/milestone_odyssey.inspector.js"></script>
+  <script src="/builder/inspectors/valentine_scratch.inspector.js"></script>
 
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
-  <script src="/builder/builder.js?v=2.3.1"></script>
+  <script src="/builder/builder.js?v=2.5.4"></script>
 </body>
 </html>

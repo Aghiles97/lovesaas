@@ -352,7 +352,7 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
       if (btnTestVoicePlay) {
         btnTestVoicePlay.onclick = () => {
           if (previewIframe && previewIframe.contentWindow) {
-            previewIframe.contentWindow.postMessage({ type: "HERO_VOICE_TOGGLE" }, "*");
+            previewIframe.contentWindow.postMessage({ type: "HERO_VOICE_TOGGLE" }, window.location.origin);
           }
         };
       }
@@ -390,7 +390,7 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
               previewIframe.contentWindow.postMessage({
                 type: "SET_SONG",
                 song: { src: e.target.value, title: title || "Romantic Soundtrack", artist: artist || "" }
-              }, "*");
+              }, window.location.origin);
             }
           }
         };
@@ -407,7 +407,7 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
             previewIframe.contentWindow.postMessage({
               type: "SET_SONG",
               song: { src: h.musicTrackUrl, title: h.musicTrackTitle || "Custom Soundtrack", artist: "Custom Track ✨" }
-            }, "*");
+            }, window.location.origin);
           }
         };
       }
@@ -449,7 +449,7 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
               previewIframe.contentWindow.postMessage({
                 type: "SET_SONG",
                 song: { src: publicUrl, title: customTitle, artist: "Custom Track ✨" }
-              }, "*");
+              }, window.location.origin);
             }
           } catch (err) {
             if (musicUploadStatus) {
@@ -479,7 +479,7 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
                   previewIframe.contentWindow.postMessage({
                     type: "SET_SONG",
                     song: { src: url, title: customTitle, artist: "Custom Track ✨" }
-                  }, "*");
+                  }, window.location.origin);
                 }
               }
             });
@@ -490,7 +490,7 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
       if (btnTestMusicPlay) {
         btnTestMusicPlay.onclick = () => {
           if (previewIframe && previewIframe.contentWindow) {
-            previewIframe.contentWindow.postMessage({ type: "MUSIC_TOGGLE" }, "*");
+            previewIframe.contentWindow.postMessage({ type: "MUSIC_TOGGLE" }, window.location.origin);
           }
         };
       }
@@ -518,7 +518,7 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
               onSelect: (url) => {
                 state.customBgUrl = url;
                 if (previewIframe && previewIframe.contentWindow) {
-                  previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, "*");
+                  previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, window.location.origin);
                 }
                 debouncedLiveUpdate(true);
                 debouncedAutoSaveLayout();
@@ -538,7 +538,7 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
             if (uploaded && uploaded.url) {
               state.customBgUrl = uploaded.url;
               if (previewIframe && previewIframe.contentWindow) {
-                previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, "*");
+                previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, window.location.origin);
               }
               debouncedLiveUpdate(true);
               debouncedAutoSaveLayout();
@@ -554,7 +554,7 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
         inputHeroBg.onchange = (e) => {
           state.customBgUrl = e.target.value.trim();
           if (previewIframe && previewIframe.contentWindow) {
-            previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, "*");
+            previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, window.location.origin);
           }
           debouncedLiveUpdate(true);
           debouncedAutoSaveLayout();

@@ -23,7 +23,10 @@ const DATA_FILE = path.join(DATA_DIR, "couple_saas.json");
 
 let isPgConnected = false;
 
+let localStoreCache = null;
+
 function loadLocalStore() {
+  if (localStoreCache) return localStoreCache;
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   let data = { tenants: {}, site_configs: {}, users: {}, user_sessions: {}, orders: {} };
   if (fs.existsSync(DATA_FILE)) {
@@ -36,10 +39,12 @@ function loadLocalStore() {
   data.users = data.users || {};
   data.user_sessions = data.user_sessions || {};
   data.orders = data.orders || {};
-  return data;
+  localStoreCache = data;
+  return localStoreCache;
 }
 
 function saveLocalStore(store) {
+  localStoreCache = store;
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   const tmp = DATA_FILE + ".tmp";
   fs.writeFileSync(tmp, JSON.stringify(store, null, 2), "utf8");
@@ -79,6 +84,13 @@ const DEFAULT_PRESETS = {
     "party_jukebox",
     "letter"
   ],
+  valentine: [
+    "hero",
+    "valentine_scratch",
+    "love_meter",
+    "reasons",
+    "letter"
+  ],
   storyteller: ["hero", "timeline", "map", "memories", "boarding_pass", "letter"],
   playful: ["hero", "love_meter", "reasons", "truth_dare", "spinner", "coupons", "quiz", "playful"],
   complete: [
@@ -106,6 +118,7 @@ const DEFAULT_PRESETS = {
     "boarding_pass",
     "quiz",
     "letter",
+    "valentine_scratch",
     "playful"
   ],
   minimal_gallery: ["hero", "memories", "letter"]
@@ -686,31 +699,31 @@ const DEFAULT_SECTIONS_DATA = {
         id: "mem-1",
         title: "Where We Met in China 🇨🇳 (Sept 17)",
         desc: "The magical moment our eyes first met on Sept 17. 12 unforgettable days filled with sweet smiles, late-night walks, and dim sum breakfasts!",
-        img: "images/mem-1.jpg"
+        img: "/uploads/demo/mem-1.jpg"
       },
       {
         id: "mem-2",
         title: "Reunion in China ✈️ (Dec 10)",
         desc: "Counting every single hour in Algeria until Dec 10, when I finally landed back in China and held you tight in my arms at the airport.",
-        img: "images/mem-2.jpg"
+        img: "/uploads/demo/mem-2.jpg"
       },
       {
         id: "mem-3",
         title: "Dream Vacation in Bali 🌴 (Jan 19)",
         desc: "Golden tropical beach sunsets, holding hands along the warm sand, drinking fresh coconuts, and falling more in lof every second.",
-        img: "images/mem-3.jpg"
+        img: "/uploads/demo/mem-3.jpg"
       },
       {
         id: "mem-4",
         title: "At Your Home in Jakarta 🇮🇩 (Jan 26 - Feb 7)",
         desc: "Staying at your home in Jakarta, meeting your lovely family, tasting home-cooked meals, and infinite morning cuddles with you.",
-        img: "images/mem-4.jpg"
+        img: "/uploads/demo/mem-4.jpg"
       },
       {
         id: "mem-5",
         title: "Spring in China Together 🌸 (Apr 7 - May 25)",
         desc: "Nearly two whole months traveling across China hand-in-hand—spring blossoms, cozy cafe dates, and making memories to last forever.",
-        img: "images/mem-5.jpg"
+        img: "/uploads/demo/mem-5.jpg"
       }
     ]
   },
@@ -1101,6 +1114,17 @@ const DEFAULT_SECTIONS_DATA = {
       { id: "mo5", date: "September 14, 2024", title: "The Proposal", location: "Tuscany Sunset Hills", icon: "💖", desc: "Kneeling on the cobblestones as golden hour washed over the vineyards. She said YES!", imgUrl: "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=600&q=80" },
       { id: "mo6", date: "Present Day", title: "The Infinity Chapter", location: "Everywhere With You", icon: "♾️", desc: "Still writing our favorite adventure every single sunrise.", imgUrl: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=600&q=80" }
     ]
+  },
+  valentine_scratch: {
+    tag: "Secret Valentine 💌",
+    title: "Scratch to Reveal Your Date 💝",
+    desc: "Use your finger or mouse to scratch the card and reveal your secret date itinerary!",
+    location: "A Magical Secret Rooftop ✨",
+    date: "February 14, 2026",
+    time: "7:30 PM",
+    dressCode: "Dress to impress & warm coat 💃🕺",
+    message: "Every single day with you is Valentine's Day. I can't wait for our special night together! ❤️",
+    overlayColor: "#e84393"
   }
 };
 
@@ -1119,7 +1143,7 @@ async function initDb() {
         slug VARCHAR(64) UNIQUE NOT NULL,
         partner1_name VARCHAR(128),
         partner2_name VARCHAR(128),
-        admin_pin VARCHAR(64) NOT NULL,
+        admin_pin VARCHAR(64),
         customer_email VARCHAR(255),
         is_purchased BOOLEAN DEFAULT true,
         plan VARCHAR(32) DEFAULT 'vip',
@@ -1189,28 +1213,28 @@ async function initDb() {
       slug: "demo",
       partner1: "Alex",
       partner2: "Sam",
-      adminPin: "1234",
       preset: "complete",
       plan: "vip",
       isPurchased: true
     });
-    console.log("✓ Seeded default tenant: 'demo' (PIN: 1234)");
+    console.log("✓ Seeded default tenant: 'demo'");
   }
 
   // Seed default admin user: admin@admin.com
   const existingAdmin = await findUserByEmail("admin@admin.com");
   if (!existingAdmin) {
+    const adminPassword = process.env.ADMIN_PASSWORD || crypto.randomBytes(16).toString("hex");
     await createUser({
       email: "admin@admin.com",
-      password: process.env.ADMIN_PIN || "admin1234",
+      password: adminPassword,
       name: "Master Admin",
       role: "admin"
     });
-    console.log("✓ Seeded default admin user: 'admin@admin.com' (Password: admin1234)");
+    console.log(`✓ Seeded default admin user: 'admin@admin.com' (Password: ${process.env.ADMIN_PASSWORD ? "configured in env" : adminPassword})`);
   }
 }
 
-async function createTenant({ slug, partner1, partner2, adminPin, preset = "blank", customerEmail = null, plan = "vip", isPurchased = true, userId = null, anniversaryDate = null, subtitle = null }) {
+async function createTenant({ slug, partner1, partner2, preset = "blank", customerEmail = null, plan = "vip", isPurchased = true, userId = null, anniversaryDate = null, subtitle = null }) {
   const id = crypto.randomUUID();
   const cleanSlug = slug.toLowerCase().trim();
   let layout = DEFAULT_PRESETS[preset] || DEFAULT_PRESETS.complete;
@@ -1224,6 +1248,14 @@ async function createTenant({ slug, partner1, partner2, adminPin, preset = "blan
       initialSections.hero.musicTrackTitle = "";
       initialSections.hero.voiceAudio = "";
     }
+    if (initialSections.memories) initialSections.memories.items = [];
+    if (initialSections.timeline) initialSections.timeline.chapters = [];
+    if (initialSections.reasons) initialSections.reasons.items = [];
+    if (initialSections.coupons) initialSections.coupons.items = [];
+    if (initialSections.audio_capsule) initialSections.audio_capsule.memos = [];
+    if (initialSections.milestone_odyssey) initialSections.milestone_odyssey.milestones = [];
+    if (initialSections.bucket_list) initialSections.bucket_list.items = [];
+    if (initialSections.map) initialSections.map.stops = [];
   }
   initialSections.hero.partner1 = partner1;
   initialSections.hero.partner2 = partner2;
@@ -1246,9 +1278,9 @@ async function createTenant({ slug, partner1, partner2, adminPin, preset = "blan
     try {
       await client.query("BEGIN");
       await client.query(
-        `INSERT INTO tenants (id, slug, partner1_name, partner2_name, admin_pin, customer_email, is_purchased, plan, auth_token, user_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-        [id, cleanSlug, partner1, partner2, adminPin, customerEmail, isPurchased, plan, authToken, userId]
+        `INSERT INTO tenants (id, slug, partner1_name, partner2_name, customer_email, is_purchased, plan, auth_token, user_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [id, cleanSlug, partner1, partner2, customerEmail, isPurchased, plan, authToken, userId]
       );
 
       await client.query(
@@ -1270,7 +1302,6 @@ async function createTenant({ slug, partner1, partner2, adminPin, preset = "blan
       slug: cleanSlug,
       partner1_name: partner1,
       partner2_name: partner2,
-      admin_pin: adminPin,
       customer_email: customerEmail,
       is_purchased: isPurchased,
       plan,
@@ -1312,12 +1343,6 @@ function enrichSectionsData(rawSections, partner1, partner2) {
   for (const [key, val] of Object.entries(rawSections)) {
     if (val && typeof val === "object" && !Array.isArray(val)) {
       merged[key] = { ...(merged[key] || {}), ...val };
-      if (key === "timeline" && Array.isArray(val.chapters) && val.chapters.length === 0) {
-        merged.timeline.chapters = DEFAULT_SECTIONS_DATA.timeline.chapters;
-      }
-      if (key === "memories" && Array.isArray(val.items) && val.items.length === 0) {
-        merged.memories.items = DEFAULT_SECTIONS_DATA.memories.items;
-      }
     } else if (Array.isArray(val) && val.length > 0) {
       merged[key] = val;
     } else if (val !== undefined && val !== null) {
@@ -1358,7 +1383,7 @@ async function getTenantBySlug(slug) {
 
   if (isPgConnected) {
     const query = `
-      SELECT t.id, t.slug, t.partner1_name, t.partner2_name, t.admin_pin, t.created_at,
+      SELECT t.id, t.slug, t.partner1_name, t.partner2_name, t.created_at,
              t.customer_email, t.is_purchased, t.plan, t.auth_token, t.user_id,
              c.template_preset, c.theme_id, c.layout_order, c.sections_data, c.updated_at
       FROM tenants t
@@ -1375,7 +1400,6 @@ async function getTenantBySlug(slug) {
       slug: row.slug,
       partner1: row.partner1_name,
       partner2: row.partner2_name,
-      adminPin: row.admin_pin,
       customerEmail: row.customer_email,
       isPurchased: row.is_purchased !== false,
       plan: row.plan || "vip",
@@ -1400,7 +1424,6 @@ async function getTenantBySlug(slug) {
     slug: t.slug,
     partner1: t.partner1_name,
     partner2: t.partner2_name,
-    adminPin: t.admin_pin,
     customerEmail: t.customer_email,
     isPurchased: t.is_purchased !== false,
     plan: t.plan || "vip",
@@ -1415,14 +1438,12 @@ async function getTenantBySlug(slug) {
   };
 }
 
-const MASTER_ADMIN_PIN = process.env.ADMIN_PIN || "admin1234";
-const MASTER_ADMIN_TOKEN = process.env.ADMIN_TOKEN || "master-admin-token-lovesaas";
+const MASTER_ADMIN_TOKEN = process.env.ADMIN_TOKEN || "";
 
-async function verifyTenantAccess({ slug, pin, token }) {
-  const cleanPin = pin ? String(pin).trim() : "";
+async function verifyTenantAccess({ slug, token }) {
   const cleanToken = token ? String(token).trim() : "";
 
-  if (cleanPin === MASTER_ADMIN_PIN || cleanToken === MASTER_ADMIN_TOKEN || (slug === "admin" && cleanPin === MASTER_ADMIN_PIN)) {
+  if (MASTER_ADMIN_TOKEN && cleanToken === MASTER_ADMIN_TOKEN) {
     const targetSlug = (slug && slug !== "admin") ? slug : "demo";
     const targetTenant = await getTenantBySlug(targetSlug);
     return {
@@ -1440,17 +1461,12 @@ async function verifyTenantAccess({ slug, pin, token }) {
   const tenant = await getTenantBySlug(slug);
   if (!tenant) return { authorized: false, error: "Site not found" };
 
-  const pinMatches = cleanPin && String(tenant.adminPin).trim() === cleanPin;
-  const tokenMatches = cleanToken && tenant.authToken && String(tenant.authToken).trim() === cleanToken;
-
   if (slug === "demo") {
-    if (pinMatches || tokenMatches) {
-      return { authorized: true, role: "user", isPurchased: true, tenant, isDemo: true };
-    }
-    return { authorized: true, role: "visitor", isPurchased: false, tenant, isDemo: true };
+    return { authorized: true, role: "user", isPurchased: true, tenant, isDemo: true };
   }
 
-  if (pinMatches || tokenMatches) {
+  const tokenMatches = cleanToken && tenant.authToken && String(tenant.authToken).trim() === cleanToken;
+  if (tokenMatches) {
     const isPurchased = tenant.isPurchased !== false;
     return {
       authorized: true,
@@ -1460,26 +1476,41 @@ async function verifyTenantAccess({ slug, pin, token }) {
       tenant
     };
   }
-  return { authorized: false, error: "Invalid PIN or token" };
+
+  if (cleanToken) {
+    const session = await validateSession(cleanToken);
+    if (session && session.user) {
+      const isOwner = session.user.role === "admin" ||
+                      session.user.id === tenant.userId ||
+                      (tenant.customerEmail && session.user.email && tenant.customerEmail.toLowerCase() === session.user.email.toLowerCase());
+      if (isOwner) {
+        return {
+          authorized: true,
+          role: session.user.role === "admin" ? "admin" : "user",
+          isAdmin: session.user.role === "admin",
+          isPurchased: true,
+          isDemo: false,
+          tenant
+        };
+      }
+    }
+  }
+
+  return { authorized: false, error: "Invalid credentials" };
 }
 
-async function updateSiteConfig(slug, { templatePreset, themeId, layoutOrder, sectionsData, adminPin, newAdminPin, authToken }) {
+async function updateSiteConfig(slug, { templatePreset, themeId, layoutOrder, sectionsData, authToken }) {
   const cleanSlug = slug.toLowerCase().trim();
   const tenant = await getTenantBySlug(cleanSlug);
   if (!tenant) throw new Error("Tenant not found");
 
-  const cleanPin = adminPin ? String(adminPin).trim() : "";
   const cleanToken = authToken ? String(authToken).trim() : "";
-  const isMasterAdmin = cleanPin === MASTER_ADMIN_PIN || cleanToken === MASTER_ADMIN_TOKEN;
+  const isMasterAdmin = Boolean(MASTER_ADMIN_TOKEN && cleanToken === MASTER_ADMIN_TOKEN);
 
-  if (!isMasterAdmin) {
-    if (cleanSlug === "demo") {
-      throw new Error("Purchase now to customize and publish changes");
-    }
-    const pinValid = cleanPin && String(tenant.adminPin).trim() === cleanPin;
+  if (!isMasterAdmin && cleanSlug !== "demo") {
     const tokenValid = cleanToken && tenant.authToken && String(tenant.authToken).trim() === cleanToken;
-    if (!pinValid && !tokenValid) {
-      throw new Error("Unauthorized PIN");
+    if (!tokenValid) {
+      throw new Error("Unauthorized token");
     }
     if (tenant.isPurchased === false) {
       throw new Error("Purchase now to customize and publish changes");
@@ -1499,13 +1530,6 @@ async function updateSiteConfig(slug, { templatePreset, themeId, layoutOrder, se
       [nextPreset, nextTheme, JSON.stringify(nextLayout), JSON.stringify(nextSections), tenant.id]
     );
 
-    if (newAdminPin && typeof newAdminPin === "string" && newAdminPin.trim()) {
-      await pool.query(
-        `UPDATE tenants SET admin_pin = $1 WHERE id = $2`,
-        [newAdminPin.trim(), tenant.id]
-      );
-    }
-
     if (sectionsData && sectionsData.hero) {
       const p1 = sectionsData.hero.partner1;
       const p2 = sectionsData.hero.partner2;
@@ -1516,8 +1540,10 @@ async function updateSiteConfig(slug, { templatePreset, themeId, layoutOrder, se
         );
       }
     }
-  } else {
-    const store = loadLocalStore();
+  }
+
+  const store = loadLocalStore();
+  if (store.site_configs) {
     store.site_configs[cleanSlug] = {
       tenant_id: tenant.id,
       template_preset: nextPreset,
@@ -1526,10 +1552,7 @@ async function updateSiteConfig(slug, { templatePreset, themeId, layoutOrder, se
       sections_data: nextSections,
       updated_at: new Date().toISOString()
     };
-    if (newAdminPin && typeof newAdminPin === "string" && newAdminPin.trim()) {
-      store.tenants[cleanSlug].admin_pin = newAdminPin.trim();
-    }
-    if (sectionsData && sectionsData.hero) {
+    if (sectionsData && sectionsData.hero && store.tenants && store.tenants[cleanSlug]) {
       if (sectionsData.hero.partner1) store.tenants[cleanSlug].partner1_name = sectionsData.hero.partner1;
       if (sectionsData.hero.partner2) store.tenants[cleanSlug].partner2_name = sectionsData.hero.partner2;
     }
@@ -1562,9 +1585,9 @@ async function listTenants() {
 async function createUser({ email, password, name = "", role = "user" }) {
   const cleanEmail = String(email).toLowerCase().trim();
   const id = crypto.randomUUID();
-  const { hash, salt } = auth.hashPassword(password);
+  const { hash, salt } = await auth.hashPassword(password);
   const now = new Date().toISOString();
-  const userRole = (cleanEmail === "admin@admin.com" || role === "admin") ? "admin" : "user";
+  const userRole = role === "admin" ? "admin" : "user";
 
   if (isPgConnected) {
     const res = await pool.query(
@@ -1622,14 +1645,14 @@ async function findUserByEmail(email) {
     const res = await pool.query(`SELECT id, email, name, role, password_hash, salt, created_at FROM users WHERE LOWER(email) = $1 LIMIT 1`, [cleanEmail]);
     if (!res.rows.length) return null;
     const row = res.rows[0];
-    const role = (cleanEmail === "admin@admin.com" || row.role === "admin") ? "admin" : (row.role || "user");
+    const role = row.role || "user";
     return { ...row, role };
   }
 
   const store = loadLocalStore();
   const u = Object.values(store.users).find(u => u.email.toLowerCase() === cleanEmail);
   if (!u) return null;
-  const role = (cleanEmail === "admin@admin.com" || u.role === "admin") ? "admin" : (u.role || "user");
+  const role = u.role || "user";
   return { ...u, role };
 }
 
@@ -1643,14 +1666,14 @@ async function findUserById(userId) {
     );
     if (!res.rows.length) return null;
     const row = res.rows[0];
-    const role = (row.email && row.email.toLowerCase() === "admin@admin.com") || row.role === "admin" ? "admin" : (row.role || "user");
+    const role = row.role || "user";
     return { id: row.id, email: row.email, name: row.name, role, createdAt: row.created_at };
   }
 
   const store = loadLocalStore();
   const u = store.users[userId];
   if (!u) return null;
-  const role = (u.email && u.email.toLowerCase() === "admin@admin.com") || u.role === "admin" ? "admin" : (u.role || "user");
+  const role = u.role || "user";
   return { id: u.id, email: u.email, name: u.name, role, createdAt: u.created_at };
 }
 
@@ -1659,13 +1682,13 @@ async function updateUserProfile(userId, { name, password }) {
 
   if (isPgConnected) {
     if (password) {
-      const { hash, salt } = auth.hashPassword(password);
+      const { hash, salt } = await auth.hashPassword(password);
       const res = await pool.query(
         `UPDATE users SET name = COALESCE($1, name), password_hash = $2, salt = $3 WHERE id = $4 RETURNING id, email, name, role, created_at`,
         [name || null, hash, salt, userId]
       );
       const row = res.rows[0];
-      const role = (row.email && row.email.toLowerCase() === "admin@admin.com") || row.role === "admin" ? "admin" : (row.role || "user");
+      const role = row.role || "user";
       return { ...row, role };
     } else {
       const res = await pool.query(
@@ -1673,7 +1696,7 @@ async function updateUserProfile(userId, { name, password }) {
         [name || null, userId]
       );
       const row = res.rows[0];
-      const role = (row.email && row.email.toLowerCase() === "admin@admin.com") || row.role === "admin" ? "admin" : (row.role || "user");
+      const role = row.role || "user";
       return { ...row, role };
     }
   }
@@ -1683,12 +1706,12 @@ async function updateUserProfile(userId, { name, password }) {
   if (!u) throw new Error("User not found");
   if (name) u.name = name;
   if (password) {
-    const { hash, salt } = auth.hashPassword(password);
+    const { hash, salt } = await auth.hashPassword(password);
     u.password_hash = hash;
     u.salt = salt;
   }
   saveLocalStore(store);
-  const role = (u.email && u.email.toLowerCase() === "admin@admin.com") || u.role === "admin" ? "admin" : (u.role || "user");
+  const role = u.role || "user";
   return { id: u.id, email: u.email, name: u.name, role, created_at: u.created_at };
 }
 
@@ -1735,7 +1758,7 @@ async function validateSession(token) {
     );
     if (!res.rows.length) return null;
     const row = res.rows[0];
-    const role = (row.email && row.email.toLowerCase() === "admin@admin.com") || row.role === "admin" ? "admin" : (row.role || "user");
+    const role = row.role || "user";
     return {
       token: row.token,
       user: { id: row.id, email: row.email, name: row.name, role, createdAt: row.created_at }
@@ -1752,7 +1775,7 @@ async function validateSession(token) {
   }
   const user = store.users[session.user_id];
   if (!user) return null;
-  const role = (user.email && user.email.toLowerCase() === "admin@admin.com") || user.role === "admin" ? "admin" : (user.role || "user");
+  const role = user.role || "user";
   return {
     token,
     user: { id: user.id, email: user.email, name: user.name, role, createdAt: user.created_at }
@@ -1864,19 +1887,19 @@ async function getUserDesigns(userId, customerEmail = null, isAdmin = false) {
 
   if (isPgConnected) {
     const query = isAdmin ? `
-      SELECT t.id, t.slug, t.partner1_name, t.partner2_name, t.admin_pin, t.plan,
+      SELECT t.id, t.slug, t.partner1_name, t.partner2_name, t.plan,
              t.auth_token, t.is_purchased, t.created_at,
              c.theme_id, c.template_preset, c.updated_at
       FROM tenants t
       LEFT JOIN site_configs c ON t.id = c.tenant_id
       ORDER BY t.created_at DESC
     ` : `
-      SELECT t.id, t.slug, t.partner1_name, t.partner2_name, t.admin_pin, t.plan,
+      SELECT t.id, t.slug, t.partner1_name, t.partner2_name, t.plan,
              t.auth_token, t.is_purchased, t.created_at,
              c.theme_id, c.template_preset, c.updated_at
       FROM tenants t
       LEFT JOIN site_configs c ON t.id = c.tenant_id
-      WHERE t.user_id = $1 ${cleanEmail ? "OR (t.customer_email IS NOT NULL AND LOWER(t.customer_email) = $2)" : ""}
+      WHERE t.user_id = $1 OR t.slug = 'demo' ${cleanEmail ? "OR (t.customer_email IS NOT NULL AND LOWER(t.customer_email) = $2)" : ""}
       ORDER BY t.created_at DESC
     `;
     const params = isAdmin ? [] : (cleanEmail ? [userId, cleanEmail] : [userId]);
@@ -1889,7 +1912,6 @@ async function getUserDesigns(userId, customerEmail = null, isAdmin = false) {
       plan: r.plan,
       themeId: r.theme_id || "romantic-rose",
       preset: r.template_preset || "complete",
-      adminPin: r.admin_pin,
       authToken: r.auth_token,
       isPurchased: r.is_purchased !== false,
       createdAt: r.created_at,
@@ -1901,7 +1923,7 @@ async function getUserDesigns(userId, customerEmail = null, isAdmin = false) {
 
   const store = loadLocalStore();
   const allTenants = Object.values(store.tenants);
-  const filtered = isAdmin ? allTenants : allTenants.filter(t => (userId && (t.user_id === userId || t.userId === userId)) || (cleanEmail && ((t.customer_email && t.customer_email.toLowerCase() === cleanEmail) || (t.customerEmail && t.customerEmail.toLowerCase() === cleanEmail))));
+  const filtered = isAdmin ? allTenants : allTenants.filter(t => t.slug === 'demo' || (userId && (t.user_id === userId || t.userId === userId)) || (cleanEmail && ((t.customer_email && t.customer_email.toLowerCase() === cleanEmail) || (t.customerEmail && t.customerEmail.toLowerCase() === cleanEmail))));
   return filtered
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .map(t => {
@@ -1914,7 +1936,6 @@ async function getUserDesigns(userId, customerEmail = null, isAdmin = false) {
         plan: t.plan,
         themeId: cfg.theme_id || "romantic-rose",
         preset: cfg.template_preset || "complete",
-        adminPin: t.admin_pin,
         authToken: t.auth_token,
         isPurchased: t.is_purchased !== false,
         createdAt: t.created_at,
@@ -1962,6 +1983,5 @@ module.exports = {
   getUserOrders,
   getUserDesigns,
   linkTenantToUser,
-  MASTER_ADMIN_PIN,
   MASTER_ADMIN_TOKEN
 };

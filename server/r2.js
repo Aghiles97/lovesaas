@@ -46,13 +46,30 @@ if (!fs.existsSync(LOCAL_UPLOADS_DIR)) {
 /**
  * Generate S3 Presigned Upload URL for Cloudflare R2 or local fallback
  */
-async function getUploadDestination(tenantSlug, filename, contentType = "image/jpeg") {
+async function getUploadDestination(tenantSlug, filename, contentType = "image/jpeg", authToken = "") {
   const ext = path.extname(filename) || ".jpg";
   const uniqueKey = `${tenantSlug}/${Date.now()}-${crypto.randomBytes(4).toString("hex")}${ext}`;
 
+  if (isR2Configured && s3Client) {
+    const uploadUrl = await getSignedUrl(s3Client, new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME,
+      Key: uniqueKey,
+      ContentType: contentType
+    }), { expiresIn: 900 });
+
+    const publicUrl = R2_PUBLIC_DOMAIN ? `${R2_PUBLIC_DOMAIN}/${uniqueKey}` : `/uploads/${uniqueKey}`;
+    return {
+      mode: "r2",
+      uploadUrl,
+      publicUrl,
+      key: uniqueKey
+    };
+  }
+
+  const tokenParam = authToken ? `&token=${encodeURIComponent(authToken)}` : "";
   return {
     mode: "local",
-    uploadUrl: `/api/upload/local?key=${encodeURIComponent(uniqueKey)}`,
+    uploadUrl: `/api/upload/local?slug=${encodeURIComponent(tenantSlug)}&key=${encodeURIComponent(uniqueKey)}${tokenParam}`,
     publicUrl: `/uploads/${uniqueKey}`,
     key: uniqueKey
   };
@@ -75,35 +92,44 @@ async function uploadBufferToR2(key, buffer, contentType = "image/jpeg") {
 }
 
 function saveLocalFile(key, buffer) {
-  const fullPath = path.join(LOCAL_UPLOADS_DIR, key);
+  const safeKey = path.normalize(key).replace(/^(\.\.[\/\\])+/, "");
+  const fullPath = path.resolve(LOCAL_UPLOADS_DIR, safeKey);
+  if (!fullPath.startsWith(LOCAL_UPLOADS_DIR + path.sep)) throw new Error("Path traversal detected");
   const dir = path.dirname(fullPath);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(fullPath, buffer);
-  return `/uploads/${key}`;
+  return `/uploads/${safeKey}`;
 }
 
 async function listTenantUploads(tenantSlug) {
   if (!isR2Configured || !s3Client) return [];
   const list = [];
+  let isTruncated = true;
+  let continuationToken = undefined;
   try {
-    const resp = await s3Client.send(new ListObjectsV2Command({
-      Bucket: R2_BUCKET_NAME,
-      Prefix: `${tenantSlug}/`
-    }));
-    if (resp.Contents) {
-      for (const item of resp.Contents) {
-        const filename = path.basename(item.Key);
-        if (!filename || filename.startsWith(".")) continue;
-        const isAudio = /\.(mp3|m4a|m4r|wav|ogg|aac)$/i.test(filename);
-        list.push({
-          key: item.Key,
-          filename,
-          size: item.Size || 0,
-          mtime: item.LastModified || new Date(),
-          isAudio,
-          url: `/uploads/${item.Key}`
-        });
+    while (isTruncated) {
+      const resp = await s3Client.send(new ListObjectsV2Command({
+        Bucket: R2_BUCKET_NAME,
+        Prefix: `${tenantSlug}/`,
+        ContinuationToken: continuationToken
+      }));
+      if (resp.Contents) {
+        for (const item of resp.Contents) {
+          const filename = path.basename(item.Key);
+          if (!filename || filename.startsWith(".") || (item.Size || 0) < 200) continue;
+          const isAudio = /\.(mp3|m4a|m4r|wav|ogg|aac)$/i.test(filename);
+          list.push({
+            key: item.Key,
+            filename,
+            size: item.Size || 0,
+            mtime: item.LastModified || new Date(),
+            isAudio,
+            url: `/uploads/${item.Key}`
+          });
+        }
       }
+      isTruncated = Boolean(resp.IsTruncated);
+      continuationToken = resp.NextContinuationToken;
     }
   } catch (err) {
     console.warn("R2 list error:", err.message);
@@ -112,9 +138,35 @@ async function listTenantUploads(tenantSlug) {
 }
 
 async function deleteTenantUpload(tenantSlug, filename) {
-  const safeFilename = path.basename(filename);
-  const key = filename.includes("/") ? filename : `${tenantSlug}/${safeFilename}`;
-  return deleteR2Object(key);
+  if (!filename) return false;
+  const clean = String(filename)
+    .replace(/^https?:\/\/[^\/]+/, "")
+    .replace(/^\/+/, "")
+    .replace(/^uploads\//, "")
+    .replace(/^\/+/, "");
+  const safeFilename = path.basename(clean);
+  const candidates = new Set([
+    clean,
+    `${tenantSlug}/${safeFilename}`,
+    `demo/${safeFilename}`,
+    `images/${safeFilename}`,
+    `audio/${safeFilename}`,
+    safeFilename,
+    `uploads/${clean}`,
+    `uploads/${tenantSlug}/${safeFilename}`,
+    `uploads/demo/${safeFilename}`
+  ]);
+  for (const k of Array.from(candidates)) {
+    if (/\.(jpg|jpeg|png)$/i.test(k)) {
+      candidates.add(k.replace(/\.(jpg|jpeg|png)$/i, ".webp"));
+    } else if (/\.webp$/i.test(k)) {
+      candidates.add(k.replace(/\.webp$/i, ".jpg"));
+      candidates.add(k.replace(/\.webp$/i, ".png"));
+    }
+  }
+  const keys = Array.from(candidates).filter(Boolean);
+  await deleteR2ObjectsBatch(keys);
+  return true;
 }
 
 async function deleteR2Object(key) {
@@ -200,6 +252,7 @@ module.exports = {
   deleteR2ObjectsBatch,
   listR2Images,
   getObjectFromR2,
+  s3Client,
   LOCAL_UPLOADS_DIR
 };
 

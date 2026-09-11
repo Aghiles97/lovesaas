@@ -121,19 +121,19 @@ if (!state.sectionsData.playful) state.sectionsData.playful = {};
 
       document.getElementById("btnTestPlayfulYes").onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "PLAYFUL_TRIGGER_YES" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "PLAYFUL_TRIGGER_YES" }, window.location.origin);
         }
       };
 
       document.getElementById("btnTestPlayfulNo").onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "PLAYFUL_TRIGGER_NO" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "PLAYFUL_TRIGGER_NO" }, window.location.origin);
         }
       };
 
       document.getElementById("btnTestPlayfulReset").onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "PLAYFUL_RESET" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "PLAYFUL_RESET" }, window.location.origin);
         }
       };
   };

@@ -518,7 +518,6 @@ document.addEventListener("DOMContentLoaded", () => {
     partner2: "",
     slug: "",
     email: "",
-    pin: "",
     provisionedData: null
   };
 
@@ -703,20 +702,17 @@ document.addEventListener("DOMContentLoaded", () => {
       const p2 = inputP2.value.trim();
       const slug = inputSlug.value.trim();
       const email = document.getElementById("inputEmail").value.trim();
-      const pin = document.getElementById("inputPin").value.trim();
       const elAnniv = document.getElementById("inputAnniversary");
       const anniversaryDate = elAnniv ? elAnniv.value : null;
 
       if (!p1 || !p2) return alert("Please enter both partner names.");
       if (!slug || !checkoutState.slugAvailable) return alert("Please choose an available URL slug.");
       if (!email || !email.includes("@")) return alert("Please enter a valid account email.");
-      if (!pin || pin.length < 4) return alert("Please set a 4-digit Admin PIN for your site.");
 
       checkoutState.partner1 = p1;
       checkoutState.partner2 = p2;
       checkoutState.slug = slug;
       checkoutState.email = email;
-      checkoutState.pin = pin;
 
       // Persist entered info to localStorage for reuse
       saveCreationInputs({ partner1: p1, partner2: p2, email, anniversaryDate });
@@ -733,7 +729,6 @@ document.addEventListener("DOMContentLoaded", () => {
             partner1: checkoutState.partner1,
             partner2: checkoutState.partner2,
             slug: checkoutState.slug,
-            adminPin: checkoutState.pin,
             customerEmail: checkoutState.email,
             plan: isAdmin ? "vip" : checkoutState.plan,
             preset: (isAdmin || checkoutState.plan === "vip") ? "complete" : "storyteller",
@@ -756,7 +751,6 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("lovesaas_auth", JSON.stringify({
           slug: data.tenant.slug,
           authToken: data.tenant.authToken,
-          adminPin: checkoutState.pin,
           partner1: data.tenant.partner1,
           partner2: data.tenant.partner2,
           plan: data.tenant.plan,
@@ -764,7 +758,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }));
 
         document.getElementById("successSiteUrl").textContent = data.siteUrl;
-        document.getElementById("successPin").textContent = checkoutState.pin;
         document.getElementById("successPlanBadge").textContent = data.isAdmin
           ? "Forever VIP Suite (Admin Bypass $0)"
           : (data.tenant.plan === "starter" ? "Love Story Starter ($19)" : "Forever VIP Suite ($39)");
@@ -906,8 +899,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const authTabs = document.querySelectorAll(".auth-tab-btn[data-auth-tab]");
   const authPanes = {
     login: document.getElementById("formAuthLogin"),
-    register: document.getElementById("formAuthRegister"),
-    pin: document.getElementById("formAuthPin")
+    register: document.getElementById("formAuthRegister")
   };
   const authAlertError = document.getElementById("authAlertError");
   const authAlertSuccess = document.getElementById("authAlertSuccess");
@@ -1055,48 +1047,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // 3. Quick PIN Direct Studio Unlock
-  const formAuthPin = document.getElementById("formAuthPin");
-  const btnSubmitSignIn = document.getElementById("btnSubmitSignIn");
-  const signInSlug = document.getElementById("signInSlug");
-  const signInPin = document.getElementById("signInPin");
-
-  if (formAuthPin) {
-    formAuthPin.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const slug = signInSlug ? signInSlug.value.trim().toLowerCase() : "";
-      const pin = signInPin ? signInPin.value.trim() : "";
-      if (!slug || !pin) return setAuthAlert("Please enter both site slug and PIN.");
-
-      btnSubmitSignIn.disabled = true;
-      btnSubmitSignIn.innerHTML = `<span>Verifying... ⏳</span>`;
-      setAuthAlert("");
-
-      try {
-        const res = await fetch("/api/auth/verify-access", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ slug, pin })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.authorized) throw new Error(data.error || "Invalid slug or Admin PIN");
-
-        localStorage.setItem("lovesaas_auth", JSON.stringify({
-          slug: data.slug,
-          authToken: data.authToken,
-          adminPin: pin,
-          plan: data.plan
-        }));
-        window.location.href = `/builder?slug=${encodeURIComponent(data.slug)}&token=${encodeURIComponent(data.authToken || "")}`;
-      } catch (err) {
-        setAuthAlert(err.message);
-      } finally {
-        btnSubmitSignIn.disabled = false;
-        btnSubmitSignIn.innerHTML = `<span>🚀 Open Studio</span>`;
-      }
-    });
-  }
-
   // ------------------------------------------------------------------
   // 12. USER PORTAL (Designs, Purchases, Profile, Logout)
   // ------------------------------------------------------------------
@@ -1214,7 +1164,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const liveUrl = `/sites/${encodeURIComponent(d.slug)}`;
         const planName = d.plan === "starter" ? "Starter ($19)" : "Forever VIP ($39)";
         const dateStr = d.createdAt ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(d.createdAt)) : "Active";
-        const pin = d.adminPin || "••••";
 
         return `
           <div class="portal-design-card" data-slug="${d.slug}">
@@ -1226,14 +1175,8 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="portal-design-slug">
               <a href="${liveUrl}" target="_blank" rel="noopener">/sites/${escapeHtml(d.slug)} ↗</a>
             </div>
-            <div class="portal-design-pin-box">
-              <span style="font-size: 0.78rem; color: var(--text-muted);">Admin PIN:</span>
-              <span class="pin-code-mask" id="pinMask_${d.slug}">••••</span>
-              <span class="pin-code-text" id="pinVal_${d.slug}" style="display: none;">${escapeHtml(pin)}</span>
-              <button type="button" class="btn-pin-toggle" data-reveal-slug="${d.slug}" title="Toggle PIN visibility">👁️</button>
-            </div>
             <div class="portal-design-actions">
-              <a href="${studioUrl}" class="btn btn-primary btn-sm portal-studio-launch-btn" data-slug="${escapeHtml(d.slug)}" data-token="${escapeHtml(d.authToken || "")}" data-pin="${escapeHtml(pin)}" data-plan="${escapeHtml(d.plan || "vip")}" style="flex: 1; justify-content: center; text-decoration: none;">
+              <a href="${studioUrl}" class="btn btn-primary btn-sm portal-studio-launch-btn" data-slug="${escapeHtml(d.slug)}" data-token="${escapeHtml(d.authToken || "")}" data-plan="${escapeHtml(d.plan || "vip")}" style="flex: 1; justify-content: center; text-decoration: none;">
                 <span>🚀 Open Studio</span>
               </a>
               <a href="${liveUrl}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="text-decoration: none;" title="View public site">
@@ -1249,24 +1192,9 @@ document.addEventListener("DOMContentLoaded", () => {
           localStorage.setItem("lovesaas_auth", JSON.stringify({
             slug: btn.dataset.slug,
             authToken: btn.dataset.token,
-            adminPin: btn.dataset.pin,
             plan: btn.dataset.plan,
             role: "user"
           }));
-        });
-      });
-
-      listEl.querySelectorAll(".btn-pin-toggle").forEach(b => {
-        b.addEventListener("click", () => {
-          const s = b.dataset.revealSlug;
-          const mask = document.getElementById(`pinMask_${s}`);
-          const val = document.getElementById(`pinVal_${s}`);
-          if (mask && val) {
-            const isHidden = val.style.display === "none";
-            val.style.display = isHidden ? "inline" : "none";
-            mask.style.display = isHidden ? "none" : "inline";
-            b.textContent = isHidden ? "🙈" : "👁️";
-          }
         });
       });
     } catch (err) {

@@ -294,7 +294,7 @@
     if (btnSpotCurrent) {
       btnSpotCurrent.onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "SPOTLIGHT_CITY", cityKey: selectedCityKey }, "*");
+          previewIframe.contentWindow.postMessage({ type: "SPOTLIGHT_CITY", cityKey: selectedCityKey }, window.location.origin);
         }
       };
     }
@@ -386,7 +386,7 @@
       btn.onclick = () => {
         const cityKey = btn.dataset.city;
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "SPOTLIGHT_CITY", cityKey }, "*");
+          previewIframe.contentWindow.postMessage({ type: "SPOTLIGHT_CITY", cityKey }, window.location.origin);
         }
       };
     });

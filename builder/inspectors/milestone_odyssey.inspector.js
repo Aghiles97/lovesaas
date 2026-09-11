@@ -160,7 +160,7 @@
     if (btnTestScroll) {
       btnTestScroll.onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "ODYSSEY_SCROLL_NEXT" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "ODYSSEY_SCROLL_NEXT" }, window.location.origin);
           try { previewIframe.contentWindow.odysseyScrollNext?.(); } catch (e) {}
         }
       };

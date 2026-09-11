@@ -96,7 +96,7 @@
     if (btnBlow) {
       btnBlow.onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "CANDLE_BLOW_ALL" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "CANDLE_BLOW_ALL" }, window.location.origin);
           try { previewIframe.contentWindow.candleBlowoutBlowAll?.(); } catch (e) {}
         }
       };
@@ -106,7 +106,7 @@
     if (btnRelight) {
       btnRelight.onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "CANDLE_RELIGHT" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "CANDLE_RELIGHT" }, window.location.origin);
           try { previewIframe.contentWindow.candleBlowoutRelight?.(); } catch (e) {}
         }
       };

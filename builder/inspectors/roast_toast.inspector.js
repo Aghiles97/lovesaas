@@ -103,7 +103,7 @@
     if (btnSpin) {
       btnSpin.onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "ROAST_TOAST_SPIN" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "ROAST_TOAST_SPIN" }, window.location.origin);
           try { previewIframe.contentWindow.roastToastSpin?.(); } catch (e) {}
         }
       };

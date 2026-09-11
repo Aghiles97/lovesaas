@@ -2,39 +2,12 @@
  * Modular Aggregator for Decomposed Production Widgets
  * Aggregates all 13 standalone widget templates for both Node.js (SSR) and Browser.
  */
-if (typeof escapeHtml !== "function") {
-  if (typeof window !== "undefined") {
-    window.escapeHtml = function(str) {
-      if (str === null || str === undefined) return "";
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    };
-  } else {
-    global.escapeHtml = function(str) {
-      if (str === null || str === undefined) return "";
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    };
-  }
+const root = typeof globalThis !== "undefined" ? globalThis : (typeof window !== "undefined" ? window : global);
+if (typeof root.escapeHtml !== "function") {
+  root.escapeHtml = (str) => (str == null ? "" : String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c])));
 }
-if (typeof safeVal !== "function") {
-  if (typeof window !== "undefined") {
-    window.safeVal = function(v) {
-      return String(v == null ? "" : v).replace(/"/g, "&quot;");
-    };
-  } else {
-    global.safeVal = function(v) {
-      return String(v == null ? "" : v).replace(/"/g, "&quot;");
-    };
-  }
+if (typeof root.safeVal !== "function") {
+  root.safeVal = (v) => String(v ?? "").replace(/"/g, "&quot;");
 }
 
 var WIDGET_TEMPLATES = (typeof window !== "undefined" && window.WIDGET_TEMPLATES) ? window.WIDGET_TEMPLATES : {};
@@ -65,7 +38,8 @@ if (typeof module !== "undefined" && module.exports) {
     then_now_slider: require("./templates/then_now_slider.template.js"),
     bucket_list: require("./templates/bucket_list.template.js"),
     audio_capsule: require("./templates/audio_capsule.template.js"),
-    milestone_odyssey: require("./templates/milestone_odyssey.template.js")
+    milestone_odyssey: require("./templates/milestone_odyssey.template.js"),
+    valentine_scratch: require("./templates/valentine_scratch.template.js")
   };
   module.exports = { WIDGET_TEMPLATES };
 }

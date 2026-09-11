@@ -33,6 +33,7 @@
       debouncedLiveUpdate = () => {},
       debouncedAutoSaveLayout = () => {},
       uploadFileToR2 = async () => {},
+      deleteAssetFromR2 = async () => {},
       previewIframe = null,
       renderWidgetInspector = () => {},
       selectWidgetForInspector = () => {},
@@ -117,9 +118,10 @@
       `).join("");
 
       return `
-        <div class="chap-card-accordion ${isExpanded ? 'is-open' : 'is-collapsed'}" data-id="${chId}" data-idx="${idx}">
+        <div class="chap-card-accordion ${isExpanded ? 'is-open' : 'is-collapsed'}" data-id="${chId}" data-idx="${idx}" draggable="true">
           <div class="chap-card-header">
             <div class="chap-header-left">
+              <span class="chap-drag-handle" title="Drag to reorder chapter">⋮⋮</span>
               <span class="chap-expand-icon">${isExpanded ? '▼' : '▶'}</span>
               <span class="chap-index-badge">#${idx + 1}</span>
               <span class="chap-flag-preview">${ch.countryFlag || '🇨🇳'}</span>
@@ -133,9 +135,6 @@
               ${coverImg ? `<img src="${coverImg}" class="chap-mini-thumb" alt="Cover" onerror="this.style.display='none';">` : ''}
               <span class="chap-photo-count-pill">📷 ${images.length}</span>
               <button type="button" class="btn-sm btn-outline btn-chap-spotlight" data-city="${ch.cityKey || ''}" title="Spotlight on Map">🗺️</button>
-              ${idx > 0 ? `<button type="button" class="btn-sm btn-outline btn-chap-up" title="Move Up">⬆️</button>` : ''}
-              ${idx < chapters.length - 1 ? `<button type="button" class="btn-sm btn-outline btn-chap-down" title="Move Down">⬇️</button>` : ''}
-              <button type="button" class="btn-sm btn-outline btn-chap-duplicate" title="Duplicate Chapter">📋</button>
               <button type="button" class="btn-remove-item btn-chap-delete" title="Delete Chapter">🗑️</button>
             </div>
           </div>
@@ -337,11 +336,74 @@
       if (!ch) return;
       const chId = ch.id || `chap-${idx}`;
 
+      // Chapter card drag & drop reordering
+      card.ondragstart = (e) => {
+        if (e.target.closest("input, textarea, select, button, .photo-pool-tile, .photo-pool-grid")) {
+          e.preventDefault();
+          return;
+        }
+        e.dataTransfer.setData("application/x-chapter-index", String(idx));
+        e.dataTransfer.effectAllowed = "move";
+        card.classList.add("is-dragging-card");
+      };
+      card.ondragover = (e) => {
+        if (e.dataTransfer && e.dataTransfer.types.includes("application/x-chapter-index")) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          card.classList.add("drag-over-card");
+        }
+      };
+      card.ondragleave = () => {
+        card.classList.remove("drag-over-card");
+      };
+      card.ondrop = (e) => {
+        if (e.dataTransfer && e.dataTransfer.types.includes("application/x-chapter-index")) {
+          e.preventDefault();
+          e.stopPropagation();
+          card.classList.remove("drag-over-card");
+          const fromIdx = parseInt(e.dataTransfer.getData("application/x-chapter-index"), 10);
+          if (!isNaN(fromIdx) && fromIdx !== idx) {
+            const [moved] = chapters.splice(fromIdx, 1);
+            chapters.splice(idx, 0, moved);
+            renderWidgetInspector("timeline");
+            notifyUpdate();
+          }
+        }
+      };
+      card.ondragend = () => {
+        card.classList.remove("is-dragging-card");
+        if (inspectorFormContainer && inspectorFormContainer.querySelectorAll) {
+          inspectorFormContainer.querySelectorAll(".chap-card-accordion").forEach(c => c.classList.remove("drag-over-card"));
+        }
+      };
+
+      const scrollToThisChapterInPreview = () => {
+        if (previewIframe && previewIframe.contentWindow) {
+          previewIframe.contentWindow.postMessage({
+            type: "SCROLL_TO_CHAPTER",
+            chapterId: chId,
+            cityKey: ch.cityKey
+          }, window.location.origin);
+        }
+      };
+
+      card.addEventListener("click", (e) => {
+        if (card.classList.contains("is-dragging-card")) return;
+        if (e.target.closest(".btn-remove-item, .btn-chap-delete, .chap-drag-handle")) return;
+        scrollToThisChapterInPreview();
+      });
+
+      card.addEventListener("focusin", (e) => {
+        if (e.target.closest(".btn-remove-item, .btn-chap-delete")) return;
+        scrollToThisChapterInPreview();
+      });
+
       // Accordion header toggle (click header to expand/collapse)
       const header = card.querySelector(".chap-card-header");
       if (header) {
         header.onclick = (e) => {
-          if (e.target.closest("button") || e.target.closest("input") || e.target.closest("label")) return;
+          if (card.classList.contains("is-dragging-card")) return;
+          if (e.target.closest("button") || e.target.closest("input") || e.target.closest("label") || e.target.closest(".chap-drag-handle")) return;
           const body = card.querySelector(".chap-card-body");
           const icon = card.querySelector(".chap-expand-icon");
           if (card.classList.contains("is-open")) {
@@ -357,6 +419,7 @@
             if (icon) icon.textContent = "▼";
             expandedChapterIds.add(chId);
           }
+          scrollToThisChapterInPreview();
         };
       }
 
@@ -415,61 +478,22 @@
           e.stopPropagation();
           const targetCity = ch.cityKey || "guangzhou";
           if (previewIframe && previewIframe.contentWindow) {
-            previewIframe.contentWindow.postMessage({ type: "SPOTLIGHT_CITY", cityKey: targetCity }, "*");
+            previewIframe.contentWindow.postMessage({ type: "SPOTLIGHT_CITY", cityKey: targetCity }, window.location.origin);
           }
-        };
-      }
-
-      // Move Up
-      const btnUp = card.querySelector(".btn-chap-up");
-      if (btnUp) {
-        btnUp.onclick = (e) => {
-          e.stopPropagation();
-          if (idx <= 0) return;
-          const tmp = chapters[idx];
-          chapters[idx] = chapters[idx - 1];
-          chapters[idx - 1] = tmp;
-          renderWidgetInspector("timeline");
-          notifyUpdate();
-        };
-      }
-
-      // Move Down
-      const btnDown = card.querySelector(".btn-chap-down");
-      if (btnDown) {
-        btnDown.onclick = (e) => {
-          e.stopPropagation();
-          if (idx >= chapters.length - 1) return;
-          const tmp = chapters[idx];
-          chapters[idx] = chapters[idx + 1];
-          chapters[idx + 1] = tmp;
-          renderWidgetInspector("timeline");
-          notifyUpdate();
-        };
-      }
-
-      // Duplicate Chapter
-      const btnDup = card.querySelector(".btn-chap-duplicate");
-      if (btnDup) {
-        btnDup.onclick = (e) => {
-          e.stopPropagation();
-          const clone = JSON.parse(JSON.stringify(ch));
-          clone.id = "chap-" + Date.now();
-          clone.title = (clone.title || "Chapter") + " (Copy)";
-          expandedChapterIds.add(clone.id);
-          chapters.splice(idx + 1, 0, clone);
-          renderWidgetInspector("timeline");
-          notifyUpdate();
         };
       }
 
       // Delete Chapter
       const btnDel = card.querySelector(".btn-chap-delete");
       if (btnDel) {
-        btnDel.onclick = (e) => {
+        btnDel.onclick = async (e) => {
           e.stopPropagation();
           if (confirm(`Delete chapter "${ch.title || 'Untitled'}"?`)) {
             expandedChapterIds.delete(chId);
+            const imgs = Array.isArray(ch.images) ? ch.images : (ch.img ? [ch.img] : []);
+            for (const im of imgs) {
+              if (im) await deleteAssetFromR2(im);
+            }
             chapters.splice(idx, 1);
             renderWidgetInspector("timeline");
             notifyUpdate();
@@ -584,30 +608,34 @@
       tiles.forEach(tile => {
         const pIdx = parseInt(tile.dataset.photoIdx, 10);
         tile.ondragstart = (e) => {
-          e.dataTransfer.setData("text/plain", String(pIdx));
+          e.stopPropagation();
+          e.dataTransfer.setData("application/x-photo-idx", String(pIdx));
           e.dataTransfer.effectAllowed = "move";
           tile.classList.add("is-dragging");
         };
-        tile.ondragend = () => {
+        tile.ondragend = (e) => {
+          e.stopPropagation();
           tile.classList.remove("is-dragging");
           card.querySelectorAll(".photo-pool-tile").forEach(t => t.classList.remove("drag-over"));
         };
         tile.ondragover = (e) => {
-          if (e.dataTransfer && !e.dataTransfer.types.includes("Files")) {
+          if (e.dataTransfer && e.dataTransfer.types.includes("application/x-photo-idx")) {
             e.preventDefault();
+            e.stopPropagation();
             e.dataTransfer.dropEffect = "move";
             tile.classList.add("drag-over");
           }
         };
-        tile.ondragleave = () => {
+        tile.ondragleave = (e) => {
+          e.stopPropagation();
           tile.classList.remove("drag-over");
         };
         tile.ondrop = (e) => {
-          if (e.dataTransfer && !e.dataTransfer.types.includes("Files")) {
+          if (e.dataTransfer && e.dataTransfer.types.includes("application/x-photo-idx")) {
             e.preventDefault();
             e.stopPropagation();
             tile.classList.remove("drag-over");
-            const fromIdx = parseInt(e.dataTransfer.getData("text/plain"), 10);
+            const fromIdx = parseInt(e.dataTransfer.getData("application/x-photo-idx"), 10);
             if (!isNaN(fromIdx) && fromIdx !== pIdx) {
               const imgs = ensureImagesArray();
               const [moved] = imgs.splice(fromIdx, 1);
@@ -638,12 +666,15 @@
 
       // Delete Photo
       card.querySelectorAll("[data-del-photo]").forEach(btn => {
-        btn.onclick = (e) => {
+        btn.onclick = async (e) => {
           e.stopPropagation();
           const pIdx = parseInt(btn.dataset.delPhoto, 10);
           const imgs = ensureImagesArray();
           if (!isNaN(pIdx)) {
-            imgs.splice(pIdx, 1);
+            const [removed] = imgs.splice(pIdx, 1);
+            if (removed && typeof deleteAssetFromR2 === "function") {
+              await deleteAssetFromR2(removed);
+            }
             syncCoverImage();
             renderWidgetInspector("timeline");
             notifyUpdate();
@@ -696,6 +727,12 @@
           targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
           targetCard.classList.add("highlight-pulse");
           setTimeout(() => targetCard.classList.remove("highlight-pulse"), 2200);
+        }
+        if (previewIframe && previewIframe.contentWindow) {
+          previewIframe.contentWindow.postMessage({
+            type: "SCROLL_TO_CHAPTER",
+            chapterId: targetId
+          }, window.location.origin);
         }
       }, 60);
     }

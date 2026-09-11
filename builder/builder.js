@@ -3,90 +3,90 @@
  * 100% Customizable Widget Content Inspector, Modular Layout Reordering, & R2 Media Pipeline
  */
 function escapeHtml(str) {
-  if (str === null || str === undefined) return "";
+  if (str === null || str === undefined) return '';
   return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 function safeVal(v) {
-  return String(v == null ? "" : v).replace(/"/g, "&quot;");
+  return String(v == null ? '' : v).replace(/"/g, '&quot;');
 }
-if (typeof window !== "undefined") {
+if (typeof window !== 'undefined') {
   window.escapeHtml = escapeHtml;
   window.safeVal = safeVal;
 }
 
 let state = {
-  slug: "demo",
-  adminPin: "1234",
+  slug: '',
   authToken: null,
-  userRole: "visitor", // "visitor" | "user" | "admin"
+  userRole: 'visitor', // "visitor" | "user" | "admin"
   isPurchased: false,
-  templatePreset: "anniversary",
-  themeId: "theme-pink",
-  layoutOrder: [
-    "hero",
-    "tenure_ticker",
-    "star_map",
-    "then_now_slider",
-    "milestone_odyssey",
-    "bucket_list",
-    "audio_capsule",
-    "letter"
-  ],
+  templatePreset: 'blank',
+  themeId: 'theme-pink',
+  layoutOrder: [],
   sectionsData: {},
   allWidgetIds: Object.keys(WIDGET_REGISTRY),
   activeInspectorWidget: null,
-  mediaViewMode: (typeof localStorage !== "undefined" && localStorage.getItem("saas_media_view")) || "grid",
-  mediaSort: "newest",
-  mediaSearchQuery: "",
-  mediaFilter: "all",
+  mediaViewMode:
+    (typeof localStorage !== 'undefined' &&
+      localStorage.getItem('saas_media_view')) ||
+    'grid',
+  mediaSort: 'newest',
+  mediaSearchQuery: '',
+  mediaFilter: 'all',
   mediaSettings: {
     volume: 80,
     autoplay: true,
     loop: true,
     sfx: true,
-    floatingPlayer: true
-  }
+    floatingPlayer: true,
+  },
 };
 
 // DOM references
-const presetGrid = document.getElementById("presetGrid");
-const widgetTray = document.getElementById("widgetTray");
-const previewIframe = document.getElementById("previewIframe");
-const currentTenantBadge = document.getElementById("currentTenantBadge");
-const btnViewLive = document.getElementById("btnViewLive");
-const btnSaveConfig = document.getElementById("btnSaveConfig");
-const inspectorWidgetSelect = document.getElementById("inspectorWidgetSelect");
-const inspectorFormContainer = document.getElementById("inspectorFormContainer");
+const presetGrid = document.getElementById('presetGrid');
+const widgetTray = document.getElementById('widgetTray');
+const previewIframe = document.getElementById('previewIframe');
+const currentTenantBadge = document.getElementById('currentTenantBadge');
+const btnViewLive = document.getElementById('btnViewLive');
+const btnSaveConfig = document.getElementById('btnSaveConfig');
+const inspectorWidgetSelect = document.getElementById('inspectorWidgetSelect');
+const inspectorFormContainer = document.getElementById(
+  'inspectorFormContainer',
+);
 
 // Live Sync Debouncer & Real-time Iframe Communication
 let liveSyncTimeout = null;
-function debouncedLiveUpdate(immediate = false) {
+function debouncedLiveUpdate(immediate = false, modifiedWidgetId = null) {
   clearTimeout(liveSyncTimeout);
   const doUpdate = () => {
     if (previewIframe && previewIframe.contentWindow) {
-      previewIframe.contentWindow.postMessage({
-        type: "STUDIO_LIVE_UPDATE",
-        config: {
-          themeId: state.themeId,
-          layoutOrder: state.layoutOrder,
-          sectionsData: state.sectionsData
-        }
-      }, "*");
+      previewIframe.contentWindow.postMessage(
+        {
+          type: 'STUDIO_LIVE_UPDATE',
+          config: {
+            themeId: state.themeId,
+            customBgUrl: state.customBgUrl || "",
+            layoutOrder: state.layoutOrder,
+            sectionsData: state.sectionsData,
+            activeWidgetId: modifiedWidgetId || state.activeInspectorWidget,
+          },
+        },
+        window.location.origin,
+      );
     }
-    const syncPill = document.getElementById("inspectorLiveSyncPill");
+    const syncPill = document.getElementById('inspectorLiveSyncPill');
     if (syncPill) {
-      syncPill.textContent = "⚡ Live Synced";
-      syncPill.style.borderColor = "#20c997";
-      syncPill.style.color = "#0ca678";
+      syncPill.textContent = '⚡ Live Synced';
+      syncPill.style.borderColor = '#20c997';
+      syncPill.style.color = '#0ca678';
       setTimeout(() => {
         if (syncPill) {
-          syncPill.style.borderColor = "";
-          syncPill.style.color = "";
+          syncPill.style.borderColor = '';
+          syncPill.style.color = '';
         }
       }, 600);
     }
@@ -99,72 +99,84 @@ function debouncedLiveUpdate(immediate = false) {
 }
 
 // Toast notification helper
-function showToast(msg, type = "info", duration = 3000) {
-  const container = document.getElementById("toastContainer");
+function showToast(msg, type = 'info', duration = 3000) {
+  const container = document.getElementById('toastContainer');
   if (!container) return;
-  const toast = document.createElement("div");
+  const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  const icon = type === "success" ? "✓" : type === "error" ? "✕" : "ℹ️";
+  const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ️';
   toast.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-msg">${escapeHtml(msg)}</span>`;
   container.appendChild(toast);
   setTimeout(() => {
-    toast.style.animation = "toastFadeOut 0.25s forwards";
+    toast.style.animation = 'toastFadeOut 0.25s forwards';
     setTimeout(() => toast.remove(), 250);
   }, duration);
 }
 
 // Auto-save debouncer for layout order & configs
 let autoSaveTimeout = null;
+function getAuthHeaders(extra = {}) {
+  const userToken = localStorage.getItem('lovesaas_user_token');
+  const headers = { ...extra };
+  if (state.authToken) headers['X-Auth-Token'] = state.authToken;
+  if (userToken) {
+    headers['X-User-Token'] = userToken;
+    headers['Authorization'] = `Bearer ${userToken}`;
+  }
+  if (state.slug) headers['X-Tenant-Slug'] = state.slug;
+  return headers;
+}
+
 function debouncedAutoSaveLayout() {
   clearTimeout(autoSaveTimeout);
-  const indicator = document.getElementById("autoSaveIndicator");
-  if (state.userRole === "visitor") {
+  const indicator = document.getElementById('autoSaveIndicator');
+  if (state.userRole === 'visitor') {
     if (indicator) {
-      indicator.className = "auto-save-indicator";
-      const textEl = indicator.querySelector(".indicator-text");
-      if (textEl) textEl.textContent = "Demo Sandbox (Preview Only)";
+      indicator.className = 'auto-save-indicator';
+      const textEl = indicator.querySelector('.indicator-text');
+      if (textEl) textEl.textContent = 'Preview Mode';
     }
     return;
   }
   if (indicator) {
-    indicator.className = "auto-save-indicator saving";
-    const textEl = indicator.querySelector(".indicator-text");
-    if (textEl) textEl.textContent = "Saving...";
+    indicator.className = 'auto-save-indicator saving';
+    const textEl = indicator.querySelector('.indicator-text');
+    if (textEl) textEl.textContent = 'Saving...';
   }
 
   autoSaveTimeout = setTimeout(async () => {
     try {
-      const res = await fetch(`/api/tenants/${encodeURIComponent(state.slug)}/config`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Admin-Pin": state.adminPin
+      const res = await fetch(
+        `/api/tenants/${encodeURIComponent(state.slug)}/config`,
+        {
+          method: 'PUT',
+          headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({
+            templatePreset: state.templatePreset,
+            themeId: state.themeId,
+            layoutOrder: state.layoutOrder,
+            sectionsData: state.sectionsData,
+          }),
         },
-        body: JSON.stringify({
-          templatePreset: state.templatePreset,
-          themeId: state.themeId,
-          layoutOrder: state.layoutOrder,
-          sectionsData: state.sectionsData
-        })
-      });
+      );
       if (indicator) {
-        indicator.className = "auto-save-indicator saved";
-        const textEl = indicator.querySelector(".indicator-text");
-        if (textEl) textEl.textContent = "All changes saved";
+        indicator.className = 'auto-save-indicator saved';
+        const textEl = indicator.querySelector('.indicator-text');
+        if (textEl) textEl.textContent = 'All changes saved';
       }
     } catch (err) {
-      console.warn("Auto-save layout error:", err);
+      console.warn('Auto-save layout error:', err);
       if (indicator) {
-        indicator.className = "auto-save-indicator";
-        const textEl = indicator.querySelector(".indicator-text");
-        if (textEl) textEl.textContent = "Unsaved changes";
+        indicator.className = 'auto-save-indicator';
+        const textEl = indicator.querySelector('.indicator-text');
+        if (textEl) textEl.textContent = 'Unsaved changes';
       }
     }
   }, 450);
 }
 
 if (previewIframe) {
-  previewIframe.addEventListener("load", () => {
+  previewIframe.addEventListener('load', () => {
     debouncedLiveUpdate(true);
   });
 }
@@ -172,140 +184,185 @@ if (previewIframe) {
 // ----------------------------------------------------
 // BUILDER ACCESS GATING & INITIALIZATION
 // ----------------------------------------------------
-function showAccessGateModal(presetSlug = "") {
-  const gateModal = document.getElementById("builderAccessGateModal");
-  const slugInput = document.getElementById("gateSlugInput");
-  const errorMsg = document.getElementById("gateErrorMsg");
+function showAccessGateModal(presetSlug = '') {
+  const gateModal = document.getElementById('builderAccessGateModal');
+  const slugInput = document.getElementById('gateSlugInput');
+  const errorMsg = document.getElementById('gateErrorMsg');
   if (!gateModal) return;
   if (presetSlug && slugInput) slugInput.value = presetSlug;
-  if (errorMsg) errorMsg.style.display = "none";
-  gateModal.classList.remove("hidden");
+  if (errorMsg) errorMsg.style.display = 'none';
+  gateModal.classList.remove('hidden');
 }
 
 function hideAccessGateModal() {
-  const gateModal = document.getElementById("builderAccessGateModal");
-  if (gateModal) gateModal.classList.add("hidden");
+  const gateModal = document.getElementById('builderAccessGateModal');
+  if (gateModal) gateModal.classList.add('hidden');
 }
 
 function showDemoBanner(visible) {
-  const banner = document.getElementById("demoBannerBar");
+  const banner = document.getElementById('demoBannerBar');
   if (!banner) return;
-  banner.style.display = visible ? "flex" : "none";
+  banner.style.display = visible ? 'flex' : 'none';
 }
 
 function updateRoleUI() {
-  const roleBadge = document.getElementById("roleStatusBadge");
-  const roleIcon = document.getElementById("roleStatusIcon");
-  const roleText = document.getElementById("roleStatusText");
-  const demoBanner = document.getElementById("demoBannerBar");
-  const btnSave = document.getElementById("btnSaveConfig");
-  const saveText = btnSave ? btnSave.querySelector(".btn-save-text") : null;
-  const saveIcon = btnSave ? btnSave.querySelector(".btn-save-icon") : null;
-  const saveKbd = btnSave ? btnSave.querySelector(".kbd-shortcut") : null;
+  const roleBadge = document.getElementById('roleStatusBadge');
+  const roleIcon = document.getElementById('roleStatusIcon');
+  const roleText = document.getElementById('roleStatusText');
+  const demoBanner = document.getElementById('demoBannerBar');
+  const btnSave = document.getElementById('btnSaveConfig');
+  const saveText = btnSave ? btnSave.querySelector('.btn-save-text') : null;
+  const saveIcon = btnSave ? btnSave.querySelector('.btn-save-icon') : null;
+  const saveKbd = btnSave ? btnSave.querySelector('.kbd-shortcut') : null;
 
-  document.body.classList.remove("role-admin", "role-user", "role-visitor");
+  document.body.classList.remove('role-admin', 'role-user', 'role-visitor');
   document.body.classList.add(`role-${state.userRole}`);
 
-  const btnHeaderNew = document.getElementById("btnHeaderNewProject");
+  const btnHeaderNew = document.getElementById('btnHeaderNewProject');
   if (btnHeaderNew) {
-    btnHeaderNew.style.display = (state.userRole === "admin" || state.userRole === "user") ? "inline-flex" : "none";
+    btnHeaderNew.style.display =
+      state.userRole === 'admin' || state.userRole === 'user'
+        ? 'inline-flex'
+        : 'none';
   }
 
-  if (state.userRole === "admin") {
+  if (state.userRole === 'admin') {
     // ADMIN: Full access, full rights, NO demo banner, NO purchase prompts
     if (roleBadge) {
-      roleBadge.className = "role-badge role-admin";
-      if (roleIcon) roleIcon.textContent = "🛡️";
-      if (roleText) roleText.textContent = "Admin (Full Access)";
-      roleBadge.title = "Master Admin: Full access & rights across all sites. Click to switch.";
+      roleBadge.className = 'role-badge role-admin';
+      if (roleIcon) roleIcon.textContent = '🛡️';
+      if (roleText) roleText.textContent = 'Admin (Full Access)';
+      roleBadge.title =
+        'Master Admin: Full access & rights across all sites. Click to switch.';
     }
     showDemoBanner(false);
     if (btnSave) {
-      btnSave.classList.remove("btn-visitor-cta");
-      btnSave.title = "Save changes (Ctrl+S / Cmd+S)";
-      if (saveIcon) saveIcon.textContent = "💾";
-      if (saveText) saveText.textContent = "Save & Publish";
-      if (saveKbd) saveKbd.style.display = "inline-block";
+      btnSave.classList.remove('btn-visitor-cta');
+      btnSave.title = 'Save changes (Ctrl+S / Cmd+S)';
+      if (saveIcon) saveIcon.textContent = '💾';
+      if (saveText)
+        saveText.innerHTML =
+          'Save<span class="btn-save-extra"> & Publish</span>';
+      if (saveKbd) saveKbd.style.display = 'inline-block';
     }
-    document.querySelectorAll(".visitor-overlay-lock, .visitor-locked-banner").forEach(el => el.remove());
-  } else if (state.userRole === "user") {
+    document
+      .querySelectorAll('.visitor-overlay-lock, .visitor-locked-banner')
+      .forEach((el) => el.remove());
+  } else if (state.userRole === 'user') {
     // USER: Full access to own design if purchased, NO demo banner
     if (roleBadge) {
-      roleBadge.className = "role-badge role-user";
-      if (roleIcon) roleIcon.textContent = "✨";
-      if (roleText) roleText.textContent = "User (Full Access)";
+      roleBadge.className = 'role-badge role-user';
+      if (roleIcon) roleIcon.textContent = '✨';
+      if (roleText) roleText.textContent = 'User (Full Access)';
       roleBadge.title = `Site Owner (${state.slug}): Full customization rights. Click to switch.`;
     }
     showDemoBanner(false);
     if (btnSave) {
-      btnSave.classList.remove("btn-visitor-cta");
-      btnSave.title = "Save changes (Ctrl+S / Cmd+S)";
-      if (saveIcon) saveIcon.textContent = "💾";
-      if (saveText) saveText.textContent = "Save & Publish";
-      if (saveKbd) saveKbd.style.display = "inline-block";
+      btnSave.classList.remove('btn-visitor-cta');
+      btnSave.title = 'Save changes (Ctrl+S / Cmd+S)';
+      if (saveIcon) saveIcon.textContent = '💾';
+      if (saveText)
+        saveText.innerHTML =
+          'Save<span class="btn-save-extra"> & Publish</span>';
+      if (saveKbd) saveKbd.style.display = 'inline-block';
     }
-    document.querySelectorAll(".visitor-overlay-lock, .visitor-locked-banner").forEach(el => el.remove());
+    document
+      .querySelectorAll('.visitor-overlay-lock, .visitor-locked-banner')
+      .forEach((el) => el.remove());
   } else {
     // VISITOR: Extremely limited controls, label 'purchase now to customize'
-    state.userRole = "visitor";
+    state.userRole = 'visitor';
     if (roleBadge) {
-      roleBadge.className = "role-badge role-visitor";
-      if (roleIcon) roleIcon.textContent = "👀";
-      if (roleText) roleText.textContent = "Visitor (Demo)";
-      roleBadge.title = "Visitor Demo: Limited controls. Click to unlock/purchase.";
+      roleBadge.className = 'role-badge role-visitor';
+      if (roleIcon) roleIcon.textContent = '👀';
+      if (roleText) roleText.textContent = 'Visitor (Demo)';
+      roleBadge.title =
+        'Visitor Demo: Limited controls. Click to unlock/purchase.';
     }
     showDemoBanner(true);
-    const demoBannerText = document.getElementById("demoBannerText");
-    if (demoBannerText) demoBannerText.textContent = "🎨 Visitor Demo Mode — Previewing sample site. Controls are extremely limited.";
-    const demoBannerCta = document.getElementById("demoBannerCta");
-    if (demoBannerCta) demoBannerCta.textContent = "Purchase now to customize ↗";
+    const demoBannerText = document.getElementById('demoBannerText');
+    if (demoBannerText)
+      demoBannerText.textContent =
+        '🎨 Visitor Demo Mode — Previewing sample site. Controls are extremely limited.';
+    const demoBannerCta = document.getElementById('demoBannerCta');
+    if (demoBannerCta)
+      demoBannerCta.textContent = 'Purchase now to customize ↗';
 
     if (btnSave) {
-      btnSave.classList.add("btn-visitor-cta");
-      btnSave.title = "Purchase now to customize and save your couple site";
-      if (saveIcon) saveIcon.textContent = "🛍️";
-      if (saveText) saveText.textContent = "Purchase now to customize";
-      if (saveKbd) saveKbd.style.display = "none";
+      btnSave.classList.add('btn-visitor-cta');
+      btnSave.title = 'Purchase now to customize and save your couple site';
+      if (saveIcon) saveIcon.textContent = '🛍️';
+      if (saveText) saveText.textContent = 'Purchase now to customize';
+      if (saveKbd) saveKbd.style.display = 'none';
     }
   }
 }
 
 function showBuilderAuthModal() {
-  document.getElementById("builderAuthModal")?.classList.remove("hidden");
+  document.documentElement.classList.remove('builder-gate-active');
+  document.getElementById('builderDesignPickerModal')?.classList.add('hidden');
+  document.getElementById('builderAuthModal')?.classList.remove('hidden');
 }
 
 function showBuilderForbiddenModal(slug) {
-  const msg = document.getElementById("builderForbiddenMsg");
-  if (msg) msg.textContent = `Access Denied: You do not have permission to access or edit /sites/${slug}. This design belongs to another account.`;
-  document.getElementById("builderForbiddenModal")?.classList.remove("hidden");
+  document.documentElement.classList.remove('builder-gate-active');
+  document.getElementById('builderDesignPickerModal')?.classList.add('hidden');
+  const msg = document.getElementById('builderForbiddenMsg');
+  if (msg)
+    msg.textContent = `Access Denied: You do not have permission to access or edit /sites/${slug}. This design belongs to another account.`;
+  document.getElementById('builderForbiddenModal')?.classList.remove('hidden');
 }
 
 async function checkBuilderAccess() {
   const urlParams = new URLSearchParams(window.location.search);
-  const paramSlug = urlParams.get("slug");
-  const paramToken = urlParams.get("token");
-  const paramPin = urlParams.get("pin");
-  const paramRole = urlParams.get("role");
-  const paramCreate = urlParams.get("create");
+  const paramSlug = urlParams.get('slug');
+  const paramToken = urlParams.get('token');
+  const paramRole = urlParams.get('role');
+  const paramCreate = urlParams.get('create');
 
-  const localAuth = JSON.parse(localStorage.getItem("lovesaas_auth") || "null");
-  const userToken = localStorage.getItem("lovesaas_user_token");
+  const localAuth = JSON.parse(localStorage.getItem('lovesaas_auth') || 'null');
+  const userToken = localStorage.getItem('lovesaas_user_token');
 
   // Master Admin bypass check
-  const isDirectMasterAdmin = paramRole === "admin" || (localAuth && localAuth.role === "admin") || paramPin === "admin1234" || paramToken === "master-admin-token-lovesaas";
+  const isDirectMasterAdmin =
+    (paramRole === 'admin' && paramToken) ||
+    (localAuth && localAuth.role === 'admin' && localAuth.authToken);
 
   if (isDirectMasterAdmin) {
-    state.userRole = "admin";
+    state.userRole = 'admin';
     state.isPurchased = true;
-    state.adminPin = "admin1234";
-    state.authToken = "master-admin-token-lovesaas";
+    state.authToken = paramToken || (localAuth && localAuth.authToken) || userToken || '';
 
     if (paramSlug) {
       state.slug = paramSlug;
       updateRoleUI();
+      fetchUserProjects();
       return true;
     }
-    // No slug → fall through to design picker below
+
+    let adminDesigns = [];
+    try {
+      const tRes = await fetch('/api/tenants', {
+        headers: state.authToken ? { Authorization: `Bearer ${state.authToken}` } : {}
+      });
+      if (tRes.ok) {
+        const tData = await tRes.json();
+        adminDesigns = (tData.tenants || []).map((t) => ({
+          slug: t.slug,
+          partner1: t.partner1,
+          partner2: t.partner2,
+          themeId: t.theme_id || t.themeId || 'romantic-rose',
+          preset: t.preset || 'complete',
+          plan: t.plan || 'vip',
+          createdAt: t.created_at || t.createdAt,
+          updatedAt: t.updated_at || t.updatedAt,
+          authToken: state.authToken,
+        }));
+      }
+    } catch (e) {}
+    state.userDesigns = adminDesigns;
+    showDesignPickerModal(adminDesigns);
+    return false;
   }
 
   // Require user authentication
@@ -316,44 +373,51 @@ async function checkBuilderAccess() {
 
   let user = null;
   try {
-    const uRes = await fetch("/api/auth/user-me", {
-      headers: { "Authorization": `Bearer ${userToken}`, "X-User-Token": userToken }
+    const uRes = await fetch('/api/auth/user-me', {
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+        'X-User-Token': userToken,
+      },
     });
-    if (!uRes.ok) throw new Error("Auth failed");
+    if (!uRes.ok) throw new Error('Auth failed');
     const uData = await uRes.json();
-    if (!uData.user) throw new Error("No user");
+    if (!uData.user) throw new Error('No user');
     user = uData.user;
   } catch (e) {
-    localStorage.removeItem("lovesaas_user_token");
+    localStorage.removeItem('lovesaas_user_token');
     showBuilderAuthModal();
     return false;
   }
 
   state.currentUser = user;
-  document.getElementById("builderAuthModal")?.classList.add("hidden");
-  document.getElementById("builderForbiddenModal")?.classList.add("hidden");
+  document.getElementById('builderAuthModal')?.classList.add('hidden');
+  document.getElementById('builderForbiddenModal')?.classList.add('hidden');
 
   // Account badge in header
-  const userBadge = document.getElementById("builderUserBadge");
-  const userNameEl = document.getElementById("builderUserName");
-  const userAvatarEl = document.getElementById("builderUserAvatar");
-  const displayName = user.name || user.email.split("@")[0];
+  const userBadge = document.getElementById('builderUserBadge');
+  const userNameEl = document.getElementById('builderUserName');
+  const userAvatarEl = document.getElementById('builderUserAvatar');
+  const displayName = user.name || user.email.split('@')[0];
   if (userNameEl) userNameEl.textContent = displayName;
-  if (userAvatarEl) userAvatarEl.textContent = displayName ? displayName[0].toUpperCase() : "👤";
-  if (userBadge) userBadge.style.display = "inline-flex";
+  if (userAvatarEl)
+    userAvatarEl.textContent = displayName
+      ? displayName[0].toUpperCase()
+      : '👤';
+  if (userBadge) userBadge.style.display = 'none';
+  updateUserMenuUI();
 
-  const isAdmin = user.role === "admin";
+  const isAdmin = user.role === 'admin';
 
   // Admin has access to all sites
   if (isAdmin) {
-    state.userRole = "admin";
+    state.userRole = 'admin';
     state.isPurchased = true;
-    state.adminPin = "admin1234";
-    state.authToken = "master-admin-token-lovesaas";
+    state.authToken = userToken || '';
 
     if (paramSlug) {
       state.slug = paramSlug;
       updateRoleUI();
+      fetchUserProjects();
       return true;
     }
     // No slug → fall through to design picker
@@ -362,8 +426,11 @@ async function checkBuilderAccess() {
   // Non-admin user: fetch user's sites
   let userDesigns = [];
   try {
-    const desRes = await fetch("/api/user/designs", {
-      headers: { "Authorization": `Bearer ${userToken}`, "X-User-Token": userToken }
+    const desRes = await fetch('/api/user/designs', {
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+        'X-User-Token': userToken,
+      },
     });
     if (desRes.ok) {
       const desData = await desRes.json();
@@ -373,25 +440,29 @@ async function checkBuilderAccess() {
   state.userDesigns = userDesigns;
 
   // If specific slug requested, ensure user owns it
-  if (paramSlug && paramSlug !== "demo") {
-    const target = userDesigns.find(d => d.slug.toLowerCase() === paramSlug.toLowerCase());
+  if (paramSlug) {
+    const target = userDesigns.find(
+      (d) => d.slug.toLowerCase() === paramSlug.toLowerCase(),
+    );
     if (!target) {
       showBuilderForbiddenModal(paramSlug);
       return false;
     }
     state.slug = target.slug;
-    state.userRole = "user";
+    state.userRole = 'user';
     state.isPurchased = true;
-    state.adminPin = target.adminPin || "1234";
-    state.authToken = target.authToken || "";
-    localStorage.setItem("lovesaas_auth", JSON.stringify({
-      slug: target.slug,
-      role: "user",
-      authToken: state.authToken,
-      adminPin: state.adminPin,
-      plan: target.plan || "vip"
-    }));
+    state.authToken = target.authToken || '';
+    localStorage.setItem(
+      'lovesaas_auth',
+      JSON.stringify({
+        slug: target.slug,
+        role: 'user',
+        authToken: state.authToken,
+        plan: target.plan || 'vip',
+      }),
+    );
     updateRoleUI();
+    fetchUserProjects();
     return true;
   }
 
@@ -400,90 +471,98 @@ async function checkBuilderAccess() {
   return false;
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
   populateInspectorSelect();
   renderPresetsUI();
 
   // Role Badge click opens Gate Modal
-  const roleBadge = document.getElementById("roleStatusBadge");
+  const roleBadge = document.getElementById('roleStatusBadge');
   if (roleBadge) {
     roleBadge.onclick = () => showAccessGateModal(state.slug);
   }
 
   // Gate Modal Tab Switcher
-  const gateTabs = document.querySelectorAll(".gate-role-tab");
-  gateTabs.forEach(tab => {
+  const gateTabs = document.querySelectorAll('.gate-role-tab');
+  gateTabs.forEach((tab) => {
     tab.onclick = () => {
       const targetTab = tab.dataset.gateTab;
-      gateTabs.forEach(t => {
-        t.classList.remove("active");
-        t.style.background = "transparent";
-        t.style.color = "#94a3b8";
+      gateTabs.forEach((t) => {
+        t.classList.remove('active');
+        t.style.background = 'transparent';
+        t.style.color = '#94a3b8';
       });
-      tab.classList.add("active");
-      tab.style.background = targetTab === "admin" ? "#10b981" : "#2563eb";
-      tab.style.color = "#ffffff";
+      tab.classList.add('active');
+      tab.style.background = targetTab === 'admin' ? '#10b981' : '#2563eb';
+      tab.style.color = '#ffffff';
 
-      document.getElementById("paneGateUser").style.display = targetTab === "user" ? "block" : "none";
-      document.getElementById("paneGateAdmin").style.display = targetTab === "admin" ? "block" : "none";
-      document.getElementById("paneGateVisitor").style.display = targetTab === "visitor" ? "block" : "none";
+      document.getElementById('paneGateUser').style.display =
+        targetTab === 'user' ? 'block' : 'none';
+      document.getElementById('paneGateAdmin').style.display =
+        targetTab === 'admin' ? 'block' : 'none';
+      document.getElementById('paneGateVisitor').style.display =
+        targetTab === 'visitor' ? 'block' : 'none';
     };
   });
 
   // User Unlock Listener
-  const btnGateUnlock = document.getElementById("btnGateUnlock");
+  const btnGateUnlock = document.getElementById('btnGateUnlock');
   if (btnGateUnlock) {
-    btnGateUnlock.addEventListener("click", async () => {
-      const slugInput = document.getElementById("gateSlugInput");
-      const pinInput = document.getElementById("gatePinInput");
-      const errorMsg = document.getElementById("gateErrorMsg");
+    btnGateUnlock.addEventListener('click', async () => {
+      const slugInput = document.getElementById('gateSlugInput');
+      const errorMsg = document.getElementById('gateErrorMsg');
       const slug = slugInput.value.trim().toLowerCase();
-      const pin = pinInput.value.trim();
 
-      if (!slug || !pin) {
-        errorMsg.textContent = "Please provide both slug and PIN.";
-        errorMsg.style.display = "block";
+      if (!slug) {
+        errorMsg.textContent = 'Please provide site slug.';
+        errorMsg.style.display = 'block';
         return;
       }
 
       btnGateUnlock.disabled = true;
-      btnGateUnlock.textContent = "Verifying...";
-      errorMsg.style.display = "none";
+      btnGateUnlock.textContent = 'Verifying...';
+      errorMsg.style.display = 'none';
 
       try {
-        const res = await fetch("/api/auth/verify-access", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ slug, pin })
+        const res = await fetch('/api/auth/verify-access', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug, token: state.authToken || '' }),
         });
         const data = await res.json();
         if (!res.ok || !data.authorized) {
-          throw new Error(data.error || "Invalid slug or PIN");
+          throw new Error(data.error || 'Invalid slug or unauthorized access');
         }
 
         state.slug = data.slug;
-        state.adminPin = pin;
         state.authToken = data.authToken;
         state.isPurchased = data.isPurchased !== false;
-        state.userRole = data.role || (data.isAdmin ? "admin" : (state.isPurchased ? "user" : "visitor"));
+        state.userRole =
+          data.role ||
+          (data.isAdmin ? 'admin' : state.isPurchased ? 'user' : 'visitor');
 
-        localStorage.setItem("lovesaas_auth", JSON.stringify({
-          slug: data.slug,
-          role: state.userRole,
-          authToken: data.authToken,
-          adminPin: pin,
-          plan: data.plan
-        }));
+        localStorage.setItem(
+          'lovesaas_auth',
+          JSON.stringify({
+            slug: data.slug,
+            role: state.userRole,
+            authToken: data.authToken,
+            plan: data.plan,
+          }),
+        );
 
         hideAccessGateModal();
         updateRoleUI();
-        window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(data.slug)}`);
+        window.history.replaceState(
+          {},
+          '',
+          `/builder?slug=${encodeURIComponent(data.slug)}`,
+        );
         await loadTenantData(state.slug);
-        showToast(`Welcome! Logged in as ${state.userRole}.`, "success");
+        showToast(`Welcome! Logged in as ${state.userRole}.`, 'success');
       } catch (err) {
         errorMsg.textContent = err.message;
-        errorMsg.style.display = "block";
+        errorMsg.style.display = 'block';
       } finally {
         btnGateUnlock.disabled = false;
         btnGateUnlock.innerHTML = `<span>Open My Design</span> <span>🔑</span>`;
@@ -492,52 +571,55 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Admin Login Listener
-  const btnGateAdminLogin = document.getElementById("btnGateAdminLogin");
+  const btnGateAdminLogin = document.getElementById('btnGateAdminLogin');
   if (btnGateAdminLogin) {
-    btnGateAdminLogin.addEventListener("click", async () => {
-      const pinInput = document.getElementById("gateAdminPinInput");
-      const slugInput = document.getElementById("gateAdminSlugInput");
-      const errorMsg = document.getElementById("gateErrorMsg");
-      const pin = pinInput.value.trim() || "admin1234";
-      const slug = slugInput.value.trim().toLowerCase() || "demo";
+    btnGateAdminLogin.addEventListener('click', async () => {
+      const slugInput = document.getElementById('gateAdminSlugInput');
+      const errorMsg = document.getElementById('gateErrorMsg');
+      const slug = (slugInput?.value || 'demo').trim().toLowerCase() || 'demo';
 
       btnGateAdminLogin.disabled = true;
-      btnGateAdminLogin.textContent = "Verifying Admin...";
-      errorMsg.style.display = "none";
+      btnGateAdminLogin.textContent = 'Verifying Admin...';
+      errorMsg.style.display = 'none';
 
       try {
-        const res = await fetch("/api/auth/verify-access", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ slug, pin })
+        const res = await fetch('/api/auth/verify-access', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug, token: userToken || '' }),
         });
         const data = await res.json();
         if (!res.ok || !data.authorized || !data.isAdmin) {
-          throw new Error(data.error || "Invalid Admin credentials");
+          throw new Error(data.error || 'Invalid Admin credentials');
         }
 
         state.slug = data.slug || slug;
-        state.adminPin = pin;
-        state.authToken = data.authToken;
-        state.userRole = "admin";
+        state.authToken = data.authToken || userToken || '';
+        state.userRole = 'admin';
         state.isPurchased = true;
 
-        localStorage.setItem("lovesaas_auth", JSON.stringify({
-          slug: state.slug,
-          role: "admin",
-          authToken: data.authToken,
-          adminPin: pin,
-          plan: "vip"
-        }));
+        localStorage.setItem(
+          'lovesaas_auth',
+          JSON.stringify({
+            slug: state.slug,
+            role: 'admin',
+            authToken: state.authToken,
+            plan: 'vip',
+          }),
+        );
 
         hideAccessGateModal();
         updateRoleUI();
-        window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(state.slug)}`);
+        window.history.replaceState(
+          {},
+          '',
+          `/builder?slug=${encodeURIComponent(state.slug)}`,
+        );
         await loadTenantData(state.slug);
-        showToast("🛡️ Master Admin logged in with full rights!", "success");
+        showToast('🛡️ Master Admin logged in with full rights!', 'success');
       } catch (err) {
         errorMsg.textContent = err.message;
-        errorMsg.style.display = "block";
+        errorMsg.style.display = 'block';
       } finally {
         btnGateAdminLogin.disabled = false;
         btnGateAdminLogin.innerHTML = `<span>Login as Admin</span> <span>🛡️</span>`;
@@ -546,17 +628,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Visitor Demo Listener
-  const btnGateDemo = document.getElementById("btnGateDemo");
+  const btnGateDemo = document.getElementById('btnGateDemo');
   if (btnGateDemo) {
-    btnGateDemo.addEventListener("click", async () => {
+    btnGateDemo.addEventListener('click', async () => {
       hideAccessGateModal();
-      state.slug = "demo";
-      state.adminPin = "1234";
-      state.userRole = "visitor";
+      state.slug = 'demo';
+      state.userRole = 'visitor';
       state.isPurchased = false;
       updateRoleUI();
-      window.history.replaceState({}, "", "/builder?slug=demo");
-      await loadTenantData("demo");
+      window.history.replaceState({}, '', '/builder?slug=demo');
+      await loadTenantData('demo');
     });
   }
 
@@ -564,16 +645,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (hasAccess) {
     await loadTenantData(state.slug);
   }
+  fetchUserProjects();
 
   const urlParams = new URLSearchParams(window.location.search);
-  const insertParam = urlParams.get("insert");
+  const insertParam = urlParams.get('insert');
   if (insertParam !== null) {
     const parsed = parseInt(insertParam, 10);
-    setTimeout(() => openAddSectionModal(isNaN(parsed) ? state.layoutOrder.length : parsed), 350);
+    setTimeout(
+      () =>
+        openAddSectionModal(isNaN(parsed) ? state.layoutOrder.length : parsed),
+      350,
+    );
   }
 
-  window.addEventListener("storage", (e) => {
-    if (e.key === "lovesaas_user_token") {
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'lovesaas_user_token') {
       checkBuilderAccess().then(() => {
         loadTenantData(state.slug);
       });
@@ -584,29 +670,49 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function loadTenantData(slug) {
   try {
     const res = await fetch(`/api/tenants/${encodeURIComponent(slug)}`);
-    if (!res.ok) throw new Error("Could not load tenant site config");
+    if (!res.ok) throw new Error('Could not load tenant site config');
     const data = await res.json();
 
     state.slug = data.slug;
-    state.partner1 = data.partner1 || (data.sectionsData && data.sectionsData.hero && data.sectionsData.hero.partner1) || "";
-    state.partner2 = data.partner2 || (data.sectionsData && data.sectionsData.hero && data.sectionsData.hero.partner2) || "";
-    state.customerEmail = data.customerEmail || "";
-    if (state.userRole !== "admin" && data.adminPin && !state.adminPin) {
-      state.adminPin = data.adminPin;
-    }
-    if (data.isPurchased !== undefined && state.userRole !== "admin") {
+    state.partner1 =
+      data.partner1 ||
+      (data.sectionsData &&
+        data.sectionsData.hero &&
+        data.sectionsData.hero.partner1) ||
+      '';
+    state.partner2 =
+      data.partner2 ||
+      (data.sectionsData &&
+        data.sectionsData.hero &&
+        data.sectionsData.hero.partner2) ||
+      '';
+    state.customerEmail = data.customerEmail || '';
+    if (data.isPurchased !== undefined && state.userRole !== 'admin') {
       state.isPurchased = data.isPurchased !== false;
     }
-    state.templatePreset = data.templatePreset || "storyteller";
-    state.themeId = (data.themeId === "romantic-rose" || !data.themeId) ? "theme-pink" : data.themeId;
-    state.layoutOrder = Array.isArray(data.layoutOrder) ? data.layoutOrder : (PRESETS.storyteller?.widgets || []);
+    state.templatePreset = data.templatePreset || 'storyteller';
+    state.themeId =
+      data.themeId === 'romantic-rose' || !data.themeId
+        ? 'theme-pink'
+        : data.themeId;
+    state.layoutOrder = Array.isArray(data.layoutOrder)
+      ? data.layoutOrder
+      : PRESETS.storyteller?.widgets || [];
     state.sectionsData = data.sectionsData || {};
 
     if (state.sectionsData.hero) {
-      if (state.partner1 && (!state.sectionsData.hero.partner1 || state.sectionsData.hero.partner1 === "Alex")) {
+      if (
+        state.partner1 &&
+        (!state.sectionsData.hero.partner1 ||
+          state.sectionsData.hero.partner1 === 'Alex')
+      ) {
         state.sectionsData.hero.partner1 = state.partner1;
       }
-      if (state.partner2 && (!state.sectionsData.hero.partner2 || state.sectionsData.hero.partner2 === "Sam")) {
+      if (
+        state.partner2 &&
+        (!state.sectionsData.hero.partner2 ||
+          state.sectionsData.hero.partner2 === 'Sam')
+      ) {
         state.sectionsData.hero.partner2 = state.partner2;
       }
     }
@@ -628,47 +734,55 @@ async function loadTenantData(slug) {
     } else {
       selectWidgetForInspector(state.activeInspectorWidget);
     }
+    document.documentElement.classList.remove('builder-gate-active');
+    document
+      .getElementById('builderDesignPickerModal')
+      ?.classList.add('hidden');
     reloadPreview();
   } catch (err) {
-    showToast("Error loading site: " + err.message, "error");
+    showToast('Error loading site: ' + err.message, 'error');
   }
 }
 
 function updateNavbarUI() {
-  currentTenantBadge.innerText = state.slug;
-  btnViewLive.href = `/sites/${state.slug}`;
-  const urlText = document.getElementById("previewUrlText");
+  if (currentTenantBadge) currentTenantBadge.innerText = state.slug || 'demo';
+  if (btnViewLive)
+    btnViewLive.href = `/sites/${encodeURIComponent(state.slug || 'demo')}`;
+  const urlText = document.getElementById('previewUrlText');
   if (urlText) {
-    urlText.textContent = `${window.location.host}/sites/${state.slug}`;
+    urlText.textContent = `${window.location.host}/sites/${state.slug || 'demo'}`;
   }
-  const presetBadge = document.getElementById("currentPresetNameBadge");
+  const presetBadge = document.getElementById('currentPresetNameBadge');
   if (presetBadge) {
-    presetBadge.textContent = PRESETS[state.templatePreset]?.name || state.templatePreset;
+    presetBadge.textContent =
+      PRESETS[state.templatePreset]?.name || state.templatePreset;
   }
+  renderProjectSwitcher();
+  updateUserMenuUI();
 }
 
 // ----------------------------------------------------
 // 1. TEMPLATE PRESETS
 // ----------------------------------------------------
-let currentWidgetFilter = "all";
-let currentWidgetSearchQuery = "";
+let currentWidgetFilter = 'all';
+let currentWidgetSearchQuery = '';
 
 function renderPresetsUI() {
-  presetGrid.innerHTML = "";
+  presetGrid.innerHTML = '';
   Object.entries(PRESETS).forEach(([key, preset]) => {
-    const card = document.createElement("div");
+    const card = document.createElement('div');
     const isActive = state.templatePreset === key;
-    card.className = `preset-card ${isActive ? "active" : ""}`;
+    card.className = `preset-card ${isActive ? 'active' : ''}`;
     card.innerHTML = `
       <div class="preset-card-header">
         <div class="preset-title-wrap">
-          <span class="preset-indicator-dot">${isActive ? "✓" : ""}</span>
+          <span class="preset-indicator-dot">${isActive ? '✓' : ''}</span>
           <h4 class="preset-title">${escapeHtml(preset.name)}</h4>
         </div>
         <span class="preset-badge">${preset.widgets.length} sections</span>
       </div>
       <p class="preset-desc">${escapeHtml(preset.desc)}</p>
-      ${isActive ? `<div class="preset-active-indicator">✓ Active Preset</div>` : ""}
+      ${isActive ? `<div class="preset-active-indicator">✓ Active Preset</div>` : ''}
     `;
     card.onclick = () => applyPreset(key);
     presetGrid.appendChild(card);
@@ -676,9 +790,9 @@ function renderPresetsUI() {
 }
 
 function applyPreset(presetKey) {
-  if (state.userRole === "visitor") {
-    showToast("🔒 Purchase now to customize template presets!", "warning");
-    window.open("/welcome#pricing", "_blank");
+  if (state.userRole === 'visitor') {
+    showToast('🔒 Purchase now to customize template presets!', 'warning');
+    window.open('/welcome#pricing', '_blank');
     return;
   }
   const preset = PRESETS[presetKey];
@@ -694,15 +808,15 @@ function applyPreset(presetKey) {
     state.activeInspectorWidget = null;
   }
 
-  const presetBadge = document.getElementById("currentPresetNameBadge");
+  const presetBadge = document.getElementById('currentPresetNameBadge');
   if (presetBadge) presetBadge.textContent = preset.name;
 
-  const wrapper = document.getElementById("presetGridWrapper");
-  if (wrapper) wrapper.classList.add("hidden");
-  const toggleText = document.getElementById("btnPresetToggleText");
-  if (toggleText) toggleText.textContent = "▾";
-  const btnToggle = document.getElementById("btnTogglePresets");
-  if (btnToggle) btnToggle.classList.remove("is-open");
+  const wrapper = document.getElementById('presetGridWrapper');
+  if (wrapper) wrapper.classList.add('hidden');
+  const toggleText = document.getElementById('btnPresetToggleText');
+  if (toggleText) toggleText.textContent = '▾';
+  const btnToggle = document.getElementById('btnTogglePresets');
+  if (btnToggle) btnToggle.classList.remove('is-open');
 
   renderPresetsUI();
   renderWidgetTray();
@@ -713,45 +827,51 @@ function applyPreset(presetKey) {
   }
   debouncedLiveUpdate(true);
   debouncedAutoSaveLayout();
-  showToast(`Applied "${preset.name}" preset`, "success");
+  showToast(`Applied "${preset.name}" preset`, 'success');
 }
 
 // ----------------------------------------------------
 // 2. MODULAR WIDGET GRID / REORDER TRAY
 // ----------------------------------------------------
 function renderWidgetTray() {
-  widgetTray.innerHTML = "";
+  widgetTray.innerHTML = '';
 
   const activeSet = new Set(state.layoutOrder);
-  const inactiveWidgets = state.allWidgetIds.filter(id => !activeSet.has(id));
+  const inactiveWidgets = state.allWidgetIds.filter((id) => !activeSet.has(id));
   const fullList = [...state.layoutOrder, ...inactiveWidgets];
 
-  const countEl = document.getElementById("activeWidgetsCount");
-  if (countEl) countEl.textContent = `${state.layoutOrder.length}/${state.allWidgetIds.length}`;
-  const countAllEl = document.getElementById("filterCountAll");
+  const countEl = document.getElementById('activeWidgetsCount');
+  if (countEl)
+    countEl.textContent = `${state.layoutOrder.length}/${state.allWidgetIds.length}`;
+  const countAllEl = document.getElementById('filterCountAll');
   if (countAllEl) countAllEl.textContent = state.allWidgetIds.length;
-  const countActiveEl = document.getElementById("filterCountActive");
+  const countActiveEl = document.getElementById('filterCountActive');
   if (countActiveEl) countActiveEl.textContent = state.layoutOrder.length;
-  const countInactiveEl = document.getElementById("filterCountInactive");
+  const countInactiveEl = document.getElementById('filterCountInactive');
   if (countInactiveEl) countInactiveEl.textContent = inactiveWidgets.length;
 
-  const tabBadge = document.getElementById("tabWidgetCountBadge");
-  if (tabBadge) tabBadge.textContent = `${state.layoutOrder.length}/${state.allWidgetIds.length}`;
+  const tabBadge = document.getElementById('tabWidgetCountBadge');
+  if (tabBadge)
+    tabBadge.textContent = `${state.layoutOrder.length}/${state.allWidgetIds.length}`;
 
-  const query = (currentWidgetSearchQuery || "").toLowerCase().trim();
-  const filteredList = fullList.filter(id => {
+  const query = (currentWidgetSearchQuery || '').toLowerCase().trim();
+  const filteredList = fullList.filter((id) => {
     const meta = WIDGET_REGISTRY[id];
     if (!meta) return false;
     const isActive = activeSet.has(id);
-    if (currentWidgetFilter === "active" && !isActive) return false;
-    if (currentWidgetFilter === "inactive" && isActive) return false;
-    if (currentWidgetFilter !== "all" && currentWidgetFilter !== "active" && currentWidgetFilter !== "inactive") {
+    if (currentWidgetFilter === 'active' && !isActive) return false;
+    if (currentWidgetFilter === 'inactive' && isActive) return false;
+    if (
+      currentWidgetFilter !== 'all' &&
+      currentWidgetFilter !== 'active' &&
+      currentWidgetFilter !== 'inactive'
+    ) {
       if (meta.category !== currentWidgetFilter) return false;
     }
     if (query) {
-      const matchTitle = (meta.title || "").toLowerCase().includes(query);
-      const matchDesc = (meta.desc || "").toLowerCase().includes(query);
-      const matchCat = (meta.category || "").toLowerCase().includes(query);
+      const matchTitle = (meta.title || '').toLowerCase().includes(query);
+      const matchDesc = (meta.desc || '').toLowerCase().includes(query);
+      const matchCat = (meta.category || '').toLowerCase().includes(query);
       const matchId = id.toLowerCase().includes(query);
       if (!matchTitle && !matchDesc && !matchCat && !matchId) return false;
     }
@@ -767,16 +887,20 @@ function renderWidgetTray() {
         <button type="button" class="btn-clear-search-pill" id="btnEmptyClearSearch">Reset Filter</button>
       </div>
     `;
-    const btnReset = document.getElementById("btnEmptyClearSearch");
+    const btnReset = document.getElementById('btnEmptyClearSearch');
     if (btnReset) {
       btnReset.onclick = () => {
-        currentWidgetSearchQuery = "";
-        currentWidgetFilter = "all";
-        const searchInput = document.getElementById("widgetSearchInput");
-        const clearBtn = document.getElementById("btnClearWidgetSearch");
-        if (searchInput) searchInput.value = "";
-        if (clearBtn) clearBtn.classList.add("hidden");
-        document.querySelectorAll(".filter-chip").forEach(c => c.classList.toggle("active", c.dataset.filter === "all"));
+        currentWidgetSearchQuery = '';
+        currentWidgetFilter = 'all';
+        const searchInput = document.getElementById('widgetSearchInput');
+        const clearBtn = document.getElementById('btnClearWidgetSearch');
+        if (searchInput) searchInput.value = '';
+        if (clearBtn) clearBtn.classList.add('hidden');
+        document
+          .querySelectorAll('.filter-chip')
+          .forEach((c) =>
+            c.classList.toggle('active', c.dataset.filter === 'all'),
+          );
         renderWidgetTray();
       };
     }
@@ -790,8 +914,8 @@ function renderWidgetTray() {
     const activeIndex = state.layoutOrder.indexOf(id);
     const isSelected = state.activeInspectorWidget === id;
 
-    const item = document.createElement("div");
-    item.className = `tray-item ${isActive ? "active-widget" : "inactive-widget"} ${isSelected ? "selected-for-edit" : ""}`;
+    const item = document.createElement('div');
+    item.className = `tray-item ${isActive ? 'active-widget' : 'inactive-widget'} ${isSelected ? 'selected-for-edit' : ''}`;
     item.draggable = isActive;
     item.dataset.widgetId = id;
     item.title = `Customize ${meta.title}`;
@@ -800,30 +924,30 @@ function renderWidgetTray() {
 
     item.innerHTML = `
       <div class="tray-lead">
-        <span class="tray-handle" title="${isActive ? "Drag to reorder" : "Disabled"}">⋮⋮</span>
-        <span class="tray-num ${isActive ? "active" : "inactive"}">${isActive ? activeIndex + 1 : "—"}</span>
+        <span class="tray-handle" title="${isActive ? 'Drag to reorder' : 'Disabled'}">⋮⋮</span>
+        <span class="tray-num ${isActive ? 'active' : 'inactive'}">${isActive ? activeIndex + 1 : '—'}</span>
         <span class="tray-icon">${meta.icon}</span>
       </div>
       <div class="tray-info">
         <div class="tray-title-row">
           <span class="tray-title">${escapeHtml(meta.title)}</span>
-          ${meta.required ? `<span class="tray-req-pill" title="Required section">Req</span>` : ""}
+          ${meta.required ? `<span class="tray-req-pill" title="Required section">Req</span>` : ''}
         </div>
         <div class="tray-sub-row">
-          <span class="tray-cat-tag cat-${escapeHtml(meta.category || "modular")}">${escapeHtml(meta.category || "modular")}</span>
+          <span class="tray-cat-tag cat-${escapeHtml(meta.category || 'modular')}">${escapeHtml(meta.category || 'modular')}</span>
           <span class="tray-desc">${escapeHtml(meta.desc)}</span>
         </div>
       </div>
       <div class="tray-actions">
-        ${isActive ? `
-          <div class="tray-reorder-arrows">
-            <button type="button" class="btn-arrow-move" data-move-widget="${id}" data-dir="-1" ${activeIndex === 0 ? "disabled" : ""} title="Move up">▲</button>
-            <button type="button" class="btn-arrow-move" data-move-widget="${id}" data-dir="1" ${activeIndex === maxPositions - 1 ? "disabled" : ""} title="Move down">▼</button>
-          </div>
+        ${
+          isActive
+            ? `
           <button type="button" class="btn-tray-remove" data-remove-tray="${id}" title="Remove section from website">✕</button>
-        ` : ""}
-        <label class="toggle-switch" title="${meta.required ? "Required section" : (isActive ? "Hide section" : "Show section")}">
-          <input type="checkbox" ${isActive ? "checked" : ""} data-toggle="${id}" ${meta.required ? "disabled" : ""}>
+        `
+            : ''
+        }
+        <label class="toggle-switch" title="${meta.required ? 'Required section' : isActive ? 'Hide section' : 'Show section'}">
+          <input type="checkbox" ${isActive ? 'checked' : ''} data-toggle="${id}" ${meta.required ? 'disabled' : ''}>
           <span class="slider"></span>
         </label>
         <span class="tray-chevron" title="Customize">›</span>
@@ -832,7 +956,13 @@ function renderWidgetTray() {
 
     item.onclick = () => {
       selectWidgetForInspector(id);
-      switchToTab("tab-inspector");
+      switchToTab('tab-inspector');
+      if (previewIframe && previewIframe.contentWindow) {
+        previewIframe.contentWindow.postMessage(
+          { type: 'SCROLL_TO_WIDGET', widgetId: id },
+          window.location.origin,
+        );
+      }
     };
 
     const removeBtn = item.querySelector(`[data-remove-tray="${id}"]`);
@@ -842,14 +972,6 @@ function renderWidgetTray() {
         removeWidgetFromLayout(id);
       };
     }
-
-    item.querySelectorAll(".btn-arrow-move").forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const dir = parseInt(btn.dataset.dir, 10);
-        moveWidgetByDelta(id, dir);
-      };
-    });
 
     const toggle = item.querySelector(`[data-toggle="${id}"]`);
     if (toggle) {
@@ -871,16 +993,16 @@ function moveWidgetByDelta(widgetId, delta) {
 }
 
 function moveWidgetToPosition(widgetId, targetIndex) {
-  if (state.userRole === "visitor") {
-    showToast("🔒 Purchase now to customize and reorder sections!", "warning");
-    window.open("/welcome#pricing", "_blank");
+  if (state.userRole === 'visitor') {
+    showToast('🔒 Purchase now to customize and reorder sections!', 'warning');
+    window.open('/welcome#pricing', '_blank');
     return;
   }
   const currentIdx = state.layoutOrder.indexOf(widgetId);
   if (currentIdx === -1) return;
   state.layoutOrder.splice(currentIdx, 1);
   state.layoutOrder.splice(targetIndex, 0, widgetId);
-  state.templatePreset = "custom";
+  state.templatePreset = 'custom';
 
   renderPresetsUI();
   renderWidgetTray();
@@ -889,9 +1011,12 @@ function moveWidgetToPosition(widgetId, targetIndex) {
 }
 
 function toggleWidgetActive(widgetId, isEnabled) {
-  if (state.userRole === "visitor") {
-    showToast("🔒 Purchase now to customize sections on your website!", "warning");
-    window.open("/welcome#pricing", "_blank");
+  if (state.userRole === 'visitor') {
+    showToast(
+      '🔒 Purchase now to customize sections on your website!',
+      'warning',
+    );
+    window.open('/welcome#pricing', '_blank');
     renderWidgetTray();
     return;
   }
@@ -903,14 +1028,14 @@ function toggleWidgetActive(widgetId, isEnabled) {
       selectWidgetForInspector(widgetId);
     }
   } else {
-    state.layoutOrder = state.layoutOrder.filter(id => id !== widgetId);
+    state.layoutOrder = state.layoutOrder.filter((id) => id !== widgetId);
     if (!state.layoutOrder.length) {
       renderInspectorEmptyState();
     } else if (state.activeInspectorWidget === widgetId) {
       selectWidgetForInspector(state.layoutOrder[0]);
     }
   }
-  state.templatePreset = "custom";
+  state.templatePreset = 'custom';
 
   renderPresetsUI();
   renderWidgetTray();
@@ -919,38 +1044,41 @@ function toggleWidgetActive(widgetId, isEnabled) {
 }
 
 function initWidgetTrayControls() {
-  const searchInput = document.getElementById("widgetSearchInput");
-  const clearBtn = document.getElementById("btnClearWidgetSearch");
+  const searchInput = document.getElementById('widgetSearchInput');
+  const clearBtn = document.getElementById('btnClearWidgetSearch');
   if (searchInput) {
     searchInput.oninput = (e) => {
       currentWidgetSearchQuery = e.target.value;
-      if (clearBtn) clearBtn.classList.toggle("hidden", !currentWidgetSearchQuery);
+      if (clearBtn)
+        clearBtn.classList.toggle('hidden', !currentWidgetSearchQuery);
       renderWidgetTray();
     };
   }
   if (clearBtn) {
     clearBtn.onclick = () => {
-      currentWidgetSearchQuery = "";
-      if (searchInput) searchInput.value = "";
-      clearBtn.classList.add("hidden");
+      currentWidgetSearchQuery = '';
+      if (searchInput) searchInput.value = '';
+      clearBtn.classList.add('hidden');
       renderWidgetTray();
     };
   }
 
-  document.querySelectorAll(".filter-chip").forEach(chip => {
+  document.querySelectorAll('.filter-chip').forEach((chip) => {
     chip.onclick = () => {
-      document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
-      chip.classList.add("active");
+      document
+        .querySelectorAll('.filter-chip')
+        .forEach((c) => c.classList.remove('active'));
+      chip.classList.add('active');
       currentWidgetFilter = chip.dataset.filter;
       renderWidgetTray();
     };
   });
 
-  const btnEnableAll = document.getElementById("btnEnableAllWidgets");
+  const btnEnableAll = document.getElementById('btnEnableAllWidgets');
   if (btnEnableAll) {
     btnEnableAll.onclick = () => {
       state.layoutOrder = [...state.allWidgetIds];
-      state.templatePreset = "custom";
+      state.templatePreset = 'custom';
       if (!state.activeInspectorWidget && state.layoutOrder.length > 0) {
         selectWidgetForInspector(state.layoutOrder[0]);
       }
@@ -961,12 +1089,14 @@ function initWidgetTrayControls() {
     };
   }
 
-  const btnDisableAll = document.getElementById("btnDisableAllWidgets");
+  const btnDisableAll = document.getElementById('btnDisableAllWidgets');
   if (btnDisableAll) {
     btnDisableAll.onclick = () => {
-      const required = state.allWidgetIds.filter(id => WIDGET_REGISTRY[id] && WIDGET_REGISTRY[id].required);
+      const required = state.allWidgetIds.filter(
+        (id) => WIDGET_REGISTRY[id] && WIDGET_REGISTRY[id].required,
+      );
       state.layoutOrder = required.length > 0 ? required : [];
-      state.templatePreset = "custom";
+      state.templatePreset = 'custom';
       if (!state.layoutOrder.length) {
         renderInspectorEmptyState();
       } else if (!state.layoutOrder.includes(state.activeInspectorWidget)) {
@@ -984,8 +1114,8 @@ function initWidgetTrayControls() {
 // 2.5 ADD SECTION / WIDGET PICKER MODAL
 // ----------------------------------------------------
 let currentAddSectionTargetIndex = null;
-let addSectionCategoryFilter = "all";
-let addSectionSearchQuery = "";
+let addSectionCategoryFilter = 'all';
+let addSectionSearchQuery = '';
 
 async function ensureDefaultWidgetData(widgetId) {
   if (state.sectionsData && state.sectionsData[widgetId]) return;
@@ -994,16 +1124,19 @@ async function ensureDefaultWidgetData(widgetId) {
 }
 
 async function addWidgetAtPosition(widgetId, targetIndex) {
-  if (state.userRole === "visitor") {
-    showToast("🔒 Purchase now to customize and add new sections!", "warning");
-    window.open("/welcome#pricing", "_blank");
+  if (state.userRole === 'visitor') {
+    showToast('🔒 Purchase now to customize and add new sections!', 'warning');
+    window.open('/welcome#pricing', '_blank');
     return;
   }
   if (!WIDGET_REGISTRY[widgetId]) return;
 
-  const validIndex = (typeof targetIndex === "number" && targetIndex >= 0 && targetIndex <= state.layoutOrder.length)
-    ? targetIndex
-    : state.layoutOrder.length;
+  const validIndex =
+    typeof targetIndex === 'number' &&
+    targetIndex >= 0 &&
+    targetIndex <= state.layoutOrder.length
+      ? targetIndex
+      : state.layoutOrder.length;
 
   const existingIdx = state.layoutOrder.indexOf(widgetId);
   if (existingIdx !== -1) {
@@ -1016,7 +1149,7 @@ async function addWidgetAtPosition(widgetId, targetIndex) {
   }
 
   state.layoutOrder.splice(finalIndex, 0, widgetId);
-  state.templatePreset = "custom";
+  state.templatePreset = 'custom';
 
   await ensureDefaultWidgetData(widgetId);
 
@@ -1029,36 +1162,45 @@ async function addWidgetAtPosition(widgetId, targetIndex) {
 
   setTimeout(() => {
     if (previewIframe && previewIframe.contentWindow) {
-      previewIframe.contentWindow.postMessage({
-        type: "SCROLL_TO_WIDGET",
-        widgetId
-      }, "*");
+      previewIframe.contentWindow.postMessage(
+        {
+          type: 'SCROLL_TO_WIDGET',
+          widgetId,
+        },
+        window.location.origin,
+      );
     }
   }, 120);
 
   selectWidgetForInspector(widgetId);
 
   const meta = WIDGET_REGISTRY[widgetId] || { title: widgetId };
-  showToast(`🎉 Added "${meta.title}" at position #${finalIndex + 1}!`, "success");
+  showToast(
+    `🎉 Added "${meta.title}" at position #${finalIndex + 1}!`,
+    'success',
+  );
 }
 
 function removeWidgetFromLayout(widgetId) {
-  if (state.userRole === "visitor") {
-    showToast("🔒 Purchase now to customize and remove sections!", "warning");
-    window.open("/welcome#pricing", "_blank");
+  if (state.userRole === 'visitor') {
+    showToast('🔒 Purchase now to customize and remove sections!', 'warning');
+    window.open('/welcome#pricing', '_blank');
     return;
   }
   if (!state.layoutOrder.includes(widgetId)) return;
 
-  state.layoutOrder = state.layoutOrder.filter(id => id !== widgetId);
-  state.templatePreset = "custom";
+  state.layoutOrder = state.layoutOrder.filter((id) => id !== widgetId);
+  state.templatePreset = 'custom';
 
   renderPresetsUI();
   renderWidgetTray();
   debouncedLiveUpdate(true);
   debouncedAutoSaveLayout();
 
-  if (state.activeInspectorWidget === widgetId || !state.layoutOrder.includes(state.activeInspectorWidget)) {
+  if (
+    state.activeInspectorWidget === widgetId ||
+    !state.layoutOrder.includes(state.activeInspectorWidget)
+  ) {
     if (state.layoutOrder.length > 0) {
       selectWidgetForInspector(state.layoutOrder[0]);
     } else {
@@ -1066,45 +1208,56 @@ function removeWidgetFromLayout(widgetId) {
     }
   }
 
-  const modal = document.getElementById("addSectionModal");
-  if (modal && !modal.classList.contains("hidden")) {
+  const modal = document.getElementById('addSectionModal');
+  if (modal && !modal.classList.contains('hidden')) {
     renderAddSectionModal();
   }
 
   const meta = WIDGET_REGISTRY[widgetId] || { title: widgetId };
-  showToast(`🗑️ Removed "${meta.title}" section from website.`, "info");
+  showToast(`🗑️ Removed "${meta.title}" section from website.`, 'info');
 }
 
 function renderAddSectionModal() {
-  const grid = document.getElementById("addSectionWidgetsGrid");
-  const subtitle = document.getElementById("addSectionModalSubtitle");
+  const grid = document.getElementById('addSectionWidgetsGrid');
+  const subtitle = document.getElementById('addSectionModalSubtitle');
   if (!grid) return;
 
   const totalWidgets = state.allWidgetIds.length;
-  const countAllSpan = document.getElementById("addSecCountAll");
+  const countAllSpan = document.getElementById('addSecCountAll');
   if (countAllSpan) countAllSpan.textContent = totalWidgets;
 
   if (subtitle) {
-    const idx = (typeof currentAddSectionTargetIndex === "number") ? currentAddSectionTargetIndex : state.layoutOrder.length;
+    const idx =
+      typeof currentAddSectionTargetIndex === 'number'
+        ? currentAddSectionTargetIndex
+        : state.layoutOrder.length;
     if (state.layoutOrder.length === 0) {
-      subtitle.innerHTML = "Inserting as the <strong>first section</strong> on your website";
+      subtitle.innerHTML =
+        'Inserting as the <strong>first section</strong> on your website';
     } else if (idx <= 0) {
-      const nextTitle = WIDGET_REGISTRY[state.layoutOrder[0]]?.title || state.layoutOrder[0];
+      const nextTitle =
+        WIDGET_REGISTRY[state.layoutOrder[0]]?.title || state.layoutOrder[0];
       subtitle.innerHTML = `Inserting at the <strong>top of website</strong> (before ${escapeHtml(nextTitle)})`;
     } else if (idx >= state.layoutOrder.length) {
-      const prevTitle = WIDGET_REGISTRY[state.layoutOrder[state.layoutOrder.length - 1]]?.title || state.layoutOrder[state.layoutOrder.length - 1];
+      const prevTitle =
+        WIDGET_REGISTRY[state.layoutOrder[state.layoutOrder.length - 1]]
+          ?.title || state.layoutOrder[state.layoutOrder.length - 1];
       subtitle.innerHTML = `Inserting at the <strong>end of website</strong> (after ${escapeHtml(prevTitle)})`;
     } else {
-      const prevTitle = WIDGET_REGISTRY[state.layoutOrder[idx - 1]]?.title || state.layoutOrder[idx - 1];
-      const nextTitle = WIDGET_REGISTRY[state.layoutOrder[idx]]?.title || state.layoutOrder[idx];
+      const prevTitle =
+        WIDGET_REGISTRY[state.layoutOrder[idx - 1]]?.title ||
+        state.layoutOrder[idx - 1];
+      const nextTitle =
+        WIDGET_REGISTRY[state.layoutOrder[idx]]?.title ||
+        state.layoutOrder[idx];
       subtitle.innerHTML = `Inserting between <strong>${escapeHtml(prevTitle)}</strong> and <strong>${escapeHtml(nextTitle)}</strong>`;
     }
   }
 
-  grid.innerHTML = "";
+  grid.innerHTML = '';
 
-  const q = (addSectionSearchQuery || "").toLowerCase().trim();
-  const cat = addSectionCategoryFilter || "all";
+  const q = (addSectionSearchQuery || '').toLowerCase().trim();
+  const cat = addSectionCategoryFilter || 'all';
 
   const sortedIds = [...state.allWidgetIds].sort((a, b) => {
     const aActive = state.layoutOrder.includes(a);
@@ -1114,13 +1267,13 @@ function renderAddSectionModal() {
     return 0;
   });
 
-  const filtered = sortedIds.filter(id => {
+  const filtered = sortedIds.filter((id) => {
     const meta = WIDGET_REGISTRY[id];
     if (!meta) return false;
-    if (cat !== "all" && meta.category !== cat) return false;
+    if (cat !== 'all' && meta.category !== cat) return false;
     if (q) {
-      const matchTitle = (meta.title || "").toLowerCase().includes(q);
-      const matchDesc = (meta.desc || "").toLowerCase().includes(q);
+      const matchTitle = (meta.title || '').toLowerCase().includes(q);
+      const matchDesc = (meta.desc || '').toLowerCase().includes(q);
       const matchId = id.toLowerCase().includes(q);
       if (!matchTitle && !matchDesc && !matchId) return false;
     }
@@ -1137,45 +1290,49 @@ function renderAddSectionModal() {
     return;
   }
 
-  filtered.forEach(id => {
+  filtered.forEach((id) => {
     const meta = WIDGET_REGISTRY[id];
     if (!meta) return;
     const isActive = state.layoutOrder.includes(id);
     const activePos = state.layoutOrder.indexOf(id);
 
-    const card = document.createElement("div");
-    card.className = `add-widget-card ${isActive ? "is-active" : ""}`;
+    const card = document.createElement('div');
+    card.className = `add-widget-card ${isActive ? 'is-active' : ''}`;
     card.innerHTML = `
       <div class="add-widget-card-top">
         <div class="add-widget-icon">${meta.icon}</div>
         <div class="add-widget-details">
           <div class="add-widget-title-row">
             <span class="add-widget-name">${escapeHtml(meta.title)}</span>
-            <span class="add-widget-cat-badge">${escapeHtml(meta.category || "widget")}</span>
+            <span class="add-widget-cat-badge">${escapeHtml(meta.category || 'widget')}</span>
           </div>
-          <p class="add-widget-desc">${escapeHtml(meta.desc || "")}</p>
+          <p class="add-widget-desc">${escapeHtml(meta.desc || '')}</p>
         </div>
       </div>
       <div class="add-widget-card-bottom">
-        <span class="add-widget-status ${isActive ? "active" : ""}">
-          ${isActive ? `✓ On site (#${activePos + 1})` : "✨ Available"}
+        <span class="add-widget-status ${isActive ? 'active' : ''}">
+          ${isActive ? `✓ On site (#${activePos + 1})` : '✨ Available'}
         </span>
         <div style="display: flex; gap: 6px;">
           <button type="button" class="btn-add-widget-action preview-btn" data-preview-id="${id}" title="Preview full widget">
             👁️ Preview
           </button>
-          ${isActive ? `
+          ${
+            isActive
+              ? `
             <button type="button" class="btn-add-widget-action remove-btn" data-remove-id="${id}" title="Remove this section from website">
               ✕ Remove
             </button>
             <button type="button" class="btn-add-widget-action move-btn" data-add-id="${id}" title="Move section to this position">
               ↕ Move
             </button>
-          ` : `
+          `
+              : `
             <button type="button" class="btn-add-widget-action" data-add-id="${id}">
               + Add Section
             </button>
-          `}
+          `
+          }
         </div>
       </div>
     `;
@@ -1207,51 +1364,61 @@ function renderAddSectionModal() {
 }
 
 function openAddSectionModal(insertIndex) {
-  const modal = document.getElementById("addSectionModal");
+  const modal = document.getElementById('addSectionModal');
   if (!modal) return;
-  currentAddSectionTargetIndex = (typeof insertIndex === "number") ? insertIndex : state.layoutOrder.length;
-  addSectionCategoryFilter = "all";
-  addSectionSearchQuery = "";
+  currentAddSectionTargetIndex =
+    typeof insertIndex === 'number' ? insertIndex : state.layoutOrder.length;
+  addSectionCategoryFilter = 'all';
+  addSectionSearchQuery = '';
 
-  const searchInput = document.getElementById("addSectionSearchInput");
-  const clearBtn = document.getElementById("btnClearAddSectionSearch");
-  if (searchInput) searchInput.value = "";
-  if (clearBtn) clearBtn.classList.add("hidden");
+  const searchInput = document.getElementById('addSectionSearchInput');
+  const clearBtn = document.getElementById('btnClearAddSectionSearch');
+  if (searchInput) searchInput.value = '';
+  if (clearBtn) clearBtn.classList.add('hidden');
 
-  document.querySelectorAll(".add-sec-filter-chip").forEach(chip => {
-    chip.classList.toggle("active", chip.dataset.cat === "all");
+  document.querySelectorAll('.add-sec-filter-chip').forEach((chip) => {
+    chip.classList.toggle('active', chip.dataset.cat === 'all');
   });
 
   renderAddSectionModal();
-  modal.classList.remove("hidden");
+  modal.classList.remove('hidden');
 }
 
 function closeAddSectionModal() {
-  const modal = document.getElementById("addSectionModal");
-  if (modal) modal.classList.add("hidden");
+  const modal = document.getElementById('addSectionModal');
+  if (modal) modal.classList.add('hidden');
   currentAddSectionTargetIndex = null;
 }
 
 let currentPreviewWidgetId = null;
 function openWidgetPreviewModal(widgetId) {
-  const modal = document.getElementById("widgetPreviewModal");
+  const modal = document.getElementById('widgetPreviewModal');
   if (!modal) return;
-  const meta = WIDGET_REGISTRY[widgetId] || { title: widgetId, icon: "🧩", category: "WIDGET", desc: "" };
+  const meta = WIDGET_REGISTRY[widgetId] || {
+    title: widgetId,
+    icon: '🧩',
+    category: 'WIDGET',
+    desc: '',
+  };
   currentPreviewWidgetId = widgetId;
 
-  const iconEl = document.getElementById("widgetPreviewIcon");
-  const titleEl = document.getElementById("widgetPreviewModalTitle");
-  const catEl = document.getElementById("widgetPreviewCategory");
-  const descEl = document.getElementById("widgetPreviewDesc");
-  const imgEl = document.getElementById("widgetPreviewImg");
-  const addBtn = document.getElementById("btnAddFromPreviewBtn");
+  const iconEl = document.getElementById('widgetPreviewIcon');
+  const titleEl = document.getElementById('widgetPreviewModalTitle');
+  const catEl = document.getElementById('widgetPreviewCategory');
+  const descEl = document.getElementById('widgetPreviewDesc');
+  const imgEl = document.getElementById('widgetPreviewImg');
+  const addBtn = document.getElementById('btnAddFromPreviewBtn');
 
-  if (iconEl) iconEl.textContent = meta.icon || "✨";
+  if (iconEl) iconEl.textContent = meta.icon || '✨';
   if (titleEl) titleEl.textContent = meta.title || widgetId;
-  if (catEl) catEl.textContent = (meta.category || "widget").toUpperCase();
-  if (descEl) descEl.textContent = meta.desc || "Visual preview of this widget fully opened and visible.";
+  if (catEl) catEl.textContent = (meta.category || 'widget').toUpperCase();
+  if (descEl)
+    descEl.textContent =
+      meta.desc || 'Visual preview of this widget fully opened and visible.';
 
-  const previewUri = (window.getWidgetPreviewImage && window.getWidgetPreviewImage(widgetId)) || "";
+  const previewUri =
+    (window.getWidgetPreviewImage && window.getWidgetPreviewImage(widgetId)) ||
+    '';
   if (imgEl) {
     imgEl.src = previewUri;
     imgEl.alt = `${meta.title} Full Preview`;
@@ -1259,7 +1426,7 @@ function openWidgetPreviewModal(widgetId) {
 
   const isActive = state.layoutOrder.includes(widgetId);
   if (addBtn) {
-    addBtn.innerHTML = isActive ? "↕ Move Section Here" : "+ Add This Section";
+    addBtn.innerHTML = isActive ? '↕ Move Section Here' : '+ Add This Section';
     addBtn.onclick = () => {
       addWidgetAtPosition(widgetId, currentAddSectionTargetIndex);
       closeWidgetPreviewModal();
@@ -1267,26 +1434,26 @@ function openWidgetPreviewModal(widgetId) {
     };
   }
 
-  modal.classList.remove("hidden");
+  modal.classList.remove('hidden');
 }
 
 function closeWidgetPreviewModal() {
-  const modal = document.getElementById("widgetPreviewModal");
-  if (modal) modal.classList.add("hidden");
+  const modal = document.getElementById('widgetPreviewModal');
+  if (modal) modal.classList.add('hidden');
   currentPreviewWidgetId = null;
 }
 
 function initAddSectionModalControls() {
-  const modal = document.getElementById("addSectionModal");
-  const btnOpen = document.getElementById("btnSidebarAddSection");
-  const btnClose = document.getElementById("btnCloseAddSectionModal");
-  const btnCancel = document.getElementById("btnCancelAddSectionModal");
-  const searchInput = document.getElementById("addSectionSearchInput");
-  const clearBtn = document.getElementById("btnClearAddSectionSearch");
+  const modal = document.getElementById('addSectionModal');
+  const btnOpen = document.getElementById('btnSidebarAddSection');
+  const btnClose = document.getElementById('btnCloseAddSectionModal');
+  const btnCancel = document.getElementById('btnCancelAddSectionModal');
+  const searchInput = document.getElementById('addSectionSearchInput');
+  const clearBtn = document.getElementById('btnClearAddSectionSearch');
 
-  const previewModal = document.getElementById("widgetPreviewModal");
-  const btnClosePreview = document.getElementById("btnCloseWidgetPreviewModal");
-  const btnCancelPreview = document.getElementById("btnCancelWidgetPreview");
+  const previewModal = document.getElementById('widgetPreviewModal');
+  const btnClosePreview = document.getElementById('btnCloseWidgetPreviewModal');
+  const btnCancelPreview = document.getElementById('btnCancelWidgetPreview');
 
   if (btnClosePreview) btnClosePreview.onclick = closeWidgetPreviewModal;
   if (btnCancelPreview) btnCancelPreview.onclick = closeWidgetPreviewModal;
@@ -1298,9 +1465,12 @@ function initAddSectionModalControls() {
 
   if (btnOpen) {
     btnOpen.onclick = () => {
-      if (state.userRole === "visitor") {
-        showToast("🔒 Purchase now to customize and add new sections!", "warning");
-        window.open("/welcome#pricing", "_blank");
+      if (state.userRole === 'visitor') {
+        showToast(
+          '🔒 Purchase now to customize and add new sections!',
+          'warning',
+        );
+        window.open('/welcome#pricing', '_blank');
         return;
       }
       openAddSectionModal(state.layoutOrder.length);
@@ -1321,24 +1491,26 @@ function initAddSectionModalControls() {
   if (searchInput) {
     searchInput.oninput = (e) => {
       addSectionSearchQuery = e.target.value;
-      if (clearBtn) clearBtn.classList.toggle("hidden", !addSectionSearchQuery);
+      if (clearBtn) clearBtn.classList.toggle('hidden', !addSectionSearchQuery);
       renderAddSectionModal();
     };
   }
 
   if (clearBtn) {
     clearBtn.onclick = () => {
-      addSectionSearchQuery = "";
-      if (searchInput) searchInput.value = "";
-      clearBtn.classList.add("hidden");
+      addSectionSearchQuery = '';
+      if (searchInput) searchInput.value = '';
+      clearBtn.classList.add('hidden');
       renderAddSectionModal();
     };
   }
 
-  document.querySelectorAll(".add-sec-filter-chip").forEach(chip => {
+  document.querySelectorAll('.add-sec-filter-chip').forEach((chip) => {
     chip.onclick = () => {
-      document.querySelectorAll(".add-sec-filter-chip").forEach(c => c.classList.remove("active"));
-      chip.classList.add("active");
+      document
+        .querySelectorAll('.add-sec-filter-chip')
+        .forEach((c) => c.classList.remove('active'));
+      chip.classList.add('active');
       addSectionCategoryFilter = chip.dataset.cat;
       renderAddSectionModal();
     };
@@ -1348,31 +1520,33 @@ function initAddSectionModalControls() {
 // Drag & drop handlers
 let draggedElement = null;
 function setupDragEvents(el) {
-  el.addEventListener("dragstart", (e) => {
+  el.addEventListener('dragstart', (e) => {
     draggedElement = el;
-    el.classList.add("dragging");
-    e.dataTransfer.effectAllowed = "move";
+    el.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
   });
 
-  el.addEventListener("dragend", () => {
-    if (draggedElement) draggedElement.classList.remove("dragging");
+  el.addEventListener('dragend', () => {
+    if (draggedElement) draggedElement.classList.remove('dragging');
     draggedElement = null;
-    document.querySelectorAll(".tray-item").forEach(i => i.classList.remove("drag-over"));
+    document
+      .querySelectorAll('.tray-item')
+      .forEach((i) => i.classList.remove('drag-over'));
   });
 
-  el.addEventListener("dragover", (e) => {
+  el.addEventListener('dragover', (e) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    el.classList.add("drag-over");
+    e.dataTransfer.dropEffect = 'move';
+    el.classList.add('drag-over');
   });
 
-  el.addEventListener("dragleave", () => {
-    el.classList.remove("drag-over");
+  el.addEventListener('dragleave', () => {
+    el.classList.remove('drag-over');
   });
 
-  el.addEventListener("drop", (e) => {
+  el.addEventListener('drop', (e) => {
     e.preventDefault();
-    el.classList.remove("drag-over");
+    el.classList.remove('drag-over');
     if (!draggedElement || draggedElement === el) return;
 
     const sourceId = draggedElement.dataset.widgetId;
@@ -1386,7 +1560,7 @@ function setupDragEvents(el) {
       const targetIdx = state.layoutOrder.indexOf(targetId);
       state.layoutOrder.splice(sourceIdx, 1);
       state.layoutOrder.splice(targetIdx, 0, sourceId);
-      state.templatePreset = "custom";
+      state.templatePreset = 'custom';
       renderPresetsUI();
       renderWidgetTray();
       debouncedLiveUpdate(true);
@@ -1399,52 +1573,53 @@ function setupDragEvents(el) {
 // 3. WIDGET CONTENT INSPECTOR (ALL 13 MODULES)
 // ----------------------------------------------------
 const WIDGET_CATEGORIES = {
-  hero: "Core Header",
-  love_meter: "Interactive Widget",
-  reasons: "Love Lists",
-  timeline: "Story Chapters",
-  map: "Places Map",
-  truth_dare: "Couples Game",
-  spinner: "Date Spinner",
-  memories: "Photo Gallery",
-  coupons: "Love Scratchcards",
-  boarding_pass: "Romantic Trips",
-  quiz: "Trivia Challenge",
-  letter: "Love Note",
-  playful: "Mini Game",
-  candle_blowout: "Birthday Wish",
-  milestone_stats: "Life Counter",
-  gift_unboxer: "3D Surprise",
-  roast_toast: "Party Game",
-  guestbook: "Wish Board",
-  party_jukebox: "Music & Beats",
-  tenure_ticker: "Precision Counter",
-  star_map: "Celestial Map",
-  then_now_slider: "Split Comparison",
-  bucket_list: "Shared Goals",
-  audio_capsule: "Voice Vault",
-  milestone_odyssey: "Journey Map"
+  hero: 'Core Header',
+  love_meter: 'Interactive Widget',
+  reasons: 'Love Lists',
+  timeline: 'Story Chapters',
+  map: 'Places Map',
+  truth_dare: 'Couples Game',
+  spinner: 'Date Spinner',
+  memories: 'Photo Gallery',
+  coupons: 'Love Scratchcards',
+  boarding_pass: 'Romantic Trips',
+  quiz: 'Trivia Challenge',
+  letter: 'Love Note',
+  playful: 'Mini Game',
+  candle_blowout: 'Birthday Wish',
+  milestone_stats: 'Life Counter',
+  gift_unboxer: '3D Surprise',
+  roast_toast: 'Party Game',
+  guestbook: 'Wish Board',
+  party_jukebox: 'Music & Beats',
+  tenure_ticker: 'Precision Counter',
+  star_map: 'Celestial Map',
+  then_now_slider: 'Split Comparison',
+  bucket_list: 'Shared Goals',
+  audio_capsule: 'Voice Vault',
+  milestone_odyssey: 'Journey Map',
+  valentine_scratch: 'Valentine Scratchcard',
 };
 
 let activeMediaPickerCallback = null;
-let activePickerFilter = "all";
-let activePickerQuery = "";
+let activePickerFilter = 'all';
+let activePickerQuery = '';
 
-async function openMediaPicker({ filter = "all", onSelect } = {}) {
-  const modal = document.getElementById("mediaPickerModal");
-  const grid = document.getElementById("mediaPickerGrid");
-  const searchInput = document.getElementById("mediaPickerSearchInput");
-  const counter = document.getElementById("mediaPickerCounter");
-  const directUpload = document.getElementById("mediaPickerDirectUpload");
+async function openMediaPicker({ filter = 'all', onSelect } = {}) {
+  const modal = document.getElementById('mediaPickerModal');
+  const grid = document.getElementById('mediaPickerGrid');
+  const searchInput = document.getElementById('mediaPickerSearchInput');
+  const counter = document.getElementById('mediaPickerCounter');
+  const directUpload = document.getElementById('mediaPickerDirectUpload');
   if (!modal || !grid) return;
 
   activeMediaPickerCallback = onSelect;
   activePickerFilter = filter;
-  activePickerQuery = "";
-  if (searchInput) searchInput.value = "";
+  activePickerQuery = '';
+  if (searchInput) searchInput.value = '';
 
-  document.querySelectorAll(".picker-filter-chip").forEach(chip => {
-    chip.classList.toggle("active", chip.dataset.pickerFilter === filter);
+  document.querySelectorAll('.picker-filter-chip').forEach((chip) => {
+    chip.classList.toggle('active', chip.dataset.pickerFilter === filter);
   });
 
   if (!state.mediaAssets || state.mediaAssets.length === 0) {
@@ -1453,18 +1628,23 @@ async function openMediaPicker({ filter = "all", onSelect } = {}) {
 
   function renderPickerGrid() {
     const assets = state.mediaAssets || [];
-    const query = (activePickerQuery || "").toLowerCase();
+    const query = (activePickerQuery || '').toLowerCase();
     const currentFilter = activePickerFilter;
 
-    const filtered = assets.filter(a => {
-      if (currentFilter === "image" && a.isAudio) return false;
-      if (currentFilter === "audio" && !a.isAudio) return false;
-      if (query && !a.name.toLowerCase().includes(query) && !a.url.toLowerCase().includes(query)) return false;
+    const filtered = assets.filter((a) => {
+      if (currentFilter === 'image' && a.isAudio) return false;
+      if (currentFilter === 'audio' && !a.isAudio) return false;
+      if (
+        query &&
+        !a.name.toLowerCase().includes(query) &&
+        !a.url.toLowerCase().includes(query)
+      )
+        return false;
       return true;
     });
 
     if (counter) {
-      counter.textContent = `${filtered.length} matching asset${filtered.length === 1 ? "" : "s"}`;
+      counter.textContent = `${filtered.length} matching asset${filtered.length === 1 ? '' : 's'}`;
     }
 
     if (filtered.length === 0) {
@@ -1478,29 +1658,32 @@ async function openMediaPicker({ filter = "all", onSelect } = {}) {
       return;
     }
 
-    grid.innerHTML = filtered.map(a => {
-      const sizeStr = a.size ? formatBytes(a.size) : "";
-      return `
+    grid.innerHTML = filtered
+      .map((a) => {
+        const sizeStr = a.size ? formatBytes(a.size) : '';
+        return `
         <div class="media-picker-item" data-url="${escapeHtml(a.url)}">
-          ${a.isAudio
-            ? `<div style="height:62px; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color:#fff; border-radius:6px; font-size:1.4rem;">
+          ${
+            a.isAudio
+              ? `<div style="height:62px; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color:#fff; border-radius:6px; font-size:1.4rem;">
                 <span>🎵</span>
-                ${sizeStr ? `<span style="font-size:0.58rem; opacity:0.8;">${escapeHtml(sizeStr)}</span>` : ""}
+                ${sizeStr ? `<span style="font-size:0.58rem; opacity:0.8;">${escapeHtml(sizeStr)}</span>` : ''}
                </div>`
-            : `<div style="position:relative; width:100%; height:62px; overflow:hidden; border-radius:6px;">
-                <img src="${escapeHtml(a.url)}" style="width:100%; height:100%; object-fit:cover;" loading="lazy">
-                ${sizeStr ? `<span class="media-size-badge">${escapeHtml(sizeStr)}</span>` : ""}
+              : `<div style="position:relative; width:100%; height:62px; overflow:hidden; border-radius:6px;">
+                <img src="${escapeHtml(a.url)}" style="width:100%; height:100%; object-fit:cover;" loading="lazy" onerror="this.closest('.media-picker-item').style.display='none';">
+                ${sizeStr ? `<span class="media-size-badge">${escapeHtml(sizeStr)}</span>` : ''}
                </div>`
           }
           <span class="media-picker-item-name" title="${escapeHtml(a.name)}">${escapeHtml(a.name)}</span>
         </div>
       `;
-    }).join("");
+      })
+      .join('');
 
-    grid.querySelectorAll(".media-picker-item").forEach(item => {
+    grid.querySelectorAll('.media-picker-item').forEach((item) => {
       item.onclick = () => {
-        const url = item.getAttribute("data-url");
-        if (typeof activeMediaPickerCallback === "function") {
+        const url = item.getAttribute('data-url');
+        if (typeof activeMediaPickerCallback === 'function') {
           activeMediaPickerCallback(url);
         }
         closeMediaPicker();
@@ -1515,11 +1698,13 @@ async function openMediaPicker({ filter = "all", onSelect } = {}) {
     };
   }
 
-  document.querySelectorAll(".picker-filter-chip").forEach(chip => {
+  document.querySelectorAll('.picker-filter-chip').forEach((chip) => {
     chip.onclick = () => {
-      document.querySelectorAll(".picker-filter-chip").forEach(c => c.classList.remove("active"));
-      chip.classList.add("active");
-      activePickerFilter = chip.dataset.pickerFilter || "all";
+      document
+        .querySelectorAll('.picker-filter-chip')
+        .forEach((c) => c.classList.remove('active'));
+      chip.classList.add('active');
+      activePickerFilter = chip.dataset.pickerFilter || 'all';
       renderPickerGrid();
     };
   });
@@ -1531,7 +1716,9 @@ async function openMediaPicker({ filter = "all", onSelect } = {}) {
       try {
         if (counter) counter.textContent = `Uploading ${file.name}...`;
         const publicUrl = await uploadFileToR2(file);
-        const isAudio = (file.type && file.type.startsWith("audio/")) || /\.(mp3|m4a|m4r|wav|ogg)$/i.test(file.name);
+        const isAudio =
+          (file.type && file.type.startsWith('audio/')) ||
+          /\.(mp3|m4a|m4r|wav|ogg)$/i.test(file.name);
         if (!state.mediaAssets) state.mediaAssets = [];
         state.mediaAssets.unshift({
           key: file.name,
@@ -1539,80 +1726,93 @@ async function openMediaPicker({ filter = "all", onSelect } = {}) {
           url: publicUrl,
           size: file.size,
           isAudio,
-          isUploaded: true
+          isUploaded: true,
         });
-        if (typeof activeMediaPickerCallback === "function") {
+        if (typeof activeMediaPickerCallback === 'function') {
           activeMediaPickerCallback(publicUrl);
         }
         closeMediaPicker();
         renderMediaLibraryUI(true);
       } catch (err) {
-        alert("Upload failed: " + err.message);
+        alert('Upload failed: ' + err.message);
       } finally {
-        directUpload.value = "";
+        directUpload.value = '';
       }
     };
   }
 
   renderPickerGrid();
 
-  const btnClose = document.getElementById("btnCloseMediaPicker");
-  const btnCancel = document.getElementById("btnCancelMediaPicker");
+  const btnClose = document.getElementById('btnCloseMediaPicker');
+  const btnCancel = document.getElementById('btnCancelMediaPicker');
   if (btnClose) btnClose.onclick = closeMediaPicker;
   if (btnCancel) btnCancel.onclick = closeMediaPicker;
-  modal.onclick = (e) => { if (e.target === modal) closeMediaPicker(); };
+  modal.onclick = (e) => {
+    if (e.target === modal) closeMediaPicker();
+  };
 
-  modal.classList.remove("hidden");
+  modal.classList.remove('hidden');
 }
+window.openMediaPicker = openMediaPicker;
 
 function closeMediaPicker() {
-  const modal = document.getElementById("mediaPickerModal");
-  if (modal) modal.classList.add("hidden");
+  const modal = document.getElementById('mediaPickerModal');
+  if (modal) modal.classList.add('hidden');
   activeMediaPickerCallback = null;
 }
 
 async function resetWidgetData(widgetId) {
   try {
-    const res = await fetch("/api/default-sections");
+    const res = await fetch('/api/default-sections');
     if (res.ok) {
       const { defaults } = await res.json();
       if (defaults && defaults[widgetId]) {
-        state.sectionsData[widgetId] = JSON.parse(JSON.stringify(defaults[widgetId]));
+        state.sectionsData[widgetId] = JSON.parse(
+          JSON.stringify(defaults[widgetId]),
+        );
         return true;
       }
     }
   } catch (err) {
-    console.warn("resetWidgetData failed:", err);
+    console.warn('resetWidgetData failed:', err);
   }
   return false;
 }
 
 function populateInspectorSelect() {
   if (!inspectorWidgetSelect) return;
-  inspectorWidgetSelect.innerHTML = "";
+  inspectorWidgetSelect.innerHTML = '';
   state.allWidgetIds.forEach((id) => {
     const meta = WIDGET_REGISTRY[id];
     if (!meta) return;
     const orderPos = state.layoutOrder.indexOf(id);
-    const opt = document.createElement("option");
+    const opt = document.createElement('option');
     opt.value = id;
     opt.textContent = `${meta.icon} ${meta.title} (${orderPos >= 0 ? '#' + (orderPos + 1) : 'Off'})`;
     inspectorWidgetSelect.appendChild(opt);
   });
-  inspectorWidgetSelect.onchange = (e) => selectWidgetForInspector(e.target.value);
+  inspectorWidgetSelect.onchange = (e) => {
+    selectWidgetForInspector(e.target.value);
+    if (previewIframe && previewIframe.contentWindow) {
+      previewIframe.contentWindow.postMessage(
+        { type: 'SCROLL_TO_WIDGET', widgetId: e.target.value },
+        window.location.origin,
+      );
+    }
+  };
 }
 
 function renderInspectorEmptyState() {
   state.activeInspectorWidget = null;
 
-  const pill = document.getElementById("tabActiveWidgetPill");
+  const pill = document.getElementById('tabActiveWidgetPill');
   if (pill) {
-    pill.textContent = "";
-    pill.style.display = "none";
+    pill.textContent = '';
+    pill.style.display = 'none';
   }
 
-  const stickyHeader = document.querySelector(".inspector-sticky-header");
-  if (stickyHeader) stickyHeader.classList.add("hidden");
+  const stickyHeader = document.querySelector('.inspector-sticky-header');
+  if (stickyHeader) stickyHeader.classList.add('hidden');
 
   if (inspectorFormContainer) {
     inspectorFormContainer.innerHTML = `
@@ -1625,13 +1825,15 @@ function renderInspectorEmptyState() {
         </button>
       </div>
     `;
-    const btnGo = document.getElementById("btnInspectorGoToSections");
+    const btnGo = document.getElementById('btnInspectorGoToSections');
     if (btnGo) {
-      btnGo.onclick = () => switchToTab("tab-widgets");
+      btnGo.onclick = () => switchToTab('tab-widgets');
     }
   }
 
-  document.querySelectorAll(".tray-item").forEach(item => item.classList.remove("selected-for-edit"));
+  document
+    .querySelectorAll('.tray-item')
+    .forEach((item) => item.classList.remove('selected-for-edit'));
 }
 
 function selectWidgetForInspector(widgetId) {
@@ -1640,43 +1842,43 @@ function selectWidgetForInspector(widgetId) {
     return;
   }
 
-  const stickyHeader = document.querySelector(".inspector-sticky-header");
-  if (stickyHeader) stickyHeader.classList.remove("hidden");
+  const stickyHeader = document.querySelector('.inspector-sticky-header');
+  if (stickyHeader) stickyHeader.classList.remove('hidden');
 
   state.activeInspectorWidget = widgetId;
   if (inspectorWidgetSelect) {
     inspectorWidgetSelect.value = widgetId;
-    Array.from(inspectorWidgetSelect.options).forEach(opt => {
+    Array.from(inspectorWidgetSelect.options).forEach((opt) => {
       const id = opt.value;
       const meta = WIDGET_REGISTRY[id];
       const orderPos = state.layoutOrder.indexOf(id);
-      opt.textContent = `${meta?.icon || "🧩"} ${meta?.title || id} (${orderPos >= 0 ? '#' + (orderPos + 1) : 'Off'})`;
+      opt.textContent = `${meta?.icon || '🧩'} ${meta?.title || id} (${orderPos >= 0 ? '#' + (orderPos + 1) : 'Off'})`;
     });
   }
 
-  const pill = document.getElementById("tabActiveWidgetPill");
+  const pill = document.getElementById('tabActiveWidgetPill');
   if (pill) {
     const meta = WIDGET_REGISTRY[widgetId];
     pill.textContent = meta?.title || widgetId;
-    pill.style.display = "";
+    pill.style.display = '';
   }
 
   const isActive = state.layoutOrder.includes(widgetId);
   const orderPos = state.layoutOrder.indexOf(widgetId);
-  const orderBadge = document.getElementById("inspectorOrderBadge");
+  const orderBadge = document.getElementById('inspectorOrderBadge');
   if (orderBadge) {
-    orderBadge.textContent = orderPos >= 0 ? `#${orderPos + 1}` : "Off";
+    orderBadge.textContent = orderPos >= 0 ? `#${orderPos + 1}` : 'Off';
   }
 
-  const moreMenu = document.getElementById("inspectorMoreMenu");
+  const moreMenu = document.getElementById('inspectorMoreMenu');
   const closeMore = () => {
-    if (moreMenu) moreMenu.classList.add("hidden");
-    const btnMore = document.getElementById("btnInspectorMore");
-    if (btnMore) btnMore.classList.remove("active");
+    if (moreMenu) moreMenu.classList.add('hidden');
+    const btnMore = document.getElementById('btnInspectorMore');
+    if (btnMore) btnMore.classList.remove('active');
   };
 
-  const btnMoveUp = document.getElementById("btnInspectorMoveUp");
-  const btnMoveDown = document.getElementById("btnInspectorMoveDown");
+  const btnMoveUp = document.getElementById('btnInspectorMoveUp');
+  const btnMoveDown = document.getElementById('btnInspectorMoveDown');
   if (btnMoveUp) {
     btnMoveUp.disabled = orderPos <= 0;
     btnMoveUp.onclick = () => {
@@ -1688,7 +1890,8 @@ function selectWidgetForInspector(widgetId) {
     };
   }
   if (btnMoveDown) {
-    btnMoveDown.disabled = orderPos < 0 || orderPos >= state.layoutOrder.length - 1;
+    btnMoveDown.disabled =
+      orderPos < 0 || orderPos >= state.layoutOrder.length - 1;
     btnMoveDown.onclick = () => {
       if (orderPos >= 0 && orderPos < state.layoutOrder.length - 1) {
         moveWidgetByStep(widgetId, 1);
@@ -1698,7 +1901,7 @@ function selectWidgetForInspector(widgetId) {
     };
   }
 
-  const btnRemoveCur = document.getElementById("btnRemoveCurrentWidget");
+  const btnRemoveCur = document.getElementById('btnRemoveCurrentWidget');
   if (btnRemoveCur) {
     btnRemoveCur.onclick = () => {
       closeMore();
@@ -1706,12 +1909,16 @@ function selectWidgetForInspector(widgetId) {
     };
   }
 
-  const btnReset = document.getElementById("btnResetWidgetContent");
+  const btnReset = document.getElementById('btnResetWidgetContent');
   if (btnReset) {
     btnReset.onclick = async () => {
       const meta = WIDGET_REGISTRY[widgetId] || { title: widgetId };
       closeMore();
-      if (confirm(`Reset "${meta.title}" to template default content? Custom changes in this section will be replaced.`)) {
+      if (
+        confirm(
+          `Reset "${meta.title}" to template default content? Custom changes in this section will be replaced.`,
+        )
+      ) {
         await resetWidgetData(widgetId);
         renderWidgetInspector(widgetId);
         debouncedLiveUpdate(true);
@@ -1719,7 +1926,7 @@ function selectWidgetForInspector(widgetId) {
     };
   }
 
-  const activeToggle = document.getElementById("inspectorWidgetActiveToggle");
+  const activeToggle = document.getElementById('inspectorWidgetActiveToggle');
   if (activeToggle) {
     activeToggle.checked = isActive;
     activeToggle.disabled = Boolean(WIDGET_REGISTRY[widgetId]?.required);
@@ -1729,44 +1936,70 @@ function selectWidgetForInspector(widgetId) {
     };
   }
 
-  const btnLocate = document.getElementById("btnLocateInPreview");
+  const btnLocate = document.getElementById('btnLocateInPreview');
   if (btnLocate) {
     btnLocate.onclick = () => {
       closeMore();
       if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage({ type: "SCROLL_TO_WIDGET", widgetId }, "*");
+        previewIframe.contentWindow.postMessage(
+          { type: 'SCROLL_TO_WIDGET', widgetId },
+          window.location.origin,
+        );
       }
     };
   }
 
   // Highlight tray item in Widgets tab
-  document.querySelectorAll(".tray-item").forEach(item => {
+  document.querySelectorAll('.tray-item').forEach((item) => {
     if (item.dataset.widgetId === widgetId) {
-      item.classList.add("selected-for-edit");
+      item.classList.add('selected-for-edit');
     } else {
-      item.classList.remove("selected-for-edit");
+      item.classList.remove('selected-for-edit');
     }
   });
 
   renderWidgetInspector(widgetId);
 }
 
+async function deleteAssetFromR2(urlOrKey) {
+  if (!urlOrKey) return false;
+  try {
+    const key = String(urlOrKey).replace(/^https?:\/\/[^\/]+/, '').replace(/^\/+/, '').replace(/^uploads\//, '').replace(/^\/+/, '');
+    const res = await fetch(
+      `/api/tenants/${encodeURIComponent(state.slug)}/media/${encodeURIComponent(key)}`,
+      {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      },
+    );
+    return res.ok;
+  } catch (err) {
+    console.warn('deleteAssetFromR2 error:', err);
+    return false;
+  }
+}
+
 function renderWidgetInspector(widgetId) {
   if (!inspectorFormContainer) return;
-  inspectorFormContainer.innerHTML = "";
+  const savedScrollTop = inspectorFormContainer.scrollTop;
+  inspectorFormContainer.innerHTML = '';
 
-  const meta = WIDGET_REGISTRY[widgetId] || { title: widgetId, icon: "🧩", desc: "" };
-  const category = WIDGET_CATEGORIES[widgetId] || "Modular Widget";
+  const meta = WIDGET_REGISTRY[widgetId] || {
+    title: widgetId,
+    icon: '🧩',
+    desc: '',
+  };
+  const category = WIDGET_CATEGORIES[widgetId] || 'Modular Widget';
 
-  const catEl = document.getElementById("inspectorMetaCat");
+  const catEl = document.getElementById('inspectorMetaCat');
   if (catEl) catEl.textContent = category;
 
-  const descEl = document.getElementById("inspectorMetaDesc");
+  const descEl = document.getElementById('inspectorMetaDesc');
   if (descEl) descEl.textContent = meta.desc;
 
-  if (state.userRole === "visitor") {
-    const lockBanner = document.createElement("div");
-    lockBanner.className = "visitor-locked-banner";
+  if (state.userRole === 'visitor') {
+    const lockBanner = document.createElement('div');
+    lockBanner.className = 'visitor-locked-banner';
     lockBanner.innerHTML = `
       <span>🔒 Purchase now to customize</span>
       <a href="/welcome#pricing" target="_blank" class="visitor-lock-btn">Unlock All Controls ↗</a>
@@ -1774,37 +2007,45 @@ function renderWidgetInspector(widgetId) {
     inspectorFormContainer.appendChild(lockBanner);
   }
 
-  const formHolder = document.createElement("div");
-  formHolder.className = "inspector-form-body";
+  const formHolder = document.createElement('div');
+  formHolder.className = 'inspector-form-body';
   inspectorFormContainer.appendChild(formHolder);
 
-  const inspectorFn = window.WIDGET_INSPECTORS && window.WIDGET_INSPECTORS[widgetId];
-  if (typeof inspectorFn === "function") {
+  const inspectorFn =
+    window.WIDGET_INSPECTORS && window.WIDGET_INSPECTORS[widgetId];
+  if (typeof inspectorFn === 'function') {
     inspectorFn(formHolder, state, {
       debouncedLiveUpdate,
       debouncedAutoSaveLayout,
       uploadFileToR2,
+      deleteAssetFromR2,
       previewIframe,
       renderWidgetInspector,
       selectWidgetForInspector,
       openMediaPicker,
       escapeHtml,
-      safeVal
+      safeVal,
     });
 
-    if (state.userRole === "visitor") {
-      if (widgetId === "hero") {
-        formHolder.querySelectorAll("input:not([id*='partner']), select, button, textarea").forEach(el => {
-          el.disabled = true;
-          el.classList.add("visitor-disabled");
-        });
+    if (state.userRole === 'visitor') {
+      if (widgetId === 'hero') {
+        formHolder
+          .querySelectorAll(
+            "input:not([id*='partner']), select, button, textarea",
+          )
+          .forEach((el) => {
+            el.disabled = true;
+            el.classList.add('visitor-disabled');
+          });
       } else {
-        formHolder.querySelectorAll("input, select, button, textarea").forEach(el => {
-          el.disabled = true;
-          el.classList.add("visitor-disabled");
-        });
-        const overlay = document.createElement("div");
-        overlay.className = "visitor-overlay-lock";
+        formHolder
+          .querySelectorAll('input, select, button, textarea')
+          .forEach((el) => {
+            el.disabled = true;
+            el.classList.add('visitor-disabled');
+          });
+        const overlay = document.createElement('div');
+        overlay.className = 'visitor-overlay-lock';
         overlay.innerHTML = `
           <span class="lock-icon">🔒</span>
           <div class="lock-title">Demo Preview Mode</div>
@@ -1813,91 +2054,131 @@ function renderWidgetInspector(widgetId) {
             Purchase now to customize ($19+) ↗
           </a>
         `;
-        formHolder.style.position = "relative";
-        formHolder.style.minHeight = "220px";
+        formHolder.style.position = 'relative';
+        formHolder.style.minHeight = '220px';
         formHolder.appendChild(overlay);
       }
     }
   } else {
     formHolder.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted);">No custom inspector available for ${widgetId}.</p>`;
   }
+
+  if (savedScrollTop > 0) {
+    inspectorFormContainer.scrollTop = savedScrollTop;
+    requestAnimationFrame(() => {
+      if (inspectorFormContainer) inspectorFormContainer.scrollTop = savedScrollTop;
+    });
+  }
 }
 
 // ----------------------------------------------------
 function reloadPreview() {
-  previewIframe.src = `/sites/${state.slug}?preview=builder&t=${Date.now()}`;
+  const isEmpty =
+    state.layoutOrder && state.layoutOrder.length === 0 ? '1' : '0';
+  previewIframe.src = `/sites/${encodeURIComponent(state.slug)}?preview=builder&empty=${isEmpty}&t=${Date.now()}`;
 }
 
 // ----------------------------------------------------
 // 5. SAVE & PUBLISH API (POSTGRESQL PERSISTENCE)
 // ----------------------------------------------------
 async function saveConfig() {
-  if (state.userRole === "visitor" || (state.slug === "demo" && state.userRole !== "admin")) {
+  if (
+    state.userRole === 'visitor' ||
+    (state.slug === 'demo' && state.userRole !== 'admin')
+  ) {
     if (state.currentUser) {
-      showToast("💡 Demo preview cannot be overwritten. Create your site to publish!", "info");
-      if (typeof window.openNewProjectModal === "function") {
+      showToast(
+        '💡 Demo preview cannot be overwritten. Create your site to publish!',
+        'info',
+      );
+      if (typeof window.openNewProjectModal === 'function') {
         window.openNewProjectModal(false);
       }
     } else {
-      showToast("🛍️ Purchase now to customize and publish your couple site!", "info");
-      window.open("/welcome#pricing", "_blank");
+      showToast(
+        '🛍️ Purchase now to customize and publish your couple site!',
+        'info',
+      );
+      window.open('/welcome#pricing', '_blank');
     }
     return;
   }
 
-  btnSaveConfig.disabled = true;
-  const saveText = btnSaveConfig.querySelector(".btn-save-text");
-  if (saveText) saveText.textContent = "Publishing...";
-  else btnSaveConfig.innerText = "Publishing...";
+  if (btnSaveConfig) {
+    btnSaveConfig.disabled = true;
+    const saveText = btnSaveConfig.querySelector('.btn-save-text');
+    if (saveText) saveText.textContent = 'Publishing...';
+    else btnSaveConfig.innerText = 'Publishing...';
+  }
+
+  const indicator = document.getElementById('autoSaveIndicator');
+  if (indicator) {
+    indicator.className = 'auto-save-indicator saving';
+    const textEl = indicator.querySelector('.indicator-text');
+    if (textEl) textEl.textContent = 'Saving...';
+  }
 
   try {
-    const headers = {
-      "Content-Type": "application/json",
-      "X-Admin-Pin": state.adminPin || ""
-    };
-    if (state.authToken) headers["X-Auth-Token"] = state.authToken;
-
-    const res = await fetch(`/api/tenants/${encodeURIComponent(state.slug)}/config`, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify({
-        templatePreset: state.templatePreset,
-        themeId: state.themeId,
-        layoutOrder: state.layoutOrder,
-        sectionsData: state.sectionsData,
-        adminPin: state.adminPin,
-        authToken: state.authToken
-      })
-    });
+    const headers = getAuthHeaders({ 'Content-Type': 'application/json' });
+    const res = await fetch(
+      `/api/tenants/${encodeURIComponent(state.slug)}/config`,
+      {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({
+          templatePreset: state.templatePreset,
+          themeId: state.themeId,
+          layoutOrder: state.layoutOrder,
+          sectionsData: state.sectionsData,
+          authToken: state.authToken,
+        }),
+      },
+    );
 
     if (!res.ok) {
       const err = await res.json();
-      throw new Error(err.error || "Save failed");
+      throw new Error(err.error || 'Save failed');
     }
 
-    if (saveText) saveText.textContent = "✓ Published!";
-    else btnSaveConfig.innerText = "✓ Published!";
-    showToast("Changes saved & published live!", "success");
+    if (btnSaveConfig) {
+      const saveText = btnSaveConfig.querySelector('.btn-save-text');
+      if (saveText) saveText.textContent = '✓ Published!';
+      else btnSaveConfig.innerText = '✓ Published!';
+    }
+    showToast('Changes saved & synced live!', 'success');
 
-    const indicator = document.getElementById("autoSaveIndicator");
     if (indicator) {
-      indicator.className = "auto-save-indicator saved";
-      const textEl = indicator.querySelector(".indicator-text");
-      if (textEl) textEl.textContent = "All changes saved";
+      indicator.className = 'auto-save-indicator saved';
+      const textEl = indicator.querySelector('.indicator-text');
+      if (textEl) textEl.textContent = 'All changes saved';
     }
 
     setTimeout(() => {
-      btnSaveConfig.disabled = false;
-      if (saveText) saveText.textContent = "Save & Publish";
-      else btnSaveConfig.innerText = "💾 Save & Publish";
+      if (btnSaveConfig) {
+        btnSaveConfig.disabled = false;
+        const saveText = btnSaveConfig.querySelector('.btn-save-text');
+        if (saveText)
+          saveText.innerHTML =
+            'Save<span class="btn-save-extra"> & Publish</span>';
+        else btnSaveConfig.innerText = '💾 Save';
+      }
     }, 1600);
 
     reloadPreview();
   } catch (err) {
-    showToast("Save Error: " + err.message, "error");
-    btnSaveConfig.disabled = false;
-    if (saveText) saveText.textContent = "Save & Publish";
-    else btnSaveConfig.innerText = "💾 Save & Publish";
+    showToast('Save Error: ' + err.message, 'error');
+    if (btnSaveConfig) {
+      btnSaveConfig.disabled = false;
+      const saveText = btnSaveConfig.querySelector('.btn-save-text');
+      if (saveText)
+        saveText.innerHTML = 'Save<span class="btn-save-extra"> & Publish</span>';
+      else btnSaveConfig.innerText = '💾 Save';
+    }
+    if (indicator) {
+      indicator.className = 'auto-save-indicator';
+      const textEl = indicator.querySelector('.indicator-text');
+      if (textEl) textEl.textContent = 'Unsaved changes';
+    }
   }
 }
 
@@ -1905,71 +2186,95 @@ async function saveConfig() {
 // 6. CLOUDFLARE R2 UPLOAD PIPELINE
 // ----------------------------------------------------
 async function uploadFileToR2(file) {
-  if (state.userRole === "visitor") {
-    showToast("🔒 Purchase now to customize and upload media files!", "warning");
-    window.open("/welcome#pricing", "_blank");
-    throw new Error("Purchase now to customize and upload media files.");
+  if (state.userRole === 'visitor') {
+    showToast(
+      '🔒 Purchase now to customize and upload media files!',
+      'warning',
+    );
+    window.open('/welcome#pricing', '_blank');
+    throw new Error('Purchase now to customize and upload media files.');
   }
   if (file.size > 10 * 1024 * 1024) {
-    throw new Error("File exceeds 10 Mo limit. Please choose a file under 10 Mo.");
+    throw new Error(
+      'File exceeds 10 Mo limit. Please choose a file under 10 Mo.',
+    );
   }
-  const headers = { "Content-Type": "application/json" };
-  if (state.adminPin) headers["X-Admin-Pin"] = state.adminPin;
-  if (state.authToken) headers["X-Auth-Token"] = state.authToken;
+  const headers = getAuthHeaders({ 'Content-Type': 'application/json' });
 
-  const presignRes = await fetch(`/api/tenants/${encodeURIComponent(state.slug)}/upload-url`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ filename: file.name, contentType: file.type })
-  });
-  if (!presignRes.ok) throw new Error("Could not get upload destination");
+  const presignRes = await fetch(
+    `/api/tenants/${encodeURIComponent(state.slug)}/upload-url`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ filename: file.name, contentType: file.type }),
+    },
+  );
+  if (!presignRes.ok) {
+    const errData = await presignRes.json().catch(() => ({}));
+    throw new Error(errData.error || 'Could not get upload destination');
+  }
   const dest = await presignRes.json();
 
-  let uploadRes;
-  if (dest.mode === "r2") {
+  const uploadHeaders = getAuthHeaders(file.type ? { 'Content-Type': file.type } : {});
+
+  let uploadRes = null;
+  let useFallback = dest.mode !== 'r2';
+  if (dest.mode === 'r2') {
     try {
       uploadRes = await fetch(dest.uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file
+        method: 'PUT',
+        headers: file.type ? { 'Content-Type': file.type } : {},
+        body: file,
       });
+      if (!uploadRes.ok) useFallback = true;
     } catch (err) {
-      uploadRes = await fetch(`/api/upload/local?key=${encodeURIComponent(dest.key)}`, {
-        method: "POST",
-        headers,
-        body: file
-      });
+      useFallback = true;
     }
-  } else {
-    uploadRes = await fetch(dest.uploadUrl, {
-      method: "POST",
-      body: file
+  }
+
+  if (useFallback) {
+    const localUrl = (dest.mode === 'local' && dest.uploadUrl)
+      ? dest.uploadUrl
+      : `/api/upload/local?slug=${encodeURIComponent(state.slug)}&key=${encodeURIComponent(dest.key)}${state.authToken ? `&token=${encodeURIComponent(state.authToken)}` : ''}`;
+    uploadRes = await fetch(localUrl, {
+      method: 'POST',
+      headers: uploadHeaders,
+      body: file,
     });
   }
 
-  if (!uploadRes.ok) throw new Error("Upload to destination failed");
+  if (!uploadRes || !uploadRes.ok) {
+    const errData = uploadRes ? await uploadRes.json().catch(() => ({})) : {};
+    throw new Error(errData.error || 'Upload to destination failed');
+  }
   const data = await uploadRes.json().catch(() => ({}));
   return data.publicUrl || dest.publicUrl;
 }
 
 let mediaAudioPlayer = null;
+const mediaAudioEqualizers = new Map();
 
-function formatBytes(bytes) {
-  if (!bytes) return "";
-  const k = 1024, sizes = ["B", "KB", "MB"];
+function formatFileSize(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
+const formatBytes = formatFileSize;
 
 async function fetchTenantMediaAssets() {
   const assets = [];
   const seen = new Set();
 
   try {
-    const res = await fetch(`/api/tenants/${encodeURIComponent(state.slug)}/media`);
+    const res = await fetch(
+      `/api/tenants/${encodeURIComponent(state.slug)}/media`,
+      { headers: getAuthHeaders() },
+    );
     if (res.ok) {
       const { media = [] } = await res.json();
-      media.forEach(item => {
+      media.forEach((item) => {
         if (!seen.has(item.url)) {
           seen.add(item.url);
           assets.push({ ...item, isUploaded: true, name: item.filename });
@@ -1977,35 +2282,7 @@ async function fetchTenantMediaAssets() {
       });
     }
   } catch (err) {
-    console.warn("fetchTenantMediaAssets:", err);
-  }
-
-  const hero = state.sectionsData.hero || {};
-  [hero.musicTrackUrl, hero.customAudioUrl].filter(Boolean).forEach(url => {
-    if (!seen.has(url)) {
-      seen.add(url);
-      assets.push({ key: url, name: url.split("/").pop(), url, isAudio: true, isUploaded: false });
-    }
-  });
-
-  const memItems = state.sectionsData.memories?.items;
-  if (Array.isArray(memItems)) {
-    memItems.forEach(m => {
-      if (m?.img && !seen.has(m.img)) {
-        seen.add(m.img);
-        assets.push({ key: m.id || m.img, name: m.title || m.img.split("/").pop(), url: m.img, isAudio: false, isUploaded: false });
-      }
-    });
-  }
-
-  const tlEvents = state.sectionsData.timeline?.events;
-  if (Array.isArray(tlEvents)) {
-    tlEvents.forEach(ev => {
-      if (ev?.img && !seen.has(ev.img)) {
-        seen.add(ev.img);
-        assets.push({ key: ev.title || ev.img, name: ev.title || ev.img.split("/").pop(), url: ev.img, isAudio: false, isUploaded: false });
-      }
-    });
+    console.warn('fetchTenantMediaAssets:', err);
   }
 
   state.mediaAssets = assets;
@@ -2013,14 +2290,14 @@ async function fetchTenantMediaAssets() {
 }
 
 function formatTime(sec) {
-  if (!sec || isNaN(sec)) return "0:00";
+  if (!sec || isNaN(sec)) return '0:00';
   const m = Math.floor(sec / 60);
   const s = Math.floor(sec % 60);
-  return `${m}:${s < 10 ? "0" : ""}${s}`;
+  return `${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
 async function renderMediaLibraryUI(refresh = false) {
-  const libraryGrid = document.getElementById("mediaLibraryGrid");
+  const libraryGrid = document.getElementById('mediaLibraryGrid');
   if (!libraryGrid) return;
 
   if (!state.mediaAssets || refresh) {
@@ -2028,16 +2305,16 @@ async function renderMediaLibraryUI(refresh = false) {
   }
 
   const assets = state.mediaAssets || [];
-  const filter = state.mediaFilter || "all";
-  const query = (state.mediaSearchQuery || "").toLowerCase();
+  const filter = state.mediaFilter || 'all';
+  const query = (state.mediaSearchQuery || '').toLowerCase();
 
-  const countAll = document.getElementById("mediaCountAll");
-  const countImages = document.getElementById("mediaCountImages");
-  const countAudio = document.getElementById("mediaCountAudio");
-  const tabMediaBadge = document.getElementById("tabMediaCountBadge");
+  const countAll = document.getElementById('mediaCountAll');
+  const countImages = document.getElementById('mediaCountImages');
+  const countAudio = document.getElementById('mediaCountAudio');
+  const tabMediaBadge = document.getElementById('tabMediaCountBadge');
 
-  const imgCount = assets.filter(a => !a.isAudio).length;
-  const audCount = assets.filter(a => a.isAudio).length;
+  const imgCount = assets.filter((a) => !a.isAudio).length;
+  const audCount = assets.filter((a) => a.isAudio).length;
 
   if (countAll) countAll.innerText = assets.length;
   if (countImages) countImages.innerText = imgCount;
@@ -2045,35 +2322,46 @@ async function renderMediaLibraryUI(refresh = false) {
   if (tabMediaBadge) tabMediaBadge.innerText = assets.length;
 
   const totalBytes = assets.reduce((sum, a) => sum + (a.size || 0), 0);
-  const countStat = document.getElementById("mediaStorageAssetCount");
-  const sizeStat = document.getElementById("mediaStorageTotalSize");
-  const meterFill = document.getElementById("storageMeterFill");
+  const countStat = document.getElementById('mediaStorageAssetCount');
+  const sizeStat = document.getElementById('mediaStorageTotalSize');
+  const meterFill = document.getElementById('storageMeterFill');
 
   if (countStat) countStat.innerText = assets.length;
-  if (sizeStat) sizeStat.innerText = totalBytes > 0 ? formatBytes(totalBytes) : "0 B";
+  if (sizeStat)
+    sizeStat.innerText = totalBytes > 0 ? formatBytes(totalBytes) : '0 B';
   if (meterFill) {
-    const pct = Math.min(100, Math.max(4, Math.round((totalBytes / (50 * 1024 * 1024)) * 100)));
+    const pct = Math.min(
+      100,
+      Math.max(4, Math.round((totalBytes / (50 * 1024 * 1024)) * 100)),
+    );
     meterFill.style.width = `${pct}%`;
   }
 
-  let filtered = assets.filter(a => {
-    if (filter === "image" && a.isAudio) return false;
-    if (filter === "audio" && !a.isAudio) return false;
-    if (query && !a.name.toLowerCase().includes(query) && !a.url.toLowerCase().includes(query)) return false;
+  let filtered = assets.filter((a) => {
+    if (filter === 'image' && a.isAudio) return false;
+    if (filter === 'audio' && !a.isAudio) return false;
+    if (
+      query &&
+      !a.name.toLowerCase().includes(query) &&
+      !a.url.toLowerCase().includes(query)
+    )
+      return false;
     return true;
   });
 
-  const sortMode = state.mediaSort || "newest";
+  const sortMode = state.mediaSort || 'newest';
   filtered.sort((a, b) => {
-    if (sortMode === "newest") return new Date(b.mtime || 0) - new Date(a.mtime || 0);
-    if (sortMode === "oldest") return new Date(a.mtime || 0) - new Date(b.mtime || 0);
-    if (sortMode === "name") return (a.name || "").localeCompare(b.name || "");
-    if (sortMode === "size") return (b.size || 0) - (a.size || 0);
+    if (sortMode === 'newest')
+      return new Date(b.mtime || 0) - new Date(a.mtime || 0);
+    if (sortMode === 'oldest')
+      return new Date(a.mtime || 0) - new Date(b.mtime || 0);
+    if (sortMode === 'name') return (a.name || '').localeCompare(b.name || '');
+    if (sortMode === 'size') return (b.size || 0) - (a.size || 0);
     return 0;
   });
 
-  const isListView = state.mediaViewMode === "list";
-  libraryGrid.classList.toggle("list-view", isListView);
+  const isListView = state.mediaViewMode === 'list';
+  libraryGrid.classList.toggle('list-view', isListView);
 
   if (filtered.length === 0) {
     libraryGrid.innerHTML = `
@@ -2081,7 +2369,7 @@ async function renderMediaLibraryUI(refresh = false) {
         <div style="font-size: 2rem; margin-bottom: 6px;">📂</div>
         <div style="font-weight: 600; margin-bottom: 4px; color: var(--text);">No media assets found</div>
         <div style="font-size: 0.75rem; color: var(--text-muted);">
-          ${query ? "No items matching your search filter." : "Drop photos or audio files above, or click 'Import via URL' to add media."}
+          ${query ? 'No items matching your search filter.' : "Drop photos or audio files above, or click 'Import via URL' to add media."}
         </div>
       </div>
     `;
@@ -2089,9 +2377,10 @@ async function renderMediaLibraryUI(refresh = false) {
   }
 
   if (isListView) {
-    libraryGrid.innerHTML = filtered.map(a => {
-      const sizeStr = a.size ? formatBytes(a.size) : "";
-      return `
+    libraryGrid.innerHTML = filtered
+      .map((a) => {
+        const sizeStr = a.size ? formatBytes(a.size) : '';
+        return `
         <div class="media-list-item" data-url="${escapeHtml(a.url)}">
           <div class="media-list-thumb ${a.isAudio ? 'audio-thumb' : ''} btn-preview-media" data-url="${escapeHtml(a.url)}" data-name="${escapeHtml(a.name)}" data-isaudio="${a.isAudio}">
             ${a.isAudio ? '🎵' : `<img src="${escapeHtml(a.url)}" alt="${escapeHtml(a.name)}" loading="lazy">`}
@@ -2105,29 +2394,31 @@ async function renderMediaLibraryUI(refresh = false) {
             </div>
           </div>
           <div class="media-list-actions">
-            ${a.isAudio
-              ? `<button type="button" class="media-item-btn btn-set-bgm" data-url="${escapeHtml(a.url)}" title="Set as Background Music">🎵 BGM</button>
+            ${
+              a.isAudio
+                ? `<button type="button" class="media-item-btn btn-set-bgm" data-url="${escapeHtml(a.url)}" title="Set as Background Music">🎵 BGM</button>
                  <button type="button" class="media-item-btn btn-set-voice" data-url="${escapeHtml(a.url)}" title="Set as Voice Memo">🎙️ Voice</button>`
-              : `<button type="button" class="media-item-btn btn-add-to-memories" data-url="${escapeHtml(a.url)}" data-name="${escapeHtml(a.name)}" title="Add to Memories">📷 Mem</button>
-                 <button type="button" class="media-item-btn btn-add-to-timeline" data-url="${escapeHtml(a.url)}" data-name="${escapeHtml(a.name)}" title="Add to Timeline">🗓️ Time</button>`
+                : ''
             }
             <button type="button" class="media-item-btn btn-copy-media-url" data-url="${escapeHtml(a.url)}" title="Copy Link">📋</button>
             <button type="button" class="media-item-btn btn-preview-media" data-url="${escapeHtml(a.url)}" data-name="${escapeHtml(a.name)}" data-isaudio="${a.isAudio}" title="Preview">👁️</button>
-            ${a.isUploaded ? `<button type="button" class="media-item-btn btn-delete-asset" data-key="${escapeHtml(a.filename || a.name)}" title="Delete file">🗑️</button>` : ""}
+            ${a.isUploaded ? `<button type="button" class="media-item-btn btn-delete-asset" data-key="${escapeHtml(a.filename || a.name)}" title="Delete file">🗑️</button>` : ''}
           </div>
         </div>
       `;
-    }).join("");
+      })
+      .join('');
   } else {
-    libraryGrid.innerHTML = filtered.map(a => {
-      const sizeStr = a.size ? formatBytes(a.size) : "";
-      if (a.isAudio) {
-        return `
+    libraryGrid.innerHTML = filtered
+      .map((a) => {
+        const sizeStr = a.size ? formatBytes(a.size) : '';
+        if (a.isAudio) {
+          return `
           <div class="media-item-card" data-url="${escapeHtml(a.url)}">
             <div class="media-card-thumb">
               <div class="media-audio-preview">
                 <span class="media-type-badge">AUDIO</span>
-                ${sizeStr ? `<span class="media-size-badge">${escapeHtml(sizeStr)}</span>` : ""}
+                ${sizeStr ? `<span class="media-size-badge">${escapeHtml(sizeStr)}</span>` : ''}
                 <button type="button" class="media-audio-play-btn" data-url="${escapeHtml(a.url)}" title="Play / Pause">▶</button>
                 <div class="media-audio-player-bar">
                   <div class="media-audio-scrubber" data-url="${escapeHtml(a.url)}">
@@ -2151,173 +2442,126 @@ async function renderMediaLibraryUI(refresh = false) {
             <div class="media-item-actions">
               <button type="button" class="media-item-btn btn-copy-media-url" data-url="${escapeHtml(a.url)}">📋 Copy</button>
               <button type="button" class="media-item-btn btn-preview-media" data-url="${escapeHtml(a.url)}" data-name="${escapeHtml(a.name)}" data-isaudio="true">👁️</button>
-              ${a.isUploaded ? `<button type="button" class="media-item-btn btn-delete-asset" data-key="${escapeHtml(a.filename || a.name)}" title="Delete file">🗑️</button>` : ""}
+              ${a.isUploaded ? `<button type="button" class="media-item-btn btn-delete-asset" data-key="${escapeHtml(a.filename || a.name)}" title="Delete file">🗑️</button>` : ''}
             </div>
           </div>
         `;
-      }
-      return `
+        }
+        return `
         <div class="media-item-card" data-url="${escapeHtml(a.url)}">
           <div class="media-card-thumb btn-preview-media" data-url="${escapeHtml(a.url)}" data-name="${escapeHtml(a.name)}" data-isaudio="false">
             <img src="${escapeHtml(a.url)}" alt="${escapeHtml(a.name)}" loading="lazy">
             <span class="media-type-badge">IMG</span>
-            ${sizeStr ? `<span class="media-size-badge">${escapeHtml(sizeStr)}</span>` : ""}
+            ${sizeStr ? `<span class="media-size-badge">${escapeHtml(sizeStr)}</span>` : ''}
           </div>
           <div class="media-item-info">
             <span class="media-item-name" title="${escapeHtml(a.name)}">${escapeHtml(a.name)}</span>
             <span class="media-item-url" title="${escapeHtml(a.url)}">${escapeHtml(a.url)}</span>
           </div>
-          <div style="display:flex; gap:4px;">
-            <button type="button" class="media-quick-insert-btn btn-add-to-memories" data-url="${escapeHtml(a.url)}" data-name="${escapeHtml(a.name)}" style="flex:1;">📷 Memories</button>
-            <button type="button" class="media-quick-insert-btn btn-add-to-timeline" data-url="${escapeHtml(a.url)}" data-name="${escapeHtml(a.name)}" style="flex:1;">🗓️ Timeline</button>
-          </div>
           <div class="media-item-actions">
-            <button type="button" class="media-item-btn btn-copy-media-url" data-url="${escapeHtml(a.url)}">📋 Copy</button>
+            <button type="button" class="media-item-btn btn-copy-media-url" data-url="${escapeHtml(a.url)}" title="Copy Link">📋 Copy</button>
             <button type="button" class="media-item-btn btn-preview-media" data-url="${escapeHtml(a.url)}" data-name="${escapeHtml(a.name)}" data-isaudio="false">👁️</button>
-            ${a.isUploaded ? `<button type="button" class="media-item-btn btn-delete-asset" data-key="${escapeHtml(a.filename || a.name)}" title="Delete file">🗑️</button>` : ""}
+            ${a.isUploaded ? `<button type="button" class="media-item-btn btn-delete-asset" data-key="${escapeHtml(a.filename || a.name)}" title="Delete file">🗑️</button>` : ''}
           </div>
         </div>
       `;
-    }).join("");
+      })
+      .join('');
   }
 
-  libraryGrid.querySelectorAll(".btn-copy-media-url").forEach(btn => {
+  libraryGrid.querySelectorAll('.btn-copy-media-url').forEach((btn) => {
     btn.onclick = (e) => {
       e.stopPropagation();
-      navigator.clipboard?.writeText(btn.getAttribute("data-url"));
-      btn.textContent = "✓ Copied!";
-      setTimeout(() => btn.textContent = "📋 Copy", 1200);
+      navigator.clipboard?.writeText(btn.getAttribute('data-url'));
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => (btn.textContent = '📋 Copy'), 1200);
     };
   });
 
-  libraryGrid.querySelectorAll(".btn-set-bgm").forEach(btn => {
+  libraryGrid.querySelectorAll('.btn-set-bgm').forEach((btn) => {
     btn.onclick = (e) => {
       e.stopPropagation();
-      const url = btn.getAttribute("data-url");
+      const url = btn.getAttribute('data-url');
       if (!state.sectionsData.hero) state.sectionsData.hero = {};
       state.sectionsData.hero.musicTrackUrl = url;
       state.sectionsData.hero.customAudioUrl = url;
-      btn.innerText = "✓ Set as BGM!";
+      btn.innerText = '✓ Set as BGM!';
       debouncedLiveUpdate(true);
       debouncedAutoSaveLayout();
-      if (state.activeInspectorWidget === "hero") renderWidgetInspector("hero");
+      if (state.activeInspectorWidget === 'hero') renderWidgetInspector('hero');
       renderMediaSettingsUI();
       renderSiteSettingsUI();
-      setTimeout(() => btn.innerText = "🎵 BGM", 1600);
+      setTimeout(() => (btn.innerText = '🎵 BGM'), 1600);
     };
   });
 
-  libraryGrid.querySelectorAll(".btn-set-voice").forEach(btn => {
+  libraryGrid.querySelectorAll('.btn-set-voice').forEach((btn) => {
     btn.onclick = (e) => {
       e.stopPropagation();
-      const url = btn.getAttribute("data-url");
+      const url = btn.getAttribute('data-url');
       if (!state.sectionsData.hero) state.sectionsData.hero = {};
       state.sectionsData.hero.voiceAudio = url;
-      btn.innerText = "✓ Set Voice!";
+      btn.innerText = '✓ Set Voice!';
       debouncedLiveUpdate(true);
       debouncedAutoSaveLayout();
-      if (state.activeInspectorWidget === "hero") renderWidgetInspector("hero");
+      if (state.activeInspectorWidget === 'hero') renderWidgetInspector('hero');
       renderMediaSettingsUI();
       renderSiteSettingsUI();
-      setTimeout(() => btn.innerText = "🎙️ Voice", 1600);
+      setTimeout(() => (btn.innerText = '🎙️ Voice'), 1600);
     };
   });
 
-  libraryGrid.querySelectorAll(".btn-add-to-memories").forEach(btn => {
-    btn.onclick = (e) => {
-      e.stopPropagation();
-      const url = btn.getAttribute("data-url");
-      const name = btn.getAttribute("data-name") || "Memory";
-      if (!state.sectionsData.memories || typeof state.sectionsData.memories !== "object") {
-        state.sectionsData.memories = { items: [] };
-      }
-      if (!Array.isArray(state.sectionsData.memories.items)) {
-        state.sectionsData.memories.items = [];
-      }
-      state.sectionsData.memories.items.unshift({
-        id: `mem-${Date.now()}`,
-        title: name.replace(/\.[^/.]+$/, ""),
-        desc: "Captured romance ❤️",
-        img: url
-      });
-      btn.innerText = "✓ Added!";
-      debouncedLiveUpdate();
-      debouncedAutoSaveLayout();
-      if (state.activeInspectorWidget === "memories") renderWidgetInspector("memories");
-      setTimeout(() => btn.innerText = "📷 Memories", 1600);
-    };
-  });
-
-  libraryGrid.querySelectorAll(".btn-add-to-timeline").forEach(btn => {
-    btn.onclick = (e) => {
-      e.stopPropagation();
-      const url = btn.getAttribute("data-url");
-      const name = btn.getAttribute("data-name") || "Special Date";
-      if (!state.sectionsData.timeline || typeof state.sectionsData.timeline !== "object") {
-        state.sectionsData.timeline = { events: [] };
-      }
-      if (!Array.isArray(state.sectionsData.timeline.events)) {
-        state.sectionsData.timeline.events = [];
-      }
-      state.sectionsData.timeline.events.unshift({
-        id: `tl-${Date.now()}`,
-        date: "Special Date",
-        title: name.replace(/\.[^/.]+$/, ""),
-        desc: "Our unforgettable moment together ❤️",
-        img: url
-      });
-      btn.innerText = "✓ Added!";
-      debouncedLiveUpdate();
-      debouncedAutoSaveLayout();
-      if (state.activeInspectorWidget === "timeline") renderWidgetInspector("timeline");
-      setTimeout(() => btn.innerText = "🗓️ Timeline", 1600);
-    };
-  });
-
-  libraryGrid.querySelectorAll(".btn-preview-media").forEach(el => {
+  libraryGrid.querySelectorAll('.btn-preview-media').forEach((el) => {
     el.onclick = (e) => {
       e.stopPropagation();
       openMediaLightbox({
-        url: el.getAttribute("data-url"),
-        name: el.getAttribute("data-name"),
-        isAudio: el.getAttribute("data-isaudio") === "true"
+        url: el.getAttribute('data-url'),
+        name: el.getAttribute('data-name'),
+        isAudio: el.getAttribute('data-isaudio') === 'true',
       });
     };
   });
 
-  libraryGrid.querySelectorAll(".media-audio-play-btn").forEach(btn => {
+  libraryGrid.querySelectorAll('.media-audio-play-btn').forEach((btn) => {
     btn.onclick = (e) => {
       e.stopPropagation();
-      toggleMediaAudio(btn.getAttribute("data-url"), btn);
+      toggleMediaAudio(btn.getAttribute('data-url'), btn);
     };
   });
 
-  libraryGrid.querySelectorAll(".media-audio-scrubber").forEach(bar => {
+  libraryGrid.querySelectorAll('.media-audio-scrubber').forEach((bar) => {
     bar.onclick = (e) => {
       e.stopPropagation();
-      const url = bar.getAttribute("data-url");
-      if (mediaAudioPlayer && mediaAudioPlayer.src.endsWith(url) && mediaAudioPlayer.duration) {
+      const url = bar.getAttribute('data-url');
+      if (
+        mediaAudioPlayer &&
+        mediaAudioPlayer.src.endsWith(url) &&
+        mediaAudioPlayer.duration
+      ) {
         const rect = bar.getBoundingClientRect();
-        const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const ratio = Math.max(
+          0,
+          Math.min(1, (e.clientX - rect.left) / rect.width),
+        );
         mediaAudioPlayer.currentTime = ratio * mediaAudioPlayer.duration;
       }
     };
   });
 
-  libraryGrid.querySelectorAll(".btn-delete-asset").forEach(btn => {
+  libraryGrid.querySelectorAll('.btn-delete-asset').forEach((btn) => {
     btn.onclick = async (e) => {
       e.stopPropagation();
-      const key = btn.getAttribute("data-key");
+      const key = btn.getAttribute('data-key');
       if (!confirm(`Delete "${key}" from storage?`)) return;
       try {
-        const headers = {};
-        if (state.adminPin) headers["X-Admin-Pin"] = state.adminPin;
-        if (state.authToken) headers["X-Auth-Token"] = state.authToken;
-        const res = await fetch(`/api/tenants/${encodeURIComponent(state.slug)}/media/${encodeURIComponent(key)}`, {
-          method: "DELETE",
-          headers
-        });
-        if (!res.ok) throw new Error("Delete failed");
+        const res = await fetch(
+          `/api/tenants/${encodeURIComponent(state.slug)}/media/${encodeURIComponent(key)}`,
+          {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+          },
+        );
+        if (!res.ok) throw new Error('Delete failed');
         await renderMediaLibraryUI(true);
       } catch (err) {
         alert(err.message);
@@ -2330,71 +2574,93 @@ function toggleMediaAudio(url, btn) {
   if (!mediaAudioPlayer) {
     mediaAudioPlayer = new Audio();
     mediaAudioPlayer.onended = () => {
-      document.querySelectorAll(".media-audio-play-btn").forEach(b => b.textContent = "▶");
-      document.querySelectorAll(".audio-equalizer-bars").forEach(eq => eq.classList.remove("playing"));
-      document.querySelectorAll(".media-audio-scrubber-fill").forEach(f => f.style.width = "0%");
-      document.querySelectorAll(".media-audio-time").forEach(t => t.textContent = "0:00");
+      document
+        .querySelectorAll('.media-audio-play-btn')
+        .forEach((b) => (b.textContent = '▶'));
+      document
+        .querySelectorAll('.audio-equalizer-bars')
+        .forEach((eq) => eq.classList.remove('playing'));
+      document
+        .querySelectorAll('.media-audio-scrubber-fill')
+        .forEach((f) => (f.style.width = '0%'));
+      document
+        .querySelectorAll('.media-audio-time')
+        .forEach((t) => (t.textContent = '0:00'));
     };
     mediaAudioPlayer.ontimeupdate = () => {
       if (!mediaAudioPlayer.duration) return;
       const currentUrl = mediaAudioPlayer.src;
-      document.querySelectorAll(".media-item-card, .media-list-item").forEach(item => {
-        const itemUrl = item.getAttribute("data-url");
-        if (itemUrl && currentUrl.endsWith(itemUrl)) {
-          const fill = item.querySelector(".media-audio-scrubber-fill");
-          const timeEl = item.querySelector(".media-audio-time");
-          if (fill) {
-            const pct = (mediaAudioPlayer.currentTime / mediaAudioPlayer.duration) * 100;
-            fill.style.width = `${pct}%`;
+      document
+        .querySelectorAll('.media-item-card, .media-list-item')
+        .forEach((item) => {
+          const itemUrl = item.getAttribute('data-url');
+          if (itemUrl && currentUrl.endsWith(itemUrl)) {
+            const fill = item.querySelector('.media-audio-scrubber-fill');
+            const timeEl = item.querySelector('.media-audio-time');
+            if (fill) {
+              const pct =
+                (mediaAudioPlayer.currentTime / mediaAudioPlayer.duration) *
+                100;
+              fill.style.width = `${pct}%`;
+            }
+            if (timeEl) {
+              timeEl.textContent = `${formatTime(mediaAudioPlayer.currentTime)} / ${formatTime(mediaAudioPlayer.duration)}`;
+            }
           }
-          if (timeEl) {
-            timeEl.textContent = `${formatTime(mediaAudioPlayer.currentTime)} / ${formatTime(mediaAudioPlayer.duration)}`;
-          }
-        }
-      });
+        });
     };
   }
-  const card = btn.closest(".media-item-card") || btn.closest(".media-list-item");
-  const eq = card ? card.querySelector(".audio-equalizer-bars") : null;
+  const card =
+    btn.closest('.media-item-card') || btn.closest('.media-list-item');
+  const eq = card ? card.querySelector('.audio-equalizer-bars') : null;
 
   if (mediaAudioPlayer.src.endsWith(url) && !mediaAudioPlayer.paused) {
     mediaAudioPlayer.pause();
-    btn.textContent = "▶";
-    if (eq) eq.classList.remove("playing");
+    btn.textContent = '▶';
+    if (eq) eq.classList.remove('playing');
   } else {
-    document.querySelectorAll(".media-audio-play-btn").forEach(b => b.textContent = "▶");
-    document.querySelectorAll(".audio-equalizer-bars").forEach(e => e.classList.remove("playing"));
-    document.querySelectorAll(".media-audio-scrubber-fill").forEach(f => f.style.width = "0%");
+    document
+      .querySelectorAll('.media-audio-play-btn')
+      .forEach((b) => (b.textContent = '▶'));
+    document
+      .querySelectorAll('.audio-equalizer-bars')
+      .forEach((e) => e.classList.remove('playing'));
+    document
+      .querySelectorAll('.media-audio-scrubber-fill')
+      .forEach((f) => (f.style.width = '0%'));
     mediaAudioPlayer.src = url;
-    mediaAudioPlayer.play().then(() => {
-      btn.textContent = "⏸";
-      if (eq) eq.classList.add("playing");
-    }).catch(() => {
-      btn.textContent = "▶";
-      if (eq) eq.classList.remove("playing");
-    });
+    mediaAudioPlayer
+      .play()
+      .then(() => {
+        btn.textContent = '⏸';
+        if (eq) eq.classList.add('playing');
+      })
+      .catch(() => {
+        btn.textContent = '▶';
+        if (eq) eq.classList.remove('playing');
+      });
   }
 }
 
 function openMediaLightbox({ url, name, isAudio }) {
-  const modal = document.getElementById("mediaLightboxModal");
+  const modal = document.getElementById('mediaLightboxModal');
   if (!modal) return;
-  const title = document.getElementById("lightboxTitle");
-  const content = document.getElementById("lightboxContent");
-  const btnOpen = document.getElementById("btnOpenLightboxUrl");
-  const btnCopy = document.getElementById("btnCopyLightboxUrl");
-  const urlText = document.getElementById("lightboxUrlText");
-  const icon = document.getElementById("lightboxIcon");
+  const title = document.getElementById('lightboxTitle');
+  const content = document.getElementById('lightboxContent');
+  const btnOpen = document.getElementById('btnOpenLightboxUrl');
+  const btnCopy = document.getElementById('btnCopyLightboxUrl');
+  const urlText = document.getElementById('lightboxUrlText');
+  const icon = document.getElementById('lightboxIcon');
 
-  if (title) title.innerText = name || "Media Preview";
-  if (icon) icon.innerText = isAudio ? "🎵" : "📷";
+  if (title) title.innerText = name || 'Media Preview';
+  if (icon) icon.innerText = isAudio ? '🎵' : '📷';
   if (urlText) urlText.innerText = url;
   if (btnOpen) btnOpen.href = url;
   if (btnCopy) {
     btnCopy.onclick = () => {
       navigator.clipboard?.writeText(url);
-      btnCopy.innerText = "✓ Copied!";
-      setTimeout(() => btnCopy.innerText = "📋 Copy Link", 1200);
+      btnCopy.innerText = '✓ Copied!';
+      setTimeout(() => (btnCopy.innerText = '📋 Copy Link'), 1200);
     };
   }
   if (content) {
@@ -2405,21 +2671,21 @@ function openMediaLightbox({ url, name, isAudio }) {
          </div>`
       : `<img src="${escapeHtml(url)}" alt="${escapeHtml(name)}" style="max-width: 100%; max-height: 55vh; object-fit: contain;">`;
   }
-  modal.classList.remove("hidden");
+  modal.classList.remove('hidden');
 }
 
 function closeMediaLightbox() {
-  const modal = document.getElementById("mediaLightboxModal");
+  const modal = document.getElementById('mediaLightboxModal');
   if (!modal) return;
-  modal.classList.add("hidden");
-  const content = document.getElementById("lightboxContent");
-  if (content) content.innerHTML = "";
+  modal.classList.add('hidden');
+  const content = document.getElementById('lightboxContent');
+  if (content) content.innerHTML = '';
 }
 
 async function uploadMediaFiles(files) {
   if (!files || files.length === 0) return;
-  const statusEl = document.getElementById("uploadStatusText");
-  const progressEl = document.getElementById("mediaUploadProgress");
+  const statusEl = document.getElementById('uploadStatusText');
+  const progressEl = document.getElementById('mediaUploadProgress');
 
   for (const file of files) {
     if (file.size > 10 * 1024 * 1024) {
@@ -2428,7 +2694,7 @@ async function uploadMediaFiles(files) {
     }
   }
 
-  if (progressEl) progressEl.classList.add("active");
+  if (progressEl) progressEl.classList.add('active');
 
   try {
     let count = 0;
@@ -2438,16 +2704,21 @@ async function uploadMediaFiles(files) {
 
       try {
         const publicUrl = await uploadFileToR2(file);
-        const isAudio = (file.type && file.type.startsWith("audio/")) || /\.(mp3|m4a|m4r|wav|ogg)$/i.test(file.name);
+        const isAudio =
+          (file.type && file.type.startsWith('audio/')) ||
+          /\.(mp3|m4a|m4r|wav|ogg)$/i.test(file.name);
 
         if (!isAudio) {
-          if (!state.sectionsData.memories || typeof state.sectionsData.memories !== "object") {
+          if (
+            !state.sectionsData.memories ||
+            typeof state.sectionsData.memories !== 'object'
+          ) {
             state.sectionsData.memories = {
-              tag: "Captured Memories",
-              title: "Our Favorite Moments 📷",
-              desc: "Snapshots of our laughter, late-night talks, warm hugs, and infinite love. ✨",
-              addBtnText: "📷 Add Our Photo / Video Memory",
-              items: []
+              tag: 'Captured Memories',
+              title: 'Our Favorite Moments 📷',
+              desc: 'Snapshots of our laughter, late-night talks, warm hugs, and infinite love. ✨',
+              addBtnText: '📷 Add Our Photo / Video Memory',
+              items: [],
             };
           }
           if (!Array.isArray(state.sectionsData.memories.items)) {
@@ -2455,9 +2726,9 @@ async function uploadMediaFiles(files) {
           }
           state.sectionsData.memories.items.unshift({
             id: `mem-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-            title: file.name.replace(/\.[^/.]+$/, ""),
-            desc: "Uploaded memory",
-            img: publicUrl
+            title: file.name.replace(/\.[^/.]+$/, ''),
+            desc: 'Uploaded memory',
+            img: publicUrl,
           });
         }
         count++;
@@ -2469,86 +2740,90 @@ async function uploadMediaFiles(files) {
 
     statusEl.innerText = `✓ ${count} file(s) uploaded successfully!`;
     setTimeout(() => {
-      if (statusEl.innerText.startsWith("✓")) statusEl.innerText = "";
+      if (statusEl.innerText.startsWith('✓')) statusEl.innerText = '';
     }, 4000);
 
     await renderMediaLibraryUI(true);
     renderWidgetInspector(state.activeInspectorWidget);
     debouncedLiveUpdate();
   } finally {
-    if (progressEl) progressEl.classList.remove("active");
+    if (progressEl) progressEl.classList.remove('active');
   }
 }
 
 function initMediaTabControls() {
-  const fileInput = document.getElementById("mediaUploadInput");
-  const dropZone = document.getElementById("mediaDropZone");
-  const btnPickPhotos = document.getElementById("btnPickPhotos");
-  const btnPickAudio = document.getElementById("btnPickAudio");
-  const searchInput = document.getElementById("mediaSearchInput");
-  const btnClearSearch = document.getElementById("btnClearMediaSearch");
-  const sortSelect = document.getElementById("mediaSortSelect");
-  const btnViewGrid = document.getElementById("btnViewGrid");
-  const btnViewList = document.getElementById("btnViewList");
-  const btnRefresh = document.getElementById("btnRefreshMedia");
-  const btnRefreshLib = document.getElementById("btnRefreshMediaLibrary");
-  const btnCloseLightbox = document.getElementById("btnCloseLightbox");
-  const btnCloseLightboxAlt = document.getElementById("btnCloseLightboxAlt");
-  const lightboxModal = document.getElementById("mediaLightboxModal");
+  const fileInput = document.getElementById('mediaUploadInput');
+  const dropZone = document.getElementById('mediaDropZone');
+  const btnPickPhotos = document.getElementById('btnPickPhotos');
+  const btnPickAudio = document.getElementById('btnPickAudio');
+  const searchInput = document.getElementById('mediaSearchInput');
+  const btnClearSearch = document.getElementById('btnClearMediaSearch');
+  const sortSelect = document.getElementById('mediaSortSelect');
+  const btnViewGrid = document.getElementById('btnViewGrid');
+  const btnViewList = document.getElementById('btnViewList');
+  const btnRefresh = document.getElementById('btnRefreshMedia');
+  const btnRefreshLib = document.getElementById('btnRefreshMediaLibrary');
+  const btnCloseLightbox = document.getElementById('btnCloseLightbox');
+  const btnCloseLightboxAlt = document.getElementById('btnCloseLightboxAlt');
+  const lightboxModal = document.getElementById('mediaLightboxModal');
 
   // Subnav switching inside Media tab
-  const btnSubLib = document.getElementById("btnMediaSubnavLibrary");
-  const btnSubSet = document.getElementById("btnMediaSubnavSettings");
-  const paneLib = document.getElementById("media-pane-library");
-  const paneSet = document.getElementById("media-pane-settings");
+  const btnSubLib = document.getElementById('btnMediaSubnavLibrary');
+  const btnSubSet = document.getElementById('btnMediaSubnavSettings');
+  const paneLib = document.getElementById('media-pane-library');
+  const paneSet = document.getElementById('media-pane-settings');
 
   if (btnSubLib && btnSubSet && paneLib && paneSet) {
     btnSubLib.onclick = () => {
-      btnSubLib.classList.add("active");
-      btnSubSet.classList.remove("active");
-      paneLib.classList.add("active");
-      paneSet.classList.remove("active");
+      btnSubLib.classList.add('active');
+      btnSubSet.classList.remove('active');
+      paneLib.classList.add('active');
+      paneSet.classList.remove('active');
       renderMediaLibraryUI(false);
     };
     btnSubSet.onclick = () => {
-      btnSubSet.classList.add("active");
-      btnSubLib.classList.remove("active");
-      paneSet.classList.add("active");
-      paneLib.classList.remove("active");
+      btnSubSet.classList.add('active');
+      btnSubLib.classList.remove('active');
+      paneSet.classList.add('active');
+      paneLib.classList.remove('active');
       renderMediaSettingsUI();
     };
   }
 
   // URL Import Box toggle and submit
-  const btnToggleUrlImport = document.getElementById("btnToggleUrlImport");
-  const urlImportBox = document.getElementById("mediaUrlImportBox");
-  const btnCloseUrlImport = document.getElementById("btnCloseUrlImport");
-  const btnSubmitUrlImport = document.getElementById("btnSubmitUrlImport");
-  const urlInput = document.getElementById("mediaImportUrlInput");
-  const urlStatus = document.getElementById("mediaUrlImportStatus");
+  const btnToggleUrlImport = document.getElementById('btnToggleUrlImport');
+  const urlImportBox = document.getElementById('mediaUrlImportBox');
+  const btnCloseUrlImport = document.getElementById('btnCloseUrlImport');
+  const btnSubmitUrlImport = document.getElementById('btnSubmitUrlImport');
+  const urlInput = document.getElementById('mediaImportUrlInput');
+  const urlStatus = document.getElementById('mediaUrlImportStatus');
 
   if (btnToggleUrlImport && urlImportBox) {
     btnToggleUrlImport.onclick = () => {
-      if (state.userRole === "visitor") {
-        showToast("🔒 Purchase now to customize and import media!", "warning");
-        window.open("/welcome#pricing", "_blank");
+      if (state.userRole === 'visitor') {
+        showToast('🔒 Purchase now to customize and import media!', 'warning');
+        window.open('/welcome#pricing', '_blank');
         return;
       }
-      urlImportBox.classList.toggle("hidden");
+      urlImportBox.classList.toggle('hidden');
     };
   }
   if (btnCloseUrlImport && urlImportBox) {
-    btnCloseUrlImport.onclick = () => urlImportBox.classList.add("hidden");
+    btnCloseUrlImport.onclick = () => urlImportBox.classList.add('hidden');
   }
   if (btnSubmitUrlImport && urlInput) {
     btnSubmitUrlImport.onclick = () => {
       const u = urlInput.value.trim();
       if (!u || !/^https?:\/\/.+/i.test(u)) {
-        if (urlStatus) urlStatus.innerHTML = '<span style="color:#e63946;">Please enter a valid http/https URL</span>';
+        if (urlStatus)
+          urlStatus.innerHTML =
+            '<span style="color:#e63946;">Please enter a valid http/https URL</span>';
         return;
       }
       const isAudio = /\.(mp3|m4a|m4r|wav|ogg|aac)(\?.*)?$/i.test(u);
-      const filename = u.split("/").pop().split("?")[0] || (isAudio ? "custom-audio.mp3" : "custom-photo.jpg");
+      const filename =
+        u.split('/').pop().split('?')[0] ||
+        (isAudio ? 'custom-audio.mp3' : 'custom-photo.jpg');
       if (!state.mediaAssets) state.mediaAssets = [];
       state.mediaAssets.unshift({
         key: u,
@@ -2556,13 +2831,15 @@ function initMediaTabControls() {
         url: u,
         size: 0,
         isAudio,
-        isUploaded: false
+        isUploaded: false,
       });
-      urlInput.value = "";
-      if (urlStatus) urlStatus.innerHTML = '<span style="color:#2a9d8f;">✓ Added to media library!</span>';
+      urlInput.value = '';
+      if (urlStatus)
+        urlStatus.innerHTML =
+          '<span style="color:#2a9d8f;">✓ Added to media library!</span>';
       setTimeout(() => {
-        if (urlImportBox) urlImportBox.classList.add("hidden");
-        if (urlStatus) urlStatus.innerHTML = "";
+        if (urlImportBox) urlImportBox.classList.add('hidden');
+        if (urlStatus) urlStatus.innerHTML = '';
       }, 1200);
       renderMediaLibraryUI(false);
     };
@@ -2571,28 +2848,28 @@ function initMediaTabControls() {
   // View Mode toggle
   if (btnViewGrid && btnViewList) {
     btnViewGrid.onclick = () => {
-      state.mediaViewMode = "grid";
-      localStorage.setItem("saas_media_view", "grid");
-      btnViewGrid.classList.add("active");
-      btnViewList.classList.remove("active");
+      state.mediaViewMode = 'grid';
+      localStorage.setItem('saas_media_view', 'grid');
+      btnViewGrid.classList.add('active');
+      btnViewList.classList.remove('active');
       renderMediaLibraryUI(false);
     };
     btnViewList.onclick = () => {
-      state.mediaViewMode = "list";
-      localStorage.setItem("saas_media_view", "list");
-      btnViewList.classList.add("active");
-      btnViewGrid.classList.remove("active");
+      state.mediaViewMode = 'list';
+      localStorage.setItem('saas_media_view', 'list');
+      btnViewList.classList.add('active');
+      btnViewGrid.classList.remove('active');
       renderMediaLibraryUI(false);
     };
-    if (state.mediaViewMode === "list") {
-      btnViewList.classList.add("active");
-      btnViewGrid.classList.remove("active");
+    if (state.mediaViewMode === 'list') {
+      btnViewList.classList.add('active');
+      btnViewGrid.classList.remove('active');
     }
   }
 
   // Sort dropdown
   if (sortSelect) {
-    sortSelect.value = state.mediaSort || "newest";
+    sortSelect.value = state.mediaSort || 'newest';
     sortSelect.onchange = (e) => {
       state.mediaSort = e.target.value;
       renderMediaLibraryUI(false);
@@ -2603,25 +2880,28 @@ function initMediaTabControls() {
   if (searchInput) {
     searchInput.oninput = (e) => {
       state.mediaSearchQuery = e.target.value.trim();
-      if (btnClearSearch) btnClearSearch.classList.toggle("hidden", !state.mediaSearchQuery);
+      if (btnClearSearch)
+        btnClearSearch.classList.toggle('hidden', !state.mediaSearchQuery);
       renderMediaLibraryUI(false);
     };
   }
   if (btnClearSearch && searchInput) {
     btnClearSearch.onclick = () => {
-      searchInput.value = "";
-      state.mediaSearchQuery = "";
-      btnClearSearch.classList.add("hidden");
+      searchInput.value = '';
+      state.mediaSearchQuery = '';
+      btnClearSearch.classList.add('hidden');
       renderMediaLibraryUI(false);
     };
   }
 
   // Filter buttons
-  document.querySelectorAll(".media-filter-btn").forEach(btn => {
+  document.querySelectorAll('.media-filter-btn').forEach((btn) => {
     btn.onclick = () => {
-      document.querySelectorAll(".media-filter-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      state.mediaFilter = btn.getAttribute("data-filter") || "all";
+      document
+        .querySelectorAll('.media-filter-btn')
+        .forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.mediaFilter = btn.getAttribute('data-filter') || 'all';
       renderMediaLibraryUI(false);
     };
   });
@@ -2629,20 +2909,20 @@ function initMediaTabControls() {
   if (fileInput) {
     fileInput.onchange = (e) => {
       uploadMediaFiles(Array.from(e.target.files || []));
-      fileInput.value = "";
+      fileInput.value = '';
     };
   }
 
   if (btnPickPhotos) {
     btnPickPhotos.onclick = (e) => {
       e.stopPropagation();
-      if (state.userRole === "visitor") {
-        showToast("🔒 Purchase now to customize and upload photos!", "warning");
-        window.open("/welcome#pricing", "_blank");
+      if (state.userRole === 'visitor') {
+        showToast('🔒 Purchase now to customize and upload photos!', 'warning');
+        window.open('/welcome#pricing', '_blank');
         return;
       }
       if (fileInput) {
-        fileInput.accept = "image/*";
+        fileInput.accept = 'image/*';
         fileInput.click();
       }
     };
@@ -2651,39 +2931,42 @@ function initMediaTabControls() {
   if (btnPickAudio) {
     btnPickAudio.onclick = (e) => {
       e.stopPropagation();
-      if (state.userRole === "visitor") {
-        showToast("🔒 Purchase now to customize and upload audio!", "warning");
-        window.open("/welcome#pricing", "_blank");
+      if (state.userRole === 'visitor') {
+        showToast('🔒 Purchase now to customize and upload audio!', 'warning');
+        window.open('/welcome#pricing', '_blank');
         return;
       }
       if (fileInput) {
-        fileInput.accept = "audio/*";
+        fileInput.accept = 'audio/*';
         fileInput.click();
       }
     };
   }
 
   if (dropZone) {
-    ["dragenter", "dragover"].forEach(evt => {
+    ['dragenter', 'dragover'].forEach((evt) => {
       dropZone.addEventListener(evt, (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropZone.classList.add("dragover");
+        dropZone.classList.add('dragover');
       });
     });
 
-    ["dragleave", "drop"].forEach(evt => {
+    ['dragleave', 'drop'].forEach((evt) => {
       dropZone.addEventListener(evt, (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropZone.classList.remove("dragover");
+        dropZone.classList.remove('dragover');
       });
     });
 
-    dropZone.addEventListener("drop", (e) => {
-      if (state.userRole === "visitor") {
-        showToast("🔒 Purchase now to customize and upload media files!", "warning");
-        window.open("/welcome#pricing", "_blank");
+    dropZone.addEventListener('drop', (e) => {
+      if (state.userRole === 'visitor') {
+        showToast(
+          '🔒 Purchase now to customize and upload media files!',
+          'warning',
+        );
+        window.open('/welcome#pricing', '_blank');
         return;
       }
       const files = e.dataTransfer?.files;
@@ -2709,18 +2992,27 @@ function initMediaTabControls() {
 // ----------------------------------------------------
 function getMediaSettings() {
   if (!state.sectionsData) state.sectionsData = {};
-  if (!state.sectionsData.mediaSettings || typeof state.sectionsData.mediaSettings !== "object") {
+  if (
+    !state.sectionsData.mediaSettings ||
+    typeof state.sectionsData.mediaSettings !== 'object'
+  ) {
     state.sectionsData.mediaSettings = {};
   }
   const hero = state.sectionsData.hero || {};
   const ms = state.sectionsData.mediaSettings;
-  if (ms.soundtrackUrl === undefined) ms.soundtrackUrl = hero.musicTrackUrl || "taylor-swift-fate-of-ophelia.m4r";
-  if (ms.soundtrackTitle === undefined) ms.soundtrackTitle = hero.musicTrackTitle || "The Fate of Ophelia • Taylor Swift ✨";
+  if (ms.soundtrackUrl === undefined)
+    ms.soundtrackUrl = hero.musicTrackUrl || 'taylor-swift-fate-of-ophelia.m4r';
+  if (ms.soundtrackTitle === undefined)
+    ms.soundtrackTitle =
+      hero.musicTrackTitle || 'The Fate of Ophelia • Taylor Swift ✨';
   if (ms.soundtrackPreset === undefined) {
-    if (ms.soundtrackUrl.includes("taylor-swift")) ms.soundtrackPreset = "taylor-swift-fate-of-ophelia.m4r";
-    else if (ms.soundtrackUrl.includes("lady-gaga")) ms.soundtrackPreset = "lady-gaga-always-remember-us-this-way.m4r";
-    else if (ms.soundtrackUrl.includes("imagine-dragons")) ms.soundtrackPreset = "imagine-dragons-i-follow-you.m4r";
-    else ms.soundtrackPreset = "custom";
+    if (ms.soundtrackUrl.includes('taylor-swift'))
+      ms.soundtrackPreset = 'taylor-swift-fate-of-ophelia.m4r';
+    else if (ms.soundtrackUrl.includes('lady-gaga'))
+      ms.soundtrackPreset = 'lady-gaga-always-remember-us-this-way.m4r';
+    else if (ms.soundtrackUrl.includes('imagine-dragons'))
+      ms.soundtrackPreset = 'imagine-dragons-i-follow-you.m4r';
+    else ms.soundtrackPreset = 'custom';
   }
   if (ms.soundtrackVolume === undefined) ms.soundtrackVolume = 80;
   if (ms.soundtrackAutoplay === undefined) ms.soundtrackAutoplay = true;
@@ -2728,19 +3020,20 @@ function getMediaSettings() {
   if (ms.floatingPlayer === undefined) ms.floatingPlayer = true;
   if (ms.romanticSfx === undefined) ms.romanticSfx = true;
 
-  if (ms.voiceUrl === undefined) ms.voiceUrl = hero.voiceAudio || "audio/myrecording-volume-adjusted.m4r";
+  if (ms.voiceUrl === undefined)
+    ms.voiceUrl = hero.voiceAudio || 'audio/myrecording-volume-adjusted.m4r';
   if (ms.voiceVolume === undefined) ms.voiceVolume = 100;
   return ms;
 }
 
 function getVolumeIcon(vol) {
-  if (vol <= 0) return "🔇";
-  if (vol <= 35) return "🔈";
-  if (vol <= 70) return "🔉";
-  return "🔊";
+  if (vol <= 0) return '🔇';
+  if (vol <= 35) return '🔈';
+  if (vol <= 70) return '🔉';
+  return '🔊';
 }
 
-function renderMediaSettingsHTML(prefix = "ms_") {
+function renderMediaSettingsHTML(prefix = 'ms_') {
   const ms = getMediaSettings();
 
   return `
@@ -2889,46 +3182,68 @@ function renderMediaSettingsHTML(prefix = "ms_") {
   `;
 }
 
-function bindMediaSettingsControls(container, prefix = "ms_") {
+function bindMediaSettingsControls(container, prefix = 'ms_') {
   const ms = getMediaSettings();
   if (!state.sectionsData.hero) state.sectionsData.hero = {};
   const hero = state.sectionsData.hero;
 
-  const presetEl = container.querySelector("#" + prefix + "soundtrack_preset");
-  const titleEl = container.querySelector("#" + prefix + "soundtrack_title");
-  const urlEl = container.querySelector("#" + prefix + "soundtrack_url");
-  const pickSoundtrackBtn = container.querySelector("#" + prefix + "btn_pick_soundtrack");
-  const fileSoundtrackEl = container.querySelector("#" + prefix + "soundtrack_file");
-  const statusSoundtrackEl = container.querySelector("#" + prefix + "soundtrack_upload_status");
-  const testSoundtrackBtn = container.querySelector("#" + prefix + "btn_test_soundtrack");
+  const presetEl = container.querySelector('#' + prefix + 'soundtrack_preset');
+  const titleEl = container.querySelector('#' + prefix + 'soundtrack_title');
+  const urlEl = container.querySelector('#' + prefix + 'soundtrack_url');
+  const pickSoundtrackBtn = container.querySelector(
+    '#' + prefix + 'btn_pick_soundtrack',
+  );
+  const fileSoundtrackEl = container.querySelector(
+    '#' + prefix + 'soundtrack_file',
+  );
+  const statusSoundtrackEl = container.querySelector(
+    '#' + prefix + 'soundtrack_upload_status',
+  );
+  const testSoundtrackBtn = container.querySelector(
+    '#' + prefix + 'btn_test_soundtrack',
+  );
 
-  const volSlider = container.querySelector("#" + prefix + "soundtrack_vol_slider");
-  const volBadge = container.querySelector("#" + prefix + "soundtrack_vol_badge");
-  const volIcon = container.querySelector("#" + prefix + "soundtrack_vol_icon");
+  const volSlider = container.querySelector(
+    '#' + prefix + 'soundtrack_vol_slider',
+  );
+  const volBadge = container.querySelector(
+    '#' + prefix + 'soundtrack_vol_badge',
+  );
+  const volIcon = container.querySelector('#' + prefix + 'soundtrack_vol_icon');
 
-  const toggleAutoplay = container.querySelector("#" + prefix + "toggle_autoplay");
-  const toggleLoop = container.querySelector("#" + prefix + "toggle_loop");
-  const toggleFloating = container.querySelector("#" + prefix + "toggle_floating");
-  const toggleSfx = container.querySelector("#" + prefix + "toggle_sfx");
+  const toggleAutoplay = container.querySelector(
+    '#' + prefix + 'toggle_autoplay',
+  );
+  const toggleLoop = container.querySelector('#' + prefix + 'toggle_loop');
+  const toggleFloating = container.querySelector(
+    '#' + prefix + 'toggle_floating',
+  );
+  const toggleSfx = container.querySelector('#' + prefix + 'toggle_sfx');
 
-  const voiceUrlEl = container.querySelector("#" + prefix + "voice_url");
-  const pickVoiceBtn = container.querySelector("#" + prefix + "btn_pick_voice");
-  const fileVoiceEl = container.querySelector("#" + prefix + "voice_file");
-  const statusVoiceEl = container.querySelector("#" + prefix + "voice_upload_status");
-  const voiceVolSlider = container.querySelector("#" + prefix + "voice_vol_slider");
-  const voiceVolBadge = container.querySelector("#" + prefix + "voice_vol_badge");
-  const voiceVolIcon = container.querySelector("#" + prefix + "voice_vol_icon");
-  const testVoiceBtn = container.querySelector("#" + prefix + "btn_test_voice");
+  const voiceUrlEl = container.querySelector('#' + prefix + 'voice_url');
+  const pickVoiceBtn = container.querySelector('#' + prefix + 'btn_pick_voice');
+  const fileVoiceEl = container.querySelector('#' + prefix + 'voice_file');
+  const statusVoiceEl = container.querySelector(
+    '#' + prefix + 'voice_upload_status',
+  );
+  const voiceVolSlider = container.querySelector(
+    '#' + prefix + 'voice_vol_slider',
+  );
+  const voiceVolBadge = container.querySelector(
+    '#' + prefix + 'voice_vol_badge',
+  );
+  const voiceVolIcon = container.querySelector('#' + prefix + 'voice_vol_icon');
+  const testVoiceBtn = container.querySelector('#' + prefix + 'btn_test_voice');
 
   // Preset dropdown
   if (presetEl) {
     presetEl.onchange = (e) => {
       const val = e.target.value;
       ms.soundtrackPreset = val;
-      if (val !== "custom") {
+      if (val !== 'custom') {
         const opt = e.target.selectedOptions[0];
-        const title = opt ? opt.getAttribute("data-title") : "";
-        const artist = opt ? opt.getAttribute("data-artist") : "";
+        const title = opt ? opt.getAttribute('data-title') : '';
+        const artist = opt ? opt.getAttribute('data-artist') : '';
         ms.soundtrackUrl = val;
         hero.musicTrackUrl = val;
         if (title && artist) {
@@ -2938,10 +3253,13 @@ function bindMediaSettingsControls(container, prefix = "ms_") {
         }
         if (urlEl) urlEl.value = val;
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({
-            type: "SET_SONG",
-            song: { title, artist, src: val }
-          }, "*");
+          previewIframe.contentWindow.postMessage(
+            {
+              type: 'SET_SONG',
+              song: { title, artist, src: val },
+            },
+            window.location.origin,
+          );
         }
       }
       debouncedLiveUpdate(true);
@@ -2966,10 +3284,13 @@ function bindMediaSettingsControls(container, prefix = "ms_") {
       ms.soundtrackUrl = v;
       hero.musicTrackUrl = v;
       if (presetEl) {
-        if (v.includes("taylor-swift")) presetEl.value = "taylor-swift-fate-of-ophelia.m4r";
-        else if (v.includes("lady-gaga")) presetEl.value = "lady-gaga-always-remember-us-this-way.m4r";
-        else if (v.includes("imagine-dragons")) presetEl.value = "imagine-dragons-i-follow-you.m4r";
-        else presetEl.value = "custom";
+        if (v.includes('taylor-swift'))
+          presetEl.value = 'taylor-swift-fate-of-ophelia.m4r';
+        else if (v.includes('lady-gaga'))
+          presetEl.value = 'lady-gaga-always-remember-us-this-way.m4r';
+        else if (v.includes('imagine-dragons'))
+          presetEl.value = 'imagine-dragons-i-follow-you.m4r';
+        else presetEl.value = 'custom';
         ms.soundtrackPreset = presetEl.value;
       }
       debouncedLiveUpdate();
@@ -2981,25 +3302,32 @@ function bindMediaSettingsControls(container, prefix = "ms_") {
   if (pickSoundtrackBtn) {
     pickSoundtrackBtn.onclick = () => {
       openMediaPicker({
-        filter: "audio",
+        filter: 'audio',
         onSelect: (url) => {
           ms.soundtrackUrl = url;
           hero.musicTrackUrl = url;
           if (urlEl) urlEl.value = url;
           if (presetEl) {
-            presetEl.value = "custom";
-            ms.soundtrackPreset = "custom";
+            presetEl.value = 'custom';
+            ms.soundtrackPreset = 'custom';
           }
-          const fname = decodeURIComponent(url.split("/").pop()?.split("?")[0] || "Custom Track");
-          if (!ms.soundtrackTitle || ms.soundtrackTitle.includes("Taylor Swift") || ms.soundtrackTitle.includes("Lady Gaga") || ms.soundtrackTitle.includes("Imagine Dragons")) {
-            const autoTitle = fname.replace(/\.[^/.]+$/, "") + " 🎵";
+          const fname = decodeURIComponent(
+            url.split('/').pop()?.split('?')[0] || 'Custom Track',
+          );
+          if (
+            !ms.soundtrackTitle ||
+            ms.soundtrackTitle.includes('Taylor Swift') ||
+            ms.soundtrackTitle.includes('Lady Gaga') ||
+            ms.soundtrackTitle.includes('Imagine Dragons')
+          ) {
+            const autoTitle = fname.replace(/\.[^/.]+$/, '') + ' 🎵';
             ms.soundtrackTitle = autoTitle;
             hero.musicTrackTitle = autoTitle;
             if (titleEl) titleEl.value = autoTitle;
           }
           debouncedLiveUpdate(true);
           debouncedAutoSaveLayout();
-        }
+        },
       });
     };
   }
@@ -3013,36 +3341,36 @@ function bindMediaSettingsControls(container, prefix = "ms_") {
         const mb = (file.size / (1024 * 1024)).toFixed(1);
         if (statusSoundtrackEl) {
           statusSoundtrackEl.textContent = `❌ Song size (${mb} MB) exceeds 10 Mo limit! Choose a file under 10 Mo.`;
-          statusSoundtrackEl.style.color = "#ff4365";
+          statusSoundtrackEl.style.color = '#ff4365';
         }
-        fileSoundtrackEl.value = "";
+        fileSoundtrackEl.value = '';
         return;
       }
       if (statusSoundtrackEl) {
-        statusSoundtrackEl.textContent = "Uploading soundtrack (max 10 Mo)...";
-        statusSoundtrackEl.style.color = "var(--text-muted)";
+        statusSoundtrackEl.textContent = 'Uploading soundtrack (max 10 Mo)...';
+        statusSoundtrackEl.style.color = 'var(--text-muted)';
       }
       try {
         const publicUrl = await uploadFileToR2(file);
         ms.soundtrackUrl = publicUrl;
         hero.musicTrackUrl = publicUrl;
-        const customTitle = file.name.replace(/\.[^/.]+$/, "") + " 🎵";
+        const customTitle = file.name.replace(/\.[^/.]+$/, '') + ' 🎵';
         ms.soundtrackTitle = customTitle;
         hero.musicTrackTitle = customTitle;
         if (titleEl) titleEl.value = customTitle;
         if (urlEl) urlEl.value = publicUrl;
-        if (presetEl) presetEl.value = "custom";
-        ms.soundtrackPreset = "custom";
+        if (presetEl) presetEl.value = 'custom';
+        ms.soundtrackPreset = 'custom';
         if (statusSoundtrackEl) {
           statusSoundtrackEl.textContent = `✓ Uploaded (${(file.size / (1024 * 1024)).toFixed(2)} MB)!`;
-          statusSoundtrackEl.style.color = "#2ed573";
+          statusSoundtrackEl.style.color = '#2ed573';
         }
         debouncedLiveUpdate(true);
         debouncedAutoSaveLayout();
       } catch (err) {
         if (statusSoundtrackEl) {
-          statusSoundtrackEl.textContent = "Upload failed: " + err.message;
-          statusSoundtrackEl.style.color = "#ff4365";
+          statusSoundtrackEl.textContent = 'Upload failed: ' + err.message;
+          statusSoundtrackEl.style.color = '#ff4365';
         }
       }
     };
@@ -3052,7 +3380,7 @@ function bindMediaSettingsControls(container, prefix = "ms_") {
   if (testSoundtrackBtn) {
     testSoundtrackBtn.onclick = () => {
       if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage({ type: "MUSIC_TOGGLE" }, "*");
+        previewIframe.contentWindow.postMessage({ type: 'MUSIC_TOGGLE' }, window.location.origin);
       }
     };
   }
@@ -3067,7 +3395,10 @@ function bindMediaSettingsControls(container, prefix = "ms_") {
       if (volBadge) volBadge.textContent = `${val}%`;
       if (volIcon) volIcon.textContent = getVolumeIcon(val);
       if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage({ type: "SET_VOLUME", volume: val / 100 }, "*");
+        previewIframe.contentWindow.postMessage(
+          { type: 'SET_VOLUME', volume: val / 100 },
+          window.location.origin,
+        );
       }
       debouncedAutoSaveLayout();
     };
@@ -3077,13 +3408,16 @@ function bindMediaSettingsControls(container, prefix = "ms_") {
   if (volIcon) {
     volIcon.onclick = () => {
       const current = ms.soundtrackVolume || 0;
-      const target = current > 0 ? 0 : (lastSoundtrackVol || 80);
+      const target = current > 0 ? 0 : lastSoundtrackVol || 80;
       ms.soundtrackVolume = target;
       if (volSlider) volSlider.value = target;
       if (volBadge) volBadge.textContent = `${target}%`;
       volIcon.textContent = getVolumeIcon(target);
       if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage({ type: "SET_VOLUME", volume: target / 100 }, "*");
+        previewIframe.contentWindow.postMessage(
+          { type: 'SET_VOLUME', volume: target / 100 },
+          window.location.origin,
+        );
       }
       debouncedAutoSaveLayout();
     };
@@ -3095,20 +3429,23 @@ function bindMediaSettingsControls(container, prefix = "ms_") {
     el.onchange = () => {
       ms[key] = el.checked;
       if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage({
-          type: "MEDIA_SETTINGS_UPDATE",
-          mediaSettings: ms
-        }, "*");
+        previewIframe.contentWindow.postMessage(
+          {
+            type: 'MEDIA_SETTINGS_UPDATE',
+            mediaSettings: ms,
+          },
+          window.location.origin,
+        );
       }
       debouncedLiveUpdate(true);
       debouncedAutoSaveLayout();
     };
   };
 
-  bindToggle(toggleAutoplay, "soundtrackAutoplay");
-  bindToggle(toggleLoop, "soundtrackLoop");
-  bindToggle(toggleFloating, "floatingPlayer");
-  bindToggle(toggleSfx, "romanticSfx");
+  bindToggle(toggleAutoplay, 'soundtrackAutoplay');
+  bindToggle(toggleLoop, 'soundtrackLoop');
+  bindToggle(toggleFloating, 'floatingPlayer');
+  bindToggle(toggleSfx, 'romanticSfx');
 
   // Voice note URL
   if (voiceUrlEl) {
@@ -3125,14 +3462,14 @@ function bindMediaSettingsControls(container, prefix = "ms_") {
   if (pickVoiceBtn) {
     pickVoiceBtn.onclick = () => {
       openMediaPicker({
-        filter: "audio",
+        filter: 'audio',
         onSelect: (url) => {
           ms.voiceUrl = url;
           hero.voiceAudio = url;
           if (voiceUrlEl) voiceUrlEl.value = url;
           debouncedLiveUpdate(true);
           debouncedAutoSaveLayout();
-        }
+        },
       });
     };
   }
@@ -3146,14 +3483,14 @@ function bindMediaSettingsControls(container, prefix = "ms_") {
         const mb = (file.size / (1024 * 1024)).toFixed(1);
         if (statusVoiceEl) {
           statusVoiceEl.textContent = `❌ Audio size (${mb} MB) exceeds 10 Mo limit!`;
-          statusVoiceEl.style.color = "#ff4365";
+          statusVoiceEl.style.color = '#ff4365';
         }
-        fileVoiceEl.value = "";
+        fileVoiceEl.value = '';
         return;
       }
       if (statusVoiceEl) {
-        statusVoiceEl.textContent = "Uploading voice note...";
-        statusVoiceEl.style.color = "var(--text-muted)";
+        statusVoiceEl.textContent = 'Uploading voice note...';
+        statusVoiceEl.style.color = 'var(--text-muted)';
       }
       try {
         const publicUrl = await uploadFileToR2(file);
@@ -3162,14 +3499,14 @@ function bindMediaSettingsControls(container, prefix = "ms_") {
         if (voiceUrlEl) voiceUrlEl.value = publicUrl;
         if (statusVoiceEl) {
           statusVoiceEl.textContent = `✓ Uploaded (${(file.size / (1024 * 1024)).toFixed(2)} MB)!`;
-          statusVoiceEl.style.color = "#2ed573";
+          statusVoiceEl.style.color = '#2ed573';
         }
         debouncedLiveUpdate(true);
         debouncedAutoSaveLayout();
       } catch (err) {
         if (statusVoiceEl) {
-          statusVoiceEl.textContent = "Upload failed: " + err.message;
-          statusVoiceEl.style.color = "#ff4365";
+          statusVoiceEl.textContent = 'Upload failed: ' + err.message;
+          statusVoiceEl.style.color = '#ff4365';
         }
       }
     };
@@ -3191,7 +3528,7 @@ function bindMediaSettingsControls(container, prefix = "ms_") {
   if (voiceVolIcon) {
     voiceVolIcon.onclick = () => {
       const current = ms.voiceVolume || 0;
-      const target = current > 0 ? 0 : (lastVoiceVol || 100);
+      const target = current > 0 ? 0 : lastVoiceVol || 100;
       ms.voiceVolume = target;
       if (voiceVolSlider) voiceVolSlider.value = target;
       if (voiceVolBadge) voiceVolBadge.textContent = `${target}%`;
@@ -3204,74 +3541,93 @@ function bindMediaSettingsControls(container, prefix = "ms_") {
   if (testVoiceBtn) {
     testVoiceBtn.onclick = () => {
       if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage({ type: "HERO_VOICE_TOGGLE" }, "*");
+        previewIframe.contentWindow.postMessage(
+          { type: 'HERO_VOICE_TOGGLE' },
+          window.location.origin,
+        );
       }
     };
   }
 }
 
 function renderMediaSettingsUI() {
-  const container = document.getElementById("mediaSettingsContainer");
+  const container = document.getElementById('mediaSettingsContainer');
   if (!container) return;
-  container.innerHTML = renderMediaSettingsHTML("media_tab_");
-  bindMediaSettingsControls(container, "media_tab_");
+  container.innerHTML = renderMediaSettingsHTML('media_tab_');
+  bindMediaSettingsControls(container, 'media_tab_');
 }
 
 // ----------------------------------------------------
 // SIDEBAR TABS & GLOBAL SITE SETTINGS
 // ----------------------------------------------------
 function initSidebarTabs() {
-  document.querySelectorAll(".sidebar-tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const tabId = btn.getAttribute("data-tab");
-      if (tabId === "tab-inspector" && (!state.layoutOrder || !state.layoutOrder.length)) {
-        showToast("No active sections on website to customize.", "info");
+  document.querySelectorAll('.sidebar-tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const tabId = btn.getAttribute('data-tab');
+      if (
+        tabId === 'tab-inspector' &&
+        (!state.layoutOrder || !state.layoutOrder.length)
+      ) {
+        showToast('No active sections on website to customize.', 'info');
       }
       switchToTab(tabId);
     });
   });
 
-  const btnBack = document.getElementById("btnBackToWidgets");
+  const btnBack = document.getElementById('btnBackToWidgets');
   if (btnBack) {
-    btnBack.addEventListener("click", () => switchToTab("tab-widgets"));
+    btnBack.addEventListener('click', () => switchToTab('tab-widgets'));
   }
 
-  const btnMore = document.getElementById("btnInspectorMore");
-  const moreMenu = document.getElementById("inspectorMoreMenu");
+  const btnMore = document.getElementById('btnInspectorMore');
+  const moreMenu = document.getElementById('inspectorMoreMenu');
   if (btnMore && moreMenu) {
     btnMore.onclick = (e) => {
       e.stopPropagation();
-      const isHidden = moreMenu.classList.contains("hidden");
-      moreMenu.classList.toggle("hidden", !isHidden);
-      btnMore.classList.toggle("active", isHidden);
+      const isHidden = moreMenu.classList.contains('hidden');
+      moreMenu.classList.toggle('hidden', !isHidden);
+      btnMore.classList.toggle('active', isHidden);
     };
-    document.addEventListener("click", (e) => {
+    document.addEventListener('click', (e) => {
       if (!moreMenu.contains(e.target) && e.target !== btnMore) {
-        moreMenu.classList.add("hidden");
-        btnMore.classList.remove("active");
+        moreMenu.classList.add('hidden');
+        btnMore.classList.remove('active');
       }
     });
   }
 }
 
 function switchToTab(tabId) {
-  if (tabId === "tab-inspector") {
+  if (tabId === 'tab-inspector') {
     if (!state.layoutOrder || !state.layoutOrder.length) {
       renderInspectorEmptyState();
-    } else if (!state.activeInspectorWidget || !state.layoutOrder.includes(state.activeInspectorWidget)) {
+    } else if (
+      !state.activeInspectorWidget ||
+      !state.layoutOrder.includes(state.activeInspectorWidget)
+    ) {
       selectWidgetForInspector(state.layoutOrder[0]);
     }
   }
-  document.querySelectorAll(".sidebar-tab-btn").forEach(b => {
-    b.classList.toggle("active", b.getAttribute("data-tab") === tabId);
+  document.querySelectorAll('.sidebar-tab-btn').forEach((b) => {
+    const isActive = b.getAttribute('data-tab') === tabId;
+    b.classList.toggle('active', isActive);
+    if (isActive && window.innerWidth <= 820) {
+      b.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      });
+    }
   });
-  document.querySelectorAll(".sidebar-tab-pane").forEach(p => {
-    p.classList.toggle("active", p.id === tabId);
+  document.querySelectorAll('.sidebar-tab-pane').forEach((p) => {
+    p.classList.toggle('active', p.id === tabId);
   });
-  if (tabId === "tab-website") {
+  if (tabId === 'tab-website') {
     renderSiteSettingsUI();
-  } else if (tabId === "tab-media") {
-    const isSettingsActive = document.getElementById("btnMediaSubnavSettings")?.classList.contains("active");
+  } else if (tabId === 'tab-media') {
+    const isSettingsActive = document
+      .getElementById('btnMediaSubnavSettings')
+      ?.classList.contains('active');
     if (isSettingsActive) {
       renderMediaSettingsUI();
     } else {
@@ -3282,77 +3638,240 @@ function switchToTab(tabId) {
 window.switchToTab = switchToTab;
 
 function renderSiteSettingsUI() {
-  const container = document.getElementById("siteSettingsContainer");
+  const container = document.getElementById('siteSettingsContainer');
   if (!container) return;
 
   if (!state.sectionsData.hero) state.sectionsData.hero = {};
   const hero = state.sectionsData.hero;
 
   const birthdayThemes = [
-    { id: "theme-birthday", name: "Birthday Cakes 🎂", desc: "Tiered cakes, dripping icing, candles & balloons", color: "#ff2e93", bg: "linear-gradient(135deg, #fff0f7 0%, #fffbf0 50%, #f0f7ff 100%)", icon: "🎂" },
-    { id: "theme-birthday-midnight", name: "Midnight Gold Gala ✨", desc: "Dark luxury gala, sparkler cakes & champagne", color: "#f59e0b", bg: "linear-gradient(135deg, #090d16 0%, #111827 50%, #1e1b4b 100%)", icon: "✨" },
-    { id: "theme-birthday-pastel", name: "Sweet Cupcake Bakery 🧁", desc: "Strawberry cream, cupcakes & macaron towers", color: "#ec4899", bg: "linear-gradient(135deg, #fdf2f8 0%, #fef3c7 50%, #f0fdf4 100%)", icon: "🧁" },
-    { id: "theme-birthday-carnival", name: "Carnival & Confetti 🎪", desc: "Joyful bunting banners, party poppers & balloons", color: "#0284c7", bg: "linear-gradient(135deg, #f0f9ff 0%, #fdf4ff 50%, #ecfeff 100%)", icon: "🎪" },
-    { id: "theme-birthday-emoji", name: "3D Emoji Party 🥳", desc: "Floating 3D emoji stickers, festive confetti & vibes", color: "#f43f5e", bg: "linear-gradient(135deg, #fff1f2 0%, #fff7ed 50%, #fef08a 100%)", icon: "🥳" },
-    { id: "theme-birthday-pixel", name: "8-Bit Retro Arcade 👾", desc: "Chiptune arcade pixel art, pixel cake & CRT grid", color: "#a855f7", bg: "linear-gradient(135deg, #0d0221 0%, #19053b 50%, #26115a 100%)", icon: "👾" },
-    { id: "theme-birthday-neon", name: "Electric Cyber Neon ⚡", desc: "Glow tubes, dark club mode & vibrant neon signage", color: "#ff007f", bg: "linear-gradient(135deg, #050508 0%, #0a0a14 50%, #12091f 100%)", icon: "⚡" },
-    { id: "theme-birthday-papercraft", name: "Papercraft Cardstock ✂️", desc: "Folded origami, layered papercut shadows & bunting", color: "#ea580c", bg: "linear-gradient(135deg, #fffbf5 0%, #fef3c7 50%, #ffedd5 100%)", icon: "✂️" },
-    { id: "theme-birthday-watercolor", name: "Watercolor & Foil 🎨", desc: "Soft pastel washes, luxury gold foil & delicate botanicals", color: "#c026d3", bg: "linear-gradient(135deg, #faf5ff 0%, #fdf2f8 50%, #f5f3ff 100%)", icon: "🎨" }
+    {
+      id: 'theme-birthday',
+      name: 'Birthday Cakes 🎂',
+      desc: 'Tiered cakes, dripping icing, candles & balloons',
+      color: '#ff2e93',
+      bg: 'linear-gradient(135deg, #fff0f7 0%, #fffbf0 50%, #f0f7ff 100%)',
+      icon: '🎂',
+    },
+    {
+      id: 'theme-birthday-midnight',
+      name: 'Midnight Gold Gala ✨',
+      desc: 'Dark luxury gala, sparkler cakes & champagne',
+      color: '#f59e0b',
+      bg: 'linear-gradient(135deg, #090d16 0%, #111827 50%, #1e1b4b 100%)',
+      icon: '✨',
+    },
+    {
+      id: 'theme-birthday-pastel',
+      name: 'Sweet Cupcake Bakery 🧁',
+      desc: 'Strawberry cream, cupcakes & macaron towers',
+      color: '#ec4899',
+      bg: 'linear-gradient(135deg, #fdf2f8 0%, #fef3c7 50%, #f0fdf4 100%)',
+      icon: '🧁',
+    },
+    {
+      id: 'theme-birthday-carnival',
+      name: 'Carnival & Confetti 🎪',
+      desc: 'Joyful bunting banners, party poppers & balloons',
+      color: '#0284c7',
+      bg: 'linear-gradient(135deg, #f0f9ff 0%, #fdf4ff 50%, #ecfeff 100%)',
+      icon: '🎪',
+    },
+    {
+      id: 'theme-birthday-emoji',
+      name: '3D Emoji Party 🥳',
+      desc: 'Floating 3D emoji stickers, festive confetti & vibes',
+      color: '#f43f5e',
+      bg: 'linear-gradient(135deg, #fff1f2 0%, #fff7ed 50%, #fef08a 100%)',
+      icon: '🥳',
+    },
+    {
+      id: 'theme-birthday-pixel',
+      name: '8-Bit Retro Arcade 👾',
+      desc: 'Chiptune arcade pixel art, pixel cake & CRT grid',
+      color: '#a855f7',
+      bg: 'linear-gradient(135deg, #0d0221 0%, #19053b 50%, #26115a 100%)',
+      icon: '👾',
+    },
+    {
+      id: 'theme-birthday-neon',
+      name: 'Electric Cyber Neon ⚡',
+      desc: 'Glow tubes, dark club mode & vibrant neon signage',
+      color: '#ff007f',
+      bg: 'linear-gradient(135deg, #050508 0%, #0a0a14 50%, #12091f 100%)',
+      icon: '⚡',
+    },
+    {
+      id: 'theme-birthday-papercraft',
+      name: 'Papercraft Cardstock ✂️',
+      desc: 'Folded origami, layered papercut shadows & bunting',
+      color: '#ea580c',
+      bg: 'linear-gradient(135deg, #fffbf5 0%, #fef3c7 50%, #ffedd5 100%)',
+      icon: '✂️',
+    },
+    {
+      id: 'theme-birthday-watercolor',
+      name: 'Watercolor & Foil 🎨',
+      desc: 'Soft pastel washes, luxury gold foil & delicate botanicals',
+      color: '#c026d3',
+      bg: 'linear-gradient(135deg, #faf5ff 0%, #fdf2f8 50%, #f5f3ff 100%)',
+      icon: '🎨',
+    },
   ];
 
   const artStyles = [
-    { id: "theme-img-watercolor-frame", name: "Watercolor Romance 🎨", desc: "Soft border wash, polka-dot balloons & golden arrows", color: "#fb7185", img: "/images/themes/bg-watercolor-frame.png" },
-    { id: "theme-img-pop-stickers", name: "Pop Love Stickers 💋", desc: "Bold lips, bubbling potion, winged hearts & lockets", color: "#ff007f", img: "/images/themes/bg-pop-stickers.png" },
-    { id: "theme-img-doodle-tapestry", name: "Love Sketch Tapestry 🧸", desc: "Monoline toile: teddy bears, champagne & roses", color: "#e11d48", img: "/images/themes/bg-doodle-tapestry.png" }
+    {
+      id: 'theme-img-watercolor-frame',
+      name: 'Watercolor Romance 🎨',
+      desc: 'Soft border wash, polka-dot balloons & golden arrows',
+      color: '#fb7185',
+      img: '/images/themes/bg-watercolor-frame.png',
+    },
+    {
+      id: 'theme-img-pop-stickers',
+      name: 'Pop Love Stickers 💋',
+      desc: 'Bold lips, bubbling potion, winged hearts & lockets',
+      color: '#ff007f',
+      img: '/images/themes/bg-pop-stickers.png',
+    },
+    {
+      id: 'theme-img-doodle-tapestry',
+      name: 'Love Sketch Tapestry 🧸',
+      desc: 'Monoline toile: teddy bears, champagne & roses',
+      color: '#e11d48',
+      img: '/images/themes/bg-doodle-tapestry.png',
+    },
   ];
 
   const imageBackgroundThemes = [
-    { id: "theme-img-theme1", name: "Theme 1 🎀", desc: "Watercolor clouds & ribbons (Responsive)", color: "#e11d48", img: "/images/themes/thumb-theme1.jpg" },
-    { id: "theme-img-theme2", name: "Theme 2 🎀", desc: "Silk bows & pearl necklaces (Responsive)", color: "#e11d48", img: "/images/themes/thumb-theme2.jpg" },
-    { id: "theme-img-theme3", name: "Theme 3 🍒", desc: "Heart cherries with silk ribbons (Responsive)", color: "#dc2626", img: "/images/themes/thumb-theme3.jpg" },
-    { id: "theme-img-theme4", name: "Theme 4 📝", desc: "Love letter notebook paper (Responsive)", color: "#e11d48", img: "/images/themes/thumb-theme4.jpg" },
-    { id: "theme-img-gold-hearts", name: "Watercolor Gold Hearts 💛", desc: "Gold leaf hearts & blush wash", color: "#d97706", img: "/images/themes/bg-watercolor-gold.jpeg" },
-    { id: "theme-img-love-letter", name: "Love Letter Envelope 💌", desc: "Pink letter & floating hearts", color: "#fb7185", img: "/images/themes/bg-love-letter.jpg" },
-    { id: "theme-img-be-mine", name: "Be Mine Sunset Sky 🌅", desc: "Sunset sky & sparkling heart trail", color: "#f43f5e", img: "/images/themes/bg-be-mine-sky.jpg" },
-    { id: "theme-img-sweet-couple", name: "Embracing Couple 👩‍❤️‍👨", desc: "Minimalist couple hug illustration", color: "#0284c7", img: "/images/themes/bg-sweet-couple.jpg" },
-    { id: "theme-img-line-hearts", name: "Minimalist Line Hearts ✍️", desc: "Continuous ink doodle hearts", color: "#ec4899", img: "/images/themes/bg-line-hearts.jpg" },
-    { id: "theme-img-stitched-hearts", name: "Stitched Dual Pink 💕", desc: "Two-tone stitched craft paper", color: "#db2777", img: "/images/themes/bg-stitched-pink.jpeg" },
-    { id: "theme-img-heart-podiums", name: "3D Heart Podiums 🎁", desc: "Studio 3D pastel pink heart sculpture", color: "#ec4899", img: "/images/themes/bg-heart-podiums.webp" },
-    { id: "theme-img-paper-sunset", name: "Sunset Paper Hearts 🌇", desc: "Warm sunset & layered paper cutouts", color: "#f97316", img: "/images/themes/bg-paper-sunset.jpg" }
+    {
+      id: 'theme-img-theme1',
+      name: 'Theme 1 🎀',
+      desc: 'Watercolor clouds & ribbons (Responsive)',
+      color: '#e11d48',
+      img: '/images/themes/thumb-theme1.jpg?v=2.5.0',
+    },
+    {
+      id: 'theme-img-theme2',
+      name: 'Theme 2 🎀',
+      desc: 'Silk bows & pearl necklaces (Responsive)',
+      color: '#e11d48',
+      img: '/images/themes/thumb-theme2.jpg?v=2.5.0',
+    },
+    {
+      id: 'theme-img-theme3',
+      name: 'Theme 3 🍒',
+      desc: 'Heart cherries with silk ribbons (Responsive)',
+      color: '#dc2626',
+      img: '/images/themes/thumb-theme3.jpg?v=2.5.0',
+    },
+    {
+      id: 'theme-img-theme4',
+      name: 'Theme 4 📝',
+      desc: 'Love letter notebook paper (Responsive)',
+      color: '#e11d48',
+      img: '/images/themes/thumb-theme4.jpg?v=2.5.0',
+    },
+    {
+      id: 'theme-img-gold-hearts',
+      name: 'Watercolor Gold Hearts 💛',
+      desc: 'Gold leaf hearts & blush wash',
+      color: '#d97706',
+      img: '/images/themes/bg-watercolor-gold.jpeg',
+    },
+    {
+      id: 'theme-img-love-letter',
+      name: 'Love Letter Envelope 💌',
+      desc: 'Pink letter & floating hearts',
+      color: '#fb7185',
+      img: '/images/themes/bg-love-letter.jpg',
+    },
+    {
+      id: 'theme-img-be-mine',
+      name: 'Be Mine Sunset Sky 🌅',
+      desc: 'Sunset sky & sparkling heart trail',
+      color: '#f43f5e',
+      img: '/images/themes/bg-be-mine-sky.jpg',
+    },
+    {
+      id: 'theme-img-sweet-couple',
+      name: 'Embracing Couple 👩‍❤️‍👨',
+      desc: 'Minimalist couple hug illustration',
+      color: '#0284c7',
+      img: '/images/themes/bg-sweet-couple.jpg',
+    },
+    {
+      id: 'theme-img-line-hearts',
+      name: 'Minimalist Line Hearts ✍️',
+      desc: 'Continuous ink doodle hearts',
+      color: '#ec4899',
+      img: '/images/themes/bg-line-hearts.jpg',
+    },
+    {
+      id: 'theme-img-stitched-hearts',
+      name: 'Stitched Dual Pink 💕',
+      desc: 'Two-tone stitched craft paper',
+      color: '#db2777',
+      img: '/images/themes/bg-stitched-pink.jpeg',
+    },
+    {
+      id: 'theme-img-heart-podiums',
+      name: '3D Heart Podiums 🎁',
+      desc: 'Studio 3D pastel pink heart sculpture',
+      color: '#ec4899',
+      img: '/images/themes/bg-heart-podiums.webp',
+    },
+    {
+      id: 'theme-img-paper-sunset',
+      name: 'Sunset Paper Hearts 🌇',
+      desc: 'Warm sunset & layered paper cutouts',
+      color: '#f97316',
+      img: '/images/themes/bg-paper-sunset.jpg',
+    },
   ];
 
   const otherOccasions = [
-    { id: "theme-apology", name: "Sincere Apology 🕊️", color: "#3a86ff" },
-    { id: "theme-anniversary", name: "Anniversary 💍", color: "#c9184a" },
-    { id: "theme-scrapbook", name: "Scrapbook 📖", color: "#b05d3b" }
+    { id: 'theme-apology', name: 'Sincere Apology 🕊️', color: '#3a86ff' },
+    { id: 'theme-anniversary', name: 'Anniversary 💍', color: '#c9184a' },
+    { id: 'theme-scrapbook', name: 'Scrapbook 📖', color: '#b05d3b' },
   ];
 
   const colorThemes = [
-    { id: "theme-pink", name: "Romantic Rose", color: "#ff4d6d" },
-    { id: "theme-midnight", name: "Ocean Blue", color: "#3b82f6" },
-    { id: "theme-purple", name: "Lavender Dream", color: "#9b5de5" },
-    { id: "theme-gold", name: "Sunset Gold", color: "#f77f00" },
-    { id: "theme-emerald", name: "Emerald Garden", color: "#10b981" },
-    { id: "theme-peach", name: "Warm Peach", color: "#f97316" }
+    { id: 'theme-pink', name: 'Romantic Rose', color: '#ff4d6d' },
+    { id: 'theme-midnight', name: 'Ocean Blue', color: '#3b82f6' },
+    { id: 'theme-purple', name: 'Lavender Dream', color: '#9b5de5' },
+    { id: 'theme-gold', name: 'Sunset Gold', color: '#f77f00' },
+    { id: 'theme-emerald', name: 'Emerald Garden', color: '#10b981' },
+    { id: 'theme-peach', name: 'Warm Peach', color: '#f97316' },
   ];
 
-  let currentTheme = state.themeId || "theme-pink";
-  if (currentTheme === "romantic-rose" || !currentTheme) currentTheme = "theme-pink";
-  else if (currentTheme === "theme-blue" || currentTheme === "blue") currentTheme = "theme-midnight";
-  else if (currentTheme === "birthday" || currentTheme === "theme-birthday-cake") currentTheme = "theme-birthday";
-  else if (currentTheme.endsWith("-16-9") || currentTheme.endsWith("-9-16")) {
-    currentTheme = currentTheme.replace(/-(16-9|9-16)$/, "");
+  let currentTheme = state.themeId || 'theme-pink';
+  if (currentTheme === 'romantic-rose' || !currentTheme)
+    currentTheme = 'theme-pink';
+  else if (currentTheme === 'theme-blue' || currentTheme === 'blue')
+    currentTheme = 'theme-midnight';
+  else if (
+    currentTheme === 'birthday' ||
+    currentTheme === 'theme-birthday-cake'
+  )
+    currentTheme = 'theme-birthday';
+  else if (currentTheme.endsWith('-16-9') || currentTheme.endsWith('-9-16')) {
+    currentTheme = currentTheme.replace(/-(16-9|9-16)$/, '');
   }
   const safeDateVal = (hero.anniversaryDate || '2024-02-14').split('T')[0];
   const publicSiteUrl = `${window.location.origin}/sites/${encodeURIComponent(state.slug)}`;
 
   container.innerHTML = `
-    ${state.userRole === "visitor" ? `
+    ${
+      state.userRole === 'visitor'
+        ? `
       <div class="visitor-locked-banner">
         <span>🔒 Purchase now to customize themes, motto & identity</span>
         <a href="/welcome#pricing" target="_blank" class="visitor-lock-btn">Unlock Themes ↗</a>
       </div>
-    ` : ""}
+    `
+        : ''
+    }
     <!-- Live Website Share Card -->
     <div class="settings-group-card">
       <div class="settings-group-title"><span>🌐</span> Live Website Link</div>
@@ -3395,7 +3914,9 @@ function renderSiteSettingsUI() {
       <div class="settings-group-title"><span>🎂</span> Birthday Theme & Background Variations</div>
       <div style="font-size: 11px; color: var(--text-muted, #64748b); margin-bottom: 10px;">Select from 9 unique birthday designs & illustrated background art:</div>
       <div class="theme-chips-grid" style="grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;">
-        ${birthdayThemes.map(t => `
+        ${birthdayThemes
+          .map(
+            (t) => `
           <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden;">
             <div style="width: 100%; height: 65px; background: ${t.bg}; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; position: relative; box-shadow: inset 0 0 10px rgba(0,0,0,0.05);">
               <span style="font-size: 26px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">${t.icon}</span>
@@ -3406,13 +3927,17 @@ function renderSiteSettingsUI() {
             </div>
             <span style="font-size: 10px; color: var(--text-muted, #64748b); font-weight: normal; line-height: 1.25;">${t.desc}</span>
           </button>
-        `).join("")}
+        `,
+          )
+          .join('')}
       </div>
 
       <div class="settings-group-title" style="font-size: 12px; opacity: 0.9; margin-top: 6px;"><span>✨</span> Illustrated Romance & Art Styles</div>
       <div style="font-size: 11px; color: var(--text-muted, #64748b); margin-bottom: 10px;">Select from 3 illustrated aesthetics (Watercolor Frame, Pop Stickers, Sketch Tapestry):</div>
       <div class="theme-chips-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
-        ${artStyles.map(t => `
+        ${artStyles
+          .map(
+            (t) => `
           <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden;">
             <div style="width: 100%; height: 65px; background: url('${t.img}') center/cover no-repeat; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1);"></div>
             <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
@@ -3421,7 +3946,9 @@ function renderSiteSettingsUI() {
             </div>
             <span style="font-size: 10px; color: var(--text-muted, #64748b); font-weight: normal; line-height: 1.25;">${t.desc}</span>
           </button>
-        `).join("")}
+        `,
+          )
+          .join('')}
       </div>
 
       <div class="settings-group-title" style="font-size: 13px; font-weight: 700; margin-top: 14px;"><span>🖼️</span> Background Wallpaper & Imagery</div>
@@ -3440,9 +3967,13 @@ function renderSiteSettingsUI() {
             <input type="file" id="uploadCustomBgFile" accept="image/*" style="display: none;">
           </label>
         </div>
-        ${state.customBgUrl ? `
+        ${
+          state.customBgUrl
+            ? `
           <div style="margin-top: 10px; width: 100%; height: 95px; background: url('${escapeHtml(state.customBgUrl)}') center/cover no-repeat; border-radius: 8px; border: 2px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
-        ` : ''}
+        `
+            : ''
+        }
       </div>
 
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -3450,9 +3981,11 @@ function renderSiteSettingsUI() {
         <button type="button" id="btnOpenAddThemeModal" class="btn-sm btn-primary" style="padding: 3px 8px; font-size: 11px; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;"><span>+</span> Add Theme (Admin)</button>
       </div>
       <div class="theme-chips-grid" style="grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;">
-        ${(state.sectionsData.customThemes || []).map(t => `
+        ${(state.sectionsData.customThemes || [])
+          .map(
+            (t) => `
           <div style="position: relative; width: 100%;">
-            <button type="button" class="theme-chip-btn ${(!state.customBgUrl && currentTheme === t.id) ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden; width: 100%; border: 1px solid rgba(225,29,72,0.35);">
+            <button type="button" class="theme-chip-btn ${!state.customBgUrl && currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden; width: 100%; border: 1px solid rgba(225,29,72,0.35);">
               <div style="width: 100%; height: 75px; background: ${t.color || '#e11d48'} url('${escapeHtml(t.desktopImg || t.mobileImg)}') center/cover no-repeat; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1); position: relative;">
                 <span style="position: absolute; top: 4px; left: 4px; background: rgba(225,29,72,0.85); color: #fff; font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: 700;">CUSTOM</span>
               </div>
@@ -3464,9 +3997,13 @@ function renderSiteSettingsUI() {
             </button>
             <button type="button" class="btn-delete-custom-theme" data-theme-id="${escapeHtml(t.id)}" title="Delete theme (Admin only)" style="position: absolute; top: 6px; right: 6px; background: rgba(239,68,68,0.9); color: white; border: none; border-radius: 4px; padding: 3px 6px; font-size: 10px; cursor: pointer; z-index: 2;">🗑️</button>
           </div>
-        `).join("")}
-        ${imageBackgroundThemes.map(t => `
-          <button type="button" class="theme-chip-btn ${(!state.customBgUrl && currentTheme === t.id) ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden;">
+        `,
+          )
+          .join('')}
+        ${imageBackgroundThemes
+          .map(
+            (t) => `
+          <button type="button" class="theme-chip-btn ${!state.customBgUrl && currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden;">
             <div style="width: 100%; height: 75px; background: url('${t.img}') center/cover no-repeat; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1);"></div>
             <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
               <span class="theme-color-dot" style="background: ${t.color}"></span>
@@ -3474,202 +4011,155 @@ function renderSiteSettingsUI() {
             </div>
             <span style="font-size: 10px; color: var(--text-muted, #64748b); font-weight: normal; line-height: 1.2;">${t.desc}</span>
           </button>
-        `).join("")}
+        `,
+          )
+          .join('')}
       </div>
 
       <div class="settings-group-title" style="font-size: 12px; opacity: 0.9; margin-top: 6px;"><span>💌</span> Other Occasions</div>
       <div class="theme-chips-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 14px;">
-        ${otherOccasions.map(t => `
+        ${otherOccasions
+          .map(
+            (t) => `
           <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}">
             <span class="theme-color-dot" style="background: ${t.color}"></span>
             <span>${t.name}</span>
           </button>
-        `).join("")}
+        `,
+          )
+          .join('')}
       </div>
 
       <div class="settings-group-title" style="font-size: 12px; opacity: 0.9; margin-top: 6px;"><span>🎨</span> Classic Color Palettes</div>
       <div class="theme-chips-grid">
-        ${colorThemes.map(t => `
+        ${colorThemes
+          .map(
+            (t) => `
           <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}">
             <span class="theme-color-dot" style="background: ${t.color}"></span>
             <span>${t.name}</span>
           </button>
-        `).join("")}
+        `,
+          )
+          .join('')}
       </div>
     </div>
 
     <!-- Audio & Romance Soundtrack Settings -->
-    ${renderMediaSettingsHTML("site_")}
-
-    <!-- Security & Account PIN -->
-    <div class="settings-group-card">
-      <div class="settings-group-title"><span>🔒</span> Security & Passcode</div>
-      <div class="input-group">
-        <label>Couple Admin PIN (for saving & editing)</label>
-        <div class="pin-input-wrap" style="display:flex; gap:8px;">
-          <input type="password" id="site_admin_pin" value="${escapeHtml(state.adminPin || '1234')}" maxlength="8" style="flex:1;">
-          <button type="button" class="btn-toggle-pin" id="btnTogglePinVisibility">👁️ Show</button>
-          <button type="button" id="btnUpdateAdminPin" style="padding:6px 14px; background:var(--primary); color:#fff; border:none; border-radius:6px; font-weight:600; font-size:12px; cursor:pointer;">Update PIN</button>
-        </div>
-        <div id="site_pinStatus" style="font-size:11px; margin-top:4px;"></div>
-      </div>
-    </div>
+    ${renderMediaSettingsHTML('site_')}
   `;
 
   // Copy site link button with clipboard fallback
-  const btnCopy = document.getElementById("btnCopySiteLink");
+  const btnCopy = document.getElementById('btnCopySiteLink');
   if (btnCopy) {
     btnCopy.onclick = () => {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(publicSiteUrl);
       } else {
-        const ta = document.createElement("textarea");
+        const ta = document.createElement('textarea');
         ta.value = publicSiteUrl;
         document.body.appendChild(ta);
         ta.select();
-        document.execCommand("copy");
+        document.execCommand('copy');
         ta.remove();
       }
-      btnCopy.textContent = "✓ Copied!";
-      setTimeout(() => btnCopy.textContent = "📋 Copy", 1500);
-    };
-  }
-
-  // Toggle PIN visibility button
-  const btnTogglePin = document.getElementById("btnTogglePinVisibility");
-  const pinInput = document.getElementById("site_admin_pin");
-  if (btnTogglePin && pinInput) {
-    btnTogglePin.onclick = () => {
-      const isPwd = pinInput.type === "password";
-      pinInput.type = isPwd ? "text" : "password";
-      btnTogglePin.textContent = isPwd ? "🙈 Hide" : "👁️ Show";
-    };
-  }
-
-  // Explicit Update PIN button
-  const btnUpdatePin = document.getElementById("btnUpdateAdminPin");
-  const pinStatus = document.getElementById("site_pinStatus");
-  if (btnUpdatePin && pinInput) {
-    btnUpdatePin.onclick = async () => {
-      if (state.userRole === "visitor") {
-        showToast("🔒 Purchase now to customize and update admin PIN!", "warning");
-        window.open("/welcome#pricing", "_blank");
-        return;
-      }
-      const newPin = pinInput.value.trim();
-      if (!newPin || newPin.length < 4) {
-        if (pinStatus) {
-          pinStatus.textContent = "❌ PIN must be at least 4 digits.";
-          pinStatus.style.color = "#ff4365";
-        }
-        return;
-      }
-      try {
-        btnUpdatePin.disabled = true;
-        btnUpdatePin.textContent = "Updating...";
-        const res = await fetch(`/api/tenants/${encodeURIComponent(state.slug)}/config`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Admin-Pin": state.adminPin
-          },
-          body: JSON.stringify({
-            templatePreset: state.templatePreset,
-            themeId: state.themeId,
-            layoutOrder: state.layoutOrder,
-            sectionsData: state.sectionsData,
-            newAdminPin: newPin
-          })
-        });
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || "Update failed");
-        }
-        state.adminPin = newPin;
-        if (pinStatus) {
-          pinStatus.textContent = "✓ Admin PIN updated successfully!";
-          pinStatus.style.color = "#2ed573";
-        }
-        showToast("Admin PIN updated successfully!", "success");
-      } catch (err) {
-        if (pinStatus) {
-          pinStatus.textContent = "Update failed: " + err.message;
-          pinStatus.style.color = "#ff4365";
-        }
-        showToast("PIN Error: " + err.message, "error");
-      } finally {
-        btnUpdatePin.disabled = false;
-        btnUpdatePin.textContent = "Update PIN";
-      }
+      btnCopy.textContent = '✓ Copied!';
+      setTimeout(() => (btnCopy.textContent = '📋 Copy'), 1500);
     };
   }
 
   // Bind unified media and audio settings controls
-  bindMediaSettingsControls(container, "site_");
+  bindMediaSettingsControls(container, 'site_');
 
   // Bind custom background wallpaper controls
-  const btnPickBg = document.getElementById("btnPickBgFromLibrary");
+  const btnPickBg = document.getElementById('btnPickBgFromLibrary');
   if (btnPickBg) {
     btnPickBg.onclick = () => {
-      if (state.userRole === "visitor") {
-        showToast("🔒 Purchase now to customize background wallpaper!", "warning");
-        window.open("/welcome#pricing", "_blank");
+      if (state.userRole === 'visitor') {
+        showToast(
+          '🔒 Purchase now to customize background wallpaper!',
+          'warning',
+        );
+        window.open('/welcome#pricing', '_blank');
         return;
       }
       openMediaPicker({
-        filter: "image",
+        filter: 'image',
         onSelect: (url) => {
           state.customBgUrl = url;
           if (previewIframe && previewIframe.contentWindow) {
-            previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, "*");
+            previewIframe.contentWindow.postMessage(
+              {
+                type: 'SET_THEME',
+                themeId: state.themeId,
+                customBgUrl: state.customBgUrl,
+              },
+              window.location.origin,
+            );
           }
           renderSiteSettingsUI();
           debouncedLiveUpdate(true);
           debouncedAutoSaveLayout();
-        }
+        },
       });
     };
   }
 
-  const bgUploadInput = document.getElementById("uploadCustomBgFile");
+  const bgUploadInput = document.getElementById('uploadCustomBgFile');
   if (bgUploadInput) {
     bgUploadInput.onchange = async (e) => {
-      if (state.userRole === "visitor") {
-        showToast("🔒 Purchase now to upload background images!", "warning");
-        window.open("/welcome#pricing", "_blank");
+      if (state.userRole === 'visitor') {
+        showToast('🔒 Purchase now to upload background images!', 'warning');
+        window.open('/welcome#pricing', '_blank');
         return;
       }
       const file = e.target.files[0];
       if (!file) return;
       try {
         const uploaded = await uploadFileToR2(file);
-        const url = typeof uploaded === "string" ? uploaded : (uploaded?.url || uploaded?.publicUrl);
+        const url =
+          typeof uploaded === 'string'
+            ? uploaded
+            : uploaded?.url || uploaded?.publicUrl;
         if (url) {
           state.customBgUrl = url;
           if (previewIframe && previewIframe.contentWindow) {
-            previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, "*");
+            previewIframe.contentWindow.postMessage(
+              {
+                type: 'SET_THEME',
+                themeId: state.themeId,
+                customBgUrl: state.customBgUrl,
+              },
+              window.location.origin,
+            );
           }
           renderSiteSettingsUI();
           debouncedLiveUpdate(true);
           debouncedAutoSaveLayout();
         }
       } catch (err) {
-        showToast("Failed to upload background image: " + err.message, "error");
+        showToast('Failed to upload background image: ' + err.message, 'error');
       }
     };
   }
 
-  const btnClearBg = document.getElementById("btnClearCustomBg");
+  const btnClearBg = document.getElementById('btnClearCustomBg');
   if (btnClearBg) {
     btnClearBg.onclick = () => {
-      if (state.userRole === "visitor") {
-        showToast("🔒 Purchase now to customize background wallpaper!", "warning");
-        window.open("/welcome#pricing", "_blank");
+      if (state.userRole === 'visitor') {
+        showToast(
+          '🔒 Purchase now to customize background wallpaper!',
+          'warning',
+        );
+        window.open('/welcome#pricing', '_blank');
         return;
       }
-      state.customBgUrl = "";
+      state.customBgUrl = '';
       if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: "" }, "*");
+        previewIframe.contentWindow.postMessage(
+          { type: 'SET_THEME', themeId: state.themeId, customBgUrl: '' },
+          window.location.origin,
+        );
       }
       renderSiteSettingsUI();
       debouncedLiveUpdate(true);
@@ -3677,17 +4167,27 @@ function renderSiteSettingsUI() {
     };
   }
 
-  const inputCustomBg = document.getElementById("site_customBgUrl");
+  const inputCustomBg = document.getElementById('site_customBgUrl');
   if (inputCustomBg) {
     inputCustomBg.onchange = (e) => {
-      if (state.userRole === "visitor") {
-        showToast("🔒 Purchase now to customize background wallpaper!", "warning");
-        window.open("/welcome#pricing", "_blank");
+      if (state.userRole === 'visitor') {
+        showToast(
+          '🔒 Purchase now to customize background wallpaper!',
+          'warning',
+        );
+        window.open('/welcome#pricing', '_blank');
         return;
       }
       state.customBgUrl = e.target.value.trim();
       if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, "*");
+        previewIframe.contentWindow.postMessage(
+          {
+            type: 'SET_THEME',
+            themeId: state.themeId,
+            customBgUrl: state.customBgUrl,
+          },
+          window.location.origin,
+        );
       }
       debouncedLiveUpdate(true);
       debouncedAutoSaveLayout();
@@ -3695,24 +4195,33 @@ function renderSiteSettingsUI() {
   }
 
   // Bind theme clicks
-  container.querySelectorAll(".theme-chip-btn").forEach(btn => {
+  container.querySelectorAll('.theme-chip-btn').forEach((btn) => {
     btn.onclick = () => {
-      if (state.userRole === "visitor") {
-        showToast("🔒 Purchase now to customize your website theme!", "warning");
-        window.open("/welcome#pricing", "_blank");
+      if (state.userRole === 'visitor') {
+        showToast(
+          '🔒 Purchase now to customize your website theme!',
+          'warning',
+        );
+        window.open('/welcome#pricing', '_blank');
         return;
       }
-      container.querySelectorAll(".theme-chip-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      state.themeId = btn.getAttribute("data-theme");
-      state.customBgUrl = "";
+      container
+        .querySelectorAll('.theme-chip-btn')
+        .forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.themeId = btn.getAttribute('data-theme');
+      state.customBgUrl = '';
       if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage({
-          type: "SET_THEME",
-          themeId: state.themeId,
-          customBgUrl: "",
-          customThemes: (state.sectionsData && state.sectionsData.customThemes) || []
-        }, "*");
+        previewIframe.contentWindow.postMessage(
+          {
+            type: 'SET_THEME',
+            themeId: state.themeId,
+            customBgUrl: '',
+            customThemes:
+              (state.sectionsData && state.sectionsData.customThemes) || [],
+          },
+          window.location.origin,
+        );
       }
       renderSiteSettingsUI();
       debouncedLiveUpdate(true);
@@ -3721,258 +4230,285 @@ function renderSiteSettingsUI() {
   });
 
   // Bind custom theme modal & actions
-  const btnOpenAddTheme = document.getElementById("btnOpenAddThemeModal");
-  const modalAddTheme = document.getElementById("addThemeModal");
+  const btnOpenAddTheme = document.getElementById('btnOpenAddThemeModal');
+  const modalAddTheme = document.getElementById('addThemeModal');
   if (btnOpenAddTheme && modalAddTheme) {
     btnOpenAddTheme.onclick = () => {
-      if (state.userRole === "visitor") {
-        showToast("🔒 Purchase now to customize and create themes!", "warning");
-        window.open("/welcome#pricing", "_blank");
+      if (state.userRole === 'visitor') {
+        showToast('🔒 Purchase now to customize and create themes!', 'warning');
+        window.open('/welcome#pricing', '_blank');
         return;
       }
-      modalAddTheme.classList.remove("hidden");
-      const pinInput = document.getElementById("customThemeAdminPin");
-      if (pinInput && state.adminPin) pinInput.value = state.adminPin;
-      const statusEl = document.getElementById("customThemeStatus");
-      if (statusEl) { statusEl.style.display = "none"; statusEl.textContent = ""; }
+      modalAddTheme.classList.remove('hidden');
+      const statusEl = document.getElementById('customThemeStatus');
+      if (statusEl) {
+        statusEl.style.display = 'none';
+        statusEl.textContent = '';
+      }
     };
   }
 
-  const btnCloseThemeModal = document.getElementById("btnCloseAddThemeModal");
-  const btnCancelThemeModal = document.getElementById("btnCancelAddThemeModal");
-  [btnCloseThemeModal, btnCancelThemeModal].forEach(b => {
+  const btnCloseThemeModal = document.getElementById('btnCloseAddThemeModal');
+  const btnCancelThemeModal = document.getElementById('btnCancelAddThemeModal');
+  [btnCloseThemeModal, btnCancelThemeModal].forEach((b) => {
     if (b && modalAddTheme) {
-      b.onclick = () => modalAddTheme.classList.add("hidden");
+      b.onclick = () => modalAddTheme.classList.add('hidden');
     }
   });
   if (modalAddTheme) {
-    modalAddTheme.onclick = e => {
-      if (e.target === modalAddTheme) modalAddTheme.classList.add("hidden");
+    modalAddTheme.onclick = (e) => {
+      if (e.target === modalAddTheme) modalAddTheme.classList.add('hidden');
     };
   }
 
-  const themeColor = document.getElementById("customThemeColor");
-  const themeColorHex = document.getElementById("customThemeColorHex");
+  const themeColor = document.getElementById('customThemeColor');
+  const themeColorHex = document.getElementById('customThemeColorHex');
   if (themeColor && themeColorHex) {
-    themeColor.oninput = e => { themeColorHex.value = e.target.value; };
-    themeColorHex.oninput = e => {
-      if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) themeColor.value = e.target.value;
+    themeColor.oninput = (e) => {
+      themeColorHex.value = e.target.value;
+    };
+    themeColorHex.oninput = (e) => {
+      if (/^#[0-9a-fA-F]{6}$/.test(e.target.value))
+        themeColor.value = e.target.value;
     };
   }
 
-  const deskInput = document.getElementById("customThemeDesktopImg");
-  const deskPreview = document.getElementById("customThemeDesktopPreview");
-  const updateDeskPreview = url => {
+  const deskInput = document.getElementById('customThemeDesktopImg');
+  const deskPreview = document.getElementById('customThemeDesktopPreview');
+  const updateDeskPreview = (url) => {
     if (deskPreview) {
-      deskPreview.style.backgroundImage = url ? `url('${url}')` : "";
-      deskPreview.textContent = url ? "" : "Desktop (16:9) Preview";
+      deskPreview.style.backgroundImage = url ? `url('${url}')` : '';
+      deskPreview.textContent = url ? '' : 'Desktop (16:9) Preview';
     }
   };
-  if (deskInput) deskInput.oninput = e => updateDeskPreview(e.target.value.trim());
+  if (deskInput)
+    deskInput.oninput = (e) => updateDeskPreview(e.target.value.trim());
 
-  const btnDeskLib = document.getElementById("btnCustomThemeDesktopLibrary");
+  const btnDeskLib = document.getElementById('btnCustomThemeDesktopLibrary');
   if (btnDeskLib) {
     btnDeskLib.onclick = () => {
       openMediaPicker({
-        filter: "image",
-        onSelect: url => {
+        filter: 'image',
+        onSelect: (url) => {
           if (deskInput) deskInput.value = url;
           updateDeskPreview(url);
-        }
+        },
       });
     };
   }
 
-  const fileDesk = document.getElementById("uploadCustomThemeDesktop");
+  const fileDesk = document.getElementById('uploadCustomThemeDesktop');
   if (fileDesk) {
-    fileDesk.onchange = async e => {
+    fileDesk.onchange = async (e) => {
       const f = e.target.files[0];
       if (!f) return;
       try {
         const up = await uploadFileToR2(f);
-        const url = typeof up === "string" ? up : (up?.url || up?.publicUrl);
+        const url = typeof up === 'string' ? up : up?.url || up?.publicUrl;
         if (url) {
           if (deskInput) deskInput.value = url;
           updateDeskPreview(url);
         }
       } catch (err) {
-        showToast("Upload error: " + err.message, "error");
+        showToast('Upload error: ' + err.message, 'error');
       }
     };
   }
 
-  const mobInput = document.getElementById("customThemeMobileImg");
-  const mobPreview = document.getElementById("customThemeMobilePreview");
-  const updateMobPreview = url => {
+  const mobInput = document.getElementById('customThemeMobileImg');
+  const mobPreview = document.getElementById('customThemeMobilePreview');
+  const updateMobPreview = (url) => {
     if (mobPreview) {
-      mobPreview.style.backgroundImage = url ? `url('${url}')` : "";
-      mobPreview.textContent = url ? "" : "Mobile (9:16)";
+      mobPreview.style.backgroundImage = url ? `url('${url}')` : '';
+      mobPreview.textContent = url ? '' : 'Mobile (9:16)';
     }
   };
-  if (mobInput) mobInput.oninput = e => updateMobPreview(e.target.value.trim());
+  if (mobInput)
+    mobInput.oninput = (e) => updateMobPreview(e.target.value.trim());
 
-  const btnMobLib = document.getElementById("btnCustomThemeMobileLibrary");
+  const btnMobLib = document.getElementById('btnCustomThemeMobileLibrary');
   if (btnMobLib) {
     btnMobLib.onclick = () => {
       openMediaPicker({
-        filter: "image",
-        onSelect: url => {
+        filter: 'image',
+        onSelect: (url) => {
           if (mobInput) mobInput.value = url;
           updateMobPreview(url);
-        }
+        },
       });
     };
   }
 
-  const fileMob = document.getElementById("uploadCustomThemeMobile");
+  const fileMob = document.getElementById('uploadCustomThemeMobile');
   if (fileMob) {
-    fileMob.onchange = async e => {
+    fileMob.onchange = async (e) => {
       const f = e.target.files[0];
       if (!f) return;
       try {
         const up = await uploadFileToR2(f);
-        const url = typeof up === "string" ? up : (up?.url || up?.publicUrl);
+        const url = typeof up === 'string' ? up : up?.url || up?.publicUrl;
         if (url) {
           if (mobInput) mobInput.value = url;
           updateMobPreview(url);
         }
       } catch (err) {
-        showToast("Upload error: " + err.message, "error");
+        showToast('Upload error: ' + err.message, 'error');
       }
     };
   }
 
-  const btnSaveTheme = document.getElementById("btnSaveCustomTheme");
+  const btnSaveTheme = document.getElementById('btnSaveCustomTheme');
   if (btnSaveTheme) {
     btnSaveTheme.onclick = async () => {
-      const name = (document.getElementById("customThemeName")?.value || "").trim();
-      const desc = (document.getElementById("customThemeDesc")?.value || "").trim();
-      const color = (document.getElementById("customThemeColor")?.value || "#e11d48").trim();
-      const desktopImg = (document.getElementById("customThemeDesktopImg")?.value || "").trim();
-      const mobileImg = (document.getElementById("customThemeMobileImg")?.value || desktopImg).trim();
-      const pin = (document.getElementById("customThemeAdminPin")?.value || state.adminPin || "").trim();
-      const statusEl = document.getElementById("customThemeStatus");
+      const name = (
+        document.getElementById('customThemeName')?.value || ''
+      ).trim();
+      const desc = (
+        document.getElementById('customThemeDesc')?.value || ''
+      ).trim();
+      const color = (
+        document.getElementById('customThemeColor')?.value || '#e11d48'
+      ).trim();
+      const desktopImg = (
+        document.getElementById('customThemeDesktopImg')?.value || ''
+      ).trim();
+      const mobileImg = (
+        document.getElementById('customThemeMobileImg')?.value || desktopImg
+      ).trim();
+      const statusEl = document.getElementById('customThemeStatus');
 
       if (!name) {
-        if (statusEl) { statusEl.style.display = "block"; statusEl.style.color = "#ef4444"; statusEl.textContent = "Theme Name is required."; }
+        if (statusEl) {
+          statusEl.style.display = 'block';
+          statusEl.style.color = '#ef4444';
+          statusEl.textContent = 'Theme Name is required.';
+        }
         return;
       }
       if (!desktopImg && !mobileImg) {
-        if (statusEl) { statusEl.style.display = "block"; statusEl.style.color = "#ef4444"; statusEl.textContent = "Desktop (16:9) or Mobile (9:16) image is required."; }
-        return;
-      }
-      if (!pin) {
-        if (statusEl) { statusEl.style.display = "block"; statusEl.style.color = "#ef4444"; statusEl.textContent = "Admin PIN is required."; }
+        if (statusEl) {
+          statusEl.style.display = 'block';
+          statusEl.style.color = '#ef4444';
+          statusEl.textContent =
+            'Desktop (16:9) or Mobile (9:16) image is required.';
+        }
         return;
       }
 
       btnSaveTheme.disabled = true;
-      btnSaveTheme.textContent = "Saving...";
+      btnSaveTheme.textContent = 'Saving...';
 
       try {
-        const res = await fetch(`/api/tenants/${encodeURIComponent(state.slug)}/custom-themes`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Admin-Pin": pin
+        const headers = getAuthHeaders({ 'Content-Type': 'application/json' });
+
+        const res = await fetch(
+          `/api/tenants/${encodeURIComponent(state.slug)}/custom-themes`,
+          {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              name,
+              desc: desc || 'Custom responsive wallpaper',
+              color,
+              desktopImg: desktopImg || mobileImg,
+              mobileImg: mobileImg || desktopImg,
+            }),
           },
-          body: JSON.stringify({ name, desc: desc || "Custom responsive wallpaper", color, desktopImg: desktopImg || mobileImg, mobileImg: mobileImg || desktopImg })
-        });
+        );
         const result = await res.json();
-        if (!res.ok) throw new Error(result.error || "Failed to add theme");
+        if (!res.ok) throw new Error(result.error || 'Failed to add theme');
 
         if (!state.sectionsData) state.sectionsData = {};
         state.sectionsData.customThemes = result.customThemes || [];
         state.themeId = result.theme.id;
-        state.customBgUrl = "";
-        state.adminPin = pin;
+        state.customBgUrl = '';
 
         // Reset form inputs for next time
-        const nameEl = document.getElementById("customThemeName");
-        const descEl = document.getElementById("customThemeDesc");
-        if (nameEl) nameEl.value = "";
-        if (descEl) descEl.value = "";
-        if (deskInput) deskInput.value = "";
-        if (mobInput) mobInput.value = "";
-        updateDeskPreview("");
-        updateMobPreview("");
+        const nameEl = document.getElementById('customThemeName');
+        const descEl = document.getElementById('customThemeDesc');
+        if (nameEl) nameEl.value = '';
+        if (descEl) descEl.value = '';
+        if (deskInput) deskInput.value = '';
+        if (mobInput) mobInput.value = '';
+        updateDeskPreview('');
+        updateMobPreview('');
 
-        if (modalAddTheme) modalAddTheme.classList.add("hidden");
+        if (modalAddTheme) modalAddTheme.classList.add('hidden');
 
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({
-            type: "SET_THEME",
-            themeId: state.themeId,
-            customBgUrl: "",
-            customThemes: state.sectionsData.customThemes
-          }, "*");
+          previewIframe.contentWindow.postMessage(
+            {
+              type: 'SET_THEME',
+              themeId: state.themeId,
+              customBgUrl: '',
+              customThemes: state.sectionsData.customThemes,
+            },
+            window.location.origin,
+          );
         }
 
         renderSiteSettingsUI();
         debouncedLiveUpdate(true);
         debouncedAutoSaveLayout();
-        showToast("✨ Custom theme created & applied!", "success");
+        showToast('✓ Custom responsive theme created and applied!', 'success');
       } catch (err) {
-        if (statusEl) {
-          statusEl.style.display = "block";
-          statusEl.style.color = "#ef4444";
-          statusEl.textContent = err.message;
-        }
-        showToast("Error: " + err.message, "error");
+        alert(err.message);
       } finally {
         btnSaveTheme.disabled = false;
-        btnSaveTheme.innerHTML = "<span>💾</span> Save & Apply Theme";
+        btnSaveTheme.textContent = 'Save Custom Theme';
       }
     };
   }
 
-  container.querySelectorAll(".btn-delete-custom-theme").forEach(btn => {
-    btn.onclick = async e => {
+  // Delete custom theme buttons
+  container.querySelectorAll('.btn-delete-custom-theme').forEach((btn) => {
+    btn.onclick = async (e) => {
       e.stopPropagation();
-      if (state.userRole === "visitor") {
-        showToast("🔒 Only site admins can delete custom themes!", "warning");
+      if (state.userRole === 'visitor') {
+        showToast('🔒 Only site admins can delete custom themes!', 'warning');
         return;
       }
-      const themeId = btn.getAttribute("data-theme-id");
+      const themeId = btn.getAttribute('data-theme-id');
       if (!themeId) return;
-      let pin = state.adminPin;
-      if (!pin) {
-        pin = prompt("Enter Admin PIN to delete this theme:");
-        if (!pin) return;
-      }
-      if (!confirm("Are you sure you want to delete this custom theme?")) return;
+      if (!confirm('Are you sure you want to delete this custom theme?'))
+        return;
 
       try {
         btn.disabled = true;
-        const res = await fetch(`/api/tenants/${encodeURIComponent(state.slug)}/custom-themes/${encodeURIComponent(themeId)}`, {
-          method: "DELETE",
-          headers: { "X-Admin-Pin": pin }
-        });
+        const res = await fetch(
+          `/api/tenants/${encodeURIComponent(state.slug)}/custom-themes/${encodeURIComponent(themeId)}`,
+          {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+          },
+        );
         const result = await res.json();
-        if (!res.ok) throw new Error(result.error || "Failed to delete theme");
+        if (!res.ok) throw new Error(result.error || 'Failed to delete theme');
 
         if (!state.sectionsData) state.sectionsData = {};
         state.sectionsData.customThemes = result.customThemes || [];
         if (state.themeId === themeId) {
-          state.themeId = "theme-img-theme1";
+          state.themeId = 'theme-img-theme1';
         }
-        state.adminPin = pin;
 
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({
-            type: "SET_THEME",
-            themeId: state.themeId,
-            customBgUrl: "",
-            customThemes: state.sectionsData.customThemes
-          }, "*");
+          previewIframe.contentWindow.postMessage(
+            {
+              type: 'SET_THEME',
+              themeId: state.themeId,
+              customBgUrl: '',
+              customThemes: state.sectionsData.customThemes,
+            },
+            window.location.origin,
+          );
         }
 
         renderSiteSettingsUI();
         debouncedLiveUpdate(true);
         debouncedAutoSaveLayout();
-        showToast("Theme deleted.", "info");
+        showToast('Theme deleted.', 'info');
       } catch (err) {
-        alert("Delete failed: " + err.message);
+        alert('Delete failed: ' + err.message);
       }
     };
   });
@@ -3988,32 +4524,36 @@ function renderSiteSettingsUI() {
     };
   };
 
-  bindInput("site_p1", v => {
+  bindInput('site_p1', (v) => {
     if (!state.sectionsData.hero) state.sectionsData.hero = {};
     state.sectionsData.hero.partner1 = v;
   });
-  bindInput("site_p2", v => {
+  bindInput('site_p2', (v) => {
     if (!state.sectionsData.hero) state.sectionsData.hero = {};
     state.sectionsData.hero.partner2 = v;
   });
-  bindInput("site_date", v => {
+  bindInput('site_date', (v) => {
     if (!state.sectionsData.hero) state.sectionsData.hero = {};
     state.sectionsData.hero.anniversaryDate = v;
   });
-  bindInput("site_subtitle", v => {
+  bindInput('site_subtitle', (v) => {
     if (!state.sectionsData.hero) state.sectionsData.hero = {};
     state.sectionsData.hero.subtitle = v;
   });
-  bindInput("site_page_title", v => {
+  bindInput('site_page_title', (v) => {
     if (!state.sectionsData.hero) state.sectionsData.hero = {};
     state.sectionsData.hero.pageTitle = v;
   });
 
-  if (state.userRole === "visitor") {
-    container.querySelectorAll("input:not([id='site_p1']):not([id='site_p2']), select, button:not(#btnCopySiteLink):not(.btn-open-link)").forEach(el => {
-      el.disabled = true;
-      el.classList.add("visitor-disabled");
-    });
+  if (state.userRole === 'visitor') {
+    container
+      .querySelectorAll(
+        "input:not([id='site_p1']):not([id='site_p2']), select, button:not(#btnCopySiteLink):not(.btn-open-link)",
+      )
+      .forEach((el) => {
+        el.disabled = true;
+        el.classList.add('visitor-disabled');
+      });
   }
 }
 
@@ -4021,18 +4561,18 @@ function renderSiteSettingsUI() {
 // 7. BUILDER CONTROLS & SHORTCUTS
 // ----------------------------------------------------
 function initSidebarResizer() {
-  const sidebar = document.getElementById("builderSidebar");
-  const resizer = document.getElementById("builderResizer");
-  const btnCollapse = document.getElementById("btnCollapseSidebar");
-  const collapseArrow = document.getElementById("collapseArrow");
+  const sidebar = document.getElementById('builderSidebar');
+  const resizer = document.getElementById('builderResizer');
+  const btnCollapse = document.getElementById('btnCollapseSidebar');
+  const collapseArrow = document.getElementById('collapseArrow');
   if (!sidebar || !resizer) return;
 
-  const savedWidth = localStorage.getItem("builder_sidebar_width");
+  const savedWidth = localStorage.getItem('builder_sidebar_width');
   if (savedWidth) {
     const w = parseInt(savedWidth, 10);
     if (w >= 360 && w <= 760) {
       sidebar.style.width = `${w}px`;
-      document.documentElement.style.setProperty("--sidebar-width", `${w}px`);
+      document.documentElement.style.setProperty('--sidebar-width', `${w}px`);
     }
   }
 
@@ -4044,10 +4584,10 @@ function initSidebarResizer() {
     isDragging = true;
     startX = e.clientX;
     startWidth = sidebar.offsetWidth;
-    resizer.classList.add("resizing");
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-    if (previewIframe) previewIframe.style.pointerEvents = "none";
+    resizer.classList.add('resizing');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    if (previewIframe) previewIframe.style.pointerEvents = 'none';
   };
 
   const onMouseMove = (e) => {
@@ -4057,151 +4597,502 @@ function initSidebarResizer() {
     if (newWidth < 360) newWidth = 360;
     if (newWidth > 760) newWidth = 760;
     sidebar.style.width = `${newWidth}px`;
-    document.documentElement.style.setProperty("--sidebar-width", `${newWidth}px`);
-    if (sidebar.classList.contains("collapsed")) {
-      sidebar.classList.remove("collapsed");
-      if (collapseArrow) collapseArrow.textContent = "◀";
+    document.documentElement.style.setProperty(
+      '--sidebar-width',
+      `${newWidth}px`,
+    );
+    if (sidebar.classList.contains('collapsed')) {
+      sidebar.classList.remove('collapsed');
+      if (collapseArrow) collapseArrow.textContent = '◀';
     }
   };
 
   const onMouseUp = () => {
     if (isDragging) {
       isDragging = false;
-      resizer.classList.remove("resizing");
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-      if (previewIframe) previewIframe.style.pointerEvents = "";
-      localStorage.setItem("builder_sidebar_width", sidebar.offsetWidth);
+      resizer.classList.remove('resizing');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      if (previewIframe) previewIframe.style.pointerEvents = '';
+      localStorage.setItem('builder_sidebar_width', sidebar.offsetWidth);
     }
   };
 
-  resizer.addEventListener("mousedown", onMouseDown);
-  window.addEventListener("mousemove", onMouseMove);
-  window.addEventListener("mouseup", onMouseUp);
+  resizer.addEventListener('mousedown', onMouseDown);
+  window.addEventListener('mousemove', onMouseMove);
+  window.addEventListener('mouseup', onMouseUp);
 
-  resizer.addEventListener("dblclick", () => {
-    sidebar.style.width = "470px";
-    document.documentElement.style.setProperty("--sidebar-width", "470px");
-    localStorage.removeItem("builder_sidebar_width");
-    showToast("Sidebar width reset to default", "info", 1500);
+  resizer.addEventListener('dblclick', () => {
+    sidebar.style.width = '470px';
+    document.documentElement.style.setProperty('--sidebar-width', '470px');
+    localStorage.removeItem('builder_sidebar_width');
+    showToast('Sidebar width reset to default', 'info', 1500);
   });
 
   if (btnCollapse) {
     btnCollapse.onclick = () => {
-      const isCollapsed = sidebar.classList.toggle("collapsed");
-      if (collapseArrow) collapseArrow.textContent = isCollapsed ? "▶" : "◀";
-      btnCollapse.title = isCollapsed ? "Expand sidebar" : "Collapse sidebar";
+      const isCollapsed = sidebar.classList.toggle('collapsed');
+      if (collapseArrow) collapseArrow.textContent = isCollapsed ? '▶' : '◀';
+      btnCollapse.title = isCollapsed ? 'Expand sidebar' : 'Collapse sidebar';
     };
   }
 }
 
+let currentDeviceMode = 'desktop';
+
 function initDeviceSwitcher() {
-  const btnDesktop = document.getElementById("btnDeviceDesktop");
-  const btnTablet = document.getElementById("btnDeviceTablet");
-  const btnMobile = document.getElementById("btnDeviceMobile");
-  const btnRefresh = document.getElementById("btnRefreshPreview");
-  const previewChassis = document.getElementById("previewDeviceChassis");
-  const zoomSelect = document.getElementById("previewZoomSelect");
+  const btnDesktop = document.getElementById('btnDeviceDesktop');
+  const btnTablet = document.getElementById('btnDeviceTablet');
+  const btnMobile = document.getElementById('btnDeviceMobile');
+  const btnRefresh = document.getElementById('btnRefreshPreview');
+  const previewChassis = document.getElementById('previewDeviceChassis');
+  const zoomSelect = document.getElementById('previewZoomSelect');
 
   const setDevice = (mode) => {
     if (!previewChassis) return;
-    [btnDesktop, btnTablet, btnMobile].forEach(b => b?.classList.remove("active"));
-    previewChassis.className = "preview-device-chassis";
+    currentDeviceMode = mode;
+    [btnDesktop, btnTablet, btnMobile].forEach((b) =>
+      b?.classList.remove('active'),
+    );
+    previewChassis.className = 'preview-device-chassis';
 
-    if (mode === "desktop") {
-      btnDesktop?.classList.add("active");
-    } else if (mode === "tablet") {
-      btnTablet?.classList.add("active");
-      previewChassis.classList.add("tablet");
-    } else if (mode === "mobile") {
-      btnMobile?.classList.add("active");
-      previewChassis.classList.add("mobile");
+    if (mode === 'desktop') {
+      btnDesktop?.classList.add('active');
+    } else if (mode === 'tablet') {
+      btnTablet?.classList.add('active');
+      previewChassis.classList.add('tablet');
+    } else if (mode === 'mobile') {
+      btnMobile?.classList.add('active');
+      previewChassis.classList.add('mobile');
+    }
+
+    if (previewIframe && previewIframe.contentWindow) {
+      previewIframe.contentWindow.postMessage(
+        {
+          type: 'SET_DEVICE_MODE',
+          device: mode,
+          isMobile: mode === 'mobile',
+        },
+        '*',
+      );
     }
   };
 
-  if (btnDesktop) btnDesktop.onclick = () => setDevice("desktop");
-  if (btnTablet) btnTablet.onclick = () => setDevice("tablet");
-  if (btnMobile) btnMobile.onclick = () => setDevice("mobile");
+  if (btnDesktop) btnDesktop.onclick = () => setDevice('desktop');
+  if (btnTablet) btnTablet.onclick = () => setDevice('tablet');
+  if (btnMobile) btnMobile.onclick = () => setDevice('mobile');
+  if (previewIframe) {
+    previewIframe.addEventListener('load', () => {
+      try {
+        if (previewIframe.contentWindow) {
+          previewIframe.contentWindow.postMessage(
+            {
+              type: 'SET_DEVICE_MODE',
+              device: currentDeviceMode,
+              isMobile: currentDeviceMode === 'mobile',
+            },
+            '*',
+          );
+        }
+      } catch (err) {}
+    });
+  }
   if (btnRefresh) {
     btnRefresh.onclick = () => {
-      const icon = btnRefresh.querySelector(".refresh-icon");
-      if (icon) icon.style.transform = "rotate(360deg)";
+      const icon = btnRefresh.querySelector('.refresh-icon');
+      if (icon) icon.style.transform = 'rotate(360deg)';
       reloadPreview();
-      setTimeout(() => { if (icon) icon.style.transform = ""; }, 400);
+      setTimeout(() => {
+        if (icon) icon.style.transform = '';
+      }, 400);
     };
   }
 
   if (zoomSelect && previewChassis) {
     zoomSelect.onchange = (e) => {
       const scale = parseFloat(e.target.value) || 1;
-      previewChassis.style.transform = scale === 1 ? "" : `scale(${scale})`;
+      previewChassis.style.transform = scale === 1 ? '' : `scale(${scale})`;
     };
   }
 }
 
 function initMobileWorkspaceToggle() {
-  const btnEditor = document.getElementById("btnMobileShowEditor");
-  const btnPreview = document.getElementById("btnMobileShowPreview");
-  const workspace = document.getElementById("builderWorkspace");
+  const btnEditor = document.getElementById('btnMobileShowEditor');
+  const btnPreview = document.getElementById('btnMobileShowPreview');
+  const btnBackEditor = document.getElementById('btnPreviewBackToEditor');
+  const workspace = document.getElementById('builderWorkspace');
   if (!workspace || !btnEditor || !btnPreview) return;
 
   const setWorkspaceMode = (mode) => {
-    if (mode === "editor") {
-      workspace.classList.add("show-editor");
-      workspace.classList.remove("show-preview");
-      btnEditor.classList.add("active");
-      btnPreview.classList.remove("active");
+    if (mode === 'editor') {
+      workspace.classList.add('show-editor');
+      workspace.classList.remove('show-preview');
+      btnEditor.classList.add('active');
+      btnPreview.classList.remove('active');
     } else {
-      workspace.classList.add("show-preview");
-      workspace.classList.remove("show-editor");
-      btnPreview.classList.add("active");
-      btnEditor.classList.remove("active");
+      workspace.classList.add('show-preview');
+      workspace.classList.remove('show-editor');
+      btnPreview.classList.add('active');
+      btnEditor.classList.remove('active');
+      debouncedLiveUpdate(true);
     }
   };
 
-  btnEditor.addEventListener("click", () => setWorkspaceMode("editor"));
-  btnPreview.addEventListener("click", () => setWorkspaceMode("preview"));
+  btnEditor.addEventListener('click', () => setWorkspaceMode('editor'));
+  btnPreview.addEventListener('click', () => setWorkspaceMode('preview'));
+  if (btnBackEditor) {
+    btnBackEditor.addEventListener('click', () => setWorkspaceMode('editor'));
+  }
+}
+
+function updateUserMenuUI() {
+  const headerUserAvatar = document.getElementById('headerUserAvatar');
+  const headerUserName = document.getElementById('headerUserName');
+  const userMenuDisplayName = document.getElementById('userMenuDisplayName');
+  const userMenuRoleBadge = document.getElementById('userMenuRoleBadge');
+  const user = state.currentUser;
+
+  if (user) {
+    const rawName = user.name || (user.email ? user.email.split('@')[0] : 'Account');
+    const shortName = rawName === 'Master Admin' ? 'Admin' : rawName;
+    const initial = shortName ? shortName[0].toUpperCase() : 'A';
+
+    if (headerUserAvatar) headerUserAvatar.textContent = initial;
+    if (headerUserName) headerUserName.textContent = shortName;
+    if (userMenuDisplayName) userMenuDisplayName.textContent = rawName;
+    if (userMenuRoleBadge)
+      userMenuRoleBadge.textContent =
+        user.role === 'admin'
+          ? '🛡️ Master Admin • Full Access'
+          : user.email || 'User';
+  } else {
+    if (headerUserAvatar) headerUserAvatar.textContent = '👤';
+    if (headerUserName) headerUserName.textContent = 'Account';
+    if (userMenuDisplayName) userMenuDisplayName.textContent = 'My Account';
+    if (userMenuRoleBadge)
+      userMenuRoleBadge.textContent =
+        state.userRole === 'admin' ? '🛡️ Admin' : state.userRole || 'Visitor';
+  }
+}
+
+function renderProjectSwitcher() {
+  const listEl = document.getElementById('projectDropdownList');
+  const currentBadge = document.getElementById('currentTenantBadge');
+  if (currentBadge) currentBadge.textContent = state.slug || 'demo';
+
+  if (!listEl) return;
+  const projects = state.userDesigns || [];
+
+  if (projects.length === 0) {
+    listEl.innerHTML = `
+      <div style="padding: 12px 14px; color: var(--text-muted); font-size: 0.78rem; text-align: center;">
+        No other projects found.<br>
+        <span style="font-size: 0.72rem;">Click "+ New Site" to create one!</span>
+      </div>`;
+    return;
+  }
+
+  listEl.innerHTML = projects.map((p) => {
+    const isCurrent = p.slug === state.slug;
+    const displayName = [p.partner1, p.partner2].filter(Boolean).join(' & ') || p.slug;
+    return `
+      <button type="button" class="project-dropdown-item ${isCurrent ? 'active' : ''}" data-slug="${escapeHtml(p.slug)}" data-token="${escapeHtml(p.authToken || '')}">
+        <div class="project-item-info">
+          <span class="project-item-name">${isCurrent ? '✓ ' : ''}${escapeHtml(displayName)}</span>
+          <span class="project-item-slug">/sites/${escapeHtml(p.slug)}</span>
+        </div>
+        ${isCurrent ? '<span class="project-item-check">Current</span>' : ''}
+      </button>
+    `;
+  }).join('');
+
+  listEl.querySelectorAll('.project-dropdown-item').forEach((item) => {
+    item.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const slug = item.dataset.slug;
+      const token = item.dataset.token || '';
+      document.getElementById('projectSwitcherDropdown')?.classList.add('hidden');
+      document.getElementById('projectSwitcher')?.classList.remove('open');
+      document.getElementById('btnProjectSwitcher')?.setAttribute('aria-expanded', 'false');
+
+      if (slug === state.slug) return;
+
+      state.slug = slug;
+      if (token) state.authToken = token;
+      try {
+        const localAuth = JSON.parse(localStorage.getItem('lovesaas_auth') || '{}');
+        localAuth.slug = slug;
+        if (token) localAuth.authToken = token;
+        localStorage.setItem('lovesaas_auth', JSON.stringify(localAuth));
+      } catch (err) {}
+
+      window.history.pushState(
+        {},
+        '',
+        `/builder?slug=${encodeURIComponent(slug)}${token ? `&token=${encodeURIComponent(token)}` : ''}`
+      );
+      await loadTenantData(slug);
+      showToast(`Switched to site "${slug}"`, 'info');
+      renderProjectSwitcher();
+    });
+  });
+}
+
+async function fetchUserProjects() {
+  const userToken = localStorage.getItem('lovesaas_user_token');
+  let designs = [];
+  try {
+    if (userToken) {
+      const res = await fetch('/api/user/designs', {
+        headers: getAuthHeaders(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.designs) && data.designs.length > 0) {
+          designs = data.designs;
+        }
+      }
+    }
+  } catch (e) {}
+
+  if (designs.length === 0) {
+    try {
+      const tRes = await fetch('/api/tenants');
+      if (tRes.ok) {
+        const tData = await tRes.json();
+        designs = (tData.tenants || []).map((t) => ({
+          slug: t.slug,
+          partner1: t.partner1_name || t.partner1,
+          partner2: t.partner2_name || t.partner2,
+          themeId: t.theme_id || t.themeId || 'romantic-rose',
+          preset: t.preset || 'complete',
+          plan: t.plan || 'vip',
+          authToken: t.auth_token || '',
+        }));
+      }
+    } catch (e) {}
+  }
+
+  // Ensure current active project is in the list
+  if (state.slug && !designs.some((d) => d.slug === state.slug)) {
+    designs.unshift({
+      slug: state.slug,
+      partner1: state.partner1 || state.slug,
+      partner2: state.partner2 || '',
+      themeId: state.themeId,
+      preset: state.templatePreset,
+      authToken: state.authToken || '',
+    });
+  }
+
+  state.userDesigns = designs;
+  renderProjectSwitcher();
+  return designs;
+}
+
+function initProjectSwitcher() {
+  const container = document.getElementById('projectSwitcher');
+  const btn = document.getElementById('btnProjectSwitcher');
+  const dropdown = document.getElementById('projectSwitcherDropdown');
+  const btnNew = document.getElementById('btnProjectDropdownNew');
+  const btnManage = document.getElementById('btnViewAllProjects');
+
+  if (!btn || !dropdown) return;
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('userMenuDropdown')?.classList.add('hidden');
+    document.getElementById('headerUserMenu')?.classList.remove('open');
+    document.getElementById('btnUserMenuToggle')?.setAttribute('aria-expanded', 'false');
+
+    const isHidden = dropdown.classList.toggle('hidden');
+    container?.classList.toggle('open', !isHidden);
+    btn.setAttribute('aria-expanded', !isHidden ? 'true' : 'false');
+
+    if (!isHidden) {
+      fetchUserProjects();
+    }
+  });
+
+  if (btnNew) {
+    btnNew.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.add('hidden');
+      container?.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+      if (typeof window.openNewProjectModal === 'function') {
+        window.openNewProjectModal(false);
+      }
+    });
+  }
+
+  if (btnManage) {
+    btnManage.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.add('hidden');
+      container?.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+      showDesignPickerModal(state.userDesigns || []);
+    });
+  }
+}
+
+function initHeaderUserMenu() {
+  const container = document.getElementById('headerUserMenu');
+  const btn = document.getElementById('btnUserMenuToggle');
+  const dropdown = document.getElementById('userMenuDropdown');
+  const btnSwitch = document.getElementById('btnUserMenuSwitchProject');
+  const btnNew = document.getElementById('btnUserMenuNewProject');
+  const btnCopy = document.getElementById('btnUserMenuCopyLink');
+  const btnLogout = document.getElementById('btnBuilderLogout');
+
+  if (!btn || !dropdown) return;
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('projectSwitcherDropdown')?.classList.add('hidden');
+    document.getElementById('projectSwitcher')?.classList.remove('open');
+    document.getElementById('btnProjectSwitcher')?.setAttribute('aria-expanded', 'false');
+
+    updateUserMenuUI();
+    const isHidden = dropdown.classList.toggle('hidden');
+    container?.classList.toggle('open', !isHidden);
+    btn.setAttribute('aria-expanded', !isHidden ? 'true' : 'false');
+  });
+
+  if (btnSwitch) {
+    btnSwitch.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.add('hidden');
+      container?.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+      const switcherBtn = document.getElementById('btnProjectSwitcher');
+      if (switcherBtn) switcherBtn.click();
+    });
+  }
+
+  if (btnNew) {
+    btnNew.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.add('hidden');
+      container?.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+      if (typeof window.openNewProjectModal === 'function') {
+        window.openNewProjectModal(false);
+      }
+    });
+  }
+
+  if (btnCopy) {
+    btnCopy.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdown.classList.add('hidden');
+      container?.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+      const url = `${window.location.origin}/sites/${encodeURIComponent(state.slug || 'demo')}`;
+      navigator.clipboard?.writeText(url).then(() => {
+        showToast('Live site URL copied to clipboard! 📋', 'success');
+      }).catch(() => {
+        prompt('Copy this URL:', url);
+      });
+    });
+  }
+
+  if (btnLogout) {
+    btnLogout.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      try {
+        const token = localStorage.getItem('lovesaas_user_token');
+        if (token) {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'X-User-Token': token,
+            },
+          });
+        }
+      } catch (err) {}
+      localStorage.removeItem('lovesaas_user_token');
+      localStorage.removeItem('lovesaas_auth');
+      window.location.href = '/welcome';
+    });
+  }
+}
+
+function initMobileMenu() {
+  const backdrop = document.getElementById('builderMobileMenuBackdrop');
+  const btnClose = document.getElementById('btnCloseMobileMenu');
+  if (!backdrop) return;
+  const closeMenu = () => backdrop.classList.add('hidden');
+  if (btnClose) btnClose.addEventListener('click', closeMenu);
+  backdrop.addEventListener('click', (e) => {
+    if (e.target === backdrop) closeMenu();
+  });
 }
 
 function initPresetsToggle() {
-  const btnToggle = document.getElementById("btnTogglePresets");
-  const wrapper = document.getElementById("presetGridWrapper");
-  const toggleText = document.getElementById("btnPresetToggleText");
+  const btnToggle = document.getElementById('btnTogglePresets');
+  const wrapper = document.getElementById('presetGridWrapper');
+  const toggleText = document.getElementById('btnPresetToggleText');
   if (btnToggle && wrapper) {
     btnToggle.onclick = () => {
-      const isHidden = wrapper.classList.toggle("hidden");
-      btnToggle.classList.toggle("is-open", !isHidden);
-      if (toggleText) toggleText.textContent = isHidden ? "▾" : "▴";
+      const isHidden = wrapper.classList.toggle('hidden');
+      btnToggle.classList.toggle('is-open', !isHidden);
+      if (toggleText) toggleText.textContent = isHidden ? '▾' : '▴';
     };
   }
 }
 
 function initCopyLiveLink() {
-  const btnCopy = document.getElementById("btnCopyLiveLink");
+  const btnCopy = document.getElementById('btnCopyLiveLink');
   if (btnCopy) {
     btnCopy.onclick = () => {
       const url = `${window.location.origin}/sites/${encodeURIComponent(state.slug)}`;
-      navigator.clipboard?.writeText(url).then(() => {
-        showToast("Live site URL copied to clipboard! 📋", "success");
-      }).catch(() => {
-        prompt("Copy this URL:", url);
-      });
+      navigator.clipboard
+        ?.writeText(url)
+        .then(() => {
+          showToast('Live site URL copied to clipboard! 📋', 'success');
+        })
+        .catch(() => {
+          prompt('Copy this URL:', url);
+        });
     };
   }
 }
 
 function initKeyboardShortcuts() {
-  window.addEventListener("keydown", (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+  window.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
       saveConfig();
-    } else if (e.key === "Escape") {
-      document.getElementById("mediaLightboxModal")?.classList.add("hidden");
-      document.getElementById("mediaPickerModal")?.classList.add("hidden");
-      document.getElementById("addSectionModal")?.classList.add("hidden");
-      document.getElementById("widgetPreviewModal")?.classList.add("hidden");
-      document.getElementById("inspectorMoreMenu")?.classList.add("hidden");
-      document.getElementById("btnInspectorMore")?.classList.remove("active");
+    } else if (e.key === 'Escape') {
+      document.getElementById('mediaLightboxModal')?.classList.add('hidden');
+      document.getElementById('mediaPickerModal')?.classList.add('hidden');
+      document.getElementById('addSectionModal')?.classList.add('hidden');
+      document.getElementById('widgetPreviewModal')?.classList.add('hidden');
+      document.getElementById('inspectorMoreMenu')?.classList.add('hidden');
+      document.getElementById('builderMobileMenuBackdrop')?.classList.add('hidden');
+      document.getElementById('projectSwitcherDropdown')?.classList.add('hidden');
+      document.getElementById('projectSwitcher')?.classList.remove('open');
+      document.getElementById('userMenuDropdown')?.classList.add('hidden');
+      document.getElementById('headerUserMenu')?.classList.remove('open');
+      document.getElementById('btnInspectorMore')?.classList.remove('active');
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    const switcher = document.getElementById('projectSwitcher');
+    const userMenu = document.getElementById('headerUserMenu');
+    if (switcher && !switcher.contains(e.target)) {
+      document.getElementById('projectSwitcherDropdown')?.classList.add('hidden');
+      switcher.classList.remove('open');
+      document.getElementById('btnProjectSwitcher')?.setAttribute('aria-expanded', 'false');
+    }
+    if (userMenu && !userMenu.contains(e.target)) {
+      document.getElementById('userMenuDropdown')?.classList.add('hidden');
+      userMenu.classList.remove('open');
+      document.getElementById('btnUserMenuToggle')?.setAttribute('aria-expanded', 'false');
     }
   });
 }
@@ -4216,77 +5107,110 @@ function setupEventListeners() {
   initSidebarResizer();
   initDeviceSwitcher();
   initMobileWorkspaceToggle();
+  initMobileMenu();
+  initProjectSwitcher();
+  initHeaderUserMenu();
   initPresetsToggle();
   initCopyLiveLink();
   initKeyboardShortcuts();
   setupNewProjectModal();
 
-  btnSaveConfig.onclick = saveConfig;
+  if (btnSaveConfig) btnSaveConfig.onclick = saveConfig;
 
-  window.addEventListener("message", (e) => {
+  window.addEventListener('message', (e) => {
     if (!e.data) return;
-    if (e.data.type === "STUDIO_IFRAME_READY") {
+    if (e.data.type === 'STUDIO_IFRAME_READY') {
       debouncedLiveUpdate(true);
+      if (previewIframe && previewIframe.contentWindow) {
+        previewIframe.contentWindow.postMessage(
+          {
+            type: 'SET_DEVICE_MODE',
+            device: currentDeviceMode,
+            isMobile: currentDeviceMode === 'mobile',
+          },
+          '*',
+        );
+      }
     }
-    if (e.data.type === "MUSIC_STATE_CHANGED") {
-      const btn = document.getElementById("btnTestSiteSoundtrack");
-      if (btn) btn.textContent = e.data.playing ? "⏸️ Pause" : "▶️ Test";
+    if (e.data.type === 'MUSIC_STATE_CHANGED') {
+      const btn = document.getElementById('btnTestSiteSoundtrack');
+      if (btn) btn.textContent = e.data.playing ? '⏸️ Pause' : '▶️ Test';
     }
-    if (e.data.type === "OPEN_ADD_SECTION_MODAL") {
+    if (e.data.type === 'OPEN_ADD_SECTION_MODAL') {
       openAddSectionModal(e.data.insertIndex);
     }
-    if (e.data.type === "REMOVE_WIDGET" && e.data.widgetId) {
+    if (e.data.type === 'REMOVE_WIDGET' && e.data.widgetId) {
       removeWidgetFromLayout(e.data.widgetId);
     }
-    if (e.data.type === "SELECT_WIDGET" && e.data.widgetId) {
-      if (typeof switchToTab === "function") switchToTab("tab-inspector");
+    if (e.data.type === 'SELECT_WIDGET' && e.data.widgetId) {
+      if (typeof switchToTab === 'function') switchToTab('tab-inspector');
       if (e.data.chapterId) state.targetChapterId = e.data.chapterId;
+      if (e.data.memoryId) state.targetMemoryId = e.data.memoryId;
       selectWidgetForInspector(e.data.widgetId);
+      if (previewIframe && previewIframe.contentWindow) {
+        previewIframe.contentWindow.postMessage(
+          { type: 'SCROLL_TO_WIDGET', widgetId: e.data.widgetId },
+          window.location.origin,
+        );
+      }
     }
-    if (e.data.type === "SYNC_REASONS" && Array.isArray(e.data.reasons)) {
+    if (e.data.type === 'SYNC_REASONS' && Array.isArray(e.data.reasons)) {
       state.sectionsData.reasons = e.data.reasons;
-      if (state.activeInspectorWidget === "reasons") {
-        renderWidgetInspector("reasons");
+      if (state.activeInspectorWidget === 'reasons') {
+        renderWidgetInspector('reasons');
       }
       debouncedLiveUpdate();
       debouncedAutoSaveLayout();
     }
-    if (e.data.type === "SYNC_CHAPTER" && e.data.chapter) {
+    if (e.data.type === 'SYNC_CHAPTER' && e.data.chapter) {
       const syncCh = e.data.chapter;
       const t = Array.isArray(state.sectionsData.timeline)
         ? state.sectionsData.timeline
-        : (state.sectionsData.timeline?.chapters || []);
-      const found = t.find(c => c.id === syncCh.id || c.cityKey === syncCh.id || c.id === e.data.chapterId);
+        : state.sectionsData.timeline?.chapters || [];
+      const found = t.find(
+        (c) =>
+          c.id === syncCh.id ||
+          c.cityKey === syncCh.id ||
+          c.id === e.data.chapterId,
+      );
       if (found) {
         if (syncCh.title !== undefined) found.title = syncCh.title;
         if (syncCh.caption !== undefined) found.caption = syncCh.caption;
         if (syncCh.desc !== undefined) found.desc = syncCh.desc;
-        if (syncCh.highlights && syncCh.highlights.length > 0) found.highlights = syncCh.highlights;
-        if (syncCh.images && syncCh.images.length > 0) {
-          found.images = syncCh.images;
-          found.img = syncCh.images[0];
+        if (syncCh.highlights && syncCh.highlights.length > 0)
+          found.highlights = syncCh.highlights;
+        if (Array.isArray(syncCh.images)) {
+          found.images = [...syncCh.images];
+          found.img = syncCh.images[0] || syncCh.img || "";
         } else if (syncCh.img) {
           found.img = syncCh.img;
         }
-        if (state.activeInspectorWidget === "timeline") {
-          renderWidgetInspector("timeline");
+        if (state.activeInspectorWidget === 'timeline') {
+          renderWidgetInspector('timeline');
         }
         debouncedLiveUpdate();
         debouncedAutoSaveLayout();
       }
     }
-    if (e.data.type === "SYNC_MEMORIES" && Array.isArray(e.data.memories)) {
+    if (e.data.type === 'SYNC_MEMORIES' && Array.isArray(e.data.memories)) {
       const seen = new Set();
-      const deduped = e.data.memories.filter(m => m && m.id && !seen.has(m.id) && seen.add(m.id));
-      if (state.sectionsData.memories && typeof state.sectionsData.memories === "object" && !Array.isArray(state.sectionsData.memories)) {
+      const deduped = e.data.memories.filter(
+        (m) => m && m.id && !seen.has(m.id) && seen.add(m.id),
+      );
+      if (
+        state.sectionsData.memories &&
+        typeof state.sectionsData.memories === 'object' &&
+        !Array.isArray(state.sectionsData.memories)
+      ) {
         state.sectionsData.memories.items = deduped;
       } else {
         state.sectionsData.memories = deduped;
       }
-      if (state.activeInspectorWidget === "memories") {
-        renderWidgetInspector("memories");
+      if (state.activeInspectorWidget === 'memories') {
+        renderWidgetInspector('memories');
       }
       debouncedLiveUpdate();
+      debouncedAutoSaveLayout();
     }
   });
 
@@ -4295,34 +5219,34 @@ function setupEventListeners() {
 
   // Builder Auth & Gate Modals
   function setupBuilderAuthModals() {
-    const authModal = document.getElementById("builderAuthModal");
-    const authForm = document.getElementById("builderAuthForm");
-    const toggleBtn = document.getElementById("btnBuilderAuthToggleMode");
-    const toggleText = document.getElementById("builderAuthToggleText");
-    const titleEl = document.getElementById("builderAuthTitle");
-    const nameGroup = document.getElementById("builderAuthNameGroup");
-    const submitBtn = document.getElementById("btnBuilderAuthSubmit");
-    const errEl = document.getElementById("builderAuthError");
-    const btnLogout = document.getElementById("btnBuilderLogout");
+    const authModal = document.getElementById('builderAuthModal');
+    const authForm = document.getElementById('builderAuthForm');
+    const toggleBtn = document.getElementById('btnBuilderAuthToggleMode');
+    const toggleText = document.getElementById('builderAuthToggleText');
+    const titleEl = document.getElementById('builderAuthTitle');
+    const nameGroup = document.getElementById('builderAuthNameGroup');
+    const submitBtn = document.getElementById('btnBuilderAuthSubmit');
+    const errEl = document.getElementById('builderAuthError');
+    const btnLogout = document.getElementById('btnBuilderLogout');
 
     let isRegisterMode = false;
 
     if (toggleBtn) {
       toggleBtn.onclick = () => {
         isRegisterMode = !isRegisterMode;
-        if (errEl) errEl.style.display = "none";
+        if (errEl) errEl.style.display = 'none';
         if (isRegisterMode) {
-          titleEl.textContent = "Create an Account";
-          nameGroup.style.display = "block";
-          submitBtn.textContent = "Register & Open Studio";
-          toggleText.textContent = "Already have an account?";
-          toggleBtn.textContent = "Sign in";
+          titleEl.textContent = 'Create an Account';
+          nameGroup.style.display = 'block';
+          submitBtn.textContent = 'Register & Open Studio';
+          toggleText.textContent = 'Already have an account?';
+          toggleBtn.textContent = 'Sign in';
         } else {
-          titleEl.textContent = "Sign in to Studio";
-          nameGroup.style.display = "none";
-          submitBtn.textContent = "Sign In";
+          titleEl.textContent = 'Sign in to Studio';
+          nameGroup.style.display = 'none';
+          submitBtn.textContent = 'Sign In';
           toggleText.textContent = "Don't have an account?";
-          toggleBtn.textContent = "Create one";
+          toggleBtn.textContent = 'Create one';
         }
       };
     }
@@ -4330,37 +5254,46 @@ function setupEventListeners() {
     if (authForm) {
       authForm.onsubmit = async (e) => {
         e.preventDefault();
-        const email = document.getElementById("builderAuthEmail")?.value.trim();
-        const password = document.getElementById("builderAuthPassword")?.value;
-        const name = document.getElementById("builderAuthName")?.value.trim();
+        const email = document.getElementById('builderAuthEmail')?.value.trim();
+        const password = document.getElementById('builderAuthPassword')?.value;
+        const name = document.getElementById('builderAuthName')?.value.trim();
 
         if (!email || !password) return;
         submitBtn.disabled = true;
-        submitBtn.textContent = "Authenticating...";
-        if (errEl) errEl.style.display = "none";
+        submitBtn.textContent = 'Authenticating...';
+        if (errEl) errEl.style.display = 'none';
 
         try {
-          const endpoint = isRegisterMode ? "/api/auth/register" : "/api/auth/login";
-          const body = isRegisterMode ? { email, password, name } : { email, password };
+          const endpoint = isRegisterMode
+            ? '/api/auth/register'
+            : '/api/auth/login';
+          const body = isRegisterMode
+            ? { email, password, name }
+            : { email, password };
           const res = await fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body)
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
           });
           const data = await res.json();
-          if (!res.ok) throw new Error(data.error || "Authentication failed");
+          if (!res.ok) throw new Error(data.error || 'Authentication failed');
 
-          localStorage.setItem("lovesaas_user_token", data.token);
-          authModal?.classList.add("hidden");
-          showToast(isRegisterMode ? "Account created!" : "Signed in successfully!", "success");
+          localStorage.setItem('lovesaas_user_token', data.token);
+          authModal?.classList.add('hidden');
+          showToast(
+            isRegisterMode ? 'Account created!' : 'Signed in successfully!',
+            'success',
+          );
           window.location.reload();
         } catch (err) {
           if (errEl) {
             errEl.textContent = err.message;
-            errEl.style.display = "block";
+            errEl.style.display = 'block';
           }
           submitBtn.disabled = false;
-          submitBtn.textContent = isRegisterMode ? "Register & Open Studio" : "Sign In";
+          submitBtn.textContent = isRegisterMode
+            ? 'Register & Open Studio'
+            : 'Sign In';
         }
       };
     }
@@ -4368,36 +5301,43 @@ function setupEventListeners() {
     if (btnLogout) {
       btnLogout.onclick = async () => {
         try {
-          const token = localStorage.getItem("lovesaas_user_token");
+          const token = localStorage.getItem('lovesaas_user_token');
           if (token) {
-            await fetch("/api/auth/logout", {
-              method: "POST",
-              headers: { "Authorization": `Bearer ${token}`, "X-User-Token": token }
+            await fetch('/api/auth/logout', {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'X-User-Token': token,
+              },
             });
           }
         } catch (e) {}
-        localStorage.removeItem("lovesaas_user_token");
-        localStorage.removeItem("lovesaas_auth");
-        window.location.href = "/welcome";
+        localStorage.removeItem('lovesaas_user_token');
+        localStorage.removeItem('lovesaas_auth');
+        window.location.href = '/welcome';
       };
     }
 
-    const btnForbiddenDesigns = document.getElementById("btnForbiddenMyDesigns");
+    const btnForbiddenDesigns = document.getElementById(
+      'btnForbiddenMyDesigns',
+    );
     if (btnForbiddenDesigns) {
       btnForbiddenDesigns.onclick = () => {
         if (state.userDesigns && state.userDesigns.length > 0) {
           window.location.href = `/builder?slug=${encodeURIComponent(state.userDesigns[0].slug)}`;
         } else {
-          window.location.href = "/builder";
+          window.location.href = '/builder';
         }
       };
     }
 
-    const btnForbiddenSwitch = document.getElementById("btnForbiddenSwitchAccount");
+    const btnForbiddenSwitch = document.getElementById(
+      'btnForbiddenSwitchAccount',
+    );
     if (btnForbiddenSwitch) {
       btnForbiddenSwitch.onclick = () => {
-        localStorage.removeItem("lovesaas_user_token");
-        localStorage.removeItem("lovesaas_auth");
+        localStorage.removeItem('lovesaas_user_token');
+        localStorage.removeItem('lovesaas_auth');
         window.location.reload();
       };
     }
@@ -4407,32 +5347,41 @@ function setupEventListeners() {
 
 // ── Design Picker Modal ─────────────────────────────────────────
 function dpRelativeTime(dateStr) {
-  if (!dateStr) return "—";
+  if (!dateStr) return '—';
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Just now";
+  if (mins < 1) return 'Just now';
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
   const days = Math.floor(hrs / 24);
   if (days < 30) return `${days}d ago`;
-  return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 function dpFormatDate(dateStr) {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 function showDesignPickerModal(designs) {
-  const modal = document.getElementById("builderDesignPickerModal");
-  const grid = document.getElementById("designPickerGrid");
-  const subtitle = document.getElementById("designPickerSubtitle");
+  const modal = document.getElementById('builderDesignPickerModal');
+  const grid = document.getElementById('designPickerGrid');
+  const subtitle = document.getElementById('designPickerSubtitle');
   if (!modal || !grid) return;
 
-  subtitle.textContent = designs.length > 0
-    ? `You have ${designs.length} design${designs.length > 1 ? "s" : ""}. Select one to edit, or create a new one.`
-    : "You don't have any designs yet. Create your first one!";
+  subtitle.textContent =
+    designs.length > 0
+      ? `You have ${designs.length} design${designs.length > 1 ? 's' : ''}. Select one to edit, or create a new one.`
+      : "You don't have any designs yet. Create your first one!";
 
   // Build cards
   let html = `
@@ -4442,16 +5391,16 @@ function showDesignPickerModal(designs) {
       <div class="dp-create-sub">Start a brand new couple website</div>
     </div>`;
 
-  designs.forEach(d => {
-    const name = [d.partner1, d.partner2].filter(Boolean).join(" & ") || d.slug;
+  designs.forEach((d) => {
+    const name = [d.partner1, d.partner2].filter(Boolean).join(' & ') || d.slug;
     html += `
-    <div class="design-picker-card" data-dp-slug="${escapeHtml(d.slug)}" data-dp-token="${escapeHtml(d.authToken || "")}" data-dp-pin="${escapeHtml(d.adminPin || "")}" data-dp-plan="${escapeHtml(d.plan || "vip")}">
+    <div class="design-picker-card" data-dp-slug="${escapeHtml(d.slug)}" data-dp-token="${escapeHtml(d.authToken || '')}" data-dp-plan="${escapeHtml(d.plan || 'vip')}">
       <div class="dp-card-name">💍 ${escapeHtml(name)}</div>
       <div class="dp-card-slug">/sites/${escapeHtml(d.slug)}</div>
       <div class="dp-card-badges">
-        <span class="dp-badge dp-badge--theme">${escapeHtml(d.themeId || "romantic-rose")}</span>
-        <span class="dp-badge dp-badge--preset">${escapeHtml(d.preset || "complete")}</span>
-        <span class="dp-badge dp-badge--plan">⭐ ${escapeHtml((d.plan || "vip").toUpperCase())}</span>
+        <span class="dp-badge dp-badge--theme">${escapeHtml(d.themeId || 'romantic-rose')}</span>
+        <span class="dp-badge dp-badge--preset">${escapeHtml(d.preset || 'complete')}</span>
+        <span class="dp-badge dp-badge--plan">⭐ ${escapeHtml((d.plan || 'vip').toUpperCase())}</span>
       </div>
       <div class="dp-card-stats">
         <div class="dp-stat"><span class="dp-stat-icon">📅</span> Created: ${dpFormatDate(d.createdAt)}</div>
@@ -4462,33 +5411,40 @@ function showDesignPickerModal(designs) {
   });
 
   grid.innerHTML = html;
-  modal.classList.remove("hidden");
+  modal.classList.remove('hidden');
 
   // Wire up "Create New" card
-  document.getElementById("dpCardCreateNew")?.addEventListener("click", () => {
-    modal.classList.add("hidden");
-    if (typeof window.openNewProjectModal === "function") {
+  document.getElementById('dpCardCreateNew')?.addEventListener('click', () => {
+    modal.classList.add('hidden');
+    document.documentElement.classList.remove('builder-gate-active');
+    if (typeof window.openNewProjectModal === 'function') {
       window.openNewProjectModal(designs.length === 0);
     }
   });
 
   // Wire up design cards
-  grid.querySelectorAll(".design-picker-card[data-dp-slug]").forEach(card => {
-    card.addEventListener("click", () => {
+  grid.querySelectorAll('.design-picker-card[data-dp-slug]').forEach((card) => {
+    card.addEventListener('click', () => {
       const slug = card.dataset.dpSlug;
-      const token = card.dataset.dpToken || "";
-      const pin = card.dataset.dpPin || "1234";
-      const plan = card.dataset.dpPlan || "vip";
+      const token = card.dataset.dpToken || '';
+      const plan = card.dataset.dpPlan || 'vip';
 
       state.slug = slug;
-      state.userRole = "user";
+      state.userRole = 'user';
       state.isPurchased = true;
-      state.adminPin = pin;
       state.authToken = token;
-      localStorage.setItem("lovesaas_auth", JSON.stringify({ slug, role: "user", authToken: token, adminPin: pin, plan }));
-      window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(slug)}&token=${encodeURIComponent(token)}`);
+      localStorage.setItem(
+        'lovesaas_auth',
+        JSON.stringify({ slug, role: 'user', authToken: token, plan }),
+      );
+      window.history.replaceState(
+        {},
+        '',
+        `/builder?slug=${encodeURIComponent(slug)}&token=${encodeURIComponent(token)}`,
+      );
 
-      modal.classList.add("hidden");
+      document.documentElement.classList.remove('builder-gate-active');
+      modal.classList.add('hidden');
       updateRoleUI();
       loadTenantData(slug);
     });
@@ -4496,273 +5452,334 @@ function showDesignPickerModal(designs) {
 }
 
 function setupNewProjectModal() {
-  const modal = document.getElementById("builderNewProjectModal");
-  const btnClose = document.getElementById("btnCloseNewProjectModal");
-  const cardTemplate = document.getElementById("modeCardTemplate");
-  const cardScratch = document.getElementById("modeCardScratch");
-  const presetWrap = document.getElementById("newProjectPresetPickerWrap");
-  const presetChips = document.querySelectorAll("#npPresetChips .np-preset-chip");
-  const inP1 = document.getElementById("npPartner1");
-  const inP2 = document.getElementById("npPartner2");
-  const inSlug = document.getElementById("npSlug");
-  const inPin = document.getElementById("npPin");
-  const slugFeedback = document.getElementById("npSlugFeedback");
-  const errEl = document.getElementById("npErrorMsg");
-  const btnSubmit = document.getElementById("btnCreateProjectSubmit");
-  const subtitleEl = document.getElementById("newProjectModalSubtitle");
-  const btnHeaderNew = document.getElementById("btnHeaderNewProject");
-  const btnTenantCreate = document.getElementById("btnTenantModalCreateNew");
-  const btnExplore = document.getElementById("btnExploreDemoPreview");
+  const modal = document.getElementById('builderNewProjectModal');
+  const btnClose = document.getElementById('btnCloseNewProjectModal');
+  const cardTemplate = document.getElementById('modeCardTemplate');
+  const cardScratch = document.getElementById('modeCardScratch');
+  const presetWrap = document.getElementById('newProjectPresetPickerWrap');
+  const presetChips = document.querySelectorAll(
+    '#npPresetChips .np-preset-chip',
+  );
+  const inP1 = document.getElementById('npPartner1');
+  const inP2 = document.getElementById('npPartner2');
+  const inSlug = document.getElementById('npSlug');
+  const slugFeedback = document.getElementById('npSlugFeedback');
+  const errEl = document.getElementById('npErrorMsg');
+  const btnSubmit = document.getElementById('btnCreateProjectSubmit');
+  const subtitleEl = document.getElementById('newProjectModalSubtitle');
+  const btnHeaderNew = document.getElementById('btnHeaderNewProject');
+  const btnTenantCreate = document.getElementById('btnTenantModalCreateNew');
+  const btnExplore = document.getElementById('btnExploreDemoPreview');
 
   if (!modal) return;
 
-  let selectedMode = "scratch";
-  let selectedPreset = "blank";
+  let selectedMode = 'scratch';
+  let selectedPreset = 'blank';
   let slugUserEdited = false;
   let slugCheckTimeout = null;
 
   function checkSlugAvailability(slug) {
     if (!slugFeedback) return;
     if (!slug) {
-      slugFeedback.textContent = "Enter lowercase letters, numbers, or dashes";
-      slugFeedback.style.color = "#94a3b8";
+      slugFeedback.textContent = 'Enter lowercase letters, numbers, or dashes';
+      slugFeedback.style.color = '#64748b';
       return;
     }
-    slugFeedback.textContent = "Checking availability...";
-    slugFeedback.style.color = "#94a3b8";
+    slugFeedback.textContent = 'Checking availability...';
+    slugFeedback.style.color = '#64748b';
     clearTimeout(slugCheckTimeout);
     slugCheckTimeout = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/check-slug?slug=${encodeURIComponent(slug)}`);
+        const res = await fetch(
+          `/api/check-slug?slug=${encodeURIComponent(slug)}`,
+        );
         const data = await res.json();
         if (data.available) {
           slugFeedback.textContent = `✓ /sites/${slug} is available!`;
-          slugFeedback.style.color = "#34d399";
+          slugFeedback.style.color = '#059669';
         } else {
           slugFeedback.textContent = `✕ /sites/${slug} is already taken`;
-          slugFeedback.style.color = "#f87171";
+          slugFeedback.style.color = '#dc2626';
         }
       } catch (e) {
-        slugFeedback.textContent = "Could not check availability";
-        slugFeedback.style.color = "#94a3b8";
+        slugFeedback.textContent = 'Could not check availability';
+        slugFeedback.style.color = '#64748b';
       }
     }, 250);
   }
 
   function autoSuggestSlug() {
     if (slugUserEdited) return;
-    const p1 = (inP1?.value || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
-    const p2 = (inP2?.value || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+    const p1 = (inP1?.value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
+    const p2 = (inP2?.value || '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
     if (p1 && p2 && inSlug) {
       inSlug.value = `${p1}-and-${p2}`;
       checkSlugAvailability(inSlug.value);
     }
   }
 
-  if (inP1) inP1.addEventListener("input", autoSuggestSlug);
-  if (inP2) inP2.addEventListener("input", autoSuggestSlug);
+  if (inP1) inP1.addEventListener('input', autoSuggestSlug);
+  if (inP2) inP2.addEventListener('input', autoSuggestSlug);
   if (inSlug) {
-    inSlug.addEventListener("input", () => {
+    inSlug.addEventListener('input', () => {
       slugUserEdited = true;
-      inSlug.value = inSlug.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+      inSlug.value = inSlug.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
       checkSlugAvailability(inSlug.value);
     });
   }
 
   if (cardTemplate) {
-    cardTemplate.addEventListener("click", () => {
-      selectedMode = "template";
-      cardTemplate.classList.add("active");
-      cardTemplate.style.borderColor = "var(--primary, #f43f5e)";
-      cardTemplate.style.background = "rgba(244, 63, 94, 0.12)";
-      if (cardScratch) {
-        cardScratch.classList.remove("active");
-        cardScratch.style.borderColor = "rgba(255,255,255,0.15)";
-        cardScratch.style.background = "rgba(255,255,255,0.03)";
-      }
-      if (presetWrap) presetWrap.style.display = "block";
+    cardTemplate.addEventListener('click', () => {
+      selectedMode = 'template';
+      cardTemplate.classList.add('active');
+      if (cardScratch) cardScratch.classList.remove('active');
+      if (presetWrap) presetWrap.style.display = 'block';
     });
   }
 
   if (cardScratch) {
-    cardScratch.addEventListener("click", () => {
-      selectedMode = "scratch";
-      cardScratch.classList.add("active");
-      cardScratch.style.borderColor = "var(--primary, #f43f5e)";
-      cardScratch.style.background = "rgba(244, 63, 94, 0.12)";
-      if (cardTemplate) {
-        cardTemplate.classList.remove("active");
-        cardTemplate.style.borderColor = "rgba(255,255,255,0.15)";
-        cardTemplate.style.background = "rgba(255,255,255,0.03)";
-      }
-      if (presetWrap) presetWrap.style.display = "none";
+    cardScratch.addEventListener('click', () => {
+      selectedMode = 'scratch';
+      cardScratch.classList.add('active');
+      if (cardTemplate) cardTemplate.classList.remove('active');
+      if (presetWrap) presetWrap.style.display = 'none';
     });
   }
 
-  presetChips.forEach(chip => {
-    chip.addEventListener("click", () => {
-      presetChips.forEach(c => {
-        c.classList.remove("active");
-        c.style.borderColor = "rgba(255,255,255,0.12)";
-        c.style.background = "rgba(255,255,255,0.05)";
-        c.style.color = "#cbd5e1";
-      });
-      chip.classList.add("active");
-      chip.style.borderColor = "#f43f5e";
-      chip.style.background = "rgba(244, 63, 94, 0.15)";
-      chip.style.color = "#fff";
-      selectedPreset = chip.dataset.preset || "storyteller";
+  presetChips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      presetChips.forEach((c) => c.classList.remove('active'));
+      chip.classList.add('active');
+      selectedPreset = chip.dataset.preset || 'storyteller';
     });
   });
 
   if (btnClose) {
-    btnClose.addEventListener("click", () => {
-      modal.classList.add("hidden");
+    btnClose.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
       // Return to design picker if no design is actively loaded
-      if (state.userDesigns && state.userDesigns.length > 0 && !new URLSearchParams(window.location.search).get("slug")) {
-        showDesignPickerModal(state.userDesigns);
+      if (!new URLSearchParams(window.location.search).get('slug')) {
+        document.documentElement.classList.add('builder-gate-active');
+        showDesignPickerModal(state.userDesigns || []);
       }
     });
   }
 
   if (btnExplore) {
-    btnExplore.addEventListener("click", () => {
-      modal.classList.add("hidden");
+    btnExplore.addEventListener('click', () => {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
       // Return to design picker if no design is actively loaded
-      if (state.userDesigns && state.userDesigns.length > 0 && !new URLSearchParams(window.location.search).get("slug")) {
-        showDesignPickerModal(state.userDesigns);
+      if (!new URLSearchParams(window.location.search).get('slug')) {
+        document.documentElement.classList.add('builder-gate-active');
+        showDesignPickerModal(state.userDesigns || []);
       } else {
-        showToast("Exploring demo preview. Click '+ New Site' whenever you are ready!", "info");
+        showToast(
+          "Exploring demo preview. Click '+ New Site' whenever you are ready!",
+          'info',
+        );
       }
     });
   }
 
   if (btnHeaderNew) {
-    btnHeaderNew.addEventListener("click", () => {
+    btnHeaderNew.addEventListener('click', () => {
       window.openNewProjectModal(false);
     });
   }
 
+  if (btnTenantCreate) {
+    btnTenantCreate.addEventListener('click', () => {
+      window.openNewProjectModal(false);
+    });
+  }
 
+  window.openNewProjectModal = (isFirstProject = false) => {
+    selectedMode = 'scratch';
+    selectedPreset = 'blank';
+    slugUserEdited = false;
 
-  window.openNewProjectModal = function(isFirstTime = false) {
-    if (btnClose) {
-      btnClose.style.display = isFirstTime ? "none" : "block";
+    if (cardScratch && cardTemplate) {
+      cardScratch.classList.add('active');
+      cardTemplate.classList.remove('active');
     }
+    if (presetWrap) presetWrap.style.display = 'none';
+    if (presetChips) {
+      presetChips.forEach((c) => {
+        const isB = c.dataset.preset === 'blank';
+        c.classList.toggle('active', isB);
+        c.style.borderColor = '';
+        c.style.background = '';
+        c.style.color = '';
+      });
+    }
+
     if (subtitleEl) {
-      subtitleEl.textContent = isFirstTime
-        ? "You don't have any websites yet. How would you like to start?"
-        : "Create another couple website. Choose templates or start clean from scratch:";
+      subtitleEl.textContent = isFirstProject
+        ? 'Choose a template or start from a clean blank canvas:'
+        : 'Create another couple website. Choose templates or start clean from scratch:';
     }
 
     try {
-      const saved = JSON.parse(localStorage.getItem("lovesaas_saved_creation_inputs") || "{}");
-      if (inP1 && !inP1.value) inP1.value = saved.partner1 || (state.partner1 && state.partner1 !== "Alex" ? state.partner1 : "") || "";
-      if (inP2 && !inP2.value) inP2.value = saved.partner2 || (state.partner2 && state.partner2 !== "Sam" ? state.partner2 : "") || "";
+      const saved = JSON.parse(
+        localStorage.getItem('lovesaas_saved_creation_inputs') || '{}',
+      );
+      if (inP1 && !inP1.value)
+        inP1.value =
+          saved.partner1 ||
+          (state.partner1 && state.partner1 !== 'Alex' ? state.partner1 : '') ||
+          '';
+      if (inP2 && !inP2.value)
+        inP2.value =
+          saved.partner2 ||
+          (state.partner2 && state.partner2 !== 'Sam' ? state.partner2 : '') ||
+          '';
     } catch {}
 
     autoSuggestSlug();
     if (errEl) {
-      errEl.style.display = "none";
-      errEl.textContent = "";
+      errEl.style.display = 'none';
+      errEl.textContent = '';
     }
-    modal.classList.remove("hidden");
+    modal.classList.remove('hidden');
+    modal.style.display = '';
   };
 
   if (btnSubmit) {
-    btnSubmit.addEventListener("click", async () => {
+    btnSubmit.addEventListener('click', async () => {
       if (errEl) {
-        errEl.style.display = "none";
-        errEl.textContent = "";
+        errEl.style.display = 'none';
+        errEl.textContent = '';
       }
 
-      const p1 = (inP1?.value || "").trim();
-      const p2 = (inP2?.value || "").trim();
-      let slug = (inSlug?.value || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
-      const pin = (inPin?.value || "1234").trim();
+      const p1 = (inP1?.value || '').trim();
+      const p2 = (inP2?.value || '').trim();
+      let slug = (inSlug?.value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, '');
 
       if (!p1 || !p2) {
         if (errEl) {
-          errEl.textContent = "Please enter both partner names.";
-          errEl.style.display = "block";
+          errEl.textContent = 'Please enter both partner names.';
+          errEl.style.display = 'block';
         }
         return;
       }
       if (!slug) {
         if (errEl) {
-          errEl.textContent = "Please enter a valid website URL slug.";
-          errEl.style.display = "block";
+          errEl.textContent = 'Please enter a valid website URL slug.';
+          errEl.style.display = 'block';
         }
         return;
       }
 
-      const userToken = localStorage.getItem("lovesaas_user_token");
-      const isAdmin = state.userRole === "admin" || (state.currentUser && state.currentUser.role === "admin");
-      const customerEmail = (state.currentUser && state.currentUser.email) || "";
-      const chosenPreset = selectedMode === "scratch" ? "blank" : (selectedPreset || "blank");
+      const userToken = localStorage.getItem('lovesaas_user_token');
+      const isAdmin =
+        state.userRole === 'admin' ||
+        (state.currentUser && state.currentUser.role === 'admin');
+      const customerEmail =
+        (state.currentUser && state.currentUser.email) || '';
+      const chosenPreset =
+        selectedMode === 'scratch' ? 'blank' : selectedPreset || 'blank';
 
       btnSubmit.disabled = true;
       btnSubmit.innerHTML = `<span>Creating your website...</span> <span>⏳</span>`;
 
       try {
-        const headers = { "Content-Type": "application/json" };
+        const headers = { 'Content-Type': 'application/json' };
         if (userToken) {
-          headers["Authorization"] = `Bearer ${userToken}`;
-          headers["X-User-Token"] = userToken;
+          headers['Authorization'] = `Bearer ${userToken}`;
+          headers['X-User-Token'] = userToken;
         }
 
-        const res = await fetch("/api/checkout", {
-          method: "POST",
+        const res = await fetch('/api/checkout', {
+          method: 'POST',
           headers,
           body: JSON.stringify({
             partner1: p1,
             partner2: p2,
             slug,
-            adminPin: pin,
             customerEmail,
-            plan: isAdmin ? "vip" : "vip",
-            preset: chosenPreset
-          })
+            plan: isAdmin ? 'vip' : 'vip',
+            preset: chosenPreset,
+          }),
         });
 
         const data = await res.json();
         if (!res.ok) {
-          throw new Error(data.error || "Failed to create website.");
+          throw new Error(data.error || 'Failed to create website.');
         }
 
         try {
-          localStorage.setItem("lovesaas_saved_creation_inputs", JSON.stringify({ partner1: p1, partner2: p2, email: customerEmail }));
+          localStorage.setItem(
+            'lovesaas_saved_creation_inputs',
+            JSON.stringify({
+              partner1: p1,
+              partner2: p2,
+              email: customerEmail,
+            }),
+          );
         } catch {}
 
         state.slug = data.tenant.slug;
         state.partner1 = data.tenant.partner1;
         state.partner2 = data.tenant.partner2;
-        state.authToken = data.tenant.authToken || (isAdmin ? "master-admin-token-lovesaas" : "");
-        state.adminPin = pin;
-        state.userRole = isAdmin ? "admin" : "user";
+        state.authToken =
+          data.tenant.authToken ||
+          (isAdmin ? userToken || '' : '');
+        state.userRole = isAdmin ? 'admin' : 'user';
         state.isPurchased = true;
 
-        localStorage.setItem("lovesaas_auth", JSON.stringify({
-          slug: data.tenant.slug,
-          role: state.userRole,
-          authToken: state.authToken,
-          adminPin: state.adminPin,
-          plan: data.tenant.plan || "vip"
-        }));
+        // If blank project: immediately zero out layout and blank preview iframe so old widgets never flash
+        if (chosenPreset === 'blank') {
+          state.layoutOrder = [];
+          state.sectionsData = {};
+          state.templatePreset = 'blank';
+          renderPresetsUI();
+          renderWidgetTray();
+          if (previewIframe) previewIframe.src = 'about:blank';
+        }
 
-        modal.classList.add("hidden");
-        window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(data.tenant.slug)}&token=${encodeURIComponent(state.authToken || "")}`);
+        localStorage.setItem(
+          'lovesaas_auth',
+          JSON.stringify({
+            slug: data.tenant.slug,
+            role: state.userRole,
+            authToken: state.authToken,
+            plan: data.tenant.plan || 'vip',
+          }),
+        );
+
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        document.documentElement.classList.remove('builder-gate-active');
+        window.history.replaceState(
+          {},
+          '',
+          `/builder?slug=${encodeURIComponent(data.tenant.slug)}&token=${encodeURIComponent(state.authToken || '')}`,
+        );
         updateRoleUI();
         await loadTenantData(data.tenant.slug);
-        showToast(`🎉 Website "${data.tenant.slug}" created successfully!`, "success");
+        showToast(
+          `🎉 Website "${data.tenant.slug}" created successfully!`,
+          'success',
+        );
 
-        if (typeof initBuilderUserSession === "function") {
+        if (typeof initBuilderUserSession === 'function') {
           initBuilderUserSession();
         }
       } catch (err) {
         if (errEl) {
           errEl.textContent = err.message;
-          errEl.style.display = "block";
+          errEl.style.display = 'block';
         }
       } finally {
         btnSubmit.disabled = false;

@@ -1,30 +1,14 @@
 // App State Engine
 let rawSavedDate = localStorage.getItem("gf_start_date");
-if (rawSavedDate && rawSavedDate.startsWith("2023")) {
-  rawSavedDate = "2025-09-17T00:00";
-  localStorage.setItem("gf_start_date", rawSavedDate);
-}
 
 let state = {
   partnerName: localStorage.getItem("gf_name") || DEFAULTS.partnerName,
   senderName: localStorage.getItem("gf_sender") || DEFAULTS.senderName,
   startDate: rawSavedDate || DEFAULTS.startDate,
-  letter: (() => {
-    const saved = localStorage.getItem("gf_letter");
-    if (saved && !saved.toLowerCase().includes("monchichi")) {
-      return DEFAULTS.letter;
-    }
-    return saved || DEFAULTS.letter;
-  })(),
+  letter: localStorage.getItem("gf_letter") || DEFAULTS.letter,
   giftTitle: localStorage.getItem("gf_gift_title") || DEFAULTS.giftTitle,
   memories: typeof loadStoredMemories === "function" ? loadStoredMemories() : (typeof DEFAULTS !== "undefined" ? DEFAULTS.memories || [] : []),
-  voiceAudio: (() => {
-    const v = localStorage.getItem("gf_voice_audio");
-    if (v && v.includes("myrecording") && !v.includes("myrecording-volume-adjusted")) {
-      return "audio/myrecording-volume-adjusted.mp3";
-    }
-    return v || DEFAULTS.voiceAudio || "audio/myrecording-volume-adjusted.mp3";
-  })(),
+  voiceAudio: localStorage.getItem("gf_voice_audio") || DEFAULTS.voiceAudio || "audio/myrecording-volume-adjusted.mp3",
   letterAudio: localStorage.getItem("gf_letter_audio") || (DEFAULTS.letterAudio !== undefined ? DEFAULTS.letterAudio : "audio/letter_voice-volume-adjusted.mp3"),
   customMusicAudio: localStorage.getItem("gf_music_audio") || null,
   voiceVolume: parseInt((() => {
@@ -630,7 +614,7 @@ function initEvents() {
       if (settingsDrawer) {
         settingsDrawer.classList.remove("hidden");
       } else if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: "SELECT_WIDGET", widgetId: "hero" }, "*");
+        window.parent.postMessage({ type: "SELECT_WIDGET", widgetId: "hero" }, window.location.origin);
       } else {
         const pathParts = window.location.pathname.split("/").filter(Boolean);
         const slug = pathParts[1] || "demo";
@@ -977,17 +961,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (synced) {
         state.partnerName = localStorage.getItem("gf_name") || DEFAULTS.partnerName;
         state.senderName = localStorage.getItem("gf_sender") || DEFAULTS.senderName;
-        let syncedStart = localStorage.getItem("gf_start_date");
-        if (syncedStart && syncedStart.startsWith("2023")) {
-          syncedStart = "2025-09-17T00:00";
-          localStorage.setItem("gf_start_date", syncedStart);
-        }
-        state.startDate = syncedStart || DEFAULTS.startDate;
+        state.startDate = localStorage.getItem("gf_start_date") || DEFAULTS.startDate;
         state.letter = localStorage.getItem("gf_letter") || DEFAULTS.letter;
         state.giftTitle = localStorage.getItem("gf_gift_title") || DEFAULTS.giftTitle;
         state.giftDesc = localStorage.getItem("gf_gift_desc") || DEFAULTS.giftDesc;
-        const rawVoice = localStorage.getItem("gf_voice_audio");
-        state.voiceAudio = (rawVoice && rawVoice.includes("myrecording") && !rawVoice.includes("myrecording-volume-adjusted")) ? "audio/myrecording-volume-adjusted.mp3" : (rawVoice || DEFAULTS.voiceAudio || "audio/myrecording-volume-adjusted.mp3");
+        state.voiceAudio = localStorage.getItem("gf_voice_audio") || DEFAULTS.voiceAudio || "audio/myrecording-volume-adjusted.mp3";
         state.letterAudio = localStorage.getItem("gf_letter_audio") || DEFAULTS.letterAudio || "audio/letter_voice-volume-adjusted.mp3";
         state.herVoiceAudio = null;
         state.customMusicAudio = localStorage.getItem("gf_music_audio") || null;

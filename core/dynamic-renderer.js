@@ -23,6 +23,7 @@ if (typeof safeVal !== "function") {
 class DynamicRenderer {
   constructor(containerId = "modularGridContainer") {
     this.container = document.getElementById(containerId);
+    this.currentLayoutOrder = null;
   }
 
   ensureWidgetAssets(layoutOrder = []) {
@@ -43,9 +44,13 @@ class DynamicRenderer {
 
   render(config) {
     if (!this.container) return;
-    this.container.innerHTML = "";
     const { layoutOrder = [], sectionsData = {} } = config;
     const isEmptyLayout = Array.isArray(layoutOrder) && layoutOrder.length === 0;
+
+    const isSameLayout = Array.isArray(this.currentLayoutOrder) &&
+      this.currentLayoutOrder.length === layoutOrder.length &&
+      this.currentLayoutOrder.every((id, i) => id === layoutOrder[i]) &&
+      this.container.children.length > 0;
 
     if (isEmptyLayout) {
       if (typeof document !== "undefined") {
@@ -98,23 +103,24 @@ class DynamicRenderer {
         }
       }
       if (hero.musicTrackUrl && !isEmptyLayout) {
-        state.customMusicAudio = hero.musicTrackUrl;
         const bgAudio = document.getElementById("bgAudioPlayer");
-        if (bgAudio) {
-          const wasPlaying = !bgAudio.paused;
-          if (!bgAudio.src.endsWith(hero.musicTrackUrl)) {
+        const curSrc = bgAudio ? (bgAudio.currentSrc || bgAudio.src || "") : "";
+        const isSongDifferent = !curSrc || (!curSrc.endsWith(hero.musicTrackUrl) && curSrc !== hero.musicTrackUrl);
+        if (isSongDifferent) {
+          state.customMusicAudio = hero.musicTrackUrl;
+          if (bgAudio) {
+            const wasPlaying = !bgAudio.paused;
             bgAudio.src = hero.musicTrackUrl;
             bgAudio.load();
             if (wasPlaying) bgAudio.play().catch(() => {});
           }
-        }
-        if (typeof window.selectAndPlaySong === "function") {
-          window.selectAndPlaySong({
-            src: hero.musicTrackUrl,
-            title: hero.musicTrackTitle || "Soundtrack",
-            artist: "Soundtrack",
-            start: 0
-          });
+          if (typeof window.selectAndPlaySong === "function") {
+            window.selectAndPlaySong({
+              src: hero.musicTrackUrl,
+              title: hero.musicTrackTitle || "Soundtrack",
+              artist: "Soundtrack"
+            });
+          }
         }
       }
       if (hero.musicTrackTitle) {
@@ -171,21 +177,14 @@ class DynamicRenderer {
                 img: (c.images && c.images[0]) || c.img || ""
               };
               if (typeof LOCAL_IMG_CACHE !== "undefined") {
-                delete LOCAL_IMG_CACHE[`city_${c.id}`];
-                delete LOCAL_IMG_CACHE[c.id];
-                for (let i = 0; i <= 30; i++) {
-                  delete LOCAL_IMG_CACHE[`city_${c.id}_${i}`];
-                  delete LOCAL_IMG_CACHE[`${c.id}_${i}`];
-                }
+                Object.keys(LOCAL_IMG_CACHE).forEach(k => {
+                  if (k.startsWith(`city_${c.id}`) || k.startsWith(c.id)) delete LOCAL_IMG_CACHE[k];
+                });
               }
               const dbSaver = (typeof window !== "undefined" && window.saveImageToLocalDb) || (typeof saveImageToLocalDb === "function" ? saveImageToLocalDb : null);
               if (dbSaver) {
                 dbSaver(`city_${c.id}`, null);
                 dbSaver(c.id, null);
-                for (let i = 0; i <= 30; i++) {
-                  dbSaver(`city_${c.id}_${i}`, null);
-                  dbSaver(`${c.id}_${i}`, null);
-                }
               }
             }
           });
@@ -275,6 +274,145 @@ class DynamicRenderer {
       if (celebrationBtnText && pl.celebrationBtnText) celebrationBtnText.textContent = pl.celebrationBtnText;
     }
 
+    if (isSameLayout) {
+      const activeId = config.activeWidgetId || config.modifiedWidgetId;
+      const templates = (typeof window !== "undefined" && window.WIDGET_TEMPLATES) ? window.WIDGET_TEMPLATES : (typeof WIDGET_TEMPLATES !== "undefined" ? WIDGET_TEMPLATES : {});
+      const isIframe = typeof window !== "undefined" && window.parent && window.parent !== window;
+      const urlParams = (typeof window !== "undefined" && window.location) ? new URLSearchParams(window.location.search) : null;
+      const isBuilder = (typeof document !== "undefined" && (
+        document.body.classList.contains("builder-mode") ||
+        document.body.classList.contains("in-builder-preview")
+      )) || (isIframe && Boolean(urlParams && (urlParams.get("preview") === "builder" || urlParams.get("builder") === "1")));
+
+      if (activeId && !["timeline", "memories", "reasons", "coupons", "quiz", "hero", "letter"].includes(activeId) && templates[activeId]) {
+        const existingEl = document.getElementById("section-" + activeId) || document.querySelector(`[data-widget-id="${activeId}"]`);
+        if (existingEl) {
+          const wrapper = document.createElement("div");
+          wrapper.className = `widget-module-wrap widget-wrap-${activeId}`;
+          wrapper.innerHTML = templates[activeId](sectionsData[activeId] || sectionsData, sectionsData.hero || sectionsData);
+          const newEl = wrapper.firstElementChild || wrapper;
+          if (!newEl.id) newEl.id = "section-" + activeId;
+          newEl.dataset.widgetId = activeId;
+          if (isBuilder) {
+            const reg = (typeof WIDGET_REGISTRY !== "undefined" && WIDGET_REGISTRY[activeId]) ? WIDGET_REGISTRY[activeId] : { title: activeId, icon: "🧩" };
+            const toolbar = document.createElement("div");
+            toolbar.className = "site-section-admin-toolbar";
+            toolbar.innerHTML = `
+              <span class="site-section-badge">${reg.icon || "🧩"} ${escapeHtml(reg.title || activeId)}</span>
+              <button type="button" class="btn-site-edit-section" data-edit-widget="${activeId}" title="Edit this section">
+                <span>✏️</span> Edit
+              </button>
+              <button type="button" class="btn-site-remove-section" data-remove-widget="${activeId}" title="Remove this section from website">
+                <span>✕</span> Remove
+              </button>
+            `;
+            toolbar.querySelector(".btn-site-edit-section").onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (isIframe) {
+                window.parent.postMessage({ type: "SELECT_WIDGET", widgetId: activeId }, "*");
+              }
+            };
+            const removeBtn = toolbar.querySelector(".btn-site-remove-section");
+            removeBtn.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (isIframe) {
+                window.parent.postMessage({ type: "REMOVE_WIDGET", widgetId: activeId }, "*");
+              } else if (typeof window.removeWidgetFromSite === "function") {
+                window.removeWidgetFromSite(activeId);
+              }
+            };
+            newEl.style.position = "relative";
+            newEl.prepend(toolbar);
+          }
+          existingEl.replaceWith(newEl);
+          this.initSingleWidgetEngine(activeId, sectionsData);
+          this.bindDynamicEditTriggers();
+          return;
+        }
+      }
+
+      if (!activeId || activeId === "timeline") {
+        if (layoutOrder.includes("timeline")) {
+          const tlSec = document.getElementById("section-timeline") || document.querySelector(".timeline-section");
+          if (tlSec && sectionsData.timeline && !Array.isArray(sectionsData.timeline)) {
+            const t = sectionsData.timeline;
+            const tagEl = tlSec.querySelector(".section-tag");
+            const titleEl = tlSec.querySelector(".section-title");
+            const descEl = tlSec.querySelector(".section-desc");
+            if (tagEl && t.tag) tagEl.textContent = t.tag;
+            if (titleEl && t.title) titleEl.textContent = t.title;
+            if (descEl && t.desc) descEl.textContent = t.desc;
+          }
+          if (typeof renderTimeline === "function") {
+            try { renderTimeline(); } catch (e) {}
+          }
+        }
+      }
+      if (!activeId || activeId === "memories") {
+        if (layoutOrder.includes("memories")) {
+          const memSec = document.getElementById("section-memories") || document.querySelector(".memories-section");
+          if (memSec && sectionsData.memories && !Array.isArray(sectionsData.memories)) {
+            const m = sectionsData.memories;
+            const tagEl = memSec.querySelector(".section-tag");
+            const titleEl = memSec.querySelector(".section-title");
+            const descEl = memSec.querySelector(".section-desc");
+            if (tagEl && m.tag) tagEl.textContent = m.tag;
+            if (titleEl && m.title) titleEl.textContent = m.title;
+            if (descEl && m.desc) descEl.textContent = m.desc;
+          }
+          if (typeof renderPolaroids === "function") {
+            try { renderPolaroids(); } catch (e) {}
+          }
+        }
+      }
+      if (!activeId || activeId === "reasons") {
+        if (layoutOrder.includes("reasons")) {
+          if (typeof renderCurrentReason === "function") try { renderCurrentReason(false); } catch (e) {}
+          if (typeof updateFilterCounts === "function") try { updateFilterCounts(); } catch (e) {}
+          if (typeof renderAllNotesDrawer === "function") try { renderAllNotesDrawer(); } catch (e) {}
+        }
+      }
+      if (!activeId || activeId === "coupons") {
+        if (layoutOrder.includes("coupons") && typeof renderScratchCoupons === "function") {
+          try { renderScratchCoupons(); } catch (e) {}
+        }
+      }
+      if (!activeId || activeId === "quiz") {
+        if (layoutOrder.includes("quiz") && typeof renderQuizStep === "function") {
+          try { renderQuizStep(); } catch (e) {}
+        }
+      }
+      if (!activeId || activeId === "hero") {
+        if (typeof renderDOM === "function") {
+          try { renderDOM(); } catch (e) {}
+        }
+        if (layoutOrder.includes("hero")) {
+          if (typeof updateQuintillionLive === "function") try { updateQuintillionLive(); } catch (e) {}
+          if (typeof updateLDRClocks === "function") try { updateLDRClocks(); } catch (e) {}
+        }
+      }
+      if (!activeId || activeId === "letter") {
+        if (typeof setupLoveLetterFeatures === "function") {
+          try { setupLoveLetterFeatures(); } catch (e) {}
+        }
+      }
+      if (!activeId) {
+        layoutOrder.forEach(wid => {
+          if (!["timeline", "memories", "reasons", "coupons", "quiz", "hero", "letter"].includes(wid)) {
+            this.initSingleWidgetEngine(wid, sectionsData);
+          }
+        });
+      }
+      this.bindDynamicEditTriggers();
+      return;
+    }
+
+    this.currentLayoutOrder = [...layoutOrder];
+    const prevScrollTop = (typeof window !== "undefined") ? (window.scrollY || document.documentElement.scrollTop || 0) : 0;
+    this.container.innerHTML = "";
+
     // Render active widgets in ordered sequence
     const templates = (typeof window !== "undefined" && window.WIDGET_TEMPLATES) ? window.WIDGET_TEMPLATES : (typeof WIDGET_TEMPLATES !== "undefined" ? WIDGET_TEMPLATES : {});
     const urlParams = (typeof window !== "undefined" && window.location) ? new URLSearchParams(window.location.search) : null;
@@ -334,10 +472,20 @@ class DynamicRenderer {
           toolbar.className = "site-section-admin-toolbar";
           toolbar.innerHTML = `
             <span class="site-section-badge">${reg.icon || "🧩"} ${escapeHtml(reg.title || widgetId)}</span>
+            <button type="button" class="btn-site-edit-section" data-edit-widget="${widgetId}" title="Edit this section">
+              <span>✏️</span> Edit
+            </button>
             <button type="button" class="btn-site-remove-section" data-remove-widget="${widgetId}" title="Remove this section from website">
               <span>✕</span> Remove
             </button>
           `;
+          toolbar.querySelector(".btn-site-edit-section").onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (isIframe) {
+              window.parent.postMessage({ type: "SELECT_WIDGET", widgetId }, "*");
+            }
+          };
           const removeBtn = toolbar.querySelector(".btn-site-remove-section");
           removeBtn.onclick = (e) => {
             e.preventDefault();
@@ -361,6 +509,116 @@ class DynamicRenderer {
     });
 
     this.initInteractiveEngines(sectionsData, layoutOrder);
+
+    if (typeof window !== "undefined") {
+      const restoreScroll = () => {
+        if (prevScrollTop >= 0) {
+          window.scrollTo({ top: prevScrollTop, behavior: "instant" });
+        }
+      };
+      restoreScroll();
+      requestAnimationFrame(() => {
+        restoreScroll();
+        this.container.style.minHeight = "";
+      });
+    } else {
+      this.container.style.minHeight = "";
+    }
+  }
+
+  initSingleWidgetEngine(widgetId, sectionsData = {}) {
+    const hero = sectionsData?.hero;
+    const engines = {
+      reasons: () => {
+        if (typeof setupReasonsDeck === "function") try { setupReasonsDeck(); } catch (e) {}
+        if (typeof setupEditAllReasonsModal === "function") try { setupEditAllReasonsModal(); } catch (e) {}
+        if (typeof updateFilterCounts === "function") try { updateFilterCounts(); } catch (e) {}
+        if (typeof renderCurrentReason === "function") try { renderCurrentReason(false); } catch (e) {}
+        if (typeof renderAllNotesDrawer === "function") try { renderAllNotesDrawer(); } catch (e) {}
+      },
+      timeline: () => {
+        if (typeof renderTimeline === "function") try { renderTimeline(); } catch (e) {}
+        if (typeof initDirectChapterEditor === "function") try { initDirectChapterEditor(); } catch (e) {}
+      },
+      map: () => {
+        if (typeof setupInteractiveMap === "function") try { setupInteractiveMap(); } catch (e) {}
+      },
+      memories: () => {
+        if (typeof renderPolaroids === "function") try { renderPolaroids(); } catch (e) {}
+        if (typeof initDirectMemoryEditor === "function") try { initDirectMemoryEditor(); } catch (e) {}
+      },
+      coupons: () => {
+        if (typeof renderScratchCoupons === "function") try { renderScratchCoupons(); } catch (e) {}
+      },
+      truth_dare: () => {
+        if (typeof setupTruthOrDareGame === "function") try { setupTruthOrDareGame(sectionsData.truth_dare, hero); } catch (e) {}
+      },
+      spinner: () => {
+        if (typeof setupDateSpinner === "function") try { setupDateSpinner(sectionsData.spinner, hero); } catch (e) {}
+      },
+      boarding_pass: () => {
+        if (typeof setupGiftBox === "function") try { setupGiftBox(); } catch (e) {}
+      },
+      quiz: () => {
+        if (typeof renderQuizStep === "function") try { renderQuizStep(); } catch (e) {}
+      },
+      love_meter: () => {
+        if (typeof setupLoveMeter === "function") try { setupLoveMeter(); } catch (e) {}
+      },
+      letter: () => {
+        if (typeof setupLoveLetterFeatures === "function") try { setupLoveLetterFeatures(); } catch (e) {}
+      },
+      playful: () => {
+        if (typeof setupPlayfulGame === "function") try { setupPlayfulGame(); } catch (e) {}
+      },
+      candle_blowout: () => {
+        if (typeof setupCandleBlowout === "function") try { setupCandleBlowout(sectionsData.candle_blowout); } catch (e) {}
+      },
+      milestone_stats: () => {
+        if (typeof setupMilestoneStats === "function") try { setupMilestoneStats(sectionsData.milestone_stats, hero); } catch (e) {}
+      },
+      gift_unboxer: () => {
+        if (typeof setupGiftUnboxer === "function") try { setupGiftUnboxer(sectionsData.gift_unboxer); } catch (e) {}
+      },
+      roast_toast: () => {
+        if (typeof setupRoastToast === "function") try { setupRoastToast(sectionsData.roast_toast); } catch (e) {}
+      },
+      guestbook: () => {
+        if (typeof setupGuestbook === "function") try { setupGuestbook(sectionsData.guestbook); } catch (e) {}
+      },
+      party_jukebox: () => {
+        if (typeof setupPartyJukebox === "function") try { setupPartyJukebox(sectionsData.party_jukebox); } catch (e) {}
+      },
+      tenure_ticker: () => {
+        if (typeof setupTenureTicker === "function") try { setupTenureTicker(sectionsData.tenure_ticker, hero); } catch (e) {}
+      },
+      star_map: () => {
+        if (typeof setupStarMap === "function") try { setupStarMap(sectionsData.star_map, hero); } catch (e) {}
+      },
+      then_now_slider: () => {
+        if (typeof setupThenNowSlider === "function") try { setupThenNowSlider(sectionsData.then_now_slider, hero); } catch (e) {}
+      },
+      bucket_list: () => {
+        if (typeof setupBucketList === "function") try { setupBucketList(sectionsData.bucket_list, hero); } catch (e) {}
+      },
+      audio_capsule: () => {
+        if (typeof setupAudioCapsule === "function") try { setupAudioCapsule(sectionsData.audio_capsule, hero); } catch (e) {}
+      },
+      milestone_odyssey: () => {
+        if (typeof setupMilestoneOdyssey === "function") try { setupMilestoneOdyssey(sectionsData.milestone_odyssey, hero); } catch (e) {}
+      },
+      valentine_scratch: () => {
+        if (typeof setupValentineScratch === "function") try { setupValentineScratch(sectionsData.valentine_scratch); } catch (e) {}
+      },
+      hero: () => {
+        if (typeof setupQuintillionObserver === "function") try { setupQuintillionObserver(); } catch (e) {}
+        if (typeof updateQuintillionLive === "function") try { updateQuintillionLive(); } catch (e) {}
+        if (typeof updateLDRClocks === "function") try { updateLDRClocks(); } catch (e) {}
+        if (typeof setupLoveConnectionHub === "function") try { setupLoveConnectionHub(); } catch (e) {}
+        if (typeof setupVoiceNotePlayer === "function") try { setupVoiceNotePlayer(); } catch (e) {}
+      }
+    };
+    engines[widgetId]?.();
   }
 
   initInteractiveEngines(sectionsData, layoutOrder = []) {
@@ -369,162 +627,16 @@ class DynamicRenderer {
       particles.particles = [];
     }
 
-    // 1. Core DOM bindings and text displays
     if (typeof renderDOM === "function") {
       try { renderDOM(); } catch (e) { console.warn("renderDOM error:", e); }
     }
 
-    // 2. Love Deck & Reasons
-    if (layoutOrder.includes("reasons")) {
-      if (typeof setupReasonsDeck === "function") try { setupReasonsDeck(); } catch (e) {}
-      if (typeof setupEditAllReasonsModal === "function") try { setupEditAllReasonsModal(); } catch (e) {}
-      if (typeof updateFilterCounts === "function") try { updateFilterCounts(); } catch (e) {}
-      if (typeof renderCurrentReason === "function") try { renderCurrentReason(false); } catch (e) {}
-      if (typeof renderAllNotesDrawer === "function") try { renderAllNotesDrawer(); } catch (e) {}
-    }
+    layoutOrder.forEach(wid => this.initSingleWidgetEngine(wid, sectionsData));
 
-    // 3. Timeline Chapters & Direct Editor
-    if (layoutOrder.includes("timeline")) {
-      if (typeof renderTimeline === "function") try { renderTimeline(); } catch (e) {}
-      if (typeof initDirectChapterEditor === "function") try { initDirectChapterEditor(); } catch (e) {}
-    }
-
-    // 4. Illustrated Interactive Map
-    if (layoutOrder.includes("map")) {
-      if (typeof setupInteractiveMap === "function") try { setupInteractiveMap(); } catch (e) {}
-    }
-
-    // 5. Memories & Polaroids & Direct Editor
-    if (layoutOrder.includes("memories")) {
-      if (typeof renderPolaroids === "function") try { renderPolaroids(); } catch (e) {}
-      if (typeof initDirectMemoryEditor === "function") try { initDirectMemoryEditor(); } catch (e) {}
-    }
-
-    // 6. Scratch Coupons
-    if (layoutOrder.includes("coupons")) {
-      if (typeof renderScratchCoupons === "function") try { renderScratchCoupons(); } catch (e) {}
-    }
-
-    // 7. Truth or Dare
-    if (layoutOrder.includes("truth_dare")) {
-      if (typeof setupTruthOrDareGame === "function") try { setupTruthOrDareGame(sectionsData.truth_dare, sectionsData.hero); } catch (e) {}
-    }
-
-    // 8. Date Night Spinner
-    if (layoutOrder.includes("spinner")) {
-      if (typeof setupDateSpinner === "function") try { setupDateSpinner(sectionsData.spinner, sectionsData.hero); } catch (e) {}
-    }
-
-    // 9. Boarding Pass & Adventure Picker
-    if (layoutOrder.includes("boarding_pass")) {
-      if (typeof setupGiftBox === "function") try { setupGiftBox(); } catch (e) {}
-    }
-
-    // 10. Quiz Trivia Challenge
-    if (layoutOrder.includes("quiz")) {
-      if (typeof renderQuizStep === "function") try { renderQuizStep(); } catch (e) {}
-    }
-
-    // 11. Love Meter
-    if (layoutOrder.includes("love_meter")) {
-      if (typeof setupLoveMeter === "function") try { setupLoveMeter(); } catch (e) {}
-    }
-
-    // 12. Love Letter
-    if (layoutOrder.includes("letter")) {
-      if (typeof setupLoveLetterFeatures === "function") try { setupLoveLetterFeatures(); } catch (e) {}
-    }
-
-    // 13. Playful Game
-    if (layoutOrder.includes("playful")) {
-      if (typeof setupPlayfulGame === "function") try { setupPlayfulGame(); } catch (e) {}
-    }
-
-    // 14. Candle Blow-Out
-    if (layoutOrder.includes("candle_blowout")) {
-      if (typeof setupCandleBlowout === "function") try { setupCandleBlowout(sectionsData.candle_blowout); } catch (e) {}
-    }
-
-    // 15. Milestone Life Stats
-    if (layoutOrder.includes("milestone_stats")) {
-      if (typeof setupMilestoneStats === "function") try { setupMilestoneStats(sectionsData.milestone_stats, sectionsData.hero); } catch (e) {}
-    }
-
-    // 16. 3D Surprise Gift Unboxer
-    if (layoutOrder.includes("gift_unboxer")) {
-      if (typeof setupGiftUnboxer === "function") try { setupGiftUnboxer(sectionsData.gift_unboxer); } catch (e) {}
-    }
-
-    // 17. Roast & Toast Wheel
-    if (layoutOrder.includes("roast_toast")) {
-      if (typeof setupRoastToast === "function") try { setupRoastToast(sectionsData.roast_toast); } catch (e) {}
-    }
-
-    // 18. Guestbook Wish Wall
-    if (layoutOrder.includes("guestbook")) {
-      if (typeof setupGuestbook === "function") try { setupGuestbook(sectionsData.guestbook); } catch (e) {}
-    }
-
-    // 19. Party Jukebox
-    if (layoutOrder.includes("party_jukebox")) {
-      if (typeof setupPartyJukebox === "function") try { setupPartyJukebox(sectionsData.party_jukebox); } catch (e) {}
-    }
-
-    // 20. Tenure Ticker
-    if (layoutOrder.includes("tenure_ticker")) {
-      if (typeof setupTenureTicker === "function") try { setupTenureTicker(sectionsData.tenure_ticker, sectionsData.hero); } catch (e) {}
-    }
-
-    // 21. Night Sky Star Map
-    if (layoutOrder.includes("star_map")) {
-      if (typeof setupStarMap === "function") try { setupStarMap(sectionsData.star_map, sectionsData.hero); } catch (e) {}
-    }
-
-    // 22. Then vs. Now Slider
-    if (layoutOrder.includes("then_now_slider")) {
-      if (typeof setupThenNowSlider === "function") try { setupThenNowSlider(sectionsData.then_now_slider, sectionsData.hero); } catch (e) {}
-    }
-
-    // 23. Couple Bucket List
-    if (layoutOrder.includes("bucket_list")) {
-      if (typeof setupBucketList === "function") try { setupBucketList(sectionsData.bucket_list, sectionsData.hero); } catch (e) {}
-    }
-
-    // 24. Audio Time Capsule
-    if (layoutOrder.includes("audio_capsule")) {
-      if (typeof setupAudioCapsule === "function") try { setupAudioCapsule(sectionsData.audio_capsule, sectionsData.hero); } catch (e) {}
-    }
-
-    // 25. Milestone Odyssey
-    if (layoutOrder.includes("milestone_odyssey")) {
-      if (typeof setupMilestoneOdyssey === "function") try { setupMilestoneOdyssey(sectionsData.milestone_odyssey, sectionsData.hero); } catch (e) {}
-    }
-
-    // 14. Audio, Vinyl Disc, & Equalizer
     if (typeof setupAudioVisualizerAndVolume === "function" && layoutOrder.length > 0) {
       try { setupAudioVisualizerAndVolume(); } catch (e) {}
     }
 
-    // 15. Hero Live Quintillions, LDR Clocks, Hub & Voice Note Player
-    if (layoutOrder.includes("hero")) {
-      if (typeof setupQuintillionObserver === "function") {
-        try { setupQuintillionObserver(); } catch (e) {}
-      }
-      if (typeof updateQuintillionLive === "function") {
-        try { updateQuintillionLive(); } catch (e) {}
-      }
-      if (typeof updateLDRClocks === "function") {
-        try { updateLDRClocks(); } catch (e) {}
-      }
-      if (typeof setupLoveConnectionHub === "function") {
-        try { setupLoveConnectionHub(); } catch (e) {}
-      }
-      if (typeof setupVoiceNotePlayer === "function") {
-        try { setupVoiceNotePlayer(); } catch (e) {}
-      }
-    }
-
-    // 17. Bind in-place edit buttons & parent iframe sync
     this.bindDynamicEditTriggers();
   }
 
@@ -540,6 +652,7 @@ class DynamicRenderer {
           e.stopPropagation();
           if (isIframe) {
             window.parent.postMessage({ type: "SELECT_WIDGET", widgetId: "reasons" }, "*");
+            return;
           }
           if (typeof openEditAllReasonsModal === "function") {
             openEditAllReasonsModal();
@@ -555,6 +668,7 @@ class DynamicRenderer {
         e.stopPropagation();
         if (isIframe) {
           window.parent.postMessage({ type: "SELECT_WIDGET", widgetId: "memories" }, "*");
+          return;
         }
         if (typeof openDirectMemoryEditor === "function") {
           openDirectMemoryEditor(null);

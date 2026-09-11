@@ -156,7 +156,9 @@ function renderTimeline() {
     const highlightsList = (photoData.highlights && photoData.highlights.length > 0) ? photoData.highlights : (ch.highlights || []);
     const item = document.createElement("div");
     item.className = "timeline-item";
-    item.id = ch.id;
+    item.id = ch.id || ch.cityKey || `chap-${chIdx}`;
+    item.setAttribute("data-chapter-id", ch.id || "");
+    if (ch.cityKey) item.setAttribute("data-city-key", ch.cityKey);
     const tagStr = cleanChapterTag(ch.tag);
     item.innerHTML = `
       <div class="timeline-dot">${ch.icon || '💖'}</div>
@@ -476,10 +478,13 @@ function renderDirectChapterGalleryThumbs() {
   });
 
   thumbsWrap.querySelectorAll(".del-photo-btn").forEach(btn => {
-    btn.addEventListener("click", (e) => {
+    btn.addEventListener("click", async (e) => {
       e.stopPropagation();
       const idx = parseInt(btn.getAttribute("data-idx"), 10);
-      currentEditingChapterImages.splice(idx, 1);
+      const [removed] = currentEditingChapterImages.splice(idx, 1);
+      if (removed && typeof deleteFileFromDisk === "function") {
+        await deleteFileFromDisk(removed);
+      }
       currentEditingChapterImg = currentEditingChapterImages[0] || "";
       const previewImg = document.getElementById("directChapterPreviewImg");
       if (previewImg) {
@@ -516,7 +521,8 @@ function openDirectChapterEditor(chapterIdOrCityKey, fallbackCityKey) {
       type: "SELECT_WIDGET",
       widgetId: "timeline",
       chapterId: currentEditingChapterKey
-    }, "*");
+    }, window.location.origin);
+    return;
   }
 
   const modal = document.getElementById("directChapterModal");
@@ -708,11 +714,9 @@ function initDirectChapterEditor() {
           if (title) ch.title = title;
           if (caption !== undefined) ch.caption = caption;
           if (desc !== undefined) ch.desc = desc;
-          if (parsedHighlights && parsedHighlights.length > 0) ch.highlights = parsedHighlights;
-          if (currentEditingChapterImages.length > 0) {
-            ch.images = [...currentEditingChapterImages];
-            ch.img = currentEditingChapterImages[0];
-          }
+          if (parsedHighlights) ch.highlights = parsedHighlights;
+          ch.images = [...currentEditingChapterImages];
+          ch.img = currentEditingChapterImages[0] || "";
         }
 
         if (window.parent && window.parent !== window) {
@@ -728,7 +732,7 @@ function initDirectChapterEditor() {
               images: currentEditingChapterImages,
               img: currentEditingChapterImages[0] || ""
             }
-          }, "*");
+          }, window.location.origin);
         }
 
         renderTimeline();
@@ -770,6 +774,17 @@ function initDirectChapterEditor() {
         const saved = localStorage.getItem("gf_city_photos");
         if (saved) {
           photos = JSON.parse(saved);
+          const toDeleteImgs = new Set(currentEditingChapterImages);
+          if (photos[currentEditingChapterKey]) {
+            const item = photos[currentEditingChapterKey];
+            if (Array.isArray(item.images)) item.images.forEach(im => toDeleteImgs.add(im));
+            if (item.img) toDeleteImgs.add(item.img);
+          }
+          if (typeof deleteFileFromDisk === "function") {
+            for (const im of toDeleteImgs) {
+              if (im) await deleteFileFromDisk(im);
+            }
+          }
           delete photos[currentEditingChapterKey];
           if (currentEditingChapterFallback) delete photos[currentEditingChapterFallback];
           localStorage.setItem("gf_city_photos", JSON.stringify(photos));

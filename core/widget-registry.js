@@ -328,6 +328,19 @@ const WIDGET_REGISTRY = {
     inspector: "/builder/inspectors/milestone_odyssey.inspector.js",
     runtime: "/public/js/widgets/milestone-odyssey.runtime.js",
     initFn: "setupMilestoneOdyssey"
+  },
+  valentine_scratch: {
+    id: "valentine_scratch",
+    title: "Valentine Scratch-Off Date Itinerary",
+    icon: "💝",
+    desc: "Interactive canvas scratchcard revealing secret date itinerary, dress code & love message.",
+    category: "valentine",
+    defaultEnabled: true,
+    css: "/public/css/widgets/valentine_scratch.css",
+    template: "/core/templates/valentine_scratch.template.js",
+    inspector: "/builder/inspectors/valentine_scratch.inspector.js",
+    runtime: "/public/js/widgets/valentine-scratch.runtime.js",
+    initFn: "setupValentineScratch"
   }
 };
 
@@ -336,6 +349,11 @@ const PRESETS = {
     name: "Blank Canvas",
     desc: "Start fresh with a clean slate.",
     widgets: []
+  },
+  valentine: {
+    name: "Valentine's Romance",
+    desc: "Romantic Valentine keepsake: Hero → Secret Valentine Scratchcard → Lof-O-Meter → Reasons → Wax-Sealed Letter.",
+    widgets: ["hero", "valentine_scratch", "love_meter", "reasons", "letter"]
   },
   anniversary: {
     name: "Anniversary Odyssey",
@@ -403,6 +421,7 @@ const PRESETS = {
       "boarding_pass",
       "quiz",
       "letter",
+      "valentine_scratch",
       "playful"
     ]
   },

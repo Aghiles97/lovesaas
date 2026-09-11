@@ -500,7 +500,7 @@ body.theme-img-watercolor-frame {
   --accent-gold: #d97706;
   --accent-purple: #f472b6;
   --bg-gradient: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.95) 45%, #fff1f2 75%, #fce7f3 100%);
-  --bg-pattern: url("/images/themes/bg-watercolor-frame.png");
+  --bg-pattern: url("/images/themes/bg-watercolor-frame.png?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -529,7 +529,7 @@ body.theme-img-pop-stickers {
   --accent-gold: #facc15;
   --accent-purple: #c084fc;
   --bg-gradient: linear-gradient(135deg, #ffffff 0%, #fff5f8 100%);
-  --bg-pattern: url("/images/themes/bg-pop-stickers.png");
+  --bg-pattern: url("/images/themes/bg-pop-stickers.png?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -558,7 +558,7 @@ body.theme-img-doodle-tapestry {
   --accent-gold: #f59e0b;
   --accent-purple: #a855f7;
   --bg-gradient: linear-gradient(135deg, #fffdfa 0%, #fff7ed 100%);
-  --bg-pattern: url("/images/themes/bg-doodle-tapestry.png");
+  --bg-pattern: url("/images/themes/bg-doodle-tapestry.png?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -592,7 +592,7 @@ body.theme-img-theme1-16-9 {
   --accent-gold: #fb7185;
   --accent-purple: #f472b6;
   --bg-gradient: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.95) 45%, #fff1f2 75%, #fce7f3 100%);
-  --bg-pattern: url("/images/themes/theme1-16-9.PNG");
+  --bg-pattern: url("/images/themes/theme1-16-9.PNG?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -620,7 +620,7 @@ body.theme-img-theme1-9-16 {
   --accent-gold: #fb7185;
   --accent-purple: #f472b6;
   --bg-gradient: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.95) 45%, #fff1f2 75%, #fce7f3 100%);
-  --bg-pattern: url("/images/themes/theme1-9-16.PNG");
+  --bg-pattern: url("/images/themes/theme1-9-16.PNG?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -640,8 +640,20 @@ body.theme-img-theme1-9-16 {
   body[data-theme="theme-img-theme1"],
   body[data-theme="img-theme1"],
   body.theme-img-theme1 {
-    --bg-pattern: url("/images/themes/theme1-9-16.PNG");
+    --bg-pattern: url("/images/themes/theme1-9-16.PNG?v=2.5.0");
   }
+}
+[data-device="mobile"] [data-theme="theme-img-theme1"],
+[data-device="mobile"] [data-theme="img-theme1"],
+[data-device="mobile"] body[data-theme="theme-img-theme1"],
+[data-device="mobile"] body[data-theme="img-theme1"],
+body.device-mobile[data-theme="theme-img-theme1"],
+body.device-mobile[data-theme="img-theme1"],
+body.is-mobile[data-theme="theme-img-theme1"],
+body.is-mobile[data-theme="img-theme1"],
+body.device-mobile.theme-img-theme1,
+body.is-mobile.theme-img-theme1 {
+  --bg-pattern: url("/images/themes/theme1-9-16.PNG?v=2.5.0") !important;
 }
 
 /* --- THEME: REAL IMAGE THEME 2 (PEARLS & RIBBON BOWS) 🎀 --- */
@@ -664,7 +676,7 @@ body.theme-img-theme2-16-9 {
   --accent-gold: #f59e0b;
   --accent-purple: #f472b6;
   --bg-gradient: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.95) 45%, #fff1f2 75%, #fce7f3 100%);
-  --bg-pattern: url("/images/themes/theme2-16-9.PNG");
+  --bg-pattern: url("/images/themes/theme2-16-9.PNG?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -692,7 +704,7 @@ body.theme-img-theme2-9-16 {
   --accent-gold: #f59e0b;
   --accent-purple: #f472b6;
   --bg-gradient: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.95) 45%, #fff1f2 75%, #fce7f3 100%);
-  --bg-pattern: url("/images/themes/theme2-9-16.PNG");
+  --bg-pattern: url("/images/themes/theme2-9-16.PNG?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -712,8 +724,20 @@ body.theme-img-theme2-9-16 {
   body[data-theme="theme-img-theme2"],
   body[data-theme="img-theme2"],
   body.theme-img-theme2 {
-    --bg-pattern: url("/images/themes/theme2-9-16.PNG");
+    --bg-pattern: url("/images/themes/theme2-9-16.PNG?v=2.5.0");
   }
+}
+[data-device="mobile"] [data-theme="theme-img-theme2"],
+[data-device="mobile"] [data-theme="img-theme2"],
+[data-device="mobile"] body[data-theme="theme-img-theme2"],
+[data-device="mobile"] body[data-theme="img-theme2"],
+body.device-mobile[data-theme="theme-img-theme2"],
+body.device-mobile[data-theme="img-theme2"],
+body.is-mobile[data-theme="theme-img-theme2"],
+body.is-mobile[data-theme="img-theme2"],
+body.device-mobile.theme-img-theme2,
+body.is-mobile.theme-img-theme2 {
+  --bg-pattern: url("/images/themes/theme2-9-16.PNG?v=2.5.0") !important;
 }
 
 /* --- THEME: REAL IMAGE THEME 3 (HEART CHERRIES) 🍒 --- */
@@ -736,7 +760,7 @@ body.theme-img-theme3-16-9 {
   --accent-gold: #f59e0b;
   --accent-purple: #f43f5e;
   --bg-gradient: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.95) 45%, #fff1f2 75%, #fee2e2 100%);
-  --bg-pattern: url("/images/themes/theme3-16-9.PNG");
+  --bg-pattern: url("/images/themes/theme3-16-9.PNG?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -764,7 +788,7 @@ body.theme-img-theme3-9-16 {
   --accent-gold: #f59e0b;
   --accent-purple: #f43f5e;
   --bg-gradient: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.95) 45%, #fff1f2 75%, #fee2e2 100%);
-  --bg-pattern: url("/images/themes/theme3-9-16.PNG");
+  --bg-pattern: url("/images/themes/theme3-9-16.PNG?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -784,8 +808,20 @@ body.theme-img-theme3-9-16 {
   body[data-theme="theme-img-theme3"],
   body[data-theme="img-theme3"],
   body.theme-img-theme3 {
-    --bg-pattern: url("/images/themes/theme3-9-16.PNG");
+    --bg-pattern: url("/images/themes/theme3-9-16.PNG?v=2.5.0");
   }
+}
+[data-device="mobile"] [data-theme="theme-img-theme3"],
+[data-device="mobile"] [data-theme="img-theme3"],
+[data-device="mobile"] body[data-theme="theme-img-theme3"],
+[data-device="mobile"] body[data-theme="img-theme3"],
+body.device-mobile[data-theme="theme-img-theme3"],
+body.device-mobile[data-theme="img-theme3"],
+body.is-mobile[data-theme="theme-img-theme3"],
+body.is-mobile[data-theme="img-theme3"],
+body.device-mobile.theme-img-theme3,
+body.is-mobile.theme-img-theme3 {
+  --bg-pattern: url("/images/themes/theme3-9-16.PNG?v=2.5.0") !important;
 }
 
 /* --- THEME: REAL IMAGE THEME 4 (NOTEBOOK HEARTS) 📝 --- */
@@ -808,7 +844,7 @@ body.theme-img-theme4-16-9 {
   --accent-gold: #f59e0b;
   --accent-purple: #f472b6;
   --bg-gradient: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.95) 45%, #fff7ed 75%, #fee2e2 100%);
-  --bg-pattern: url("/images/themes/theme4-16-9.PNG");
+  --bg-pattern: url("/images/themes/theme4-16-9.PNG?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -836,7 +872,7 @@ body.theme-img-theme4-9-16 {
   --accent-gold: #f59e0b;
   --accent-purple: #f472b6;
   --bg-gradient: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.95) 45%, #fff7ed 75%, #fee2e2 100%);
-  --bg-pattern: url("/images/themes/theme4-9-16.PNG");
+  --bg-pattern: url("/images/themes/theme4-9-16.PNG?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -856,8 +892,20 @@ body.theme-img-theme4-9-16 {
   body[data-theme="theme-img-theme4"],
   body[data-theme="img-theme4"],
   body.theme-img-theme4 {
-    --bg-pattern: url("/images/themes/theme4-9-16.PNG");
+    --bg-pattern: url("/images/themes/theme4-9-16.PNG?v=2.5.0");
   }
+}
+[data-device="mobile"] [data-theme="theme-img-theme4"],
+[data-device="mobile"] [data-theme="img-theme4"],
+[data-device="mobile"] body[data-theme="theme-img-theme4"],
+[data-device="mobile"] body[data-theme="img-theme4"],
+body.device-mobile[data-theme="theme-img-theme4"],
+body.device-mobile[data-theme="img-theme4"],
+body.is-mobile[data-theme="theme-img-theme4"],
+body.is-mobile[data-theme="img-theme4"],
+body.device-mobile.theme-img-theme4,
+body.is-mobile.theme-img-theme4 {
+  --bg-pattern: url("/images/themes/theme4-9-16.PNG?v=2.5.0") !important;
 }
 
 /* --- THEME: REAL IMAGE WATERCOLOR GOLD HEARTS 💛 --- */
@@ -875,7 +923,7 @@ body.theme-img-gold-hearts {
   --accent-gold: #f59e0b;
   --accent-purple: #f43f5e;
   --bg-gradient: radial-gradient(ellipse at center, rgba(255, 252, 245, 0.9) 40%, rgba(254, 242, 242, 0.95) 100%);
-  --bg-pattern: url("/images/themes/bg-watercolor-gold.jpeg");
+  --bg-pattern: url("/images/themes/bg-watercolor-gold.jpeg?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -904,7 +952,7 @@ body.theme-img-love-letter {
   --accent-gold: #facc15;
   --accent-purple: #c084fc;
   --bg-gradient: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
-  --bg-pattern: url("/images/themes/bg-love-letter.jpg");
+  --bg-pattern: url("/images/themes/bg-love-letter.jpg?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -933,7 +981,7 @@ body.theme-img-be-mine {
   --accent-gold: #f59e0b;
   --accent-purple: #a855f7;
   --bg-gradient: linear-gradient(180deg, rgba(255, 228, 230, 0.9) 0%, rgba(254, 215, 170, 0.9) 100%);
-  --bg-pattern: url("/images/themes/bg-be-mine-sky.jpg");
+  --bg-pattern: url("/images/themes/bg-be-mine-sky.jpg?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -962,7 +1010,7 @@ body.theme-img-sweet-couple {
   --accent-gold: #eab308;
   --accent-purple: #f43f5e;
   --bg-gradient: linear-gradient(135deg, #fbf7f4 0%, #f7f0ea 100%);
-  --bg-pattern: url("/images/themes/bg-sweet-couple.jpg");
+  --bg-pattern: url("/images/themes/bg-sweet-couple.jpg?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -991,7 +1039,7 @@ body.theme-img-line-hearts {
   --accent-gold: #f59e0b;
   --accent-purple: #a855f7;
   --bg-gradient: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
-  --bg-pattern: url("/images/themes/bg-line-hearts.jpg");
+  --bg-pattern: url("/images/themes/bg-line-hearts.jpg?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -1020,7 +1068,7 @@ body.theme-img-stitched-hearts {
   --accent-gold: #f59e0b;
   --accent-purple: #9333ea;
   --bg-gradient: linear-gradient(90deg, #ffd9eb 50%, #f472b6 50%);
-  --bg-pattern: url("/images/themes/bg-stitched-pink.jpeg");
+  --bg-pattern: url("/images/themes/bg-stitched-pink.jpeg?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -1049,7 +1097,7 @@ body.theme-img-heart-podiums {
   --accent-gold: #f59e0b;
   --accent-purple: #8b5cf6;
   --bg-gradient: linear-gradient(180deg, #ffccd5 0%, #ffedf0 100%);
-  --bg-pattern: url("/images/themes/bg-heart-podiums.webp");
+  --bg-pattern: url("/images/themes/bg-heart-podiums.webp?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -1078,7 +1126,7 @@ body.theme-img-paper-sunset {
   --accent-gold: #f59e0b;
   --accent-purple: #a855f7;
   --bg-gradient: linear-gradient(180deg, #7c2d12 0%, #ea580c 50%, #f97316 100%);
-  --bg-pattern: url("/images/themes/bg-paper-sunset.jpg");
+  --bg-pattern: url("/images/themes/bg-paper-sunset.jpg?v=2.5.0");
   --bg-pattern-size: cover;
   --bg-pattern-position: center center;
   --bg-pattern-repeat: no-repeat;
@@ -3489,6 +3537,31 @@ body:not(.builder-mode):not(.in-builder-preview) .site-section-admin-toolbar {
   background: #dc2626;
   transform: scale(1.05);
   box-shadow: 0 4px 14px rgba(239, 68, 68, 0.5);
+}
+
+.btn-site-edit-section {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(59, 130, 246, 0.9);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+  transition: all 0.18s ease;
+}
+
+.btn-site-edit-section:hover {
+  background: #2563eb;
+  transform: scale(1.05);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.5);
 }
 
 

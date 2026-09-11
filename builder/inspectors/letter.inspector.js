@@ -246,19 +246,19 @@ if (!state.sectionsData.letter) state.sectionsData.letter = {};
 
       document.getElementById("btnTestLetterOpen").onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "LETTER_OPEN" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "LETTER_OPEN" }, window.location.origin);
         }
       };
 
       document.getElementById("btnTestLetterPlay").onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "LETTER_PLAY_TOGGLE" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "LETTER_PLAY_TOGGLE" }, window.location.origin);
         }
       };
 
       document.getElementById("btnTestLetterReseal").onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "LETTER_RESEAL" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "LETTER_RESEAL" }, window.location.origin);
         }
       };
   };

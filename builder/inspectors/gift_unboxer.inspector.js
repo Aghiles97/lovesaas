@@ -116,7 +116,7 @@
     if (btnStep) {
       btnStep.onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "UNBOX_STEP" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "UNBOX_STEP" }, window.location.origin);
           try { previewIframe.contentWindow.unboxGiftStep?.(); } catch (e) {}
         }
       };
@@ -125,7 +125,7 @@
     if (btnRewrap) {
       btnRewrap.onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "UNBOX_RESET" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "UNBOX_RESET" }, window.location.origin);
           try { previewIframe.contentWindow.unboxGiftReset?.(); } catch (e) {}
         }
       };

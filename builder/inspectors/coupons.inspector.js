@@ -122,12 +122,12 @@ if (!state.sectionsData.coupons) {
       // Live test controls
       document.getElementById("btnCouponsScratchAll").onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "COUPONS_SCRATCH_ALL" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "COUPONS_SCRATCH_ALL" }, window.location.origin);
         }
       };
       document.getElementById("btnCouponsReset").onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "COUPONS_RESET" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "COUPONS_RESET" }, window.location.origin);
         }
       };
 

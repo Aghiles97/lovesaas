@@ -193,7 +193,7 @@ if (!state.sectionsData.spinner) state.sectionsData.spinner = {};
       // Interactive Test Triggers
       const sendSpinnerMsg = (payload) => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage(payload, "*");
+          previewIframe.contentWindow.postMessage(payload, window.location.origin);
         }
       };
 

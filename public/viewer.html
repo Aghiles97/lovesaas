@@ -10,8 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,400;1,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="/public/css/style.css?v=2.1.0">
+  <link rel="stylesheet" href="/public/css/style.css?v=2.5.0">
   <link rel="stylesheet" href="/public/css/widgets/letter.css?v=2.1.0">
+  <link rel="stylesheet" href="/public/css/widgets/valentine_scratch.css">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <style>
@@ -95,7 +96,7 @@
 
   </div>
 
-  <audio id="bgAudioPlayer" preload="none">
+  <audio id="bgAudioPlayer" preload="metadata">
     <source src="taylor-swift-fate-of-ophelia.m4r" type="audio/mp4">
     <source src="lady-gaga-always-remember-us-this-way.m4r" type="audio/mp4">
     <source src="imagine-dragons-i-follow-you.m4r" type="audio/mp4">
@@ -914,6 +915,7 @@
   <script src="/core/templates/bucket_list.template.js"></script>
   <script src="/core/templates/audio_capsule.template.js"></script>
   <script src="/core/templates/milestone_odyssey.template.js"></script>
+  <script src="/core/templates/valentine_scratch.template.js"></script>
   <script src="/core/widget-templates.js"></script>
   <script src="/public/js/data.js"></script>
   <script src="/public/js/storage.js"></script>
@@ -947,6 +949,7 @@
   <script src="/public/js/widgets/bucket-list.runtime.js"></script>
   <script src="/public/js/widgets/audio-capsule.runtime.js"></script>
   <script src="/public/js/widgets/milestone-odyssey.runtime.js"></script>
+  <script src="/public/js/widgets/valentine-scratch.runtime.js"></script>
   <script src="/public/js/games-widgets.js"></script>
   <script src="/public/js/main.js"></script>
   <script src="/core/dynamic-renderer.js"></script>
@@ -958,6 +961,15 @@
       const pathParts = window.location.pathname.split("/").filter(Boolean);
       const slug = slugParam || (pathParts[0] === "sites" ? pathParts[1] : pathParts[pathParts.length - 1]) || "demo";
       window.CURRENT_TENANT_SLUG = slug;
+
+      // Immediately handle empty canvas mode so zero old/demo widgets or envelope ever flash
+      if (urlParams.get("empty") === "1") {
+        document.body.classList.add("letter-unsealed", "builder-mode", "in-builder-preview");
+        const env = document.getElementById("envelopeScreen");
+        if (env) { env.classList.add("opened"); env.style.display = "none"; }
+        const app = document.getElementById("modularGridContainer");
+        if (app) { app.innerHTML = ""; app.classList.add("app-revealed"); }
+      }
 
 
       try {
@@ -983,6 +995,9 @@
         const applyTheme = (themeId, customBg) => {
           let cleanTheme = (themeId === "romantic-rose" || themeId === "pink") ? "theme-pink" : (themeId || "theme-pink");
           if (cleanTheme === "blue" || cleanTheme === "theme-blue") cleanTheme = "theme-midnight";
+          if (cleanTheme.endsWith("-16-9") || cleanTheme.endsWith("-9-16")) {
+            cleanTheme = cleanTheme.replace(/-(16-9|9-16)$/, "");
+          }
           document.documentElement.setAttribute("data-theme", cleanTheme);
           document.body.setAttribute("data-theme", cleanTheme);
           const themeClasses = ["theme-pink", "theme-purple", "theme-gold", "theme-midnight", "theme-emerald", "theme-peach", "theme-birthday", "theme-birthday-cake", "theme-birthday-midnight", "theme-birthday-pastel", "theme-birthday-carnival", "theme-birthday-emoji", "theme-birthday-pixel", "theme-birthday-neon", "theme-birthday-papercraft", "theme-birthday-watercolor", "theme-watercolor-frame", "theme-pop-stickers", "theme-doodle-tapestry", "theme-img-theme1", "theme-img-theme1-16-9", "theme-img-theme1-9-16", "theme-img-theme2", "theme-img-theme2-16-9", "theme-img-theme2-9-16", "theme-img-theme3", "theme-img-theme3-16-9", "theme-img-theme3-9-16", "theme-img-theme4", "theme-img-theme4-16-9", "theme-img-theme4-9-16", "theme-img-watercolor-frame", "theme-img-pop-stickers", "theme-img-doodle-tapestry", "theme-img-gold-hearts", "theme-img-love-letter", "theme-img-be-mine", "theme-img-sweet-couple", "theme-img-line-hearts", "theme-img-stitched-hearts", "theme-img-heart-podiums", "theme-img-paper-sunset", "theme-apology", "theme-anniversary", "theme-scrapbook", "theme-sakura", "theme-sunset", "theme-ruby", "theme-lavender", "theme-blue"];
@@ -1052,6 +1067,16 @@
                   --bg-pattern: url('${mob}');
                 }
               }
+              [data-device="mobile"] [data-theme="${cleanId}"],
+              [data-device="mobile"] [data-theme="${bareId}"],
+              body.device-mobile[data-theme="${cleanId}"],
+              body.device-mobile[data-theme="${bareId}"],
+              body.is-mobile[data-theme="${cleanId}"],
+              body.is-mobile[data-theme="${bareId}"],
+              body.device-mobile.${cleanId},
+              body.is-mobile.${cleanId} {
+                --bg-pattern: url('${mob}') !important;
+              }
             `;
           });
           styleEl.textContent = css;
@@ -1093,7 +1118,7 @@
 
         if (isBuilderPreview) {
           document.body.classList.add("builder-mode", "in-builder-preview");
-          if (urlParams.get("unsealed") === "1" || urlParams.get("skip_intro") === "1" || isLayoutEmpty) {
+          if (urlParams.get("unsealed") === "1" || isLayoutEmpty) {
             document.body.classList.add("letter-unsealed");
             const env = document.getElementById("envelopeScreen");
             if (env) {
@@ -1107,10 +1132,10 @@
           const bgAudioEl = document.getElementById("bgAudioPlayer");
           if (bgAudioEl) {
             bgAudioEl.addEventListener("play", () => {
-              window.parent.postMessage({ type: "MUSIC_STATE_CHANGED", playing: true }, "*");
+              window.parent.postMessage({ type: "MUSIC_STATE_CHANGED", playing: true }, window.location.origin);
             });
             bgAudioEl.addEventListener("pause", () => {
-              window.parent.postMessage({ type: "MUSIC_STATE_CHANGED", playing: false }, "*");
+              window.parent.postMessage({ type: "MUSIC_STATE_CHANGED", playing: false }, window.location.origin);
             });
           }
         } else {
@@ -1127,7 +1152,7 @@
 
         window.openAddSectionModal = function(insertIndex) {
           if (isIframe) {
-            window.parent.postMessage({ type: "OPEN_ADD_SECTION_MODAL", insertIndex }, "*");
+            window.parent.postMessage({ type: "OPEN_ADD_SECTION_MODAL", insertIndex }, window.location.origin);
           } else {
             window.location.href = `/builder?slug=${encodeURIComponent(slug)}&insert=${insertIndex}`;
           }
@@ -1161,21 +1186,36 @@
         }
 
         if (isIframe) {
-          window.parent.postMessage({ type: "STUDIO_IFRAME_READY" }, "*");
+          window.parent.postMessage({ type: "STUDIO_IFRAME_READY" }, window.location.origin);
         }
 
         // Listen for live update messages from Studio iframe parent
         window.addEventListener("message", (e) => {
+          if (e.origin !== window.location.origin) return;
+          if (e.data && e.data.type === "SET_DEVICE_MODE") {
+            const isMob = e.data.isMobile || e.data.device === "mobile";
+            document.documentElement.setAttribute("data-device", e.data.device || "desktop");
+            if (isMob) {
+              document.body.classList.add("device-mobile", "is-mobile");
+            } else {
+              document.body.classList.remove("device-mobile", "is-mobile");
+            }
+            applyTheme(data.themeId, data.customBgUrl);
+          }
           if (e.data && e.data.type === "SET_THEME") {
             if (e.data.customThemes) registerCustomThemesCSS(e.data.customThemes);
-            applyTheme(e.data.themeId, e.data.customBgUrl);
+            data.themeId = e.data.themeId;
+            data.customBgUrl = e.data.customBgUrl || "";
+            applyTheme(data.themeId, data.customBgUrl);
           }
           if (e.data && e.data.type === "STUDIO_LIVE_UPDATE" && e.data.config) {
             if (e.data.config.sectionsData && e.data.config.sectionsData.customThemes) {
               registerCustomThemesCSS(e.data.config.sectionsData.customThemes);
             }
             if (e.data.config.themeId !== undefined || e.data.config.customBgUrl !== undefined) {
-              applyTheme(e.data.config.themeId || data.themeId, e.data.config.customBgUrl);
+              if (e.data.config.themeId !== undefined) data.themeId = e.data.config.themeId;
+              if (e.data.config.customBgUrl !== undefined) data.customBgUrl = e.data.config.customBgUrl;
+              applyTheme(data.themeId, data.customBgUrl);
             }
             const liveHero = (e.data.config.sectionsData && e.data.config.sectionsData.hero) || {};
             const liveP1 = liveHero.partner1 || data.partner1 || "Alex";
@@ -1356,7 +1396,37 @@
             const app = document.getElementById("modularGridContainer");
             if (app) app.classList.remove("app-revealed");
           }
-          if (e.data && e.data.type === "SCROLL_TO_WIDGET" && e.data.widgetId) {
+          if (e.data && (e.data.type === "SCROLL_TO_CHAPTER" || (e.data.type === "SCROLL_TO_WIDGET" && e.data.chapterId))) {
+            const env = document.getElementById("envelopeScreen");
+            const app = document.getElementById("modularGridContainer");
+            if (env && !env.classList.contains("opened")) {
+              document.body.classList.add("letter-unsealed");
+              env.classList.add("opened");
+              if (app) app.classList.add("app-revealed");
+            }
+            const chapId = e.data.chapterId;
+            const cityKey = e.data.cityKey;
+            let target = null;
+            if (chapId) {
+              target = document.getElementById(chapId) ||
+                       document.querySelector(`.timeline-item[id="${chapId}"]`) ||
+                       document.querySelector(`[data-chapter-id="${chapId}"]`);
+            }
+            if (!target && cityKey) {
+              target = document.getElementById(cityKey) ||
+                       document.querySelector(`.timeline-item[data-city-key="${cityKey}"]`) ||
+                       document.querySelector(`[data-city="${cityKey}"]`);
+            }
+            if (!target) {
+              target = document.getElementById("section-timeline") || document.querySelector(`[data-widget-id="timeline"]`);
+            }
+            if (target) {
+              target.scrollIntoView({ behavior: "smooth", block: "center" });
+              target.classList.add("widget-locate-highlight");
+              setTimeout(() => target.classList.remove("widget-locate-highlight"), 1800);
+            }
+          }
+          if (e.data && e.data.type === "SCROLL_TO_WIDGET" && e.data.widgetId && !e.data.chapterId) {
             const env = document.getElementById("envelopeScreen");
             const app = document.getElementById("modularGridContainer");
             if (env && !env.classList.contains("opened")) {

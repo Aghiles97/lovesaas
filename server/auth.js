@@ -1,17 +1,19 @@
 const crypto = require("node:crypto");
+const { promisify } = require("node:util");
+const scryptAsync = promisify(crypto.scrypt);
 
-function hashPassword(password) {
+async function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString("hex");
-  const derivedKey = crypto.scryptSync(password, salt, 64);
+  const derivedKey = await scryptAsync(password, salt, 64);
   return {
     hash: derivedKey.toString("hex"),
     salt
   };
 }
 
-function verifyPassword(password, hash, salt) {
+async function verifyPassword(password, hash, salt) {
   try {
-    const derivedKey = crypto.scryptSync(password, salt, 64);
+    const derivedKey = await scryptAsync(password, salt, 64);
     return crypto.timingSafeEqual(Buffer.from(hash, "hex"), derivedKey);
   } catch {
     return false;

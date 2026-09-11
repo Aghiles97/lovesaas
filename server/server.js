@@ -76,13 +76,9 @@ function parseMultipart(buffer, boundary) {
 }
 
 function resolveTenantSlug(req, parsedUrl) {
-  if (req.headers["x-tenant-slug"]) return req.headers["x-tenant-slug"].trim();
-  if (parsedUrl.query.slug) return String(parsedUrl.query.slug).trim();
-  const referer = req.headers["referer"] || "";
-  const siteMatch = referer.match(/\/sites\/([a-zA-Z0-9_-]+)/);
-  if (siteMatch) return siteMatch[1];
-  const builderMatch = referer.match(/slug=([a-zA-Z0-9_-]+)/) || referer.match(/site=([a-zA-Z0-9_-]+)/);
-  if (builderMatch) return builderMatch[1];
+  const headerSlug = req.headers["x-tenant-slug"];
+  if (headerSlug) return headerSlug.trim().toLowerCase();
+  if (parsedUrl && parsedUrl.query && parsedUrl.query.slug) return String(parsedUrl.query.slug).trim().toLowerCase();
   return "demo";
 }
 
@@ -106,20 +102,52 @@ function sendJson(res, statusCode, data) {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Pin, X-Auth-Token, X-User-Token, Authorization, X-Tenant-Slug"
+    "Access-Control-Allow-Headers": "Content-Type, X-Auth-Token, X-User-Token, Authorization, X-Tenant-Slug"
   });
   res.end(JSON.stringify(data));
 }
 
-function serveFile(res, filePath) {
+function serveFile(res, filePath, req = null) {
   if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
     res.writeHead(404, { "Content-Type": "text/plain" });
     return res.end("404 Not Found");
   }
+  const stat = fs.statSync(filePath);
+  const total = stat.size;
   const ext = path.extname(filePath).toLowerCase();
   const mime = MIME_TYPES[ext] || "application/octet-stream";
-  const cacheControl = (ext === ".html" || ext === ".js" || ext === ".css") ? "no-cache, must-revalidate" : "public, max-age=86400";
-  res.writeHead(200, { "Content-Type": mime, "Access-Control-Allow-Origin": "*", "Cache-Control": cacheControl });
+  const isThemeMedia = filePath.includes("/images/themes/");
+  const cacheControl = (ext === ".html" || ext === ".js" || ext === ".css" || isThemeMedia) ? "no-cache, must-revalidate" : "public, max-age=86400";
+
+  const range = req && req.headers ? req.headers.range : null;
+  if (range && (mime.startsWith("audio/") || mime.startsWith("video/"))) {
+    const parts = range.replace(/bytes=/, "").split("-");
+    const start = parseInt(parts[0], 10) || 0;
+    const end = parts[1] ? parseInt(parts[1], 10) : total - 1;
+    if (start >= total || end >= total) {
+      res.writeHead(416, { "Content-Range": `bytes */${total}` });
+      return res.end();
+    }
+    const chunksize = (end - start) + 1;
+    res.writeHead(206, {
+      "Content-Range": `bytes ${start}-${end}/${total}`,
+      "Accept-Ranges": "bytes",
+      "Content-Length": chunksize,
+      "Content-Type": mime,
+      "Access-Control-Allow-Origin": "*",
+      "Cache-Control": cacheControl
+    });
+    fs.createReadStream(filePath, { start, end }).pipe(res);
+    return;
+  }
+
+  res.writeHead(200, {
+    "Content-Type": mime,
+    "Content-Length": total,
+    "Accept-Ranges": "bytes",
+    "Access-Control-Allow-Origin": "*",
+    "Cache-Control": cacheControl
+  });
   fs.createReadStream(filePath).pipe(res);
 }
 
@@ -133,7 +161,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(204, {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, X-Admin-Pin, X-Auth-Token, X-User-Token, Authorization"
+      "Access-Control-Allow-Headers": "Content-Type, X-Auth-Token, X-User-Token, Authorization"
     });
     return res.end();
   }
@@ -143,6 +171,17 @@ const server = http.createServer(async (req, res) => {
     if (!token) return null;
     const session = await db.validateSession(token);
     return session ? session.user : null;
+  }
+
+  function extractRequestAuthToken(req, parsedUrl, body = null) {
+    return (
+      req.headers["x-auth-token"] ||
+      req.headers["x-user-token"] ||
+      auth.extractToken(req, parsedUrl) ||
+      (body && (body.authToken || body.token)) ||
+      (parsedUrl && parsedUrl.query && (parsedUrl.query.token || parsedUrl.query.authToken)) ||
+      null
+    );
   }
 
   // ----------------------------------------------------
@@ -169,12 +208,11 @@ const server = http.createServer(async (req, res) => {
   if (pathname === "/api/tenants" && method === "POST") {
     try {
       const payload = await parseJsonBody(req);
-      if (!payload.slug || !payload.partner1 || !payload.partner2 || !payload.adminPin) {
-        return sendJson(res, 400, { error: "Missing required fields: slug, partner1, partner2, adminPin" });
+      if (!payload.slug || !payload.partner1 || !payload.partner2) {
+        return sendJson(res, 400, { error: "Missing required fields: slug, partner1, partner2" });
       }
-      const adminPinHeader = req.headers["x-admin-pin"] || payload.masterAdminPin;
       const authTokenHeader = req.headers["x-auth-token"] || payload.masterAuthToken;
-      const isMasterAdmin = adminPinHeader === (process.env.ADMIN_PIN || "admin1234") || authTokenHeader === (process.env.ADMIN_TOKEN || "master-admin-token-lovesaas");
+      const isMasterAdmin = Boolean(process.env.ADMIN_TOKEN && authTokenHeader === process.env.ADMIN_TOKEN);
       const authUser = await getAuthenticatedUser(req, parsedUrl);
       const created = await db.createTenant({
         ...payload,
@@ -207,9 +245,9 @@ const server = http.createServer(async (req, res) => {
   if (pathname === "/api/checkout" && method === "POST") {
     try {
       const payload = await parseJsonBody(req);
-      const { partner1, partner2, slug, adminPin, customerEmail, plan = "vip", preset = "complete", anniversaryDate, subtitle } = payload;
-      if (!slug || !partner1 || !partner2 || !adminPin) {
-        return sendJson(res, 400, { error: "Missing required fields: slug, partner1, partner2, adminPin" });
+      const { partner1, partner2, slug, customerEmail, plan = "vip", preset = "complete", anniversaryDate, subtitle } = payload;
+      if (!slug || !partner1 || !partner2) {
+        return sendJson(res, 400, { error: "Missing required fields: slug, partner1, partner2" });
       }
       const cleanSlug = String(slug).toLowerCase().trim().replace(/[^a-z0-9_-]/g, "-");
       const existing = await db.getTenantBySlug(cleanSlug);
@@ -219,14 +257,9 @@ const server = http.createServer(async (req, res) => {
 
       // Associate with user account & check admin bypass
       const currentUser = await getAuthenticatedUser(req, parsedUrl);
-      const cleanPin = String(adminPin).trim();
-      const masterPin = process.env.ADMIN_PIN || "admin1234";
-      const masterToken = process.env.ADMIN_TOKEN || "master-admin-token-lovesaas";
+      const masterToken = process.env.ADMIN_TOKEN;
       const isAdmin = (currentUser && currentUser.role === "admin") ||
-                      (customerEmail && String(customerEmail).trim().toLowerCase() === "admin@admin.com") ||
-                      (cleanPin === masterPin) ||
-                      (req.headers["x-admin-pin"] === masterPin) ||
-                      (req.headers["x-auth-token"] === masterToken);
+                      Boolean(masterToken && req.headers["x-auth-token"] === masterToken);
 
       let userId = currentUser ? currentUser.id : null;
       let sessionToken = currentUser ? auth.extractToken(req, parsedUrl) : null;
@@ -245,7 +278,7 @@ const server = http.createServer(async (req, res) => {
           sessionToken = await db.createSession(userId);
         } else if (user) {
           userId = user.id;
-          if (payload.password && auth.verifyPassword(payload.password, user.password_hash, user.salt)) {
+          if (payload.password && (await auth.verifyPassword(payload.password, user.password_hash, user.salt))) {
             sessionToken = await db.createSession(userId);
           }
         }
@@ -256,7 +289,6 @@ const server = http.createServer(async (req, res) => {
         slug: cleanSlug,
         partner1: String(partner1).trim(),
         partner2: String(partner2).trim(),
-        adminPin: cleanPin,
         customerEmail: customerEmail ? String(customerEmail).trim() : null,
         plan: assignedPlan,
         preset: preset || "blank",
@@ -320,7 +352,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 201, {
         success: true,
         token,
-        user: { id: user.id, email: user.email, name: user.name, role: user.role || (user.email === "admin@admin.com" ? "admin" : "user"), createdAt: user.created_at }
+        user: { id: user.id, email: user.email, name: user.name, role: user.role || "user", createdAt: user.created_at }
       });
     } catch (err) {
       return sendJson(res, 500, { error: err.message });
@@ -335,14 +367,14 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 400, { error: "Email and password are required." });
       }
       const user = await db.findUserByEmail(email);
-      if (!user || !auth.verifyPassword(password, user.password_hash, user.salt)) {
+      if (!user || !(await auth.verifyPassword(password, user.password_hash, user.salt))) {
         return sendJson(res, 401, { error: "Invalid email or password." });
       }
       const token = await db.createSession(user.id);
       return sendJson(res, 200, {
         success: true,
         token,
-        user: { id: user.id, email: user.email, name: user.name, role: user.role || (user.email === "admin@admin.com" ? "admin" : "user"), createdAt: user.created_at }
+        user: { id: user.id, email: user.email, name: user.name, role: user.role || "user", createdAt: user.created_at }
       });
     } catch (err) {
       return sendJson(res, 500, { error: err.message });
@@ -456,9 +488,8 @@ const server = http.createServer(async (req, res) => {
   if (pathname === "/api/auth/me" && method === "GET") {
     try {
       const slug = resolveTenantSlug(req, parsedUrl);
-      const pin = req.headers["x-admin-pin"] || parsedUrl.query.pin;
       const token = req.headers["x-auth-token"] || parsedUrl.query.token;
-      const result = await db.verifyTenantAccess({ slug, pin, token });
+      const result = await db.verifyTenantAccess({ slug, token });
       return sendJson(res, 200, result);
     } catch (err) {
       return sendJson(res, 400, { error: err.message });
@@ -476,18 +507,15 @@ const server = http.createServer(async (req, res) => {
       const tenant = await db.getTenantBySlug(slug);
       if (!tenant) return sendJson(res, 404, { error: "Tenant not found" });
 
-      const pin = req.headers["x-admin-pin"] || parsedUrl.query.pin;
-      const token = req.headers["x-auth-token"] || parsedUrl.query.token;
+      const token = extractRequestAuthToken(req, parsedUrl);
       const authUser = await getAuthenticatedUser(req, parsedUrl);
 
-      const isAuthorized = (pin && String(tenant.adminPin).trim() === String(pin).trim()) ||
-                           (token && String(tenant.authToken).trim() === String(token).trim()) ||
-                           (pin === (process.env.ADMIN_PIN || "admin1234") || token === "master-admin-token-lovesaas") ||
-                           (authUser && (authUser.role === "admin" || authUser.id === tenant.userId || (tenant.customerEmail && authUser.email && tenant.customerEmail.toLowerCase() === authUser.email.toLowerCase())));
+      const isAuthorized = (token && String(tenant.authToken).trim() === String(token).trim()) ||
+                           Boolean(process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN) ||
+                           (authUser && (authUser.role === "admin" || authUser.id === tenant.userId || tenant.slug === "demo" || (tenant.customerEmail && authUser.email && tenant.customerEmail.toLowerCase() === authUser.email.toLowerCase())));
 
       if (!isAuthorized) {
         const publicTenant = { ...tenant };
-        delete publicTenant.adminPin;
         delete publicTenant.authToken;
         delete publicTenant.customerEmail;
         return sendJson(res, 200, publicTenant);
@@ -504,18 +532,16 @@ const server = http.createServer(async (req, res) => {
         if (!tenant) return sendJson(res, 404, { error: "Tenant not found" });
 
         const authUser = await getAuthenticatedUser(req, parsedUrl);
-        const isOwner = authUser && (authUser.role === "admin" || authUser.id === tenant.userId || (tenant.customerEmail && authUser.email && tenant.customerEmail.toLowerCase() === authUser.email.toLowerCase()));
+        const isOwner = authUser && (authUser.role === "admin" || authUser.id === tenant.userId || slug === "demo" || (tenant.customerEmail && authUser.email && tenant.customerEmail.toLowerCase() === authUser.email.toLowerCase()));
 
-        const adminPin = req.headers["x-admin-pin"] || body.adminPin || (parsedUrl.query && parsedUrl.query.pin);
-        const authToken = isOwner ? tenant.authToken : (req.headers["x-auth-token"] || body.authToken || (parsedUrl.query && parsedUrl.query.token));
+        const authToken = isOwner ? tenant.authToken : (extractRequestAuthToken(req, parsedUrl, body) || body.authToken);
 
-        const isMasterAdmin = (adminPin && String(adminPin).trim() === (process.env.ADMIN_PIN || "admin1234")) ||
-                              (authToken && String(authToken).trim() === (process.env.ADMIN_TOKEN || "master-admin-token-lovesaas"));
-        const pinValid = adminPin && String(tenant.adminPin).trim() === String(adminPin).trim();
+        const isMasterAdmin = (authUser && authUser.role === "admin") ||
+                              Boolean(process.env.ADMIN_TOKEN && authToken && String(authToken).trim() === process.env.ADMIN_TOKEN);
         const tokenValid = authToken && tenant.authToken && String(tenant.authToken).trim() === String(authToken).trim();
 
-        if (!isOwner && !isMasterAdmin && !pinValid && !tokenValid) {
-          return sendJson(res, 403, { error: "Forbidden: Owner, admin, or valid PIN/token required" });
+        if (!isOwner && !isMasterAdmin && !tokenValid) {
+          return sendJson(res, 403, { error: "Forbidden: Owner, admin, or valid token required" });
         }
 
         const updated = await db.updateSiteConfig(slug, {
@@ -523,9 +549,7 @@ const server = http.createServer(async (req, res) => {
           themeId: body.themeId,
           layoutOrder: body.layoutOrder,
           sectionsData: body.sectionsData,
-          adminPin: adminPin || (isOwner ? tenant.adminPin : undefined),
-          authToken: authToken || (isOwner ? tenant.authToken : undefined),
-          newAdminPin: body.newAdminPin
+          authToken: authToken || (isOwner ? tenant.authToken : undefined)
         });
         return sendJson(res, 200, updated);
       } catch (err) {
@@ -538,11 +562,10 @@ const server = http.createServer(async (req, res) => {
     if (subRoute === "/custom-themes" && method === "POST") {
       try {
         const body = await parseJsonBody(req);
-        const adminPin = req.headers["x-admin-pin"] || body.adminPin || (parsedUrl.query && parsedUrl.query.pin);
-        const authToken = req.headers["x-auth-token"] || body.authToken || (parsedUrl.query && parsedUrl.query.token);
-        const access = await db.verifyTenantAccess({ slug, pin: adminPin, token: authToken });
+        const authToken = extractRequestAuthToken(req, parsedUrl, body);
+        const access = await db.verifyTenantAccess({ slug, token: authToken });
         if (!access.authorized || access.role === "visitor") {
-          return sendJson(res, 403, { error: "Unauthorized: Admin PIN required to add themes." });
+          return sendJson(res, 403, { error: "Unauthorized: Admin required to add themes." });
         }
         const rawName = (body.name || "").trim();
         if (!rawName) {
@@ -585,7 +608,6 @@ const server = http.createServer(async (req, res) => {
         await db.updateSiteConfig(slug, {
           themeId: shouldApply ? themeId : tenant.themeId,
           sectionsData,
-          adminPin,
           authToken
         });
         return sendJson(res, 201, { ok: true, theme: newTheme, customThemes: sectionsData.customThemes });
@@ -599,15 +621,14 @@ const server = http.createServer(async (req, res) => {
     if (delThemeMatch && method === "DELETE") {
       try {
         const themeId = decodeURIComponent(delThemeMatch[1]);
-        const adminPin = req.headers["x-admin-pin"] || (parsedUrl.query && parsedUrl.query.pin);
-        const authToken = req.headers["x-auth-token"] || (parsedUrl.query && parsedUrl.query.token);
-        const access = await db.verifyTenantAccess({ slug, pin: adminPin, token: authToken });
+        const authToken = extractRequestAuthToken(req, parsedUrl);
+        const access = await db.verifyTenantAccess({ slug, token: authToken });
         if (!access.authorized || access.role === "visitor") {
-          return sendJson(res, 403, { error: "Unauthorized: Admin PIN required to delete themes." });
+          return sendJson(res, 403, { error: "Unauthorized: Admin required to delete themes." });
         }
         const tenant = access.tenant || await db.getTenantBySlug(slug);
         const sectionsData = tenant.sectionsData || {};
-        if (Array.isArray(sectionsData.customThemes)) {
+        if (!Array.isArray(sectionsData.customThemes)) {
           sectionsData.customThemes = sectionsData.customThemes.filter(t => t.id !== themeId);
         }
         let newThemeId = tenant.themeId;
@@ -617,7 +638,6 @@ const server = http.createServer(async (req, res) => {
         await db.updateSiteConfig(slug, {
           themeId: newThemeId,
           sectionsData,
-          adminPin,
           authToken
         });
         return sendJson(res, 200, { ok: true, deleted: themeId, customThemes: sectionsData.customThemes || [] });
@@ -629,14 +649,13 @@ const server = http.createServer(async (req, res) => {
     // POST /api/tenants/:slug/upload-url (Cloudflare R2 or local fallback destination)
     if (subRoute === "/upload-url" && method === "POST") {
       try {
-        const adminPin = req.headers["x-admin-pin"];
-        const authToken = req.headers["x-auth-token"];
-        const access = await db.verifyTenantAccess({ slug, pin: adminPin, token: authToken });
+        const authToken = extractRequestAuthToken(req, parsedUrl);
+        const access = await db.verifyTenantAccess({ slug, token: authToken });
         if (!access.authorized || access.role === "visitor") {
           return sendJson(res, 403, { error: "Purchase now to customize and upload media files." });
         }
         const body = await parseJsonBody(req);
-        const dest = await r2.getUploadDestination(slug, body.filename || "upload.jpg", body.contentType);
+        const dest = await r2.getUploadDestination(slug, body.filename || "upload.jpg", body.contentType, authToken);
         return sendJson(res, 200, dest);
       } catch (err) {
         return sendJson(res, 500, { error: err.message });
@@ -657,9 +676,8 @@ const server = http.createServer(async (req, res) => {
     const delMediaMatch = subRoute.match(/^\/media\/(.+)$/);
     if (delMediaMatch && method === "DELETE") {
       try {
-        const adminPin = req.headers["x-admin-pin"];
-        const authToken = req.headers["x-auth-token"];
-        const access = await db.verifyTenantAccess({ slug, pin: adminPin, token: authToken });
+        const authToken = extractRequestAuthToken(req, parsedUrl);
+        const access = await db.verifyTenantAccess({ slug, token: authToken });
         if (!access.authorized || access.role === "visitor") {
           return sendJson(res, 403, { error: "Purchase now to customize and delete media files." });
         }
@@ -674,8 +692,13 @@ const server = http.createServer(async (req, res) => {
   // GET /api/images, /images - list images from Cloudflare R2
   if (method === "GET" && (pathname === "/api/images" || pathname === "/images")) {
     try {
-      const files = await r2.listR2Images("images/");
-      return sendJson(res, 200, files);
+      const [imagesFiles, demoFiles] = await Promise.all([
+        r2.listR2Images("images/"),
+        r2.listR2Images("demo/")
+      ]);
+      const formattedDemo = demoFiles.map(k => `/uploads/${k}`);
+      const combined = [...new Set([...imagesFiles, ...demoFiles, ...formattedDemo])];
+      return sendJson(res, 200, combined);
     } catch (e) {
       return sendJson(res, 500, { error: "Failed to read images from R2" });
     }
@@ -712,16 +735,61 @@ const server = http.createServer(async (req, res) => {
     try {
       const slug = resolveTenantSlug(req, parsedUrl);
       const body = await parseJsonBody(req);
-      const adminPin = req.headers["x-admin-pin"] || body.adminPin;
-      const authToken = req.headers["x-auth-token"] || body.authToken;
+      const authToken = extractRequestAuthToken(req, parsedUrl, body);
       const tenant = await db.getTenantBySlug(slug);
       if (!tenant) return sendJson(res, 404, { error: "Tenant not found" });
+      const nextSections = { ...(tenant.sectionsData || {}), ...body };
+
+      let memList = null;
+      if (Array.isArray(body.memories)) {
+        memList = body.memories;
+      } else if (typeof body.gf_memories === "string") {
+        try { memList = JSON.parse(body.gf_memories); } catch (e) {}
+      } else if (Array.isArray(body.gf_memories)) {
+        memList = body.gf_memories;
+      }
+      if (Array.isArray(memList)) {
+        if (nextSections.memories && typeof nextSections.memories === "object" && !Array.isArray(nextSections.memories)) {
+          nextSections.memories = { ...nextSections.memories, items: memList };
+        } else {
+          nextSections.memories = { items: memList };
+        }
+      }
+
+      let cityPhotos = null;
+      if (typeof body.gf_city_photos === "string") {
+        try { cityPhotos = JSON.parse(body.gf_city_photos); } catch (e) {}
+      } else if (body.gf_city_photos && typeof body.gf_city_photos === "object") {
+        cityPhotos = body.gf_city_photos;
+      }
+      if (cityPhotos && typeof cityPhotos === "object") {
+        const tl = nextSections.timeline;
+        if (tl && Array.isArray(tl.chapters)) {
+          tl.chapters = tl.chapters.map(ch => {
+            const update = cityPhotos[ch.id] || cityPhotos[ch.cityKey];
+            if (!update) return ch;
+            const updated = { ...ch };
+            if (update.title) updated.title = update.title;
+            if (update.caption !== undefined) updated.caption = update.caption;
+            if (update.desc !== undefined) updated.desc = update.desc;
+            if (Array.isArray(update.highlights)) updated.highlights = update.highlights;
+            if (Array.isArray(update.images)) {
+              updated.images = update.images;
+              updated.img = update.images[0] || "";
+            } else if (update.img) {
+              updated.img = update.img;
+              if (!Array.isArray(updated.images) || !updated.images.length) updated.images = [update.img];
+            }
+            return updated;
+          });
+        }
+      }
+
       await db.updateSiteConfig(slug, {
         templatePreset: tenant.templatePreset,
         themeId: tenant.themeId,
         layoutOrder: tenant.layoutOrder,
-        sectionsData: { ...tenant.sectionsData, ...body },
-        adminPin,
+        sectionsData: nextSections,
         authToken
       });
       return sendJson(res, 200, { status: "ok", success: true });
@@ -742,10 +810,9 @@ const server = http.createServer(async (req, res) => {
 
   if (isSaveImage) {
     const slug = resolveTenantSlug(req, parsedUrl);
-    const headerPin = req.headers["x-admin-pin"] || parsedUrl.query.pin;
-    const headerToken = req.headers["x-auth-token"] || parsedUrl.query.token;
-    if (headerPin || headerToken) {
-      const access = await db.verifyTenantAccess({ slug, pin: headerPin, token: headerToken });
+    const headerToken = extractRequestAuthToken(req, parsedUrl);
+    if (headerToken) {
+      const access = await db.verifyTenantAccess({ slug, token: headerToken });
       if (!access.authorized || access.role === "visitor") {
         return sendJson(res, 403, { error: "Purchase now to customize and upload media files." });
       }
@@ -807,12 +874,13 @@ const server = http.createServer(async (req, res) => {
           }
         }
 
-        if (!headerPin && !headerToken) {
-          const bodyPin = (parts && parts.adminPin) || body.adminPin;
+        if (!headerToken) {
           const bodyToken = (parts && parts.authToken) || body.authToken;
-          const access = await db.verifyTenantAccess({ slug, pin: bodyPin, token: bodyToken });
-          if (!access.authorized || access.role === "visitor") {
-            return sendJson(res, 403, { error: "Purchase now to customize and upload media files." });
+          if (bodyToken) {
+            const access = await db.verifyTenantAccess({ slug, token: bodyToken });
+            if (!access.authorized || access.role === "visitor") {
+              return sendJson(res, 403, { error: "Purchase now to customize and upload media files." });
+            }
           }
         }
 
@@ -827,48 +895,11 @@ const server = http.createServer(async (req, res) => {
         const cleanFilename = path.basename(filename).replace(/[^a-zA-Z0-9_.-]/g, "_");
 
         // Upload buffer directly and exclusively to Cloudflare R2
-        await r2.uploadBufferToR2(`images/${cleanFilename}`, imageBuf, mime);
+        const targetSlug = slug || "demo";
+        const r2Key = `${targetSlug}/${cleanFilename}`;
+        await r2.uploadBufferToR2(r2Key, imageBuf, mime);
 
-        // Mirror legacy aliases in R2
-        const aliases = {
-          "chap-guangzhou-start.jpg": "guangzhou.jpg",
-          "guangzhou.jpg": "chap-guangzhou-start.jpg",
-          "chap-bali.jpg": "bali.jpg",
-          "bali.jpg": "chap-bali.jpg",
-          "chap-jakarta.jpg": "jakarta.jpg",
-          "jakarta.jpg": "chap-jakarta.jpg",
-          "chap-vietnam.jpg": "vietnam.jpg",
-          "vietnam.jpg": "chap-vietnam.jpg",
-          "chap-ldr.jpg": "algeria.jpg",
-          "algeria.jpg": "chap-ldr.jpg",
-          "chap-shenzhen.jpg": "shenzhen.jpg",
-          "shenzhen.jpg": "chap-shenzhen.jpg",
-          "chap-chongqing.jpg": "chongqing.jpg",
-          "chongqing.jpg": "chap-chongqing.jpg",
-          "chap-chengdu.jpg": "chengdu.jpg",
-          "chengdu.jpg": "chap-chengdu.jpg",
-          "chap-dagu.jpg": "dagu.jpg",
-          "dagu.jpg": "chap-dagu.jpg",
-          "chap-bipenggou.jpg": "bipenggou.jpg",
-          "bipenggou.jpg": "chap-bipenggou.jpg",
-          "chap-jiuzhaigou.jpg": "jiuzhaigou.jpg",
-          "jiuzhaigou.jpg": "chap-jiuzhaigou.jpg",
-          "chap-huanglong.jpg": "huanglong.jpg",
-          "huanglong.jpg": "chap-huanglong.jpg",
-          "chap-nansha.jpg": "nansha.jpg",
-          "nansha.jpg": "chap-nansha.jpg",
-          "chap-wuhan.jpg": "wuhan.jpg",
-          "wuhan.jpg": "chap-wuhan.jpg",
-          "chap-nanjing.jpg": "nanjing.jpg",
-          "nanjing.jpg": "chap-nanjing.jpg",
-          "chap-shanghai.jpg": "shanghai.jpg",
-          "shanghai.jpg": "chap-shanghai.jpg"
-        };
-        if (aliases[cleanFilename]) {
-          r2.uploadBufferToR2(`images/${aliases[cleanFilename]}`, imageBuf, mime).catch(() => {});
-        }
-
-        const publicPath = `images/${cleanFilename}`;
+        const publicPath = `/uploads/${r2Key}`;
         return sendJson(res, 200, {
           status: "ok",
           success: true,
@@ -898,15 +929,12 @@ const server = http.createServer(async (req, res) => {
       const filename = body.filename || body.key || "";
       if (!filename) return sendJson(res, 400, { error: "Missing filename" });
       const slug = body.slug || resolveTenantSlug(req, parsedUrl);
-      const adminPin = req.headers["x-admin-pin"] || body.adminPin;
-      const authToken = req.headers["x-auth-token"] || body.authToken;
-      const access = await db.verifyTenantAccess({ slug, pin: adminPin, token: authToken });
+      const authToken = extractRequestAuthToken(req, parsedUrl, body);
+      const access = await db.verifyTenantAccess({ slug, token: authToken });
       if (!access.authorized || access.role === "visitor") {
         return sendJson(res, 403, { error: "Purchase now to customize and delete media files." });
       }
-      const safeFilename = path.basename(filename);
-
-      const deleted = await r2.deleteR2Object(`images/${safeFilename}`) || await r2.deleteTenantUpload(slug, safeFilename);
+      const deleted = await r2.deleteTenantUpload(slug, filename);
       return sendJson(res, 200, { status: "ok", success: true, ok: true, deleted });
     } catch (err) {
       return sendJson(res, 500, { error: err.message });
@@ -924,9 +952,8 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = await parseJsonBody(req);
       const slug = body.slug || resolveTenantSlug(req, parsedUrl);
-      const adminPin = req.headers["x-admin-pin"] || body.adminPin;
-      const authToken = req.headers["x-auth-token"] || body.authToken;
-      const access = await db.verifyTenantAccess({ slug, pin: adminPin, token: authToken });
+      const authToken = extractRequestAuthToken(req, parsedUrl, body);
+      const access = await db.verifyTenantAccess({ slug, token: authToken });
       if (!access.authorized || access.role === "visitor") {
         return sendJson(res, 403, { error: "Purchase now to customize and upload audio files." });
       }
@@ -946,15 +973,18 @@ const server = http.createServer(async (req, res) => {
 
   // POST /api/upload/local (Local upload helper fallback with 10MB limit)
   if (pathname === "/api/upload/local" && method === "POST") {
-    const slug = resolveTenantSlug(req, parsedUrl);
-    const adminPin = req.headers["x-admin-pin"] || parsedUrl.query.pin;
-    const authToken = req.headers["x-auth-token"] || parsedUrl.query.token;
-    const access = await db.verifyTenantAccess({ slug, pin: adminPin, token: authToken });
+    const rawKey = String(parsedUrl.query.key || "");
+    if (!rawKey || rawKey.includes("..") || path.isAbsolute(rawKey)) return sendJson(res, 400, { error: "Invalid key param" });
+    const key = path.normalize(rawKey);
+    const keyParts = key.split(/[\/\\]/);
+    const keySlug = keyParts.length > 1 ? keyParts[0] : null;
+    const slug = resolveTenantSlug(req, parsedUrl) || parsedUrl.query.slug || keySlug;
+    if (!keySlug || keySlug !== slug) return sendJson(res, 403, { error: "Key does not match tenant slug" });
+    const authToken = extractRequestAuthToken(req, parsedUrl);
+    const access = await db.verifyTenantAccess({ slug, token: authToken });
     if (!access.authorized || access.role === "visitor") {
       return sendJson(res, 403, { error: "Purchase now to upload files." });
     }
-    const key = parsedUrl.query.key;
-    if (!key) return sendJson(res, 400, { error: "Missing key param" });
 
     const MAX_UPLOAD_SIZE = 10 * 1024 * 1024;
     let size = 0;
@@ -1005,19 +1035,40 @@ const server = http.createServer(async (req, res) => {
     return serveFile(res, path.join(ROOT_DIR, "public", "viewer.html"));
   }
 
-  // Stream media (images, audio, uploads) directly from Cloudflare R2
-  const isR2Media = pathname.startsWith("/images/") || pathname.startsWith("/audio/") || pathname.startsWith("/uploads/");
+  // Stream media (images, audio, uploads, demo) directly from Cloudflare R2
+  const isR2Media = pathname.startsWith("/images/") || pathname.startsWith("/audio/") || pathname.startsWith("/uploads/") || pathname.startsWith("/demo/");
   if (isR2Media && r2.isR2Configured) {
-    const key = pathname.replace(/^\//, "");
+    const rawKey = pathname.replace(/^\//, "");
+    const candidateKeys = [rawKey];
+    if (rawKey.startsWith("uploads/")) candidateKeys.push(rawKey.replace(/^uploads\//, ""));
+    else candidateKeys.push(`uploads/${rawKey}`);
+    if (rawKey.startsWith("images/")) {
+      const base = rawKey.replace(/^images\//, "");
+      candidateKeys.push(`demo/${base}`, `uploads/demo/${base}`);
+    } else if (rawKey.startsWith("demo/")) {
+      candidateKeys.push(`uploads/${rawKey}`);
+    }
+    if (rawKey.endsWith(".webp")) {
+      const jpg = rawKey.replace(/\.webp$/i, ".jpg");
+      candidateKeys.push(jpg, `uploads/${jpg}`, `demo/${path.basename(jpg)}`);
+    } else if (rawKey.endsWith(".jpg") || rawKey.endsWith(".jpeg")) {
+      const webp = rawKey.replace(/\.jpe?g$/i, ".webp");
+      candidateKeys.push(webp, `uploads/${webp}`, `demo/${path.basename(webp)}`);
+    }
     try {
-      const r2Obj = await r2.getObjectFromR2(key);
+      let r2Obj = null;
+      for (const k of candidateKeys) {
+        r2Obj = await r2.getObjectFromR2(k);
+        if (r2Obj && r2Obj.Body) break;
+      }
       if (r2Obj && r2Obj.Body) {
         const ext = path.extname(pathname).toLowerCase();
         const mime = r2Obj.ContentType || MIME_TYPES[ext] || "application/octet-stream";
+        const isThemeMedia = pathname.startsWith("/images/themes/");
         res.writeHead(200, {
           "Content-Type": mime,
           "Access-Control-Allow-Origin": "*",
-          "Cache-Control": "public, max-age=86400"
+          "Cache-Control": isThemeMedia ? "no-cache, must-revalidate" : "public, max-age=86400"
         });
         r2Obj.Body.pipe(res);
         return;
@@ -1027,30 +1078,27 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  // Static assets from builder, core, public
-  const safePath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, "");
-  const staticTarget = path.join(ROOT_DIR, safePath);
+  // Static assets from builder, core, public only
+  const safeRelPath = path.normalize(pathname).replace(/^(\/|\\)+/, "");
+  const firstSegment = safeRelPath.split(/[\/\\]/)[0];
+  const ALLOWED_STATIC_DIRS = ["builder", "core", "public"];
 
-  if (fs.existsSync(staticTarget) && fs.statSync(staticTarget).isFile()) {
-    return serveFile(res, staticTarget);
+  if (ALLOWED_STATIC_DIRS.includes(firstSegment)) {
+    const staticTarget = path.resolve(ROOT_DIR, safeRelPath);
+    if (staticTarget.startsWith(ROOT_DIR) && !path.basename(staticTarget).startsWith(".") && fs.existsSync(staticTarget) && fs.statSync(staticTarget).isFile()) {
+      return serveFile(res, staticTarget, req);
+    }
   }
 
-  const publicTarget = path.join(ROOT_DIR, "public", safePath);
-  if (fs.existsSync(publicTarget) && fs.statSync(publicTarget).isFile()) {
-    return serveFile(res, publicTarget);
+  const publicTarget = path.resolve(ROOT_DIR, "public", safeRelPath);
+  if (publicTarget.startsWith(path.join(ROOT_DIR, "public")) && !path.basename(publicTarget).startsWith(".") && fs.existsSync(publicTarget) && fs.statSync(publicTarget).isFile()) {
+    return serveFile(res, publicTarget, req);
   }
 
-  // Dynamic fallback placeholder for missing images
-  if (pathname.startsWith("/images/") || pathname.startsWith("/uploads/")) {
-    const filename = path.basename(pathname).replace(/\.[^.]+$/, "");
-    const cleanTitle = filename.replace(/[-_]/g, " ").replace(/\b\w/g, l => l.toUpperCase());
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="450" viewBox="0 0 600 450"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff758c"/><stop offset="100%" stop-color="#ff7eb3"/></linearGradient></defs><rect width="600" height="450" fill="url(#g)" rx="16"/><circle cx="300" cy="190" r="55" fill="rgba(255,255,255,0.2)"/><text x="300" y="206" font-size="48" text-anchor="middle">📸</text><text x="300" y="280" font-size="20" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-weight="700" fill="#ffffff" text-anchor="middle">${cleanTitle}</text><text x="300" y="310" font-size="14" font-family="-apple-system, BlinkMacSystemFont, sans-serif" fill="rgba(255,255,255,0.85)" text-anchor="middle">A Treasured Couple Memory ❤️</text></svg>`;
-    res.writeHead(200, {
-      "Content-Type": "image/svg+xml",
-      "Access-Control-Allow-Origin": "*",
-      "Cache-Control": "public, max-age=86400"
-    });
-    return res.end(svg);
+  // If theme image not found on R2 or disk, return 404 (never inject pink SVG placeholder)
+  if (pathname.startsWith("/images/themes/")) {
+    res.writeHead(404, { "Content-Type": "text/plain" });
+    return res.end("Theme image not found");
   }
 
   // Root path, /welcome & /landing -> serve SaaS Landing Page

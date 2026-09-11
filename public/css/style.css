@@ -2,7 +2,7 @@
  * Couple SaaS Platform - Modular CSS Bundle Aggregator
  * Decomposed into dedicated component stylesheets per widget.
  */
-@import "./base.css";
+@import "./base.css?v=2.5.0";
 
 /* Modular Widget Stylesheets */
 @import "./widgets/hero.css";

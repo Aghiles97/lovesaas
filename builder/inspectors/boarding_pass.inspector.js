@@ -232,17 +232,17 @@ if (!state.sectionsData.boarding_pass || typeof state.sectionsData.boarding_pass
       // Live test controls
       document.getElementById("btnBpClaimWish").onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "BP_CLAIM_WISH" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "BP_CLAIM_WISH" }, window.location.origin);
         }
       };
       document.getElementById("btnBpDownloadTicket").onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "BP_DOWNLOAD_TICKET" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "BP_DOWNLOAD_TICKET" }, window.location.origin);
         }
       };
       document.getElementById("btnBpResetWish").onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "BP_RESET_WISH" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "BP_RESET_WISH" }, window.location.origin);
         }
       };
 

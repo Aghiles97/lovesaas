@@ -26,9 +26,12 @@ if (!Array.isArray(state.sectionsData.reasons)) {
       let listHtml = "";
       reasons.forEach((r, idx) => {
         listHtml += `
-          <div class="item-editor-card" data-idx="${idx}">
+          <div class="item-editor-card" data-idx="${idx}" draggable="true">
             <div class="item-editor-header">
-              <span class="item-editor-title">Card #${idx + 1}</span>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="item-drag-handle" title="Drag to reorder">⋮⋮</span>
+                <span class="item-editor-title">Card #${idx + 1}</span>
+              </div>
               <button type="button" class="btn-remove-item" data-remove-reason="${idx}">🗑️ Delete</button>
             </div>
             <div class="grid-2">
@@ -68,6 +71,46 @@ if (!Array.isArray(state.sectionsData.reasons)) {
       const attachReasonEvents = () => {
         document.querySelectorAll("#reasonsListContainer .item-editor-card").forEach(card => {
           const idx = parseInt(card.dataset.idx, 10);
+
+          card.ondragstart = (e) => {
+            if (e.target.closest("input, textarea, select, button")) {
+              e.preventDefault();
+              return;
+            }
+            e.dataTransfer.setData("application/x-reason-index", String(idx));
+            e.dataTransfer.effectAllowed = "move";
+            card.classList.add("is-dragging");
+          };
+          card.ondragover = (e) => {
+            if (e.dataTransfer && e.dataTransfer.types.includes("application/x-reason-index")) {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+              card.classList.add("drag-over");
+            }
+          };
+          card.ondragleave = () => {
+            card.classList.remove("drag-over");
+          };
+          card.ondrop = (e) => {
+            if (e.dataTransfer && e.dataTransfer.types.includes("application/x-reason-index")) {
+              e.preventDefault();
+              e.stopPropagation();
+              card.classList.remove("drag-over");
+              const fromIdx = parseInt(e.dataTransfer.getData("application/x-reason-index"), 10);
+              if (!isNaN(fromIdx) && fromIdx !== idx) {
+                const [moved] = reasons.splice(fromIdx, 1);
+                reasons.splice(idx, 0, moved);
+                renderWidgetInspector("reasons");
+                debouncedLiveUpdate();
+                debouncedAutoSaveLayout();
+              }
+            }
+          };
+          card.ondragend = () => {
+            card.classList.remove("is-dragging");
+            inspectorFormContainer.querySelectorAll("#reasonsListContainer .item-editor-card").forEach(c => c.classList.remove("drag-over"));
+          };
+
           card.querySelector(".reason-title-input").oninput = (e) => {
             reasons[idx].title = e.target.value;
             debouncedLiveUpdate();

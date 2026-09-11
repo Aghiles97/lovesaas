@@ -71,7 +71,7 @@
     if (btnPlay) {
       btnPlay.onclick = () => {
         if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "JUKEBOX_TOGGLE" }, "*");
+          previewIframe.contentWindow.postMessage({ type: "JUKEBOX_TOGGLE" }, window.location.origin);
           try { previewIframe.contentWindow.jukeboxToggle?.(); } catch (e) {}
         }
       };
