@@ -1,0 +1,221 @@
+.bucket-list-section {
+  padding: 70px 20px;
+  position: relative;
+}
+.bucket-list-box {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.bucket-stats-panel {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 240, 245, 0.8));
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 105, 135, 0.25);
+  border-radius: 22px;
+  padding: 22px 26px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 30px rgba(255, 67, 101, 0.08);
+}
+.bucket-stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.bucket-stats-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+.bucket-stats-counter {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #64748b;
+}
+.bucket-stats-pct {
+  font-family: "Outfit", sans-serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #ff4365;
+  line-height: 1;
+}
+.bucket-progress-track {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  position: relative;
+}
+.bucket-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff4365, #fb7185, #f43f5e);
+  border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 16px rgba(255, 67, 101, 0.6);
+}
+.bucket-filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.bucket-tab {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: background 0.2s, color 0.2s, transform 0.2s, border-color 0.2s;
+}
+.bucket-tab:hover {
+  background: #ffffff;
+  transform: translateY(-1px);
+  border-color: rgba(255, 67, 101, 0.3);
+}
+.bucket-tab.active {
+  background: #ff4365;
+  color: #ffffff;
+  border-color: #ff4365;
+  box-shadow: 0 4px 14px rgba(255, 67, 101, 0.35);
+}
+.bucket-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bucket-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 18px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.bucket-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 67, 101, 0.12);
+  border-color: rgba(255, 105, 135, 0.4);
+}
+.bucket-card.is-completed {
+  background: rgba(240, 253, 244, 0.85);
+  border-color: rgba(74, 222, 128, 0.35);
+}
+.bucket-checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+}
+.bucket-checkbox {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+.bucket-checkmark {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  border: 2px solid #cbd5e1;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.bucket-checkbox:checked ~ .bucket-checkmark {
+  background: #10b981;
+  border-color: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+.bucket-checkbox:checked ~ .bucket-checkmark::after {
+  content: "✓";
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.bucket-icon {
+  font-size: 1.7rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.bucket-details {
+  flex: 1;
+  min-width: 0;
+}
+.bucket-header-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.bucket-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  transition: color 0.2s;
+}
+.bucket-card.is-completed .bucket-title {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+.bucket-category-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #f1f5f9;
+  color: #475569;
+}
+.badge-travel { background: rgba(56, 189, 248, 0.15); color: #0284c7; }
+.badge-adventure { background: rgba(249, 115, 22, 0.15); color: #ea580c; }
+.badge-romance { background: rgba(244, 63, 94, 0.15); color: #e11d48; }
+.badge-home { background: rgba(16, 185, 129, 0.15); color: #059669; }
+.badge-general { background: rgba(139, 92, 246, 0.15); color: #7c3aed; }
+.bucket-date {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-top: 4px;
+  display: block;
+}
+.bucket-completed-badge {
+  display: none;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #059669;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  background: rgba(16, 185, 129, 0.12);
+  border-radius: 8px;
+  white-space: nowrap;
+}
+.bucket-card.is-completed .bucket-completed-badge {
+  display: block;
+}
+@media (max-width: 640px) {
+  .bucket-card {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+  .bucket-completed-badge {
+    display: none !important;
+  }
+}

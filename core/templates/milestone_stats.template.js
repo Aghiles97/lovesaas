@@ -25,25 +25,26 @@
   }
 
   const renderTemplate = (data = {}, rootData = {}) => {
-  const partner = rootData.partner2 || rootData.partnerName || "You";
+  const partner = rootData.partner2 || rootData.partnerName || "Ella";
   const tag = data.tag || "Milestone Life Counter ⏳";
   const title = data.title || ("Every Single Second Alive, " + partner + " ❤️");
   const desc = data.desc || "A live ticking celebration of the seconds, heartbeats, and memories you bring into this universe.";
   const birthDate = data.birthDate || rootData.anniversaryDate || "2000-01-01T00:00";
 
   const defaultMetrics = [
-    { id: "heartbeats", icon: "💓", title: "Heartbeats", desc: "Beating with love & vitality (~103k/day)", factor: 103680 },
-    { id: "coffee", icon: "☕", title: "Cups of Coffee & Tea", desc: "Fueling sweet mornings & late smiles", factor: 1.6 },
-    { id: "solar", icon: "🌍", title: "Trips Around the Sun", desc: "Completed solar orbits celebrating your life", factor: 0.00273785 },
-    { id: "dreams", icon: "💤", title: "Hours of Sweet Dreams", desc: "Restful sleep & imagining bright futures", factor: 8 },
-    { id: "laughs", icon: "😂", title: "Laughs & Giggles", desc: "Shared moments of pure unadulterated joy", factor: 14 },
-    { id: "distance", icon: "✈️", title: "Kilometers Traveled", desc: "Journeying across this planet with wonder", factor: 11 }
+    { id: "heartbeats", icon: "💓", title: "Heartbeats Beating For You", desc: "Every single beat devoted purely to loving you (~103k/day)", factor: 103680 },
+    { id: "solar", icon: "☀️", title: "Trips Around The Sun", desc: "Completed solar orbits gracing the universe with your light", factor: 0.00273785 },
+    { id: "distance", icon: "💌", title: "Kilometers of Long-Distance Love Bridged", desc: "No span of Earth can ever keep my heart from yours", factor: 28 },
+    { id: "dreams", icon: "💭", title: "Hours Dreaming Of You", desc: "Sweetest dreams where you hold my hand every night", factor: 8.5 },
+    { id: "laughs", icon: "🥰", title: "Sweet Smiles & Giggles Shared", desc: "Moments of pure joy you bring into my life every day", factor: 18 },
+    { id: "coffee", icon: "☕", title: "Cups of Warm Tea & Cozy Talks", desc: "Comforting mornings and late-night heart-to-hearts", factor: 2.2 }
   ];
 
   const metrics = Array.isArray(data.metrics) && data.metrics.length ? data.metrics : defaultMetrics;
 
   const metricsHtml = metrics.map(m => `
-    <div class="quirky-metric-card" data-metric-id="${escapeHtml(m.id || '')}" data-factor="${Number(m.factor) || 1}">
+    <div class="quirky-metric-card tilt-card" data-metric-id="${escapeHtml(m.id || '')}" data-factor="${Number(m.factor) || 1}">
+      <div class="card-glare"></div>
       <span class="quirky-metric-icon">${m.icon || '✨'}</span>
       <div class="quirky-metric-content">
         <div class="quirky-metric-val" id="metric_val_${escapeHtml(m.id || 'stat')}">--</div>
@@ -63,7 +64,8 @@
             <p class="section-desc">${escapeHtml(desc)}</p>
           </div>
 
-          <div class="alive-ticker-card">
+          <div class="alive-ticker-card tilt-card">
+            <div class="card-glare"></div>
             <div style="font-size: 0.95rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.05em;">
               ⏳ Total Time Alive on Earth
             </div>
@@ -80,8 +82,8 @@
                 <span class="ticker-val" id="milestoneMinutes">--</span>
                 <span class="ticker-label">Minutes</span>
               </div>
-              <div class="ticker-slot">
-                <span class="ticker-val" id="milestoneSeconds">--</span>
+              <div class="ticker-slot ticker-slot-seconds">
+                <span class="ticker-val ticker-val-seconds" id="milestoneSeconds">--</span>
                 <span class="ticker-label">Seconds</span>
               </div>
             </div>

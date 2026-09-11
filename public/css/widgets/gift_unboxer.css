@@ -36,23 +36,38 @@
   height: 140px;
   position: absolute;
   bottom: 0;
-  background: linear-gradient(135deg, #ff4365, #e11d48);
-  border-radius: 12px;
-  box-shadow: 0 16px 36px rgba(225, 29, 72, 0.35);
+  background: radial-gradient(circle at 35% 25%, #c4103f 0%, #850024 60%, #4a0014 100%);
+  border-radius: 14px;
+  box-shadow: inset 0 2px 10px rgba(255, 180, 200, 0.35), inset 0 -10px 22px rgba(0, 0, 0, 0.6), 0 24px 50px rgba(100, 0, 25, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
+.box-inner-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 10%, rgba(255, 215, 0, 0.5) 0%, rgba(255, 215, 0, 0) 70%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+.stage-lid-off .box-inner-glow {
+  opacity: 1;
+}
+
+/* Golden Ribbon with Metallic Sheen */
 .box-ribbon-v {
   position: absolute;
   top: 0;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 26px;
-  background: linear-gradient(90deg, #ffd166, #ffb703);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  width: 28px;
+  background: linear-gradient(90deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25), inset 0 0 4px rgba(255,255,255,0.6);
   transition: transform 0.6s ease, opacity 0.6s ease;
+  z-index: 2;
 }
 .box-ribbon-h {
   position: absolute;
@@ -60,133 +75,335 @@
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  height: 26px;
-  background: linear-gradient(180deg, #ffd166, #ffb703);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  height: 28px;
+  background: linear-gradient(180deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25), inset 0 0 4px rgba(255,255,255,0.6);
   transition: transform 0.6s ease, opacity 0.6s ease;
+  z-index: 2;
 }
 .box-lid {
   position: absolute;
   top: 10px;
   left: -8px;
   width: 186px;
-  height: 44px;
-  background: linear-gradient(135deg, #ff5374, #f43f5e);
-  border-radius: 10px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+  height: 46px;
+  background: radial-gradient(circle at 35% 30%, #c4103f 0%, #850024 60%, #4a0014 100%);
+  border-radius: 12px;
+  box-shadow: inset 0 2px 6px rgba(255, 200, 220, 0.4), 0 8px 22px rgba(0,0,0,0.3);
   z-index: 10;
-  transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease;
+  transition: transform 0.75s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.5s ease;
   transform-origin: 10% 10%;
 }
-.box-bow {
+.box-lid-gold-trim {
   position: absolute;
-  top: -24px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+  border-radius: 0 0 10px 10px;
+}
+
+/* Shimmering Golden 3D Bow */
+.shimmering-bow {
+  position: absolute;
+  top: -26px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 2.2rem;
-  line-height: 1;
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+  width: 68px;
+  height: 38px;
+  pointer-events: none;
   transition: transform 0.5s ease, opacity 0.5s ease;
 }
-/* Stages */
+.bow-loop {
+  position: absolute;
+  top: 2px;
+  width: 32px;
+  height: 24px;
+  background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 30%, #b38728 60%, #aa771c 100%);
+  border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.25), inset 0 1px 3px rgba(255,255,255,0.7);
+}
+.bow-loop.left {
+  left: 3px;
+  transform: rotate(-25deg);
+}
+.bow-loop.right {
+  right: 3px;
+  transform: rotate(25deg);
+}
+.bow-center {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 18px;
+  background: radial-gradient(circle at 35% 35%, #fff1a8 0%, #d4af37 50%, #996515 100%);
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  z-index: 5;
+}
+.bow-tail {
+  position: absolute;
+  top: 18px;
+  width: 14px;
+  height: 24px;
+  background: linear-gradient(180deg, #bf953f 0%, #fcf6ba 50%, #b38728 100%);
+  border-radius: 2px 2px 6px 6px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+}
+.bow-tail.left {
+  left: 18px;
+  transform: rotate(20deg);
+}
+.bow-tail.right {
+  right: 18px;
+  transform: rotate(-20deg);
+}
+
+/* Stage Transitions */
 .stage-ribbon-off .box-ribbon-v {
-  transform: translateX(-50%) translateY(80px) rotate(45deg);
+  transform: translateX(-50%) translateY(90px) rotate(55deg);
   opacity: 0;
 }
 .stage-ribbon-off .box-ribbon-h {
-  transform: translateY(-50%) translateX(80px) rotate(-45deg);
+  transform: translateY(-50%) translateX(90px) rotate(-55deg);
   opacity: 0;
 }
-.stage-ribbon-off .box-bow {
-  transform: translateX(-50%) translateY(-50px) scale(0.2);
+.stage-ribbon-off .shimmering-bow {
+  transform: translateX(-50%) translateY(-60px) scale(0.2);
   opacity: 0;
 }
 .stage-lid-off .box-lid {
-  transform: translateY(-90px) rotate(-35deg) scale(0.8);
+  transform: translateY(-110px) rotate(-42deg) scale(0.75);
   opacity: 0;
   pointer-events: none;
 }
+
+/* Golden Light Rays Bursting from inside the box */
 .unbox-glow-rays {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 320px;
-  height: 320px;
-  background: radial-gradient(circle, rgba(255, 220, 100, 0.6) 0%, rgba(255, 100, 150, 0) 70%);
-  border-radius: 50%;
-  opacity: 0;
-  transition: opacity 0.6s ease;
+  width: 360px;
+  height: 360px;
   pointer-events: none;
-  animation: pulseGlow 2s infinite alternate;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 1;
 }
+.stage-lid-off .unbox-glow-rays,
 .stage-revealed .unbox-glow-rays {
   opacity: 1;
+  animation: raysBurstRotate 18s linear infinite;
 }
-@keyframes pulseGlow {
-  0% { transform: translate(-50%, -50%) scale(0.85); }
-  100% { transform: translate(-50%, -50%) scale(1.15); }
+.ray-beam {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 24px;
+  height: 100%;
+  transform-origin: center center;
+  background: linear-gradient(to top, rgba(255, 215, 0, 0) 25%, rgba(255, 235, 120, 0.4) 50%, rgba(255, 215, 0, 0) 75%);
+  filter: blur(4px);
 }
+.ray-beam.r1 { transform: translateX(-50%) rotate(0deg); }
+.ray-beam.r2 { transform: translateX(-50%) rotate(25deg); }
+.ray-beam.r3 { transform: translateX(-50%) rotate(50deg); }
+.ray-beam.r4 { transform: translateX(-50%) rotate(75deg); }
+.ray-beam.r5 { transform: translateX(-50%) rotate(100deg); }
+.ray-beam.r6 { transform: translateX(-50%) rotate(125deg); }
+.ray-beam.r7 { transform: translateX(-50%) rotate(150deg); }
+.ray-beam.r8 { transform: translateX(-50%) rotate(175deg); }
+
+@keyframes raysBurstRotate {
+  0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.9); }
+  50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.15); }
+  100% { transform: translate(-50%, -50%) rotate(360deg) scale(0.9); }
+}
+
 .unbox-stepper {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 20px;
 }
 .unbox-step-dot {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: rgba(0,0,0,0.15);
-  transition: background 0.3s;
+  transition: background 0.3s, transform 0.3s;
 }
 .unbox-step-dot.active {
   background: #ff4365;
-  transform: scale(1.2);
+  transform: scale(1.25);
+  box-shadow: 0 0 10px rgba(255, 67, 101, 0.5);
 }
+
+/* Luxury Gold Foil VIP Coupon Card */
 .gift-surprise-reveal {
   margin: 24px auto 0;
-  max-width: 580px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px);
-  border: 2px solid rgba(255, 215, 0, 0.7);
-  border-radius: 24px;
-  padding: 32px 24px;
-  box-shadow: 0 20px 45px rgba(255, 67, 101, 0.25);
-  transform: translateY(20px) scale(0.92);
+  max-width: 620px;
+  border-radius: 26px;
+  padding: 32px 28px;
+  transform: translateY(24px) scale(0.92);
   opacity: 0;
   pointer-events: none;
   transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
 }
 .gift-surprise-reveal.shown {
   transform: translateY(0) scale(1);
   opacity: 1;
   pointer-events: auto;
 }
+.luxury-vip-coupon {
+  border: 2px solid transparent;
+  background-clip: padding-box, border-box;
+  background-origin: padding-box, border-box;
+  background-image:
+    linear-gradient(135deg, #ffffff, #fff9f0),
+    linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
+  box-shadow: 0 20px 50px rgba(212, 175, 55, 0.35), 0 12px 30px rgba(255, 67, 101, 0.18);
+}
+.vip-coupon-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
 .gift-surprise-badge {
   display: inline-block;
-  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  background: linear-gradient(135deg, #d97706, #b45309);
   color: #fff;
   font-weight: 800;
   font-size: 0.78rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 5px 14px;
+  letter-spacing: 0.07em;
+  padding: 6px 14px;
   border-radius: 999px;
-  margin-bottom: 12px;
+  box-shadow: 0 3px 10px rgba(217, 119, 6, 0.35);
 }
+
+/* Wax Seal Stamp */
+.wax-seal {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e11d48 0%, #9f1239 65%, #4c0519 100%);
+  box-shadow: 0 4px 12px rgba(159, 18, 57, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.35), inset 0 -3px 6px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.wax-seal::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px dashed rgba(159, 18, 57, 0.6);
+  filter: blur(0.5px);
+  pointer-events: none;
+}
+.wax-seal-ring {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 215, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+}
+.wax-seal-initials {
+  font-family: Georgia, serif;
+  font-weight: 900;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: #ffd700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  line-height: 1;
+}
+.wax-seal-icon {
+  font-size: 0.65rem;
+  line-height: 1;
+  margin-top: 1px;
+}
+
 .gift-surprise-title {
   font-family: Georgia, serif;
-  font-size: 1.7rem;
+  font-size: 1.8rem;
   color: #1e293b;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 .gift-surprise-desc {
-  font-size: 1rem;
-  line-height: 1.5;
+  font-size: 1.02rem;
+  line-height: 1.55;
   color: #475569;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
+
+/* VIP Perks List */
+.vip-perks-list {
+  background: rgba(255, 250, 240, 0.85);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 14px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+.vip-perk-item {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #334155;
+  padding: 5px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* VIP Barcode Strip */
+.vip-barcode-strip {
+  background: #ffffff;
+  border: 1px dashed rgba(0, 0, 0, 0.18);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.barcode-lines {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 900;
+  font-size: 1.25rem;
+  letter-spacing: 0.22em;
+  color: #1e293b;
+  line-height: 1;
+}
+.barcode-label {
+  font-family: monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: 700;
+}
+
+.vip-coupon-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .gift-media-preview {
   margin: 16px auto;
   max-width: 440px;

@@ -332,6 +332,11 @@ const WIDGET_REGISTRY = {
 };
 
 const PRESETS = {
+  blank: {
+    name: "Blank Canvas",
+    desc: "Start fresh with a clean slate.",
+    widgets: []
+  },
   anniversary: {
     name: "Anniversary Odyssey",
     desc: "Celebrate your love journey: Hero → Tenure Ticker → Star Map → Then vs. Now → Milestone Odyssey → Bucket List → Audio Time Capsule → Letter.",
@@ -371,10 +376,22 @@ const PRESETS = {
     widgets: ["hero", "love_meter", "reasons", "truth_dare", "spinner", "coupons", "quiz", "playful"]
   },
   complete: {
-    name: "The Full Experience (All 13)",
-    desc: "All 13 production modules enabled in a harmonious, feature-packed sequence.",
+    name: "The Full Experience (All Modules)",
+    desc: "All production modules enabled in a harmonious, feature-packed sequence.",
     widgets: [
       "hero",
+      "candle_blowout",
+      "milestone_stats",
+      "gift_unboxer",
+      "roast_toast",
+      "guestbook",
+      "party_jukebox",
+      "tenure_ticker",
+      "star_map",
+      "then_now_slider",
+      "milestone_odyssey",
+      "bucket_list",
+      "audio_capsule",
       "love_meter",
       "reasons",
       "map",

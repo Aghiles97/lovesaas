@@ -4,152 +4,476 @@
   position: relative;
 }
 .party-jukebox-box {
-  max-width: 860px;
+  max-width: 900px;
   margin: 0 auto;
 }
 .jukebox-deck {
-  background: linear-gradient(145deg, #1e293b, #0f172a);
-  border-radius: 28px;
-  padding: 32px 28px;
+  background: linear-gradient(150deg, #182030 0%, #0a0f1d 100%);
+  border-radius: 30px;
+  padding: 32px 30px;
   color: #ffffff;
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
+
+/* Mode Selector */
+.jukebox-mode-selector {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 5px;
+  border-radius: 999px;
+  max-width: 320px;
+  margin: 0 auto 26px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.btn-mode-toggle {
+  flex: 1;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-weight: 700;
+  font-size: 0.86rem;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.btn-mode-toggle.active {
+  background: linear-gradient(135deg, #ff4365, #f43f5e);
+  color: #ffffff;
+  box-shadow: 0 3px 12px rgba(244, 63, 94, 0.4);
+}
+
 .jukebox-layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 28px;
+  grid-template-columns: 310px 1fr;
+  gap: 32px;
   align-items: center;
 }
-@media (max-width: 768px) {
+@media (max-width: 800px) {
   .jukebox-layout {
     grid-template-columns: 1fr;
     text-align: center;
   }
 }
+
+/* Media Deck Container */
+.deck-media-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 270px;
+}
+
+/* Turntable Vinyl View */
 .turntable-deck-area {
   position: relative;
-  width: 250px;
-  height: 250px;
-  margin: 0 auto;
+  width: 270px;
+  height: 270px;
+  background: radial-gradient(circle, #252e42 0%, #121826 100%);
+  border-radius: 20px;
+  padding: 15px;
+  box-shadow: inset 0 3px 10px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.vinyl-platter {
-  width: 230px;
-  height: 230px;
+.vinyl-platter-well {
+  width: 240px;
+  height: 240px;
   border-radius: 50%;
-  background: radial-gradient(circle, #0a0a0a 0%, #171717 60%, #000000 100%);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 0 2px #262626;
+  background: #000000;
+  box-shadow: 0 0 0 3px #334155, 0 6px 18px rgba(0,0,0,0.6);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+.vinyl-platter {
+  width: 232px;
+  height: 232px;
+  border-radius: 50%;
+  background: repeating-radial-gradient(
+    circle at center,
+    #111111 0px,
+    #111111 2px,
+    #1e1e1e 3px,
+    #0d0d0d 4px
+  );
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6), inset 0 0 14px rgba(0,0,0,0.8);
+}
 .vinyl-platter.spinning {
-  animation: spinRecord 3s linear infinite;
+  animation: spinRecord 2.8s linear infinite;
 }
 @keyframes spinRecord {
   100% { transform: rotate(360deg); }
 }
-.vinyl-label-center {
-  width: 80px;
-  height: 80px;
+
+/* Vinyl Specular Light Groove Shimmer */
+.vinyl-groove-shimmer {
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff4365, #fbbf24);
+  background: conic-gradient(
+    from 35deg,
+    transparent 0deg,
+    rgba(255, 255, 255, 0.13) 35deg,
+    transparent 70deg,
+    transparent 180deg,
+    rgba(255, 255, 255, 0.13) 215deg,
+    transparent 250deg
+  );
+  pointer-events: none;
+}
+
+/* Vinyl Center Label with Birthday Artwork */
+.vinyl-label-center {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ff4b72 0%, #e11d48 60%, #9f1239 100%);
+  border: 3px solid #d4af37;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.3), inset 0 2px 6px rgba(255,255,255,0.4);
+  z-index: 2;
+  text-align: center;
+}
+.vinyl-label-text-top {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #fef08a;
+  text-transform: uppercase;
+}
+.vinyl-label-icon {
+  font-size: 1.4rem;
+  line-height: 1.1;
+}
+.vinyl-label-text-bot {
+  font-size: 0.46rem;
+  font-weight: 800;
+  color: #ffffff;
+  opacity: 0.9;
+  letter-spacing: 0.08em;
+}
+.vinyl-spindle-hole {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  background: #000000;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);
+}
+
+/* Mechanical Tone Arm */
+.tone-arm {
+  position: absolute;
+  top: 14px;
+  right: 12px;
+  width: 55px;
+  height: 155px;
+  transform-origin: 28px 24px;
+  transform: rotate(-32deg);
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+  pointer-events: none;
+  z-index: 10;
+}
+.tone-arm.on-record {
+  transform: rotate(18deg);
+}
+.tone-arm-base {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #e2e8f0 0%, #94a3b8 55%, #475569 100%);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5), inset 0 1px 2px #ffffff;
+  border: 2px solid #cbd5e1;
+}
+.tone-arm-rod {
+  position: absolute;
+  top: 24px;
+  left: 26px;
+  width: 4px;
+  height: 110px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #94a3b8 50%, #64748b 100%);
+  border-radius: 2px;
+  box-shadow: 2px 4px 8px rgba(0,0,0,0.4);
+}
+.tone-arm-cartridge {
+  position: absolute;
+  bottom: 12px;
+  left: 20px;
+  width: 16px;
+  height: 24px;
+  background: linear-gradient(135deg, #d4af37, #b45309);
+  border-radius: 3px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+  transform: rotate(10deg);
+}
+.tone-arm-stylus {
+  position: absolute;
+  bottom: -4px;
+  left: 6px;
+  width: 4px;
+  height: 5px;
+  background: #f1f5f9;
+  border-radius: 1px;
+}
+
+/* Cassette Deck Mode */
+.cassette-deck-area {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.8rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  width: 270px;
+  height: 270px;
 }
-.tone-arm {
+.cassette-shell {
+  position: relative;
+  width: 250px;
+  height: 165px;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border-radius: 16px;
+  border: 2px solid #334155;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.1);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.cassette-screw {
   position: absolute;
-  top: 15px;
-  right: 10px;
-  width: 45px;
-  height: 120px;
-  transform-origin: 20px 20px;
-  transform: rotate(-25deg);
-  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  pointer-events: none;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, #94a3b8, #475569);
+  border-radius: 50%;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,0.5);
 }
-.tone-arm.on-record {
-  transform: rotate(15deg);
+.cassette-screw.top-left { top: 8px; left: 8px; }
+.cassette-screw.top-right { top: 8px; right: 8px; }
+.cassette-screw.bot-left { bottom: 8px; left: 8px; }
+.cassette-screw.bot-right { bottom: 8px; right: 8px; }
+
+.cassette-label-sticker {
+  background: #fef3c7;
+  color: #78350f;
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px dashed #d97706;
 }
-.tone-arm-rod {
-  width: 4px;
-  height: 100px;
-  background: linear-gradient(90deg, #cbd5e1, #94a3b8);
+.cassette-label-title {
+  font-family: 'Caveat', cursive, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.cassette-side-indicator {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  background: #fde68a;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.cassette-window {
+  background: rgba(0, 0, 0, 0.65);
+  border: 2px solid #475569;
+  border-radius: 8px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 14px;
+  position: relative;
+}
+.cassette-tape-ribbon {
+  position: absolute;
+  top: 50%;
+  left: 20%;
+  right: 20%;
+  height: 18px;
+  transform: translateY(-50%);
+  background: #382414;
   border-radius: 2px;
-  margin-left: 18px;
+  z-index: 1;
 }
-.tone-arm-head {
+.cassette-spool {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #f8fafc;
+  border: 3px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+.cassette-shell.spinning .cassette-spool {
+  animation: spinRecord 2.4s linear infinite;
+}
+.spool-teeth {
   width: 14px;
-  height: 20px;
-  background: #f59e0b;
-  border-radius: 3px;
-  margin-left: 13px;
+  height: 14px;
+  border-radius: 50%;
+  background: #0f172a;
+  box-shadow: 0 0 0 3px #e2e8f0;
 }
+
+/* 16-Bar Glowing Equalizer Visualizer */
 .visualizer-bars-row {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 4px;
-  height: 48px;
-  margin: 16px 0;
+  gap: 5px;
+  height: 52px;
+  margin: 18px 0;
+  padding: 0 8px;
 }
 .v-bar {
-  width: 6px;
+  flex: 1;
+  max-width: 8px;
   height: 6px;
-  background: linear-gradient(180deg, #ff4365, #fbbf24);
-  border-radius: 3px;
+  background: linear-gradient(180deg, #ff4365 0%, #ff758c 50%, #fbbf24 100%);
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(255, 67, 101, 0.75), 0 0 16px rgba(251, 191, 36, 0.4);
   transition: height 0.08s ease;
 }
-.jukebox-track-info {
-  margin-bottom: 12px;
+
+/* Track Information */
+.jukebox-now-playing-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #ff758c;
+  margin-bottom: 6px;
 }
 .jukebox-track-title {
-  font-size: 1.4rem;
-  font-weight: 700;
+  font-size: 1.45rem;
+  font-weight: 800;
   margin-bottom: 4px;
+  letter-spacing: -0.01em;
 }
 .jukebox-track-artist {
   color: #94a3b8;
-  font-size: 0.95rem;
+  font-size: 0.98rem;
+  margin-bottom: 6px;
 }
+.jukebox-time-display {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Controls */
 .jukebox-controls-row {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-top: 16px;
+  gap: 12px;
+  margin-top: 18px;
 }
-@media (max-width: 768px) {
+@media (max-width: 800px) {
   .jukebox-controls-row {
     justify-content: center;
+    flex-wrap: wrap;
   }
 }
+.btn-deck-ctrl {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  padding: 0;
+}
+.btn-deck-play {
+  padding: 10px 24px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 1rem;
+  box-shadow: 0 4px 18px rgba(255, 67, 101, 0.45);
+}
+.volume-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 6px;
+}
+.jukebox-vol-slider {
+  width: 85px;
+  accent-color: #ff4365;
+  cursor: pointer;
+}
+
+/* Playlist */
 .jukebox-playlist-list {
-  margin-top: 20px;
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 14px;
+  margin-top: 22px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
   max-height: 160px;
   overflow-y: auto;
   padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 .playlist-track-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 9px 14px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.15s ease;
   font-size: 0.88rem;
 }
 .playlist-track-item:hover {
   background: rgba(255, 255, 255, 0.08);
 }
 .playlist-track-item.playing {
-  background: rgba(255, 67, 101, 0.25);
+  background: rgba(255, 67, 101, 0.22);
   color: #ff758c;
   font-weight: 700;
+  box-shadow: inset 2px 0 0 #ff4365;
+}
+.track-left-info {
+  display: flex;
+  flex-direction: column;
+}
+.track-title-text {
+  font-weight: 700;
+}
+.track-artist-text {
+  font-size: 0.76rem;
+  opacity: 0.8;
+}
+.track-duration-text {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.hidden {
+  display: none !important;
 }

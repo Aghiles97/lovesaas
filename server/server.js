@@ -175,8 +175,12 @@ const server = http.createServer(async (req, res) => {
       const adminPinHeader = req.headers["x-admin-pin"] || payload.masterAdminPin;
       const authTokenHeader = req.headers["x-auth-token"] || payload.masterAuthToken;
       const isMasterAdmin = adminPinHeader === (process.env.ADMIN_PIN || "admin1234") || authTokenHeader === (process.env.ADMIN_TOKEN || "master-admin-token-lovesaas");
+      const authUser = await getAuthenticatedUser(req, parsedUrl);
       const created = await db.createTenant({
         ...payload,
+        userId: payload.userId || (authUser ? authUser.id : null),
+        customerEmail: payload.customerEmail || (authUser ? authUser.email : null),
+        plan: isMasterAdmin ? "vip" : (payload.plan || "vip"),
         isPurchased: isMasterAdmin ? true : (payload.isPurchased === true)
       });
       return sendJson(res, 201, created);
@@ -203,7 +207,7 @@ const server = http.createServer(async (req, res) => {
   if (pathname === "/api/checkout" && method === "POST") {
     try {
       const payload = await parseJsonBody(req);
-      const { partner1, partner2, slug, adminPin, customerEmail, plan = "vip", preset = "complete" } = payload;
+      const { partner1, partner2, slug, adminPin, customerEmail, plan = "vip", preset = "complete", anniversaryDate, subtitle } = payload;
       if (!slug || !partner1 || !partner2 || !adminPin) {
         return sendJson(res, 400, { error: "Missing required fields: slug, partner1, partner2, adminPin" });
       }
@@ -213,8 +217,17 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 409, { error: `Site '${cleanSlug}' already exists. Please choose a different URL slug.` });
       }
 
-      // Associate with user account
+      // Associate with user account & check admin bypass
       const currentUser = await getAuthenticatedUser(req, parsedUrl);
+      const cleanPin = String(adminPin).trim();
+      const masterPin = process.env.ADMIN_PIN || "admin1234";
+      const masterToken = process.env.ADMIN_TOKEN || "master-admin-token-lovesaas";
+      const isAdmin = (currentUser && currentUser.role === "admin") ||
+                      (customerEmail && String(customerEmail).trim().toLowerCase() === "admin@admin.com") ||
+                      (cleanPin === masterPin) ||
+                      (req.headers["x-admin-pin"] === masterPin) ||
+                      (req.headers["x-auth-token"] === masterToken);
+
       let userId = currentUser ? currentUser.id : null;
       let sessionToken = currentUser ? auth.extractToken(req, parsedUrl) : null;
 
@@ -225,7 +238,8 @@ const server = http.createServer(async (req, res) => {
           user = await db.createUser({
             email: cleanEmail,
             password: payload.password,
-            name: String(partner1).trim()
+            name: String(partner1).trim(),
+            role: isAdmin ? "admin" : "user"
           });
           userId = user.id;
           sessionToken = await db.createSession(userId);
@@ -237,24 +251,27 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
+      const assignedPlan = isAdmin ? "vip" : plan;
       const created = await db.createTenant({
         slug: cleanSlug,
         partner1: String(partner1).trim(),
         partner2: String(partner2).trim(),
-        adminPin: String(adminPin).trim(),
+        adminPin: cleanPin,
         customerEmail: customerEmail ? String(customerEmail).trim() : null,
-        plan,
-        preset: preset || (plan === "starter" ? "storyteller" : "complete"),
+        plan: assignedPlan,
+        preset: preset || (assignedPlan === "starter" ? "storyteller" : "complete"),
         isPurchased: true,
-        userId
+        userId,
+        anniversaryDate: anniversaryDate || null,
+        subtitle: subtitle || null
       });
 
-      // Record Order / Purchase
-      const amount = plan === "starter" ? 19.00 : 39.00;
+      // Record Order / Purchase ($0 for admin, normal amount for standard user)
+      const amount = isAdmin ? 0.00 : (assignedPlan === "starter" ? 19.00 : 39.00);
       await db.createOrder({
         userId,
         tenantSlug: cleanSlug,
-        plan,
+        plan: assignedPlan,
         amount,
         currency: "USD",
         status: "completed"
@@ -262,7 +279,8 @@ const server = http.createServer(async (req, res) => {
 
       return sendJson(res, 201, {
         success: true,
-        message: "Couple site provisioned successfully!",
+        message: isAdmin ? "Admin VIP site provisioned (payment bypassed)!" : "Couple site provisioned successfully!",
+        isAdmin,
         tenant: {
           slug: created.slug,
           partner1: created.partner1,
@@ -302,7 +320,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 201, {
         success: true,
         token,
-        user: { id: user.id, email: user.email, name: user.name, createdAt: user.created_at }
+        user: { id: user.id, email: user.email, name: user.name, role: user.role || (user.email === "admin@admin.com" ? "admin" : "user"), createdAt: user.created_at }
       });
     } catch (err) {
       return sendJson(res, 500, { error: err.message });
@@ -324,7 +342,7 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, {
         success: true,
         token,
-        user: { id: user.id, email: user.email, name: user.name, createdAt: user.created_at }
+        user: { id: user.id, email: user.email, name: user.name, role: user.role || (user.email === "admin@admin.com" ? "admin" : "user"), createdAt: user.created_at }
       });
     } catch (err) {
       return sendJson(res, 500, { error: err.message });
@@ -364,13 +382,12 @@ const server = http.createServer(async (req, res) => {
   // GET /api/user/designs
   if (pathname === "/api/user/designs" && method === "GET") {
     try {
-      const token = auth.extractToken(req, parsedUrl);
-      if (!token) return sendJson(res, 401, { error: "Authentication required" });
-      const session = await db.validateSession(token);
-      if (!session) return sendJson(res, 401, { error: "Session expired" });
+      const authUser = await getAuthenticatedUser(req, parsedUrl);
+      if (!authUser) return sendJson(res, 401, { error: "Authentication required" });
 
-      const designs = await db.getUserDesigns(session.user.id, session.user.email);
-      return sendJson(res, 200, { success: true, designs });
+      const isAdmin = authUser.role === "admin";
+      const designs = await db.getUserDesigns(authUser.id, authUser.email, isAdmin);
+      return sendJson(res, 200, { success: true, designs, isAdmin });
     } catch (err) {
       return sendJson(res, 500, { error: err.message });
     }
@@ -466,7 +483,7 @@ const server = http.createServer(async (req, res) => {
       const isAuthorized = (pin && String(tenant.adminPin).trim() === String(pin).trim()) ||
                            (token && String(tenant.authToken).trim() === String(token).trim()) ||
                            (pin === (process.env.ADMIN_PIN || "admin1234") || token === "master-admin-token-lovesaas") ||
-                           (authUser && (authUser.id === tenant.userId || (tenant.customerEmail && authUser.email && tenant.customerEmail.toLowerCase() === authUser.email.toLowerCase())));
+                           (authUser && (authUser.role === "admin" || authUser.id === tenant.userId || (tenant.customerEmail && authUser.email && tenant.customerEmail.toLowerCase() === authUser.email.toLowerCase())));
 
       if (!isAuthorized) {
         const publicTenant = { ...tenant };
@@ -487,23 +504,32 @@ const server = http.createServer(async (req, res) => {
         if (!tenant) return sendJson(res, 404, { error: "Tenant not found" });
 
         const authUser = await getAuthenticatedUser(req, parsedUrl);
-        const isOwner = authUser && (authUser.id === tenant.userId || (tenant.customerEmail && authUser.email && tenant.customerEmail.toLowerCase() === authUser.email.toLowerCase()));
+        const isOwner = authUser && (authUser.role === "admin" || authUser.id === tenant.userId || (tenant.customerEmail && authUser.email && tenant.customerEmail.toLowerCase() === authUser.email.toLowerCase()));
 
-        const adminPin = req.headers["x-admin-pin"] || body.adminPin;
-        const authToken = isOwner ? tenant.authToken : (req.headers["x-auth-token"] || body.authToken);
+        const adminPin = req.headers["x-admin-pin"] || body.adminPin || (parsedUrl.query && parsedUrl.query.pin);
+        const authToken = isOwner ? tenant.authToken : (req.headers["x-auth-token"] || body.authToken || (parsedUrl.query && parsedUrl.query.token));
+
+        const isMasterAdmin = (adminPin && String(adminPin).trim() === (process.env.ADMIN_PIN || "admin1234")) ||
+                              (authToken && String(authToken).trim() === (process.env.ADMIN_TOKEN || "master-admin-token-lovesaas"));
+        const pinValid = adminPin && String(tenant.adminPin).trim() === String(adminPin).trim();
+        const tokenValid = authToken && tenant.authToken && String(tenant.authToken).trim() === String(authToken).trim();
+
+        if (!isOwner && !isMasterAdmin && !pinValid && !tokenValid) {
+          return sendJson(res, 403, { error: "Forbidden: Owner, admin, or valid PIN/token required" });
+        }
 
         const updated = await db.updateSiteConfig(slug, {
           templatePreset: body.templatePreset,
           themeId: body.themeId,
           layoutOrder: body.layoutOrder,
           sectionsData: body.sectionsData,
-          adminPin,
-          authToken,
+          adminPin: adminPin || (isOwner ? tenant.adminPin : undefined),
+          authToken: authToken || (isOwner ? tenant.authToken : undefined),
           newAdminPin: body.newAdminPin
         });
         return sendJson(res, 200, updated);
       } catch (err) {
-        const status = err.message.includes("Purchase now") ? 403 : 400;
+        const status = (err.message.includes("Purchase now") || err.message.includes("Unauthorized")) ? 403 : 400;
         return sendJson(res, status, { error: err.message });
       }
     }

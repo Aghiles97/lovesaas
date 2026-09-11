@@ -29,6 +29,7 @@
   const title = data.title || "Party Jukebox & Playlist 📻";
   const desc = data.desc || "Spin the retro vinyl disc, pump up the volume, and groove to our birthday playlist!";
 
+  const partner = rootData.partner2 || rootData.partnerName || "Ella";
   const defaultTracks = [
     { title: "Celebration Jam", artist: "Kool & The Gang", url: "audio/taylor-swift-fate-of-ophelia.m4r", duration: "3:42" },
     { title: "Birthday Anthem", artist: "Sweet Melody", url: "audio/lady-gaga-always-remember-us-this-way.m4r", duration: "3:30" },
@@ -40,11 +41,11 @@
 
   const playlistHtml = tracks.map((t, idx) => `
     <div class="playlist-track-item ${idx === 0 ? 'playing' : ''}" data-track-idx="${idx}">
-      <div>
-        <span style="font-weight:700;">${idx + 1}. ${escapeHtml(t.title || 'Track')}</span>
-        <span style="display:block; font-size:0.78rem; opacity:0.8;">${escapeHtml(t.artist || 'Artist')}</span>
+      <div class="track-left-info">
+        <span class="track-title-text">${idx + 1}. ${escapeHtml(t.title || 'Track')}</span>
+        <span class="track-artist-text">${escapeHtml(t.artist || 'Artist')}</span>
       </div>
-      <span style="font-size:0.8rem; opacity:0.7;">${escapeHtml(t.duration || '3:00')}</span>
+      <span class="track-duration-text">${escapeHtml(t.duration || '3:00')}</span>
     </div>
   `).join('');
 
@@ -59,36 +60,89 @@
           </div>
 
           <div class="jukebox-deck">
+            <!-- Mode Switcher: Vinyl vs Cassette -->
+            <div class="jukebox-mode-selector">
+              <button type="button" class="btn-mode-toggle active" id="btnModeVinyl" data-mode="vinyl">
+                <span>💽 Vinyl Record</span>
+              </button>
+              <button type="button" class="btn-mode-toggle" id="btnModeCassette" data-mode="cassette">
+                <span>📼 Cassette Deck</span>
+              </button>
+            </div>
+
             <div class="jukebox-layout">
-              <div class="turntable-deck-area">
-                <div class="vinyl-platter" id="jukeboxVinyl">
-                  <div class="vinyl-label-center">🎂</div>
+              <!-- Left Deck View -->
+              <div class="deck-media-container">
+                <!-- Vinyl Player Mode -->
+                <div class="turntable-deck-area" id="vinylDeckView">
+                  <div class="vinyl-platter-well">
+                    <div class="vinyl-platter" id="jukeboxVinyl">
+                      <div class="vinyl-groove-shimmer"></div>
+                      <div class="vinyl-label-center">
+                        <div class="vinyl-label-text-top">${escapeHtml(partner)}'s 24th</div>
+                        <div class="vinyl-label-icon">🎂</div>
+                        <div class="vinyl-label-text-bot">SPECIAL EDITION</div>
+                        <div class="vinyl-spindle-hole"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tone-arm" id="jukeboxToneArm">
+                    <div class="tone-arm-base"></div>
+                    <div class="tone-arm-rod"></div>
+                    <div class="tone-arm-cartridge">
+                      <div class="tone-arm-stylus"></div>
+                    </div>
+                  </div>
                 </div>
-                <div class="tone-arm" id="jukeboxToneArm">
-                  <div class="tone-arm-rod"></div>
-                  <div class="tone-arm-head"></div>
+
+                <!-- Cassette Deck Mode -->
+                <div class="cassette-deck-area hidden" id="cassetteDeckView">
+                  <div class="cassette-shell" id="jukeboxCassette">
+                    <div class="cassette-screw top-left"></div>
+                    <div class="cassette-screw top-right"></div>
+                    <div class="cassette-screw bot-left"></div>
+                    <div class="cassette-screw bot-right"></div>
+                    <div class="cassette-label-sticker">
+                      <span class="cassette-label-title">💖 ${escapeHtml(partner)}'s Party Mixtape Vol. 1</span>
+                      <span class="cassette-side-indicator">SIDE A • STEREO</span>
+                    </div>
+                    <div class="cassette-window">
+                      <div class="cassette-spool left-spool">
+                        <span class="spool-teeth"></span>
+                      </div>
+                      <div class="cassette-tape-ribbon"></div>
+                      <div class="cassette-spool right-spool">
+                        <span class="spool-teeth"></span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              <!-- Right Control & Playlist Side -->
               <div class="jukebox-player-side">
                 <div class="jukebox-track-info">
+                  <div class="jukebox-now-playing-badge">NOW GROOVING 🎶</div>
                   <div class="jukebox-track-title" id="jukeboxTitle">${escapeHtml(initialTrack.title)}</div>
                   <div class="jukebox-track-artist" id="jukeboxArtist">${escapeHtml(initialTrack.artist)}</div>
+                  <div class="jukebox-time-display">
+                    <span id="jukeboxCurrentTime">0:00</span> / <span id="jukeboxTotalTime">${escapeHtml(initialTrack.duration || '3:30')}</span>
+                  </div>
                 </div>
 
+                <!-- 16-Bar Glowing Equalizer Visualizer -->
                 <div class="visualizer-bars-row" id="jukeboxVisualizer">
-                  <span class="v-bar"></span><span class="v-bar"></span><span class="v-bar"></span>
-                  <span class="v-bar"></span><span class="v-bar"></span><span class="v-bar"></span>
-                  <span class="v-bar"></span><span class="v-bar"></span><span class="v-bar"></span>
-                  <span class="v-bar"></span><span class="v-bar"></span><span class="v-bar"></span>
-                  <span class="v-bar"></span><span class="v-bar"></span><span class="v-bar"></span>
+                  ${Array.from({length: 16}).map((_, i) => `<span class="v-bar" data-bar-idx="${i}"></span>`).join('')}
                 </div>
 
                 <div class="jukebox-controls-row">
-                  <button type="button" class="btn btn-secondary" id="btnJukeboxPrev" title="Previous Track">⏮️</button>
-                  <button type="button" class="btn btn-primary" id="btnJukeboxPlay" title="Play/Pause">▶️ Play</button>
-                  <button type="button" class="btn btn-secondary" id="btnJukeboxNext" title="Next Track">⏭️</button>
-                  <input type="range" id="jukeboxVolume" min="0" max="100" value="80" style="width:90px; accent-color:#ff4365;" title="Volume" />
+                  <button type="button" class="btn btn-secondary btn-deck-ctrl" id="btnJukeboxPrev" title="Previous Track">⏮️</button>
+                  <button type="button" class="btn btn-primary btn-deck-play" id="btnJukeboxPlay" title="Play/Pause">▶️ Play</button>
+                  <button type="button" class="btn btn-secondary btn-deck-ctrl" id="btnJukeboxNext" title="Next Track">⏭️</button>
+                  <div class="volume-slider-wrap">
+                    <span class="vol-icon">🔊</span>
+                    <input type="range" id="jukeboxVolume" min="0" max="100" value="80" class="jukebox-vol-slider" title="Volume" />
+                  </div>
                 </div>
 
                 <div class="jukebox-playlist-list" id="jukeboxPlaylistList">

@@ -25,17 +25,19 @@
   }
 
   const renderTemplate = (data = {}, rootData = {}) => {
-  const partner = rootData.partner2 || rootData.partnerName || "Sweetheart";
+  const partner = rootData.partner2 || rootData.partnerName || "Ella";
   const tag = data.tag || "Birthday Unwrapping 🎁";
   const title = data.title || ("A Surprise Gift For You, " + partner + "!");
   const desc = data.desc || "Untie the golden ribbon and lift the lid to reveal what is waiting inside for you.";
   const surpriseType = data.surpriseType || "coupon";
-  const surpriseBadge = data.surpriseBadge || "🎉 Special Birthday Surprise";
+  const surpriseBadge = data.surpriseBadge || "✨ Luxury VIP Birthday Coupon";
   const surpriseTitle = data.surpriseTitle || "VIP Birthday Pass: All-Expenses Date & Dinner 🥂";
-  const surpriseDesc = data.surpriseDesc || "Valid anytime, anywhere! Pack your favorite outfit for a five-star dining celebration & shopping spree.";
+  const surpriseDesc = data.surpriseDesc || ("Valid anytime, anywhere! Pack your favorite outfit for a five-star dining celebration, shopping spree & endless royal pampering, " + partner + "! 💖");
   const mediaUrl = data.mediaUrl || "";
   const claimBtnText = data.claimBtnText || "Claim My Birthday Gift 🎟️";
   const claimUrl = data.claimUrl || "";
+  const waClaimText = encodeURIComponent("I'm officially claiming my VIP Birthday Pass, my love! 🥂✨ Get ready for our five-star date! 💕 — " + partner);
+  const waClaimUrl = "https://api.whatsapp.com/send?text=" + waClaimText;
 
   let mediaHtml = "";
   if (surpriseType === "video" && mediaUrl) {
@@ -57,32 +59,77 @@
           <div class="unbox-stepper">
             <span class="unbox-step-dot active" id="dotStep1" title="Step 1: Untie Ribbon"></span>
             <span class="unbox-step-dot" id="dotStep2" title="Step 2: Open Lid"></span>
-            <span class="unbox-step-dot" id="dotStep3" title="Step 3: Reveal"></span>
+            <span class="unbox-step-dot" id="dotStep3" title="Step 3: Reveal VIP Pass"></span>
           </div>
 
           <div class="gift-stage-wrap">
-            <div class="unbox-glow-rays"></div>
-            <div class="gift-box-3d" id="giftBox3d">
+            <div class="unbox-glow-rays">
+              <div class="ray-beam r1"></div>
+              <div class="ray-beam r2"></div>
+              <div class="ray-beam r3"></div>
+              <div class="ray-beam r4"></div>
+              <div class="ray-beam r5"></div>
+              <div class="ray-beam r6"></div>
+              <div class="ray-beam r7"></div>
+              <div class="ray-beam r8"></div>
+            </div>
+
+            <div class="gift-box-3d" id="giftBox3d" title="Click to unbox!">
               <div class="box-lid" id="boxLid">
-                <span class="box-bow" id="boxBow">🎀</span>
+                <div class="box-lid-gold-trim"></div>
+                <div class="shimmering-bow" id="boxBow">
+                  <div class="bow-loop left"></div>
+                  <div class="bow-loop right"></div>
+                  <div class="bow-center"></div>
+                  <div class="bow-tail left"></div>
+                  <div class="bow-tail right"></div>
+                </div>
               </div>
               <div class="box-body-cube">
+                <div class="box-inner-glow"></div>
                 <div class="box-ribbon-v" id="ribbonV"></div>
                 <div class="box-ribbon-h" id="ribbonH"></div>
               </div>
             </div>
           </div>
 
-          <div class="gift-surprise-reveal" id="giftSurpriseReveal">
-            <span class="gift-surprise-badge">${escapeHtml(surpriseBadge)}</span>
+          <div class="gift-surprise-reveal luxury-vip-coupon" id="giftSurpriseReveal">
+            <div class="vip-coupon-header">
+              <span class="gift-surprise-badge">${escapeHtml(surpriseBadge)}</span>
+              <div class="vip-seal-stamp">
+                <div class="wax-seal">
+                  <div class="wax-seal-ring">
+                    <span class="wax-seal-initials">ELLA</span>
+                    <span class="wax-seal-heart">❤️</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <h3 class="gift-surprise-title">${escapeHtml(surpriseTitle)}</h3>
             <p class="gift-surprise-desc">${escapeHtml(surpriseDesc)}</p>
+
+            <div class="vip-perks-list">
+              <div class="vip-perk-item"><span>🥂</span> 5-Star Candlelight Dining & Cocktails</div>
+              <div class="vip-perk-item"><span>🛍️</span> Unlimited Birthday Shopping Spree</div>
+              <div class="vip-perk-item"><span>💖</span> Endless Kisses, Cuddles & Lifetime Love</div>
+            </div>
+
+            <div class="vip-barcode-strip">
+              <div class="barcode-lines">||| | |||| || | ||||| |||| | ||| ||||| || |||</div>
+              <div class="barcode-label">PASS NO: ELLA-2026-VIP-LIFETIME-PASS</div>
+            </div>
+
             ${mediaHtml}
-            <div style="display:flex; justify-content:center; gap:12px; margin-top:20px;">
-              <a href="${escapeHtml(claimUrl || '#')}" id="btnClaimGift" class="btn btn-primary btn-pulse" target="_blank" rel="noopener noreferrer">
+
+            <div class="vip-coupon-actions">
+              <a href="${waClaimUrl}" id="btnClaimWhatsapp" class="btn btn-whatsapp btn-pulse" target="_blank" rel="noopener noreferrer">
+                <span>💬 Claim on WhatsApp</span>
+              </a>
+              <a href="${escapeHtml(claimUrl || '#')}" id="btnClaimGift" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
                 <span>${escapeHtml(claimBtnText)}</span>
               </a>
-              <button type="button" class="btn btn-secondary" id="btnRewrapGift">
+              <button type="button" class="btn btn-outline" id="btnRewrapGift">
                 <span>🔄 Wrap Again</span>
               </button>
             </div>

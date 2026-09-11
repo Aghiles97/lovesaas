@@ -25,7 +25,7 @@
   }
 
   const renderTemplate = (data = {}, rootData = {}) => {
-  const partner = rootData.partner2 || rootData.partnerName || "Birthday Star";
+  const partner = rootData.partner2 || rootData.partnerName || "Ella";
   const tag = data.tag || "Make a Birthday Wish 🎂";
   const title = data.title || ("Blow Out the Birthday Candles, " + partner + "! ✨");
   const desc = data.desc || "Make a secret wish in your heart, then tap to blow or blow directly into your microphone!";
@@ -36,14 +36,24 @@
   const micBtnText = data.micBtnText || "🎙️ Blow via Mic";
   const clickBtnText = data.clickBtnText || "💨 Blow Candles (Click)";
   const relightBtnText = data.relightBtnText || "🔥 Relight Candles";
+  const waShareText = encodeURIComponent("I just blew out my birthday candles and made my secret wish! 🎂✨ — Celebrating " + partner + "'s Special Day! 💕");
 
   let candlesHtml = "";
   for (let i = 0; i < count; i++) {
     candlesHtml += `
       <div class="cake-candle" data-candle-idx="${i}" title="Click to blow out">
         <div class="candle-flame"></div>
+        <div class="candle-sparkles">
+          <span class="sparkle-star s1">✦</span>
+          <span class="sparkle-star s2">★</span>
+          <span class="sparkle-star s3">✧</span>
+        </div>
         <div class="candle-wick"></div>
-        <div class="smoke-puff"></div>
+        <div class="smoke-puff-realistic">
+          <span class="smoke-wisp w1"></span>
+          <span class="smoke-wisp w2"></span>
+          <span class="smoke-wisp w3"></span>
+        </div>
       </div>`;
   }
 
@@ -58,6 +68,7 @@
           </div>
 
           <div class="cake-stage">
+            <div class="golden-hearts-container" id="goldenHeartsContainer"></div>
             <div class="cake-body">
               <div class="candles-row" id="cakeCandlesRow">
                 ${candlesHtml}
@@ -102,13 +113,19 @@
             </div>
           </div>
 
-          <div class="wish-reveal-card" id="wishRevealCard">
+          <div class="wish-reveal-card luxury-gold-foil" id="wishRevealCard">
+            <div class="gold-foil-sheen"></div>
             <span class="wish-card-badge">${escapeHtml(wishBadge)}</span>
             <h3 class="wish-card-title">${escapeHtml(wishTitle)}</h3>
             <p class="wish-card-text">${escapeHtml(wishText)}</p>
-            <button type="button" class="btn btn-primary btn-pulse" id="btnCelebrationConfetti">
-              <span>🎉 Celebrate with Confetti!</span>
-            </button>
+            <div class="wish-card-actions">
+              <button type="button" class="btn btn-primary btn-pulse" id="btnCelebrationConfetti">
+                <span>🎉 Celebrate with Confetti!</span>
+              </button>
+              <a href="https://api.whatsapp.com/send?text=${waShareText}" target="_blank" rel="noopener noreferrer" class="btn btn-whatsapp" id="btnShareWishWhatsapp">
+                <span>💬 Share Wish on WhatsApp</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>

@@ -18,7 +18,7 @@
 if (!state.sectionsData.spinner) state.sectionsData.spinner = {};
       const sp = state.sectionsData.spinner;
       const hero = state.sectionsData.hero || {};
-      const p1Def = hero.partner1 || "Aghiles";
+      const p1Def = hero.partner1 || state.partner1 || "Partner 1";
 
       const defaultFoods = [
         "🍕 Cheesy Local Pizza & Fries Night",

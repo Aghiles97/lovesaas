@@ -447,6 +447,36 @@ class DynamicRenderer {
       if (typeof setupPartyJukebox === "function") try { setupPartyJukebox(sectionsData.party_jukebox); } catch (e) {}
     }
 
+    // 20. Tenure Ticker
+    if (layoutOrder.includes("tenure_ticker")) {
+      if (typeof setupTenureTicker === "function") try { setupTenureTicker(sectionsData.tenure_ticker, sectionsData.hero); } catch (e) {}
+    }
+
+    // 21. Night Sky Star Map
+    if (layoutOrder.includes("star_map")) {
+      if (typeof setupStarMap === "function") try { setupStarMap(sectionsData.star_map, sectionsData.hero); } catch (e) {}
+    }
+
+    // 22. Then vs. Now Slider
+    if (layoutOrder.includes("then_now_slider")) {
+      if (typeof setupThenNowSlider === "function") try { setupThenNowSlider(sectionsData.then_now_slider, sectionsData.hero); } catch (e) {}
+    }
+
+    // 23. Couple Bucket List
+    if (layoutOrder.includes("bucket_list")) {
+      if (typeof setupBucketList === "function") try { setupBucketList(sectionsData.bucket_list, sectionsData.hero); } catch (e) {}
+    }
+
+    // 24. Audio Time Capsule
+    if (layoutOrder.includes("audio_capsule")) {
+      if (typeof setupAudioCapsule === "function") try { setupAudioCapsule(sectionsData.audio_capsule, sectionsData.hero); } catch (e) {}
+    }
+
+    // 25. Milestone Odyssey
+    if (layoutOrder.includes("milestone_odyssey")) {
+      if (typeof setupMilestoneOdyssey === "function") try { setupMilestoneOdyssey(sectionsData.milestone_odyssey, sectionsData.hero); } catch (e) {}
+    }
+
     // 14. Audio, Vinyl Disc, & Equalizer
     if (typeof setupAudioVisualizerAndVolume === "function") {
       try { setupAudioVisualizerAndVolume(); } catch (e) {}

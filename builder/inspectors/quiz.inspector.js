@@ -26,7 +26,7 @@ if (Array.isArray(state.sectionsData.quiz)) {
           certBody: "For scoring a perfect 100% on the Couple Trivia Challenge and holding the eternal title of",
           certBody2: "Valid across Algeria, China, Indonesia, and throughout all infinity with unlimited hug hugs & kissies.",
           certFooter: "Signed with Kiss Kiss & Hug Hug,",
-          certSender: state.partner1 || "Your Love from Algeria",
+          certSender: state.partner1 || "Partner 1",
           items: state.sectionsData.quiz
         };
       } else if (!state.sectionsData.quiz) {
@@ -35,12 +35,12 @@ if (Array.isArray(state.sectionsData.quiz)) {
           title: "How Well Do You Know Our Lof Story? 🧠💖",
           desc: "Answer sweet questions about our trips and memories to earn your Certificate of Infinite Lof!",
           certTitle: "Certificate of Infinite Lof",
-          certAwardee: "This prestigious lifelong honor is officially presented to",
+          certAwardee: `This prestigious lifelong honor is officially presented to ${state.partner2 || "Partner 2"}`,
           certTitleQuote: "« The Greatest & Prettiest Girlfriend in the Entire Universe »",
           certBody: "For scoring a perfect 100% on the Couple Trivia Challenge and holding the eternal title of",
           certBody2: "Valid across Algeria, China, Indonesia, and throughout all infinity with unlimited hug hugs & kissies.",
           certFooter: "Signed with Kiss Kiss & Hug Hug,",
-          certSender: state.partner1 || "Your Love from Algeria",
+          certSender: state.partner1 || "Partner 1",
           items: []
         };
       }

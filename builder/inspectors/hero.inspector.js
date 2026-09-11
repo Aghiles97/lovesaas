@@ -36,11 +36,11 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
           <div class="grid-2">
             <div class="input-group">
               <label>Partner 1 Name (Sender)</label>
-              <input type="text" id="h_p1" value="${escapeHtml(h.partner1 || 'Alex')}">
+              <input type="text" id="h_p1" value="${escapeHtml(h.partner1 || state.partner1 || 'Partner 1')}">
             </div>
             <div class="input-group">
               <label>Partner 2 Name (Receiver)</label>
-              <input type="text" id="h_p2" value="${escapeHtml(h.partner2 || 'Sam')}">
+              <input type="text" id="h_p2" value="${escapeHtml(h.partner2 || state.partner2 || 'Partner 2')}">
             </div>
           </div>
           <div class="input-group">

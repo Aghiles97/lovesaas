@@ -38,6 +38,9 @@
       <a id="btnViewLive" href="/sites/demo" target="_blank" class="btn-secondary" title="Open live site in new tab">
         <span class="btn-icon">↗</span> View Live
       </a>
+      <button type="button" id="btnHeaderNewProject" class="btn-secondary" title="Create a new couple site" style="display: none; align-items: center; gap: 4px; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.08); color: #fda4af;">
+        <span>💖</span> + New Site
+      </button>
       <a id="builderUserBadge" href="/welcome" class="btn-secondary" title="Account, Designs & Orders" style="display: none; align-items: center; gap: 6px; text-decoration: none; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.08);">
         <span id="builderUserAvatar">👤</span>
         <span id="builderUserName">My Account</span>
@@ -104,7 +107,7 @@
             <div class="sections-title-group">
               <span class="sections-icon">🧩</span>
               <span class="sections-title-text">Sections</span>
-              <span class="sections-counter-pill" id="activeWidgetsCount">0/13</span>
+              <span class="sections-counter-pill" id="activeWidgetsCount">0/25</span>
             </div>
             <div class="sections-control-actions">
               <button type="button" class="btn-preset-pill" id="btnTogglePresets" title="Change layout preset">
@@ -136,8 +139,9 @@
               <button type="button" id="btnClearWidgetSearch" class="btn-clear-search hidden" title="Clear search">✕</button>
             </div>
             <div class="widget-filter-chips">
-              <button type="button" class="filter-chip active" data-filter="all">All <span id="filterCountAll">13</span></button>
+              <button type="button" class="filter-chip active" data-filter="all">All <span id="filterCountAll">25</span></button>
               <button type="button" class="filter-chip" data-filter="active">Active <span id="filterCountActive">0</span></button>
+              <button type="button" class="filter-chip" data-filter="birthday">🎂 Birthday</button>
               <button type="button" class="filter-chip" data-filter="inactive">Off <span id="filterCountInactive">0</span></button>
             </div>
           </div>
@@ -450,12 +454,99 @@
     </div>
   </div>
 
+  <!-- ONBOARDING / NEW PROJECT PROMPT MODAL -->
+  <div class="modal-backdrop hidden" id="builderNewProjectModal" style="z-index: 10080;">
+    <div class="modal-box" style="max-width: 500px; text-align: left; padding: 24px; border: 1px solid rgba(244, 63, 94, 0.4); box-shadow: 0 25px 60px -15px rgba(0,0,0,0.8), 0 0 40px -10px rgba(244,63,94,0.25);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
+        <div>
+          <h3 style="margin: 0 0 4px 0; font-size: 1.25rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
+            <span>💖</span> Start Your Couple Website
+          </h3>
+          <p style="margin: 0; font-size: 0.82rem; color: #94a3b8;" id="newProjectModalSubtitle">
+            You don't have any websites yet. How would you like to start?
+          </p>
+        </div>
+        <button type="button" id="btnCloseNewProjectModal" style="background: transparent; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer; padding: 2px 6px;">✕</button>
+      </div>
+
+      <!-- 1. Start Option -->
+      <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #cbd5e1; margin-bottom: 8px;">1. Choose Setup Style</label>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+        <div class="project-mode-card active" id="modeCardTemplate" style="cursor: pointer; padding: 12px; border-radius: 8px; border: 2px solid var(--primary, #f43f5e); background: rgba(244, 63, 94, 0.12); transition: all 0.2s;">
+          <div style="font-size: 1.2rem; margin-bottom: 4px;">🎨</div>
+          <div style="font-weight: 700; font-size: 0.88rem; color: #fff; margin-bottom: 2px;">Use Templates</div>
+          <div style="font-size: 0.74rem; color: #fda4af;">Pre-built romantic layouts with timeline, audio letter & games.</div>
+        </div>
+        <div class="project-mode-card" id="modeCardScratch" style="cursor: pointer; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.03); transition: all 0.2s;">
+          <div style="font-size: 1.2rem; margin-bottom: 4px;">✨</div>
+          <div style="font-weight: 700; font-size: 0.88rem; color: #fff; margin-bottom: 2px;">From Scratch</div>
+          <div style="font-size: 0.74rem; color: #94a3b8;">Clean minimal canvas (Hero + Letter). Add sections you love later.</div>
+        </div>
+      </div>
+
+      <!-- 1b. Preset Selection for Template Mode -->
+      <div id="newProjectPresetPickerWrap" style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 0.78rem; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">Select Starting Template:</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;" id="npPresetChips">
+          <button type="button" class="np-preset-chip active" data-preset="storyteller" style="padding: 7px 10px; border-radius: 6px; border: 1px solid #f43f5e; background: rgba(244, 63, 94, 0.15); color: #fff; font-size: 0.78rem; font-weight: 600; text-align: left; cursor: pointer;">
+            📖 Storyteller (Travels)
+          </button>
+          <button type="button" class="np-preset-chip" data-preset="playful" style="padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: #cbd5e1; font-size: 0.78rem; text-align: left; cursor: pointer;">
+            🎮 Playful (Games & Coupons)
+          </button>
+          <button type="button" class="np-preset-chip" data-preset="complete" style="padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: #cbd5e1; font-size: 0.78rem; text-align: left; cursor: pointer;">
+            💖 Complete VIP (All 13)
+          </button>
+          <button type="button" class="np-preset-chip" data-preset="anniversary" style="padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: #cbd5e1; font-size: 0.78rem; text-align: left; cursor: pointer;">
+            💍 Anniversary Edition
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. Couple Names & Info -->
+      <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #cbd5e1; margin-bottom: 8px;">2. Couple Information</label>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+        <div class="input-group">
+          <label style="font-size: 0.78rem; color: #94a3b8;">Partner 1 (You)</label>
+          <input type="text" id="npPartner1" placeholder="e.g., Alex" required>
+        </div>
+        <div class="input-group">
+          <label style="font-size: 0.78rem; color: #94a3b8;">Partner 2 (Sweetheart)</label>
+          <input type="text" id="npPartner2" placeholder="e.g., Sam" required>
+        </div>
+      </div>
+
+      <div class="input-group" style="margin-bottom: 10px;">
+        <label style="font-size: 0.78rem; color: #94a3b8;">Website URL Slug</label>
+        <div style="display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; overflow: hidden;">
+          <span style="padding: 0 10px; font-size: 0.78rem; color: #fda4af; opacity: 0.8;">/sites/</span>
+          <input type="text" id="npSlug" placeholder="alex-and-sam" style="border: none; background: transparent; padding: 8px 10px; color: #fff; width: 100%;">
+        </div>
+        <div id="npSlugFeedback" style="font-size: 0.72rem; color: #94a3b8; margin-top: 4px;">Enter lowercase letters, numbers, or dashes</div>
+      </div>
+
+      <div class="input-group" style="margin-bottom: 16px;">
+        <label style="font-size: 0.78rem; color: #94a3b8;">Admin PIN (4 Digits)</label>
+        <input type="password" id="npPin" placeholder="1234" value="1234" maxlength="8">
+      </div>
+
+      <div id="npErrorMsg" style="color: #ef4444; font-size: 0.8rem; margin-bottom: 10px; display: none;"></div>
+
+      <button type="button" class="btn-primary" id="btnCreateProjectSubmit" style="width: 100%; justify-content: center; padding: 12px; font-size: 0.95rem; font-weight: 700; background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);">
+        <span>🚀 Create Website & Launch Studio</span>
+      </button>
+    </div>
+  </div>
+
   <!-- TENANT CREATE / SWITCH MODAL -->
   <div class="modal-backdrop hidden" id="tenantModal">
     <div class="modal-box">
       <h3>Couple Account</h3>
       <div id="userDesignsSection" style="display: none; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left;">
-        <label style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; display: block; margin-bottom: 6px;">Your Sites (1-Click Switch):</label>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; display: block; margin: 0;">Your Sites (1-Click Switch):</label>
+          <button type="button" id="btnTenantModalCreateNew" style="background: rgba(244,63,94,0.15); border: 1px solid #f43f5e; color: #fda4af; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; cursor: pointer;">+ New Site</button>
+        </div>
         <div id="userDesignsQuickList" style="display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto;"></div>
       </div>
       <div class="input-group">
@@ -559,13 +650,14 @@
       </div>
 
       <div class="add-section-filter-chips" id="addSectionFilterChips">
-        <button type="button" class="add-sec-filter-chip active" data-cat="all">All (<span id="addSecCountAll">13</span>)</button>
+        <button type="button" class="add-sec-filter-chip active" data-cat="all">All (<span id="addSecCountAll">25</span>)</button>
         <button type="button" class="add-sec-filter-chip" data-cat="story">📖 Story</button>
         <button type="button" class="add-sec-filter-chip" data-cat="interactive">⚡ Interactive</button>
         <button type="button" class="add-sec-filter-chip" data-cat="games">🎮 Games</button>
         <button type="button" class="add-sec-filter-chip" data-cat="gallery">📸 Gallery</button>
         <button type="button" class="add-sec-filter-chip" data-cat="letter">💌 Letter</button>
         <button type="button" class="add-sec-filter-chip" data-cat="birthday">🎂 Birthday</button>
+        <button type="button" class="add-sec-filter-chip" data-cat="anniversary">💍 Anniversary</button>
       </div>
 
       <div class="add-section-widgets-grid" id="addSectionWidgetsGrid"></div>
@@ -715,6 +807,12 @@
   <script src="/core/templates/roast_toast.template.js"></script>
   <script src="/core/templates/guestbook.template.js"></script>
   <script src="/core/templates/party_jukebox.template.js"></script>
+  <script src="/core/templates/tenure_ticker.template.js"></script>
+  <script src="/core/templates/star_map.template.js"></script>
+  <script src="/core/templates/then_now_slider.template.js"></script>
+  <script src="/core/templates/bucket_list.template.js"></script>
+  <script src="/core/templates/audio_capsule.template.js"></script>
+  <script src="/core/templates/milestone_odyssey.template.js"></script>
   <script src="/core/widget-templates.js"></script>
 
   <!-- Modular Widget Inspectors -->
@@ -737,9 +835,15 @@
   <script src="/builder/inspectors/roast_toast.inspector.js"></script>
   <script src="/builder/inspectors/guestbook.inspector.js"></script>
   <script src="/builder/inspectors/party_jukebox.inspector.js"></script>
+  <script src="/builder/inspectors/tenure_ticker.inspector.js"></script>
+  <script src="/builder/inspectors/star_map.inspector.js"></script>
+  <script src="/builder/inspectors/then_now_slider.inspector.js"></script>
+  <script src="/builder/inspectors/bucket_list.inspector.js"></script>
+  <script src="/builder/inspectors/audio_capsule.inspector.js"></script>
+  <script src="/builder/inspectors/milestone_odyssey.inspector.js"></script>
 
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
-  <script src="/builder/builder.js?v=2.3.0"></script>
+  <script src="/builder/builder.js?v=2.3.1"></script>
 </body>
 </html>

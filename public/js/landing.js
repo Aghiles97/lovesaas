@@ -532,15 +532,48 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  function openCheckoutModal(preferredPlan = "vip") {
-    checkoutState.step = 1;
-    checkoutState.plan = preferredPlan;
-    if (currentUser && currentUser.email) {
-      const elEmail = document.getElementById("inputEmail");
-      if (elEmail && !elEmail.value) elEmail.value = currentUser.email;
+  function getSavedCreationInputs() {
+    try {
+      return JSON.parse(localStorage.getItem("lovesaas_saved_creation_inputs") || "{}");
+    } catch {
+      return {};
     }
+  }
+
+  function saveCreationInputs(obj) {
+    try {
+      const existing = getSavedCreationInputs();
+      localStorage.setItem("lovesaas_saved_creation_inputs", JSON.stringify({ ...existing, ...obj }));
+    } catch {}
+  }
+
+  function openCheckoutModal(preferredPlan = "vip") {
+    if (currentUser) {
+      window.location.href = "/builder";
+      return;
+    }
+    checkoutState.step = 1;
+    const isAdmin = currentUser && currentUser.role === "admin";
+    checkoutState.plan = isAdmin ? "vip" : preferredPlan;
+
+    const saved = getSavedCreationInputs();
+    const elP1 = document.getElementById("inputPartner1");
+    const elP2 = document.getElementById("inputPartner2");
+    const elEmail = document.getElementById("inputEmail");
+    const elAnniv = document.getElementById("inputAnniversary");
+
+    if (elP1 && !elP1.value && saved.partner1) elP1.value = saved.partner1;
+    if (elP2 && !elP2.value && saved.partner2) elP2.value = saved.partner2;
+    if (elAnniv && !elAnniv.value && saved.anniversaryDate) elAnniv.value = saved.anniversaryDate;
+
+    if (currentUser && currentUser.email) {
+      if (elEmail) elEmail.value = currentUser.email;
+    } else if (elEmail && !elEmail.value && saved.email) {
+      elEmail.value = saved.email;
+    }
+
     planChips.forEach(c => {
-      if (c.dataset.plan === preferredPlan) c.classList.add("active");
+      if (c.dataset.plan === checkoutState.plan) c.classList.add("active");
       else c.classList.remove("active");
     });
     renderCheckoutStep();
@@ -631,19 +664,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnCancelCheckout = document.getElementById("btnCancelCheckout");
   const checkoutModalFooter = document.getElementById("checkoutModalFooter");
   const checkoutModalSubtitle = document.getElementById("checkoutModalSubtitle");
+  const checkoutAdminNotice = document.getElementById("checkoutAdminNotice");
+  const checkoutPlanSelectWrap = document.getElementById("checkoutPlanSelectWrap");
 
   if (btnCancelCheckout) {
     btnCancelCheckout.addEventListener("click", () => closeModal(checkoutModal));
   }
 
   function renderCheckoutStep() {
-    const cost = checkoutState.plan === "starter" ? 19 : 39;
+    const isAdmin = currentUser && currentUser.role === "admin";
+    const cost = isAdmin ? 0 : (checkoutState.plan === "starter" ? 19 : 39);
+
+    if (checkoutAdminNotice) checkoutAdminNotice.style.display = isAdmin ? "flex" : "none";
+    if (checkoutPlanSelectWrap) checkoutPlanSelectWrap.style.display = isAdmin ? "none" : "block";
+
     if (checkoutState.step === 1) {
       checkoutStep1.style.display = "block";
       checkoutStep3.style.display = "none";
       checkoutModalFooter.style.display = "flex";
-      checkoutModalSubtitle.textContent = `One-time payment • Lifetime access • Instant Studio unlock ($${cost})`;
-      btnCheckoutNext.innerHTML = `<span>💖 Claim Site & Launch Studio ($${cost})</span> <span>🚀</span>`;
+      if (isAdmin) {
+        checkoutModalSubtitle.textContent = "Master Admin Mode • Instant Provisioning • Zero Cost ($0)";
+        btnCheckoutNext.innerHTML = `<span>🚀 Instant Provision Site & Launch Studio (Admin)</span> <span>✨</span>`;
+      } else {
+        checkoutModalSubtitle.textContent = `One-time payment • Lifetime access • Instant Studio unlock ($${cost})`;
+        btnCheckoutNext.innerHTML = `<span>💖 Claim Site & Launch Studio ($${cost})</span> <span>🚀</span>`;
+      }
     } else if (checkoutState.step === 3) {
       checkoutStep1.style.display = "none";
       checkoutStep3.style.display = "block";
@@ -659,6 +704,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const slug = inputSlug.value.trim();
       const email = document.getElementById("inputEmail").value.trim();
       const pin = document.getElementById("inputPin").value.trim();
+      const elAnniv = document.getElementById("inputAnniversary");
+      const anniversaryDate = elAnniv ? elAnniv.value : null;
 
       if (!p1 || !p2) return alert("Please enter both partner names.");
       if (!slug || !checkoutState.slugAvailable) return alert("Please choose an available URL slug.");
@@ -671,7 +718,10 @@ document.addEventListener("DOMContentLoaded", () => {
       checkoutState.email = email;
       checkoutState.pin = pin;
 
-      const cost = checkoutState.plan === "starter" ? 19 : 39;
+      // Persist entered info to localStorage for reuse
+      saveCreationInputs({ partner1: p1, partner2: p2, email, anniversaryDate });
+
+      const isAdmin = currentUser && currentUser.role === "admin";
       btnCheckoutNext.disabled = true;
       btnCheckoutNext.innerHTML = `<span>Activating Site & Studio...</span> <span>⏳</span>`;
 
@@ -685,8 +735,9 @@ document.addEventListener("DOMContentLoaded", () => {
             slug: checkoutState.slug,
             adminPin: checkoutState.pin,
             customerEmail: checkoutState.email,
-            plan: checkoutState.plan,
-            preset: checkoutState.plan === "starter" ? "storyteller" : "complete"
+            plan: isAdmin ? "vip" : checkoutState.plan,
+            preset: (isAdmin || checkoutState.plan === "vip") ? "complete" : "storyteller",
+            anniversaryDate
           })
         });
 
@@ -708,12 +759,15 @@ document.addEventListener("DOMContentLoaded", () => {
           adminPin: checkoutState.pin,
           partner1: data.tenant.partner1,
           partner2: data.tenant.partner2,
-          plan: data.tenant.plan
+          plan: data.tenant.plan,
+          role: data.isAdmin ? "admin" : "user"
         }));
 
         document.getElementById("successSiteUrl").textContent = data.siteUrl;
         document.getElementById("successPin").textContent = checkoutState.pin;
-        document.getElementById("successPlanBadge").textContent = data.tenant.plan === "starter" ? "Love Story Starter ($19)" : "Forever VIP Suite ($39)";
+        document.getElementById("successPlanBadge").textContent = data.isAdmin
+          ? "Forever VIP Suite (Admin Bypass $0)"
+          : (data.tenant.plan === "starter" ? "Love Story Starter ($19)" : "Forever VIP Suite ($39)");
         
         const btnLaunch = document.getElementById("btnLaunchBuilderStudio");
         btnLaunch.href = data.builderUrl;
@@ -764,12 +818,30 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderUserState() {
     const name = currentUser ? (currentUser.name || currentUser.email.split("@")[0]) : "";
     const initial = name ? name[0].toUpperCase() : "👤";
+    const btnNavGetStarted = document.getElementById("btnNavGetStarted");
+    const btnHeroBuy = document.getElementById("btnHeroBuy");
+    const btnStickyBuy = document.getElementById("btnStickyBuy");
+    const btnMobileGetStarted = document.getElementById("btnMobileGetStarted");
 
     if (currentUser) {
       if (navAuthLoggedOut) navAuthLoggedOut.style.display = "none";
       if (navAuthLoggedIn) navAuthLoggedIn.style.display = "flex";
       if (navUserName) navUserName.textContent = name;
       if (navUserAvatar) navUserAvatar.textContent = initial;
+
+      if (btnNavGetStarted) btnNavGetStarted.style.display = "none";
+
+      if (btnHeroBuy) {
+        btnHeroBuy.innerHTML = `<span>🚀</span> Go to Builder`;
+        btnHeroBuy.onclick = (e) => { e.preventDefault(); window.location.href = "/builder"; };
+      }
+      if (btnStickyBuy) {
+        btnStickyBuy.innerHTML = `<span>🚀</span> Go to Builder`;
+        btnStickyBuy.onclick = (e) => { e.preventDefault(); window.location.href = "/builder"; };
+      }
+      if (btnMobileGetStarted) {
+        btnMobileGetStarted.style.display = "none";
+      }
 
       if (mobileAuthLoggedOut) mobileAuthLoggedOut.style.display = "none";
       if (mobileAuthLoggedIn) mobileAuthLoggedIn.style.display = "flex";
@@ -788,6 +860,21 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       if (navAuthLoggedOut) navAuthLoggedOut.style.display = "flex";
       if (navAuthLoggedIn) navAuthLoggedIn.style.display = "none";
+      if (btnNavGetStarted) btnNavGetStarted.style.display = "inline-flex";
+
+      if (btnHeroBuy) {
+        btnHeroBuy.innerHTML = `<span>💖</span> Create Our Couple Site — From $19`;
+        btnHeroBuy.onclick = () => openCheckoutModal("vip");
+      }
+      if (btnStickyBuy) {
+        btnStickyBuy.innerHTML = `<span>💖</span> Claim Site & Launch Studio`;
+        btnStickyBuy.onclick = () => openCheckoutModal("vip");
+      }
+      if (btnMobileGetStarted) {
+        btnMobileGetStarted.innerHTML = `<span>💖</span> Create Site`;
+        btnMobileGetStarted.onclick = () => openCheckoutModal("vip");
+      }
+
       if (mobileAuthLoggedOut) mobileAuthLoggedOut.style.display = "flex";
       if (mobileAuthLoggedIn) mobileAuthLoggedIn.style.display = "none";
     }
@@ -1059,7 +1146,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnPortalCreateNewSite) {
     btnPortalCreateNewSite.addEventListener("click", () => {
       closeModal(userPortalModal);
-      openCheckoutModal("vip");
+      window.location.href = "/builder?create=1";
     });
   }
 

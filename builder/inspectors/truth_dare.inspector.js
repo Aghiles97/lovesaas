@@ -19,8 +19,8 @@
     if (!state.sectionsData.truth_dare) state.sectionsData.truth_dare = {};
     const td = state.sectionsData.truth_dare;
     const hero = state.sectionsData.hero || {};
-    const p1Def = hero.partner1 || "Aghiles";
-    const p2Def = hero.partner2 || "Ela";
+    const p1Def = hero.partner1 || state.partner1 || "Partner 1";
+    const p2Def = hero.partner2 || state.partner2 || "Partner 2";
 
     const rxList = Array.isArray(td.r3Reactions) && td.r3Reactions.length === 3 ? td.r3Reactions : [
       td.r3Reaction1 || "\"I KNEW IT!! You big cheater!! 😂🥊\"",

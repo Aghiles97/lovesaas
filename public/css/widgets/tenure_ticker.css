@@ -1,0 +1,169 @@
+.tenure-ticker-section {
+  padding: 70px 20px;
+  position: relative;
+}
+.tenure-ticker-box {
+  max-width: 920px;
+  margin: 0 auto;
+}
+.tenure-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 245, 248, 0.82));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 105, 135, 0.28);
+  border-radius: 24px;
+  padding: 28px 24px;
+  box-shadow: 0 16px 36px rgba(255, 67, 101, 0.12);
+  margin-bottom: 24px;
+}
+.tenure-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.tenure-pill {
+  background: linear-gradient(135deg, #ff4365, #ff6b8b);
+  color: #ffffff;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(255, 67, 101, 0.25);
+}
+.tenure-start-meta {
+  font-size: 0.88rem;
+  color: #64748b;
+}
+.tenure-grid-six {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+@media (max-width: 768px) {
+  .tenure-grid-six {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 480px) {
+  .tenure-grid-six {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.tenure-slot {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 18px 8px;
+  text-align: center;
+  border: 1px solid rgba(255, 105, 135, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.tenure-slot:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(255, 67, 101, 0.15);
+}
+.tenure-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #ff4365;
+  text-shadow: 0 0 12px rgba(255, 67, 101, 0.22);
+  line-height: 1.1;
+  display: block;
+}
+.tenure-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 6px;
+  display: block;
+}
+.milestone-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+.milestone-tag {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ff4365;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+.milestone-heading {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 4px 0;
+}
+.milestone-date-meta {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+.milestone-remain-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.milestone-slot {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 10px 14px;
+  min-width: 62px;
+  text-align: center;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.milestone-slot-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1e293b;
+  display: block;
+  line-height: 1.1;
+}
+.milestone-slot-lbl {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  display: block;
+  margin-top: 2px;
+}
+.milestone-progress-wrap {
+  margin-top: 10px;
+}
+.milestone-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 8px;
+}
+.milestone-progress-track {
+  height: 10px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+.milestone-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff4365, #ff8c42);
+  border-radius: 8px;
+  transition: width 0.5s ease;
+  box-shadow: 0 0 10px rgba(255, 67, 101, 0.5);
+}

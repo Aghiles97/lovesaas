@@ -25,9 +25,18 @@ let state = {
   authToken: null,
   userRole: "visitor", // "visitor" | "user" | "admin"
   isPurchased: false,
-  templatePreset: "storyteller",
+  templatePreset: "anniversary",
   themeId: "theme-pink",
-  layoutOrder: ["hero", "map", "timeline", "memories", "letter"],
+  layoutOrder: [
+    "hero",
+    "tenure_ticker",
+    "star_map",
+    "then_now_slider",
+    "milestone_odyssey",
+    "bucket_list",
+    "audio_capsule",
+    "letter"
+  ],
   sectionsData: {},
   allWidgetIds: Object.keys(WIDGET_REGISTRY),
   activeInspectorWidget: null,
@@ -197,6 +206,11 @@ function updateRoleUI() {
   document.body.classList.remove("role-admin", "role-user", "role-visitor");
   document.body.classList.add(`role-${state.userRole}`);
 
+  const btnHeaderNew = document.getElementById("btnHeaderNewProject");
+  if (btnHeaderNew) {
+    btnHeaderNew.style.display = (state.userRole === "admin" || state.userRole === "user") ? "inline-flex" : "none";
+  }
+
   if (state.userRole === "admin") {
     // ADMIN: Full access, full rights, NO demo banner, NO purchase prompts
     if (roleBadge) {
@@ -279,6 +293,79 @@ async function checkBuilderAccess() {
 
   const tokenToTest = paramToken || (localAuth && (localAuth.role === "admin" || localAuth.slug === targetSlug) ? localAuth.authToken : null);
   const pinToTest = paramPin || (localAuth && (localAuth.role === "admin" || localAuth.slug === targetSlug) ? localAuth.adminPin : null);
+
+  const userToken = localStorage.getItem("lovesaas_user_token");
+  if (userToken) {
+    try {
+      const uRes = await fetch("/api/auth/user-me", {
+        headers: { "Authorization": `Bearer ${userToken}`, "X-User-Token": userToken }
+      });
+      if (uRes.ok) {
+        const uData = await uRes.json();
+        if (uData.user) {
+          state.currentUser = uData.user;
+          const isAdmin = uData.user.role === "admin";
+
+          // Fetch user's designs
+          let userDesigns = [];
+          try {
+            const desRes = await fetch("/api/user/designs", {
+              headers: { "Authorization": `Bearer ${userToken}`, "X-User-Token": userToken }
+            });
+            if (desRes.ok) {
+              const desData = await desRes.json();
+              userDesigns = desData.designs || [];
+            }
+          } catch (e) {}
+          state.userDesigns = userDesigns;
+
+          const paramCreate = urlParams.get("create");
+
+          // Case 1: User has NO projects/designs (or create=1 requested)
+          if (userDesigns.length === 0 || paramCreate === "1") {
+            state.slug = (paramSlug && paramSlug !== "demo") ? paramSlug : "demo";
+            state.userRole = isAdmin ? "admin" : "user";
+            state.isPurchased = true;
+            if (isAdmin) {
+              state.adminPin = "admin1234";
+              state.authToken = "master-admin-token-lovesaas";
+            }
+            updateRoleUI();
+            setTimeout(() => {
+              if (typeof window.openNewProjectModal === "function") {
+                window.openNewProjectModal(userDesigns.length === 0);
+              }
+            }, 300);
+            return true;
+          }
+
+          // Case 2: User has projects -> load target or latest project
+          if (paramSlug && paramSlug !== "demo") {
+            targetSlug = paramSlug;
+          } else {
+            targetSlug = userDesigns[0].slug;
+          }
+
+          const targetProject = userDesigns.find(d => d.slug === targetSlug) || userDesigns[0];
+          state.slug = targetProject.slug;
+          state.userRole = isAdmin ? "admin" : "user";
+          state.isPurchased = true;
+          state.adminPin = targetProject.adminPin || (isAdmin ? "admin1234" : "1234");
+          state.authToken = targetProject.authToken || (isAdmin ? "master-admin-token-lovesaas" : "");
+          localStorage.setItem("lovesaas_auth", JSON.stringify({
+            slug: targetProject.slug,
+            role: state.userRole,
+            authToken: state.authToken,
+            adminPin: state.adminPin,
+            plan: targetProject.plan || "vip"
+          }));
+          window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(targetProject.slug)}&token=${encodeURIComponent(state.authToken || "")}`);
+          updateRoleUI();
+          return true;
+        }
+      }
+    } catch (e) {}
+  }
 
   if (paramRole === "admin" || (localAuth && localAuth.role === "admin") || pinToTest === "admin1234" || tokenToTest === "master-admin-token-lovesaas") {
     try {
@@ -527,6 +614,9 @@ async function loadTenantData(slug) {
     const data = await res.json();
 
     state.slug = data.slug;
+    state.partner1 = data.partner1 || (data.sectionsData && data.sectionsData.hero && data.sectionsData.hero.partner1) || "";
+    state.partner2 = data.partner2 || (data.sectionsData && data.sectionsData.hero && data.sectionsData.hero.partner2) || "";
+    state.customerEmail = data.customerEmail || "";
     if (state.userRole !== "admin" && data.adminPin && !state.adminPin) {
       state.adminPin = data.adminPin;
     }
@@ -537,6 +627,15 @@ async function loadTenantData(slug) {
     state.themeId = (data.themeId === "romantic-rose" || !data.themeId) ? "theme-pink" : data.themeId;
     state.layoutOrder = data.layoutOrder || PRESETS.storyteller.widgets;
     state.sectionsData = data.sectionsData || {};
+
+    if (state.sectionsData.hero) {
+      if (state.partner1 && (!state.sectionsData.hero.partner1 || state.sectionsData.hero.partner1 === "Alex")) {
+        state.sectionsData.hero.partner1 = state.partner1;
+      }
+      if (state.partner2 && (!state.sectionsData.hero.partner2 || state.sectionsData.hero.partner2 === "Sam")) {
+        state.sectionsData.hero.partner2 = state.partner2;
+      }
+    }
 
     if (state.layoutOrder && state.layoutOrder.length) {
       if (!state.layoutOrder.includes(state.activeInspectorWidget)) {
@@ -672,6 +771,9 @@ function renderWidgetTray() {
     const isActive = activeSet.has(id);
     if (currentWidgetFilter === "active" && !isActive) return false;
     if (currentWidgetFilter === "inactive" && isActive) return false;
+    if (currentWidgetFilter !== "all" && currentWidgetFilter !== "active" && currentWidgetFilter !== "inactive") {
+      if (meta.category !== currentWidgetFilter) return false;
+    }
     if (query) {
       const matchTitle = (meta.title || "").toLowerCase().includes(query);
       const matchDesc = (meta.desc || "").toLowerCase().includes(query);
@@ -1335,7 +1437,19 @@ const WIDGET_CATEGORIES = {
   boarding_pass: "Romantic Trips",
   quiz: "Trivia Challenge",
   letter: "Love Note",
-  playful: "Mini Game"
+  playful: "Mini Game",
+  candle_blowout: "Birthday Wish",
+  milestone_stats: "Life Counter",
+  gift_unboxer: "3D Surprise",
+  roast_toast: "Party Game",
+  guestbook: "Wish Board",
+  party_jukebox: "Music & Beats",
+  tenure_ticker: "Precision Counter",
+  star_map: "Celestial Map",
+  then_now_slider: "Split Comparison",
+  bucket_list: "Shared Goals",
+  audio_capsule: "Voice Vault",
+  milestone_odyssey: "Journey Map"
 };
 
 let activeMediaPickerCallback = null;
@@ -3194,36 +3308,28 @@ function renderSiteSettingsUI() {
   const hero = state.sectionsData.hero;
 
   const birthdayThemes = [
-    { id: "theme-birthday", name: "Birthday Cakes 🎂", desc: "Tiered cakes, dripping icing, candles & balloons", color: "#ff2e93" },
-    { id: "theme-birthday-midnight", name: "Midnight Gold Gala ✨", desc: "Dark luxury gala, sparkler cakes & champagne", color: "#f59e0b" },
-    { id: "theme-birthday-pastel", name: "Sweet Cupcake Bakery 🧁", desc: "Strawberry cream, cupcakes & macaron towers", color: "#ec4899" },
-    { id: "theme-birthday-carnival", name: "Carnival & Confetti 🎪", desc: "Joyful bunting banners, party poppers & balloons", color: "#0284c7" },
-    { id: "theme-birthday-emoji", name: "3D Emoji Party 🥳", desc: "Floating 3D emoji stickers, festive confetti & vibes", color: "#f43f5e" },
-    { id: "theme-birthday-pixel", name: "8-Bit Retro Arcade 👾", desc: "Chiptune arcade pixel art, pixel cake & CRT grid", color: "#a855f7" },
-    { id: "theme-birthday-neon", name: "Electric Cyber Neon ⚡", desc: "Glow tubes, dark club mode & vibrant neon signage", color: "#ff007f" },
-    { id: "theme-birthday-papercraft", name: "Papercraft Cardstock ✂️", desc: "Folded origami, layered papercut shadows & bunting", color: "#ea580c" },
-    { id: "theme-birthday-watercolor", name: "Watercolor & Foil 🎨", desc: "Soft pastel washes, luxury gold foil & delicate botanicals", color: "#c026d3" }
+    { id: "theme-birthday", name: "Birthday Cakes 🎂", desc: "Tiered cakes, dripping icing, candles & balloons", color: "#ff2e93", bg: "linear-gradient(135deg, #fff0f7 0%, #fffbf0 50%, #f0f7ff 100%)", icon: "🎂" },
+    { id: "theme-birthday-midnight", name: "Midnight Gold Gala ✨", desc: "Dark luxury gala, sparkler cakes & champagne", color: "#f59e0b", bg: "linear-gradient(135deg, #090d16 0%, #111827 50%, #1e1b4b 100%)", icon: "✨" },
+    { id: "theme-birthday-pastel", name: "Sweet Cupcake Bakery 🧁", desc: "Strawberry cream, cupcakes & macaron towers", color: "#ec4899", bg: "linear-gradient(135deg, #fdf2f8 0%, #fef3c7 50%, #f0fdf4 100%)", icon: "🧁" },
+    { id: "theme-birthday-carnival", name: "Carnival & Confetti 🎪", desc: "Joyful bunting banners, party poppers & balloons", color: "#0284c7", bg: "linear-gradient(135deg, #f0f9ff 0%, #fdf4ff 50%, #ecfeff 100%)", icon: "🎪" },
+    { id: "theme-birthday-emoji", name: "3D Emoji Party 🥳", desc: "Floating 3D emoji stickers, festive confetti & vibes", color: "#f43f5e", bg: "linear-gradient(135deg, #fff1f2 0%, #fff7ed 50%, #fef08a 100%)", icon: "🥳" },
+    { id: "theme-birthday-pixel", name: "8-Bit Retro Arcade 👾", desc: "Chiptune arcade pixel art, pixel cake & CRT grid", color: "#a855f7", bg: "linear-gradient(135deg, #0d0221 0%, #19053b 50%, #26115a 100%)", icon: "👾" },
+    { id: "theme-birthday-neon", name: "Electric Cyber Neon ⚡", desc: "Glow tubes, dark club mode & vibrant neon signage", color: "#ff007f", bg: "linear-gradient(135deg, #050508 0%, #0a0a14 50%, #12091f 100%)", icon: "⚡" },
+    { id: "theme-birthday-papercraft", name: "Papercraft Cardstock ✂️", desc: "Folded origami, layered papercut shadows & bunting", color: "#ea580c", bg: "linear-gradient(135deg, #fffbf5 0%, #fef3c7 50%, #ffedd5 100%)", icon: "✂️" },
+    { id: "theme-birthday-watercolor", name: "Watercolor & Foil 🎨", desc: "Soft pastel washes, luxury gold foil & delicate botanicals", color: "#c026d3", bg: "linear-gradient(135deg, #faf5ff 0%, #fdf2f8 50%, #f5f3ff 100%)", icon: "🎨" }
   ];
 
   const artStyles = [
-    { id: "theme-watercolor-frame", name: "Watercolor Romance 🎨", desc: "Soft border wash, polka-dot balloons & golden arrows (Ref 1)", color: "#fb7185" },
-    { id: "theme-pop-stickers", name: "Pop Love Stickers 💋", desc: "Bold lips, bubbling potion, winged hearts & lockets (Ref 2)", color: "#ff007f" },
-    { id: "theme-doodle-tapestry", name: "Love Sketch Tapestry 🧸", desc: "Monoline toile: teddy bears, champagne & roses (Ref 3)", color: "#e11d48" }
+    { id: "theme-img-watercolor-frame", name: "Watercolor Romance 🎨", desc: "Soft border wash, polka-dot balloons & golden arrows", color: "#fb7185", img: "/images/themes/bg-watercolor-frame.png" },
+    { id: "theme-img-pop-stickers", name: "Pop Love Stickers 💋", desc: "Bold lips, bubbling potion, winged hearts & lockets", color: "#ff007f", img: "/images/themes/bg-pop-stickers.png" },
+    { id: "theme-img-doodle-tapestry", name: "Love Sketch Tapestry 🧸", desc: "Monoline toile: teddy bears, champagne & roses", color: "#e11d48", img: "/images/themes/bg-doodle-tapestry.png" }
   ];
 
   const imageBackgroundThemes = [
-    { id: "theme-img-theme1", name: "Theme 1 (Adaptive) 🎀", desc: "Watercolor clouds & ribbons (Auto 16:9 / 9:16)", color: "#e11d48", img: "/images/themes/theme1-16-9.PNG" },
-    { id: "theme-img-theme1-16-9", name: "Theme 1 (16:9) 🖼️", desc: "Watercolor clouds & ribbons (Landscape 16:9)", color: "#e11d48", img: "/images/themes/theme1-16-9.PNG" },
-    { id: "theme-img-theme1-9-16", name: "Theme 1 (9:16) 📱", desc: "Watercolor clouds & ribbons (Portrait 9:16)", color: "#e11d48", img: "/images/themes/theme1-9-16.PNG" },
-    { id: "theme-img-theme2", name: "Theme 2 (Adaptive) 🎀", desc: "Silk bows & pearl necklaces (Auto 16:9 / 9:16)", color: "#e11d48", img: "/images/themes/theme2-16-9.PNG" },
-    { id: "theme-img-theme2-16-9", name: "Theme 2 (16:9) 🖼️", desc: "Silk bows & pearl necklaces (Landscape 16:9)", color: "#e11d48", img: "/images/themes/theme2-16-9.PNG" },
-    { id: "theme-img-theme2-9-16", name: "Theme 2 (9:16) 📱", desc: "Silk bows & pearl necklaces (Portrait 9:16)", color: "#e11d48", img: "/images/themes/theme2-9-16.PNG" },
-    { id: "theme-img-theme3", name: "Theme 3 (Adaptive) 🍒", desc: "Heart cherries with silk ribbons (Auto 16:9 / 9:16)", color: "#dc2626", img: "/images/themes/theme3-16-9.PNG" },
-    { id: "theme-img-theme3-16-9", name: "Theme 3 (16:9) 🖼️", desc: "Heart cherries with silk ribbons (Landscape 16:9)", color: "#dc2626", img: "/images/themes/theme3-16-9.PNG" },
-    { id: "theme-img-theme3-9-16", name: "Theme 3 (9:16) 📱", desc: "Heart cherries with silk ribbons (Portrait 9:16)", color: "#dc2626", img: "/images/themes/theme3-9-16.PNG" },
-    { id: "theme-img-theme4", name: "Theme 4 (Adaptive) 📝", desc: "Love letter notebook paper (Auto 16:9 / 9:16)", color: "#e11d48", img: "/images/themes/theme4-16-9.PNG" },
-    { id: "theme-img-theme4-16-9", name: "Theme 4 (16:9) 🖼️", desc: "Love letter notebook paper (Landscape 16:9)", color: "#e11d48", img: "/images/themes/theme4-16-9.PNG" },
-    { id: "theme-img-theme4-9-16", name: "Theme 4 (9:16) 📱", desc: "Love letter notebook paper (Portrait 9:16)", color: "#e11d48", img: "/images/themes/theme4-9-16.PNG" },
+    { id: "theme-img-theme1", name: "Theme 1 🎀", desc: "Watercolor clouds & ribbons (Responsive)", color: "#e11d48", img: "/images/themes/thumb-theme1.jpg" },
+    { id: "theme-img-theme2", name: "Theme 2 🎀", desc: "Silk bows & pearl necklaces (Responsive)", color: "#e11d48", img: "/images/themes/thumb-theme2.jpg" },
+    { id: "theme-img-theme3", name: "Theme 3 🍒", desc: "Heart cherries with silk ribbons (Responsive)", color: "#dc2626", img: "/images/themes/thumb-theme3.jpg" },
+    { id: "theme-img-theme4", name: "Theme 4 📝", desc: "Love letter notebook paper (Responsive)", color: "#e11d48", img: "/images/themes/thumb-theme4.jpg" },
     { id: "theme-img-gold-hearts", name: "Watercolor Gold Hearts 💛", desc: "Gold leaf hearts & blush wash", color: "#d97706", img: "/images/themes/bg-watercolor-gold.jpeg" },
     { id: "theme-img-love-letter", name: "Love Letter Envelope 💌", desc: "Pink letter & floating hearts", color: "#fb7185", img: "/images/themes/bg-love-letter.jpg" },
     { id: "theme-img-be-mine", name: "Be Mine Sunset Sky 🌅", desc: "Sunset sky & sparkling heart trail", color: "#f43f5e", img: "/images/themes/bg-be-mine-sky.jpg" },
@@ -3231,10 +3337,7 @@ function renderSiteSettingsUI() {
     { id: "theme-img-line-hearts", name: "Minimalist Line Hearts ✍️", desc: "Continuous ink doodle hearts", color: "#ec4899", img: "/images/themes/bg-line-hearts.jpg" },
     { id: "theme-img-stitched-hearts", name: "Stitched Dual Pink 💕", desc: "Two-tone stitched craft paper", color: "#db2777", img: "/images/themes/bg-stitched-pink.jpeg" },
     { id: "theme-img-heart-podiums", name: "3D Heart Podiums 🎁", desc: "Studio 3D pastel pink heart sculpture", color: "#ec4899", img: "/images/themes/bg-heart-podiums.webp" },
-    { id: "theme-img-paper-sunset", name: "Sunset Paper Hearts 🌇", desc: "Warm sunset & layered paper cutouts", color: "#f97316", img: "/images/themes/bg-paper-sunset.jpg" },
-    { id: "theme-img-watercolor-frame", name: "Watercolor Frame 🖼️", desc: "Pastel frame with balloons & arrows", color: "#fb7185", img: "/images/themes/bg-watercolor-frame.png" },
-    { id: "theme-img-pop-stickers", name: "Pop Love Stickers 💋", desc: "Sticker pattern: lips, potions & wings", color: "#ff007f", img: "/images/themes/bg-pop-stickers.png" },
-    { id: "theme-img-doodle-tapestry", name: "Love Sketch Tapestry 🧸", desc: "Monoline crimson sketch toile", color: "#e11d48", img: "/images/themes/bg-doodle-tapestry.png" }
+    { id: "theme-img-paper-sunset", name: "Sunset Paper Hearts 🌇", desc: "Warm sunset & layered paper cutouts", color: "#f97316", img: "/images/themes/bg-paper-sunset.jpg" }
   ];
 
   const otherOccasions = [
@@ -3252,7 +3355,13 @@ function renderSiteSettingsUI() {
     { id: "theme-peach", name: "Warm Peach", color: "#f97316" }
   ];
 
-  const currentTheme = (state.themeId === "romantic-rose" || !state.themeId) ? "theme-pink" : (state.themeId === "theme-blue" || state.themeId === "blue") ? "theme-midnight" : (state.themeId === "birthday" ? "theme-birthday" : (state.themeId === "theme-birthday-cake" ? "theme-birthday" : state.themeId));
+  let currentTheme = state.themeId || "theme-pink";
+  if (currentTheme === "romantic-rose" || !currentTheme) currentTheme = "theme-pink";
+  else if (currentTheme === "theme-blue" || currentTheme === "blue") currentTheme = "theme-midnight";
+  else if (currentTheme === "birthday" || currentTheme === "theme-birthday-cake") currentTheme = "theme-birthday";
+  else if (currentTheme.endsWith("-16-9") || currentTheme.endsWith("-9-16")) {
+    currentTheme = currentTheme.replace(/-(16-9|9-16)$/, "");
+  }
   const safeDateVal = (hero.anniversaryDate || '2024-02-14').split('T')[0];
   const publicSiteUrl = `${window.location.origin}/sites/${encodeURIComponent(state.slug)}`;
 
@@ -3279,11 +3388,11 @@ function renderSiteSettingsUI() {
       <div class="grid-2">
         <div class="input-group">
           <label>Partner 1 (Sender / Boyfriend)</label>
-          <input type="text" id="site_p1" value="${escapeHtml(hero.partner1 || 'Aghiles')}">
+          <input type="text" id="site_p1" value="${escapeHtml(hero.partner1 || state.partner1 || 'Partner 1')}">
         </div>
         <div class="input-group">
           <label>Partner 2 (Recipient / Girlfriend)</label>
-          <input type="text" id="site_p2" value="${escapeHtml(hero.partner2 || 'Ella')}">
+          <input type="text" id="site_p2" value="${escapeHtml(hero.partner2 || state.partner2 || 'Partner 2')}">
         </div>
       </div>
       <div class="input-group">
@@ -3292,11 +3401,11 @@ function renderSiteSettingsUI() {
       </div>
       <div class="input-group">
         <label>Love Subtitle / Relationship Motto</label>
-        <input type="text" id="site_subtitle" value="${escapeHtml(hero.subtitle || 'Our Infinite Love Story ❤️')}">
+        <input type="text" id="site_subtitle" value="${escapeHtml(hero.subtitle || `${hero.partner1 || state.partner1 || 'Partner 1'} & ${hero.partner2 || state.partner2 || 'Partner 2'}'s Infinite Love Story ❤️`)}">
       </div>
       <div class="input-group" style="margin-top: 10px;">
         <label>Browser Tab Title</label>
-        <input type="text" id="site_page_title" value="${escapeHtml(hero.pageTitle || `${hero.partner1 || 'Aghiles'} & ${hero.partner2 || 'Ella'} | Our Love Story ❤️`)}">
+        <input type="text" id="site_page_title" value="${escapeHtml(hero.pageTitle || `${hero.partner1 || state.partner1 || 'Partner 1'} & ${hero.partner2 || state.partner2 || 'Partner 2'} | Our Love Story ❤️`)}">
       </div>
     </div>
 
@@ -3304,26 +3413,30 @@ function renderSiteSettingsUI() {
     <div class="settings-group-card">
       <div class="settings-group-title"><span>🎂</span> Birthday Theme & Background Variations</div>
       <div style="font-size: 11px; color: var(--text-muted, #64748b); margin-bottom: 10px;">Select from 9 unique birthday designs & illustrated background art:</div>
-      <div class="theme-chips-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 16px;">
+      <div class="theme-chips-grid" style="grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;">
         ${birthdayThemes.map(t => `
-          <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 10px 10px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 4px;">
+          <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden;">
+            <div style="width: 100%; height: 65px; background: ${t.bg}; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; position: relative; box-shadow: inset 0 0 10px rgba(0,0,0,0.05);">
+              <span style="font-size: 26px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">${t.icon}</span>
+            </div>
             <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
               <span class="theme-color-dot" style="background: ${t.color}"></span>
-              <span style="font-weight: 700; font-size: 0.82rem;">${t.name}</span>
+              <span style="font-weight: 700; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.name}</span>
             </div>
             <span style="font-size: 10px; color: var(--text-muted, #64748b); font-weight: normal; line-height: 1.25;">${t.desc}</span>
           </button>
         `).join("")}
       </div>
 
-      <div class="settings-group-title" style="font-size: 12px; opacity: 0.9; margin-top: 6px;"><span>✨</span> Illustrated Romance & Art Styles (Reference Designs)</div>
+      <div class="settings-group-title" style="font-size: 12px; opacity: 0.9; margin-top: 6px;"><span>✨</span> Illustrated Romance & Art Styles</div>
       <div style="font-size: 11px; color: var(--text-muted, #64748b); margin-bottom: 10px;">Select from 3 illustrated aesthetics (Watercolor Frame, Pop Stickers, Sketch Tapestry):</div>
-      <div class="theme-chips-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 16px;">
+      <div class="theme-chips-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
         ${artStyles.map(t => `
-          <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 10px 10px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 4px;">
+          <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden;">
+            <div style="width: 100%; height: 65px; background: url('${t.img}') center/cover no-repeat; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1);"></div>
             <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
               <span class="theme-color-dot" style="background: ${t.color}"></span>
-              <span style="font-weight: 700; font-size: 0.82rem;">${t.name}</span>
+              <span style="font-weight: 700; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.name}</span>
             </div>
             <span style="font-size: 10px; color: var(--text-muted, #64748b); font-weight: normal; line-height: 1.25;">${t.desc}</span>
           </button>
@@ -3359,7 +3472,7 @@ function renderSiteSettingsUI() {
         ${(state.sectionsData.customThemes || []).map(t => `
           <div style="position: relative; width: 100%;">
             <button type="button" class="theme-chip-btn ${(!state.customBgUrl && currentTheme === t.id) ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden; width: 100%; border: 1px solid rgba(225,29,72,0.35);">
-              <div style="width: 100%; height: 75px; background: url('${escapeHtml(t.desktopImg || t.mobileImg)}') center/cover no-repeat; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1); position: relative;">
+              <div style="width: 100%; height: 75px; background: ${t.color || '#e11d48'} url('${escapeHtml(t.desktopImg || t.mobileImg)}') center/cover no-repeat; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1); position: relative;">
                 <span style="position: absolute; top: 4px; left: 4px; background: rgba(225,29,72,0.85); color: #fff; font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: 700;">CUSTOM</span>
               </div>
               <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
@@ -4126,6 +4239,7 @@ function setupEventListeners() {
   initPresetsToggle();
   initCopyLiveLink();
   initKeyboardShortcuts();
+  setupNewProjectModal();
 
   btnSaveConfig.onclick = saveConfig;
 
@@ -4291,6 +4405,8 @@ function setupEventListeners() {
       if (nameEl) nameEl.textContent = displayName;
       if (avatarEl) avatarEl.textContent = displayName ? displayName[0].toUpperCase() : "👤";
       if (badgeEl) badgeEl.style.display = "inline-flex";
+      const btnHeaderNew = document.getElementById("btnHeaderNewProject");
+      if (btnHeaderNew) btnHeaderNew.style.display = "inline-flex";
 
       const desRes = await fetch("/api/user/designs", {
         headers: { "Authorization": `Bearer ${userToken}`, "X-User-Token": userToken }
@@ -4334,4 +4450,237 @@ function setupEventListeners() {
     } catch {}
   }
   initBuilderUserSession();
+}
+
+function setupNewProjectModal() {
+  const modal = document.getElementById("builderNewProjectModal");
+  const btnClose = document.getElementById("btnCloseNewProjectModal");
+  const cardTemplate = document.getElementById("modeCardTemplate");
+  const cardScratch = document.getElementById("modeCardScratch");
+  const presetWrap = document.getElementById("newProjectPresetPickerWrap");
+  const presetChips = document.querySelectorAll("#npPresetChips .np-preset-chip");
+  const inP1 = document.getElementById("npPartner1");
+  const inP2 = document.getElementById("npPartner2");
+  const inSlug = document.getElementById("npSlug");
+  const inPin = document.getElementById("npPin");
+  const errEl = document.getElementById("npErrorMsg");
+  const btnSubmit = document.getElementById("btnCreateProjectSubmit");
+  const subtitleEl = document.getElementById("newProjectModalSubtitle");
+  const btnHeaderNew = document.getElementById("btnHeaderNewProject");
+  const btnTenantCreate = document.getElementById("btnTenantModalCreateNew");
+
+  if (!modal) return;
+
+  let selectedMode = "template";
+  let selectedPreset = "storyteller";
+  let slugUserEdited = false;
+
+  function autoSuggestSlug() {
+    if (slugUserEdited) return;
+    const p1 = (inP1?.value || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+    const p2 = (inP2?.value || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (p1 && p2 && inSlug) {
+      inSlug.value = `${p1}-and-${p2}`;
+    }
+  }
+
+  if (inP1) inP1.addEventListener("input", autoSuggestSlug);
+  if (inP2) inP2.addEventListener("input", autoSuggestSlug);
+  if (inSlug) {
+    inSlug.addEventListener("input", () => {
+      slugUserEdited = true;
+      inSlug.value = inSlug.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    });
+  }
+
+  if (cardTemplate) {
+    cardTemplate.addEventListener("click", () => {
+      selectedMode = "template";
+      cardTemplate.classList.add("active");
+      cardTemplate.style.borderColor = "var(--primary, #f43f5e)";
+      cardTemplate.style.background = "rgba(244, 63, 94, 0.12)";
+      if (cardScratch) {
+        cardScratch.classList.remove("active");
+        cardScratch.style.borderColor = "rgba(255,255,255,0.15)";
+        cardScratch.style.background = "rgba(255,255,255,0.03)";
+      }
+      if (presetWrap) presetWrap.style.display = "block";
+    });
+  }
+
+  if (cardScratch) {
+    cardScratch.addEventListener("click", () => {
+      selectedMode = "scratch";
+      cardScratch.classList.add("active");
+      cardScratch.style.borderColor = "var(--primary, #f43f5e)";
+      cardScratch.style.background = "rgba(244, 63, 94, 0.12)";
+      if (cardTemplate) {
+        cardTemplate.classList.remove("active");
+        cardTemplate.style.borderColor = "rgba(255,255,255,0.15)";
+        cardTemplate.style.background = "rgba(255,255,255,0.03)";
+      }
+      if (presetWrap) presetWrap.style.display = "none";
+    });
+  }
+
+  presetChips.forEach(chip => {
+    chip.addEventListener("click", () => {
+      presetChips.forEach(c => {
+        c.classList.remove("active");
+        c.style.borderColor = "rgba(255,255,255,0.12)";
+        c.style.background = "rgba(255,255,255,0.05)";
+        c.style.color = "#cbd5e1";
+      });
+      chip.classList.add("active");
+      chip.style.borderColor = "#f43f5e";
+      chip.style.background = "rgba(244, 63, 94, 0.15)";
+      chip.style.color = "#fff";
+      selectedPreset = chip.dataset.preset || "storyteller";
+    });
+  });
+
+  if (btnClose) {
+    btnClose.addEventListener("click", () => {
+      modal.classList.add("hidden");
+    });
+  }
+
+  if (btnHeaderNew) {
+    btnHeaderNew.addEventListener("click", () => {
+      window.openNewProjectModal(false);
+    });
+  }
+
+  if (btnTenantCreate) {
+    btnTenantCreate.addEventListener("click", () => {
+      document.getElementById("tenantModal")?.classList.add("hidden");
+      window.openNewProjectModal(false);
+    });
+  }
+
+  window.openNewProjectModal = function(isFirstTime = false) {
+    if (btnClose) {
+      btnClose.style.display = isFirstTime ? "none" : "block";
+    }
+    if (subtitleEl) {
+      subtitleEl.textContent = isFirstTime
+        ? "You don't have any websites yet. How would you like to start?"
+        : "Create another couple website. Choose templates or start clean from scratch:";
+    }
+
+    try {
+      const saved = JSON.parse(localStorage.getItem("lovesaas_saved_creation_inputs") || "{}");
+      if (inP1 && !inP1.value) inP1.value = saved.partner1 || (state.partner1 && state.partner1 !== "Alex" ? state.partner1 : "") || "";
+      if (inP2 && !inP2.value) inP2.value = saved.partner2 || (state.partner2 && state.partner2 !== "Sam" ? state.partner2 : "") || "";
+    } catch {}
+
+    autoSuggestSlug();
+    if (errEl) {
+      errEl.style.display = "none";
+      errEl.textContent = "";
+    }
+    modal.classList.remove("hidden");
+  };
+
+  if (btnSubmit) {
+    btnSubmit.addEventListener("click", async () => {
+      if (errEl) {
+        errEl.style.display = "none";
+        errEl.textContent = "";
+      }
+
+      const p1 = (inP1?.value || "").trim();
+      const p2 = (inP2?.value || "").trim();
+      let slug = (inSlug?.value || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+      const pin = (inPin?.value || "1234").trim();
+
+      if (!p1 || !p2) {
+        if (errEl) {
+          errEl.textContent = "Please enter both partner names.";
+          errEl.style.display = "block";
+        }
+        return;
+      }
+      if (!slug) {
+        if (errEl) {
+          errEl.textContent = "Please enter a valid website URL slug.";
+          errEl.style.display = "block";
+        }
+        return;
+      }
+
+      const userToken = localStorage.getItem("lovesaas_user_token");
+      const isAdmin = state.userRole === "admin" || (state.currentUser && state.currentUser.role === "admin");
+      const customerEmail = (state.currentUser && state.currentUser.email) || "";
+      const chosenPreset = selectedMode === "scratch" ? "minimal_gallery" : selectedPreset;
+
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = `<span>Creating your website...</span> <span>⏳</span>`;
+
+      try {
+        const headers = { "Content-Type": "application/json" };
+        if (userToken) {
+          headers["Authorization"] = `Bearer ${userToken}`;
+          headers["X-User-Token"] = userToken;
+        }
+
+        const res = await fetch("/api/checkout", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            partner1: p1,
+            partner2: p2,
+            slug,
+            adminPin: pin,
+            customerEmail,
+            plan: isAdmin ? "vip" : "vip",
+            preset: chosenPreset
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to create website.");
+        }
+
+        try {
+          localStorage.setItem("lovesaas_saved_creation_inputs", JSON.stringify({ partner1: p1, partner2: p2, email: customerEmail }));
+        } catch {}
+
+        state.slug = data.tenant.slug;
+        state.partner1 = data.tenant.partner1;
+        state.partner2 = data.tenant.partner2;
+        state.authToken = data.tenant.authToken || (isAdmin ? "master-admin-token-lovesaas" : "");
+        state.adminPin = pin;
+        state.userRole = isAdmin ? "admin" : "user";
+        state.isPurchased = true;
+
+        localStorage.setItem("lovesaas_auth", JSON.stringify({
+          slug: data.tenant.slug,
+          role: state.userRole,
+          authToken: state.authToken,
+          adminPin: state.adminPin,
+          plan: data.tenant.plan || "vip"
+        }));
+
+        modal.classList.add("hidden");
+        window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(data.tenant.slug)}&token=${encodeURIComponent(state.authToken || "")}`);
+        updateRoleUI();
+        await loadTenantData(data.tenant.slug);
+        showToast(`🎉 Website "${data.tenant.slug}" created successfully!`, "success");
+
+        if (typeof initBuilderUserSession === "function") {
+          initBuilderUserSession();
+        }
+      } catch (err) {
+        if (errEl) {
+          errEl.textContent = err.message;
+          errEl.style.display = "block";
+        }
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = `<span>🚀 Create Website & Launch Studio</span>`;
+      }
+    });
+  }
 }

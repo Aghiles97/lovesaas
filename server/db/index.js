@@ -58,6 +58,17 @@ pool.on("error", (err) => {
 });
 
 const DEFAULT_PRESETS = {
+  blank: [],
+  anniversary: [
+    "hero",
+    "tenure_ticker",
+    "star_map",
+    "then_now_slider",
+    "milestone_odyssey",
+    "bucket_list",
+    "audio_capsule",
+    "letter"
+  ],
   birthday: [
     "hero",
     "candle_blowout",
@@ -72,6 +83,18 @@ const DEFAULT_PRESETS = {
   playful: ["hero", "love_meter", "reasons", "truth_dare", "spinner", "coupons", "quiz", "playful"],
   complete: [
     "hero",
+    "candle_blowout",
+    "milestone_stats",
+    "gift_unboxer",
+    "roast_toast",
+    "guestbook",
+    "party_jukebox",
+    "tenure_ticker",
+    "star_map",
+    "then_now_slider",
+    "milestone_odyssey",
+    "bucket_list",
+    "audio_capsule",
     "love_meter",
     "reasons",
     "timeline",
@@ -951,12 +974,12 @@ const DEFAULT_SECTIONS_DATA = {
     desc: "A live ticking celebration of the seconds, heartbeats, and memories you bring into this universe.",
     birthDate: "2000-01-01T00:00",
     metrics: [
-      { id: "heartbeats", icon: "💓", title: "Heartbeats", desc: "Beating with love & vitality (~103k/day)", factor: 103680 },
-      { id: "coffee", icon: "☕", title: "Cups of Coffee & Tea", desc: "Fueling sweet mornings & late smiles", factor: 1.6 },
-      { id: "solar", icon: "🌍", title: "Trips Around the Sun", desc: "Completed solar orbits celebrating your life", factor: 0.00273785 },
-      { id: "dreams", icon: "💤", title: "Hours of Sweet Dreams", desc: "Restful sleep & imagining bright futures", factor: 8 },
-      { id: "laughs", icon: "😂", title: "Laughs & Giggles", desc: "Shared moments of pure unadulterated joy", factor: 14 },
-      { id: "distance", icon: "✈️", title: "Kilometers Traveled", desc: "Journeying across this planet with wonder", factor: 11 }
+      { id: "heartbeats", icon: "💓", title: "Heartbeats Beating For You", desc: "Every single beat devoted purely to loving you (~103k/day)", factor: 103680 },
+      { id: "solar", icon: "☀️", title: "Trips Around The Sun", desc: "Completed solar orbits gracing the universe with your light", factor: 0.00273785 },
+      { id: "distance", icon: "💌", title: "Kilometers of Long-Distance Love Bridged", desc: "No span of Earth can ever keep my heart from yours", factor: 28 },
+      { id: "dreams", icon: "💭", title: "Hours Dreaming Of You", desc: "Sweetest dreams where you hold my hand every night", factor: 8.5 },
+      { id: "laughs", icon: "🥰", title: "Sweet Smiles & Giggles Shared", desc: "Moments of pure joy you bring into my life every day", factor: 18 },
+      { id: "coffee", icon: "☕", title: "Cups of Warm Tea & Cozy Talks", desc: "Comforting mornings and late-night heart-to-hearts", factor: 2.2 }
     ]
   },
   gift_unboxer: {
@@ -1008,6 +1031,75 @@ const DEFAULT_SECTIONS_DATA = {
       { title: "Celebration Jam", artist: "Kool & The Gang", url: "audio/taylor-swift-fate-of-ophelia.m4r", duration: "3:42" },
       { title: "Birthday Anthem", artist: "Sweet Melody", url: "audio/lady-gaga-always-remember-us-this-way.m4r", duration: "3:30" },
       { title: "Dancing Queen Vibes", artist: "Party Beats", url: "audio/imagine-dragons-i-follow-you.m4r", duration: "3:51" }
+    ]
+  },
+  tenure_ticker: {
+    tag: "Our Love In Numbers ⏳",
+    title: "Forever & Counting Every Second",
+    desc: "A precision live ticker of every year, month, day, and heartbeat we've spent building this life together.",
+    anniversaryDate: "2021-06-18T19:30",
+    nextMilestoneTitle: "5th Anniversary Milestone 💎",
+    nextMilestoneDate: "2026-06-18T19:30"
+  },
+  star_map: {
+    tag: "The Night We Met ✨",
+    title: "Celestial Constellation Alignment",
+    desc: "The exact arrangement of the stars, planets, and galaxies above us on the night our story began.",
+    locationName: "Paris, France",
+    latitude: 48.8566,
+    longitude: 2.3522,
+    observationDate: "2021-06-18T22:30",
+    showConstellations: true,
+    showStarNames: true,
+    mapTheme: "midnight"
+  },
+  then_now_slider: {
+    tag: "Our Journey Through Time 🌗",
+    title: "Then vs. Now: How It Started & How It's Going",
+    desc: "From the shy smiles of day one to the unbreakable bond of today. Slide to witness our growth.",
+    thenLabel: "THEN: Our First Date (2021)",
+    thenImg: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1200&q=80",
+    thenCaption: "Coffee cups shaking, butterflies in our stomachs, talking until the café closed.",
+    nowLabel: "NOW: Present Day (2026)",
+    nowImg: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=80",
+    nowCaption: "5 years of laughter, thousands of inside jokes, and a love deeper than the ocean.",
+    initialSplit: 50
+  },
+  bucket_list: {
+    tag: "Our Shared Horizon 🎯",
+    title: "The Couple Bucket List",
+    desc: "All the dreams we've conquered together and the wild adventures still waiting for us.",
+    items: [
+      { id: "b1", title: "Watch Northern Lights from glass igloo", category: "Travel", icon: "🌌", completed: true, targetDate: "Dec 2023" },
+      { id: "b2", title: "Adopt our rescue puppy", category: "Home", icon: "🐶", completed: true, targetDate: "May 2024" },
+      { id: "b3", title: "Road trip along the Amalfi Coast", category: "Adventure", icon: "🚗", completed: false, targetDate: "Summer 2027" },
+      { id: "b4", title: "Take authentic pasta making class in Rome", category: "Romance", icon: "🍝", completed: true, targetDate: "Sep 2023" },
+      { id: "b5", title: "Hot air balloon ride in Cappadocia at sunrise", category: "Adventure", icon: "🎈", completed: false, targetDate: "Autumn 2027" },
+      { id: "b6", title: "Build our cozy countryside home with a garden", category: "Home", icon: "🏡", completed: false, targetDate: "2029" }
+    ]
+  },
+  audio_capsule: {
+    tag: "Voice Memories Across Time 🎙️",
+    title: "Audio Time Capsule",
+    desc: "A sonic vault of archived voice notes, late-night whispers, and anniversary promises across the years.",
+    memos: [
+      { id: "m1", title: "First Birthday Message", speaker: "Alex", year: "2021", date: "Jun 18, 2021", duration: "0:45", audioUrl: "audio/taylor-swift-fate-of-ophelia.m4r" },
+      { id: "m2", title: "Midnight Flight Voice Note", speaker: "Ella", year: "2022", date: "Nov 03, 2022", duration: "1:12", audioUrl: "audio/lady-gaga-always-remember-us-this-way.m4r" },
+      { id: "m3", title: "Saying Yes in Tuscany", speaker: "Alex & Ella", year: "2023", date: "Sep 14, 2023", duration: "0:58", audioUrl: "audio/imagine-dragons-i-follow-you.m4r" },
+      { id: "m4", title: "Our 3-Year Anniversary Promise", speaker: "Ella", year: "2024", date: "Jun 18, 2024", duration: "1:35", audioUrl: "audio/taylor-swift-fate-of-ophelia.m4r" }
+    ]
+  },
+  milestone_odyssey: {
+    tag: "Our Love Timeline 🚀",
+    title: "Milestone Odyssey",
+    desc: "Charting the monumental checkpoints of our universe from the first hello to forever.",
+    milestones: [
+      { id: "mo1", date: "June 18, 2021", title: "The First Hello", location: "Little Paris Bistro", icon: "☕", desc: "A two-hour coffee date turned into a six-hour walk through the city lights.", imgUrl: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=600&q=80" },
+      { id: "mo2", date: "October 12, 2021", title: "Official Day One", location: "City Park Lookout", icon: "💍", desc: "Under the autumn stars, we decided to take on the entire world together.", imgUrl: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=600&q=80" },
+      { id: "mo3", date: "August 24, 2022", title: "First Big Flight", location: "Tokyo, Japan", icon: "✈️", desc: "Lost in Shibuya crossing, laughing in ramen shops, our very first international adventure.", imgUrl: "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=600&q=80" },
+      { id: "mo4", date: "May 15, 2023", title: "Moving In Together", location: "Our First Apartment", icon: "🔑", desc: "Unpacking endless cardboard boxes, painting the walls, and officially sharing a key.", imgUrl: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=600&q=80" },
+      { id: "mo5", date: "September 14, 2024", title: "The Proposal", location: "Tuscany Sunset Hills", icon: "💖", desc: "Kneeling on the cobblestones as golden hour washed over the vineyards. She said YES!", imgUrl: "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=600&q=80" },
+      { id: "mo6", date: "Present Day", title: "The Infinity Chapter", location: "Everywhere With You", icon: "♾️", desc: "Still writing our favorite adventure every single sunrise.", imgUrl: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=600&q=80" }
     ]
   }
 };
@@ -1077,6 +1169,8 @@ async function initDb() {
       CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
       CREATE INDEX IF NOT EXISTS idx_sessions_token ON user_sessions(token);
 
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(32) DEFAULT 'user';
+      UPDATE users SET role = 'admin' WHERE LOWER(email) = 'admin@admin.com';
       ALTER TABLE tenants ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255);
       ALTER TABLE tenants ADD COLUMN IF NOT EXISTS is_purchased BOOLEAN DEFAULT true;
       ALTER TABLE tenants ADD COLUMN IF NOT EXISTS plan VARCHAR(32) DEFAULT 'vip';
@@ -1109,23 +1203,43 @@ async function initDb() {
     await createUser({
       email: "admin@admin.com",
       password: process.env.ADMIN_PIN || "admin1234",
-      name: "Master Admin"
+      name: "Master Admin",
+      role: "admin"
     });
     console.log("✓ Seeded default admin user: 'admin@admin.com' (Password: admin1234)");
   }
 }
 
-async function createTenant({ slug, partner1, partner2, adminPin, preset = "complete", customerEmail = null, plan = "vip", isPurchased = true, userId = null }) {
+async function createTenant({ slug, partner1, partner2, adminPin, preset = "blank", customerEmail = null, plan = "vip", isPurchased = true, userId = null, anniversaryDate = null, subtitle = null }) {
   const id = crypto.randomUUID();
   const cleanSlug = slug.toLowerCase().trim();
-  const layout = DEFAULT_PRESETS[preset] || DEFAULT_PRESETS.complete;
+  let layout = DEFAULT_PRESETS[preset] || DEFAULT_PRESETS.complete;
   const authToken = crypto.randomBytes(24).toString("hex");
 
   const initialSections = JSON.parse(JSON.stringify(DEFAULT_SECTIONS_DATA));
+  if (preset === "blank") {
+    layout = [];
+    if (initialSections.hero) {
+      initialSections.hero.musicTrackUrl = "";
+      initialSections.hero.musicTrackTitle = "";
+      initialSections.hero.voiceAudio = "";
+    }
+  }
   initialSections.hero.partner1 = partner1;
   initialSections.hero.partner2 = partner2;
-  initialSections.letter.sender = `${partner1} ❤️`;
+  initialSections.hero.subtitle = subtitle || `${partner1} & ${partner2}'s Infinite Love Story ❤️`;
+  initialSections.hero.pageTitle = `${partner1} & ${partner2} | Our Love Story ❤️`;
+  if (anniversaryDate) {
+    initialSections.hero.anniversaryDate = anniversaryDate;
+  }
   initialSections.letter.recipient = partner2;
+  initialSections.letter.sender = `${partner1} ❤️`;
+  initialSections.letter.envelopeBadge = `👑 For My Love ${partner2}`;
+  initialSections.letter.body = `Dearest ${partner2},\n\nFirst of all, I want to say happy anniversary to you, my sweetheart, my love, my everything. I am so happy you entered my life. Meeting you was truly the best thing that ever happened to me, and it completely changed my world.\n\nEvery single memory with you is a treasure, and with you, I want to experience all the beauties of this world.\n\nForever and always,\n${partner1} ❤️`;
+  if (initialSections.quiz) {
+    initialSections.quiz.certSender = partner1;
+    initialSections.quiz.certAwardee = `This prestigious lifelong honor is officially presented to ${partner2}`;
+  }
 
   if (isPgConnected) {
     const client = await pool.connect();
@@ -1183,10 +1297,15 @@ function enrichSectionsData(rawSections, partner1, partner2) {
   if (partner1) {
     if (merged.hero) merged.hero.partner1 = partner1;
     if (merged.letter) merged.letter.sender = `${partner1} ❤️`;
+    if (merged.quiz) merged.quiz.certSender = partner1;
   }
   if (partner2) {
     if (merged.hero) merged.hero.partner2 = partner2;
-    if (merged.letter) merged.letter.recipient = partner2;
+    if (merged.letter) {
+      merged.letter.recipient = partner2;
+      merged.letter.envelopeBadge = `👑 For My Love ${partner2}`;
+    }
+    if (merged.quiz) merged.quiz.certAwardee = `This prestigious lifelong honor is officially presented to ${partner2}`;
   }
   if (!rawSections || typeof rawSections !== "object") return merged;
 
@@ -1205,6 +1324,32 @@ function enrichSectionsData(rawSections, partner1, partner2) {
       merged[key] = val;
     }
   }
+
+  // Preserve partner names from tenant table if raw config has placeholder names
+  if (partner1) {
+    if (merged.hero && (!merged.hero.partner1 || merged.hero.partner1 === "Alex")) {
+      merged.hero.partner1 = partner1;
+    }
+    if (merged.letter && (!merged.letter.sender || merged.letter.sender === "Alex ❤️" || merged.letter.sender.includes("Your Love from Algeria"))) {
+      merged.letter.sender = `${partner1} ❤️`;
+    }
+    if (merged.quiz && (!merged.quiz.certSender || merged.quiz.certSender.includes("Your Love from Algeria"))) {
+      merged.quiz.certSender = partner1;
+    }
+  }
+  if (partner2) {
+    if (merged.hero && (!merged.hero.partner2 || merged.hero.partner2 === "Sam")) {
+      merged.hero.partner2 = partner2;
+    }
+    if (merged.letter && (!merged.letter.recipient || merged.letter.recipient === "Sam" || merged.letter.recipient === "Ella")) {
+      merged.letter.recipient = partner2;
+      merged.letter.envelopeBadge = `👑 For My Love ${partner2}`;
+    }
+    if (merged.quiz && (!merged.quiz.certAwardee || merged.quiz.certAwardee.includes("Ella"))) {
+      merged.quiz.certAwardee = `This prestigious lifelong honor is officially presented to ${partner2}`;
+    }
+  }
+
   return merged;
 }
 
@@ -1414,18 +1559,19 @@ async function listTenants() {
 // USER AUTHENTICATION & MANAGEMENT
 // ----------------------------------------------------
 
-async function createUser({ email, password, name = "" }) {
+async function createUser({ email, password, name = "", role = "user" }) {
   const cleanEmail = String(email).toLowerCase().trim();
   const id = crypto.randomUUID();
   const { hash, salt } = auth.hashPassword(password);
   const now = new Date().toISOString();
+  const userRole = (cleanEmail === "admin@admin.com" || role === "admin") ? "admin" : "user";
 
   if (isPgConnected) {
     const res = await pool.query(
-      `INSERT INTO users (id, email, name, password_hash, salt, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, email, name, created_at`,
-      [id, cleanEmail, name || cleanEmail.split("@")[0], hash, salt, now]
+      `INSERT INTO users (id, email, name, password_hash, salt, role, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, email, name, role, created_at`,
+      [id, cleanEmail, name || cleanEmail.split("@")[0], hash, salt, userRole, now]
     );
     // Link existing couple sites with this customer_email
     await pool.query(
@@ -1447,6 +1593,7 @@ async function createUser({ email, password, name = "" }) {
     name: name || cleanEmail.split("@")[0],
     password_hash: hash,
     salt,
+    role: userRole,
     created_at: now
   };
   store.users[id] = user;
@@ -1464,7 +1611,7 @@ async function createUser({ email, password, name = "" }) {
   }
   saveLocalStore(store);
 
-  return { id: user.id, email: user.email, name: user.name, created_at: user.created_at };
+  return { id: user.id, email: user.email, name: user.name, role: user.role, created_at: user.created_at };
 }
 
 async function findUserByEmail(email) {
@@ -1472,12 +1619,18 @@ async function findUserByEmail(email) {
   const cleanEmail = String(email).toLowerCase().trim();
 
   if (isPgConnected) {
-    const res = await pool.query(`SELECT * FROM users WHERE LOWER(email) = $1 LIMIT 1`, [cleanEmail]);
-    return res.rows[0] || null;
+    const res = await pool.query(`SELECT id, email, name, role, password_hash, salt, created_at FROM users WHERE LOWER(email) = $1 LIMIT 1`, [cleanEmail]);
+    if (!res.rows.length) return null;
+    const row = res.rows[0];
+    const role = (cleanEmail === "admin@admin.com" || row.role === "admin") ? "admin" : (row.role || "user");
+    return { ...row, role };
   }
 
   const store = loadLocalStore();
-  return Object.values(store.users).find(u => u.email.toLowerCase() === cleanEmail) || null;
+  const u = Object.values(store.users).find(u => u.email.toLowerCase() === cleanEmail);
+  if (!u) return null;
+  const role = (cleanEmail === "admin@admin.com" || u.role === "admin") ? "admin" : (u.role || "user");
+  return { ...u, role };
 }
 
 async function findUserById(userId) {
@@ -1485,16 +1638,20 @@ async function findUserById(userId) {
 
   if (isPgConnected) {
     const res = await pool.query(
-      `SELECT id, email, name, created_at FROM users WHERE id = $1 LIMIT 1`,
+      `SELECT id, email, name, role, created_at FROM users WHERE id = $1 LIMIT 1`,
       [userId]
     );
-    return res.rows[0] || null;
+    if (!res.rows.length) return null;
+    const row = res.rows[0];
+    const role = (row.email && row.email.toLowerCase() === "admin@admin.com") || row.role === "admin" ? "admin" : (row.role || "user");
+    return { id: row.id, email: row.email, name: row.name, role, createdAt: row.created_at };
   }
 
   const store = loadLocalStore();
   const u = store.users[userId];
   if (!u) return null;
-  return { id: u.id, email: u.email, name: u.name, created_at: u.created_at };
+  const role = (u.email && u.email.toLowerCase() === "admin@admin.com") || u.role === "admin" ? "admin" : (u.role || "user");
+  return { id: u.id, email: u.email, name: u.name, role, createdAt: u.created_at };
 }
 
 async function updateUserProfile(userId, { name, password }) {
@@ -1504,16 +1661,20 @@ async function updateUserProfile(userId, { name, password }) {
     if (password) {
       const { hash, salt } = auth.hashPassword(password);
       const res = await pool.query(
-        `UPDATE users SET name = COALESCE($1, name), password_hash = $2, salt = $3 WHERE id = $4 RETURNING id, email, name, created_at`,
+        `UPDATE users SET name = COALESCE($1, name), password_hash = $2, salt = $3 WHERE id = $4 RETURNING id, email, name, role, created_at`,
         [name || null, hash, salt, userId]
       );
-      return res.rows[0];
+      const row = res.rows[0];
+      const role = (row.email && row.email.toLowerCase() === "admin@admin.com") || row.role === "admin" ? "admin" : (row.role || "user");
+      return { ...row, role };
     } else {
       const res = await pool.query(
-        `UPDATE users SET name = COALESCE($1, name) WHERE id = $2 RETURNING id, email, name, created_at`,
+        `UPDATE users SET name = COALESCE($1, name) WHERE id = $2 RETURNING id, email, name, role, created_at`,
         [name || null, userId]
       );
-      return res.rows[0];
+      const row = res.rows[0];
+      const role = (row.email && row.email.toLowerCase() === "admin@admin.com") || row.role === "admin" ? "admin" : (row.role || "user");
+      return { ...row, role };
     }
   }
 
@@ -1527,7 +1688,8 @@ async function updateUserProfile(userId, { name, password }) {
     u.salt = salt;
   }
   saveLocalStore(store);
-  return { id: u.id, email: u.email, name: u.name, created_at: u.created_at };
+  const role = (u.email && u.email.toLowerCase() === "admin@admin.com") || u.role === "admin" ? "admin" : (u.role || "user");
+  return { id: u.id, email: u.email, name: u.name, role, created_at: u.created_at };
 }
 
 // ----------------------------------------------------
@@ -1564,7 +1726,7 @@ async function validateSession(token) {
 
   if (isPgConnected) {
     const res = await pool.query(
-      `SELECT s.token, u.id, u.email, u.name, u.created_at
+      `SELECT s.token, u.id, u.email, u.name, u.role, u.created_at
        FROM user_sessions s
        JOIN users u ON s.user_id = u.id
        WHERE s.token = $1 AND (s.expires_at IS NULL OR s.expires_at > NOW())
@@ -1573,9 +1735,10 @@ async function validateSession(token) {
     );
     if (!res.rows.length) return null;
     const row = res.rows[0];
+    const role = (row.email && row.email.toLowerCase() === "admin@admin.com") || row.role === "admin" ? "admin" : (row.role || "user");
     return {
       token: row.token,
-      user: { id: row.id, email: row.email, name: row.name, createdAt: row.created_at }
+      user: { id: row.id, email: row.email, name: row.name, role, createdAt: row.created_at }
     };
   }
 
@@ -1589,9 +1752,10 @@ async function validateSession(token) {
   }
   const user = store.users[session.user_id];
   if (!user) return null;
+  const role = (user.email && user.email.toLowerCase() === "admin@admin.com") || user.role === "admin" ? "admin" : (user.role || "user");
   return {
     token,
-    user: { id: user.id, email: user.email, name: user.name, createdAt: user.created_at }
+    user: { id: user.id, email: user.email, name: user.name, role, createdAt: user.created_at }
   };
 }
 
@@ -1694,12 +1858,19 @@ async function getUserOrders(userId) {
 // USER DESIGNS (COUPLE SITES)
 // ----------------------------------------------------
 
-async function getUserDesigns(userId, customerEmail = null) {
-  if (!userId && !customerEmail) return [];
+async function getUserDesigns(userId, customerEmail = null, isAdmin = false) {
+  if (!userId && !customerEmail && !isAdmin) return [];
   const cleanEmail = customerEmail ? String(customerEmail).toLowerCase().trim() : "";
 
   if (isPgConnected) {
-    const query = `
+    const query = isAdmin ? `
+      SELECT t.id, t.slug, t.partner1_name, t.partner2_name, t.admin_pin, t.plan,
+             t.auth_token, t.is_purchased, t.created_at,
+             c.theme_id, c.template_preset, c.updated_at
+      FROM tenants t
+      LEFT JOIN site_configs c ON t.id = c.tenant_id
+      ORDER BY t.created_at DESC
+    ` : `
       SELECT t.id, t.slug, t.partner1_name, t.partner2_name, t.admin_pin, t.plan,
              t.auth_token, t.is_purchased, t.created_at,
              c.theme_id, c.template_preset, c.updated_at
@@ -1708,7 +1879,7 @@ async function getUserDesigns(userId, customerEmail = null) {
       WHERE t.user_id = $1 ${cleanEmail ? "OR (t.customer_email IS NOT NULL AND LOWER(t.customer_email) = $2)" : ""}
       ORDER BY t.created_at DESC
     `;
-    const params = cleanEmail ? [userId, cleanEmail] : [userId];
+    const params = isAdmin ? [] : (cleanEmail ? [userId, cleanEmail] : [userId]);
     const res = await pool.query(query, params);
     return res.rows.map(r => ({
       id: r.id,
@@ -1729,8 +1900,9 @@ async function getUserDesigns(userId, customerEmail = null) {
   }
 
   const store = loadLocalStore();
-  return Object.values(store.tenants)
-    .filter(t => (userId && t.user_id === userId) || (cleanEmail && t.customer_email && t.customer_email.toLowerCase() === cleanEmail))
+  const allTenants = Object.values(store.tenants);
+  const filtered = isAdmin ? allTenants : allTenants.filter(t => (userId && (t.user_id === userId || t.userId === userId)) || (cleanEmail && ((t.customer_email && t.customer_email.toLowerCase() === cleanEmail) || (t.customerEmail && t.customerEmail.toLowerCase() === cleanEmail))));
+  return filtered
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .map(t => {
       const cfg = store.site_configs[t.slug] || {};

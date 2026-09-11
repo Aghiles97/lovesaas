@@ -60,11 +60,18 @@
           </div>
 
           <div class="wheel-container">
-            <div class="wheel-pointer">
-              <div class="wheel-pointer-arrow"></div>
+            <div class="wheel-gold-rim" id="wheelGoldRim">
+              <div class="wheel-neon-ring" id="wheelNeonRing">
+                ${Array.from({length: 16}).map((_, i) => `<span class="neon-bulb" style="--bulb-idx:${i}"></span>`).join('')}
+              </div>
+              <div class="wheel-pointer">
+                <div class="wheel-pointer-arrow"></div>
+              </div>
+              <canvas id="roastToastWheelCanvas" class="wheel-disc-canvas" width="600" height="600"></canvas>
+              <div class="wheel-hub-center">
+                <span class="hub-icon">✨</span>
+              </div>
             </div>
-            <canvas id="roastToastWheelCanvas" class="wheel-disc-canvas" width="600" height="600"></canvas>
-            <div class="wheel-hub-center">🎲</div>
           </div>
 
           <div class="wheel-controls">
@@ -74,11 +81,32 @@
           </div>
 
           <div class="roast-toast-result-modal" id="roastToastResultModal">
-            <span class="result-type-pill" id="resultTypePill">ROAST 🔥</span>
+            <div class="result-badge-row">
+              <span class="result-type-pill" id="resultTypePill">ROAST 🔥</span>
+            </div>
+            <div class="result-celebration-graphic" id="resultCelebrationGraphic">
+              <div class="toast-cheers-visual hidden" id="toastCheersVisual">
+                <span class="cheers-glass glass-left">🥂</span>
+                <span class="cheers-sparkles">✨</span>
+                <span class="cheers-glass glass-right">🥂</span>
+              </div>
+              <div class="roast-flame-visual hidden" id="roastFlameVisual">
+                <span class="roast-emoji">🔥</span>
+                <span class="roast-emoji-sub">😈</span>
+              </div>
+            </div>
             <div class="result-msg-body" id="resultMsgBody">...</div>
-            <button type="button" class="btn btn-outline" id="btnCloseRoastToastResult">
-              <span>Spin Again 🔄</span>
-            </button>
+            <div class="result-action-btns">
+              <button type="button" class="btn btn-primary kiss-counter-btn hidden" id="btnCounterKisses">
+                <span>Counter-Attack with Kisses 💋</span>
+              </button>
+              <button type="button" class="btn btn-outline" id="btnCloseRoastToastResult">
+                <span>Spin Again 🔄</span>
+              </button>
+            </div>
+            <div class="kiss-feedback-banner hidden" id="kissFeedbackBanner">
+              💋 Ella launched 100 kisses! All roasts neutralized! 🥰
+            </div>
           </div>
         </div>
       </div>

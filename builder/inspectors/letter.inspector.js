@@ -83,7 +83,7 @@ if (!state.sectionsData.letter) state.sectionsData.letter = {};
             </div>
             <div class="input-group">
               <label>Recipient Name</label>
-              <input type="text" id="let_recipient" value="${escapeHtml(letObj.recipient || state.partner2 || 'Ella')}">
+              <input type="text" id="let_recipient" value="${escapeHtml(letObj.recipient || state.partner2 || 'Partner 2')}">
             </div>
           </div>
           <div class="input-group">
@@ -97,7 +97,7 @@ if (!state.sectionsData.letter) state.sectionsData.letter = {};
             </div>
             <div class="input-group">
               <label>Sender Signature</label>
-              <input type="text" id="let_sender" value="${escapeHtml(letObj.sender || state.partner1 || 'Your Love from Algeria ❤️')}">
+              <input type="text" id="let_sender" value="${escapeHtml(letObj.sender || (state.partner1 ? `${state.partner1} ❤️` : 'Partner 1 ❤️'))}">
             </div>
           </div>
         </div>

@@ -626,6 +626,401 @@
     </svg>
   `);
 
+  // 19. TENURE TICKER
+  PREVIEWS.tenure_ticker = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <defs>
+        <linearGradient id="tenureBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#fff5f5"/>
+          <stop offset="50%" stop-color="#fff0f3"/>
+          <stop offset="100%" stop-color="#ffe4e6"/>
+        </linearGradient>
+        <linearGradient id="roseGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ff4365"/>
+          <stop offset="100%" stop-color="#e11d48"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="480" fill="url(#tenureBg)"/>
+      <rect x="270" y="24" width="260" height="30" rx="15" fill="#ff4365" opacity="0.1"/>
+      <text x="400" y="44" fill="#ff4365" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" text-anchor="middle">⏳ OUR LOVE IN NUMBERS</text>
+      <text x="400" y="80" fill="#0f172a" font-family="Georgia, serif" font-size="28" font-weight="700" text-anchor="middle">Forever &amp; Counting Every Second ❤️</text>
+      <text x="400" y="104" fill="#64748b" font-family="-apple-system, sans-serif" font-size="13" text-anchor="middle">Live elapsed precision counter since June 18, 2021</text>
+      
+      <!-- Elapsed Counter Grid (6 slots) -->
+      <g transform="translate(60, 130)">
+        <rect x="0" y="0" width="680" height="150" rx="20" fill="#ffffff" stroke="#fecdd3" stroke-width="1.5"/>
+        <g transform="translate(25, 25)">
+          <!-- Years -->
+          <rect x="0" y="0" width="92" height="95" rx="14" fill="#fff1f2" stroke="#fda4af" stroke-width="1"/>
+          <text x="46" y="52" fill="#e11d48" font-family="-apple-system, sans-serif" font-size="36" font-weight="800" text-anchor="middle">5</text>
+          <text x="46" y="76" fill="#9f1239" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">YEARS</text>
+          <!-- Months -->
+          <rect x="107" y="0" width="92" height="95" rx="14" fill="#fff1f2" stroke="#fda4af" stroke-width="1"/>
+          <text x="153" y="52" fill="#e11d48" font-family="-apple-system, sans-serif" font-size="36" font-weight="800" text-anchor="middle">2</text>
+          <text x="153" y="76" fill="#9f1239" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">MONTHS</text>
+          <!-- Days -->
+          <rect x="214" y="0" width="92" height="95" rx="14" fill="#fff1f2" stroke="#fda4af" stroke-width="1"/>
+          <text x="260" y="52" fill="#e11d48" font-family="-apple-system, sans-serif" font-size="36" font-weight="800" text-anchor="middle">24</text>
+          <text x="260" y="76" fill="#9f1239" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">DAYS</text>
+          <!-- Hours -->
+          <rect x="321" y="0" width="92" height="95" rx="14" fill="#fff1f2" stroke="#fda4af" stroke-width="1"/>
+          <text x="367" y="52" fill="#e11d48" font-family="-apple-system, sans-serif" font-size="36" font-weight="800" text-anchor="middle">14</text>
+          <text x="367" y="76" fill="#9f1239" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">HOURS</text>
+          <!-- Minutes -->
+          <rect x="428" y="0" width="92" height="95" rx="14" fill="#fff1f2" stroke="#fda4af" stroke-width="1"/>
+          <text x="474" y="52" fill="#e11d48" font-family="-apple-system, sans-serif" font-size="36" font-weight="800" text-anchor="middle">38</text>
+          <text x="474" y="76" fill="#9f1239" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">MINUTES</text>
+          <!-- Seconds -->
+          <rect x="535" y="0" width="92" height="95" rx="14" fill="#fff1f2" stroke="#fda4af" stroke-width="1"/>
+          <text x="581" y="52" fill="#e11d48" font-family="-apple-system, sans-serif" font-size="36" font-weight="800" text-anchor="middle">49</text>
+          <text x="581" y="76" fill="#9f1239" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">SECONDS</text>
+        </g>
+      </g>
+
+      <!-- Next Milestone Card -->
+      <g transform="translate(60, 305)">
+        <rect x="0" y="0" width="680" height="135" rx="18" fill="#1e293b"/>
+        <text x="35" y="38" fill="#fbbf24" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">🎯 NEXT BIG MILESTONE</text>
+        <text x="35" y="66" fill="#ffffff" font-family="Georgia, serif" font-size="20" font-weight="700">2,000 Days Together • Diamond Jubilee 💎</text>
+        <text x="35" y="88" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="13">Countdown: 148 Days • 09 Hours • 21 Minutes Remaining</text>
+        <!-- Progress Bar -->
+        <rect x="35" y="104" width="610" height="10" rx="5" fill="#334155"/>
+        <rect x="35" y="104" width="460" height="10" rx="5" fill="url(#roseGlow)"/>
+        <text x="590" y="90" fill="#ff4365" font-family="-apple-system, sans-serif" font-size="12" font-weight="800">75% Complete</text>
+      </g>
+    </svg>
+  `);
+
+  // 20. STAR MAP
+  PREVIEWS.star_map = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <defs>
+        <radialGradient id="skyGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#1e1b4b"/>
+          <stop offset="60%" stop-color="#0f172a"/>
+          <stop offset="100%" stop-color="#030712"/>
+        </radialGradient>
+        <linearGradient id="goldRing" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#fbbf24"/>
+          <stop offset="50%" stop-color="#f59e0b"/>
+          <stop offset="100%" stop-color="#d97706"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="480" fill="#030712"/>
+      <!-- Header -->
+      <text x="400" y="38" fill="#fbbf24" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" text-anchor="middle">✨ THE NIGHT WE MET</text>
+      <text x="400" y="65" fill="#f8fafc" font-family="Georgia, serif" font-size="24" font-weight="700" text-anchor="middle">Under These Exact Stars, Our Universe Began</text>
+      
+      <!-- Astrolabe Outer Dial -->
+      <g transform="translate(260, 260)">
+        <circle cx="0" cy="0" r="175" fill="none" stroke="url(#goldRing)" stroke-width="4"/>
+        <circle cx="0" cy="0" r="165" fill="url(#skyGrad)" stroke="#1e293b" stroke-width="2"/>
+        
+        <!-- Stars & Constellations -->
+        <!-- Ursa Major -->
+        <g stroke="#93c5fd" stroke-width="1.2" opacity="0.8" fill="none">
+          <line x1="-80" y1="-70" x2="-45" y2="-80"/>
+          <line x1="-45" y1="-80" x2="-20" y2="-55"/>
+          <line x1="-20" y1="-55" x2="20" y2="-50"/>
+          <line x1="20" y1="-50" x2="55" y2="-85"/>
+          <line x1="55" y1="-85" x2="95" y2="-75"/>
+          <line x1="95" y1="-75" x2="50" y2="-35"/>
+          <line x1="50" y1="-35" x2="20" y2="-50"/>
+        </g>
+        <circle cx="-80" cy="-70" r="3.5" fill="#ffffff"/>
+        <circle cx="-45" cy="-80" r="2.5" fill="#ffffff"/>
+        <circle cx="-20" cy="-55" r="3.5" fill="#ffffff"/>
+        <circle cx="20" cy="-50" r="3" fill="#ffffff"/>
+        <circle cx="55" cy="-85" r="3.5" fill="#ffffff"/>
+        <circle cx="95" cy="-75" r="4" fill="#ffffff"/>
+        <circle cx="50" cy="-35" r="3" fill="#ffffff"/>
+        <text x="40" y="-100" fill="#93c5fd" font-family="-apple-system, sans-serif" font-size="9" font-weight="700">URSA MAJOR</text>
+
+        <!-- Orion -->
+        <g stroke="#fbbf24" stroke-width="1.2" opacity="0.8" fill="none">
+          <line x1="-60" y1="30" x2="20" y2="35"/>
+          <line x1="-60" y1="30" x2="-35" y2="75"/>
+          <line x1="20" y1="35" x2="-5" y2="80"/>
+          <!-- Belt -->
+          <line x1="-25" y1="75" x2="5" y2="78"/>
+          <!-- Legs -->
+          <line x1="-35" y1="75" x2="-55" y2="120"/>
+          <line x1="-5" y1="80" x2="15" y2="125"/>
+        </g>
+        <circle cx="-60" cy="30" r="4.5" fill="#fca5a5"/>
+        <circle cx="20" cy="35" r="3.5" fill="#ffffff"/>
+        <circle cx="-25" cy="75" r="3" fill="#67e8f9"/>
+        <circle cx="-10" cy="76" r="3" fill="#67e8f9"/>
+        <circle cx="5" cy="78" r="3" fill="#67e8f9"/>
+        <circle cx="-55" cy="120" r="4" fill="#ffffff"/>
+        <circle cx="15" cy="125" r="4.5" fill="#93c5fd"/>
+        <text x="-40" y="140" fill="#fbbf24" font-family="-apple-system, sans-serif" font-size="9" font-weight="700">ORION</text>
+
+        <!-- Cardinal markers -->
+        <text x="0" y="-178" fill="#fbbf24" font-size="12" font-weight="800" text-anchor="middle">N</text>
+        <text x="0" y="192" fill="#fbbf24" font-size="12" font-weight="800" text-anchor="middle">S</text>
+        <text x="188" y="5" fill="#fbbf24" font-size="12" font-weight="800" text-anchor="middle">E</text>
+        <text x="-192" y="5" fill="#fbbf24" font-size="12" font-weight="800" text-anchor="middle">W</text>
+      </g>
+
+      <!-- Location & Metadata Sidebar Card -->
+      <g transform="translate(500, 130)">
+        <rect x="0" y="0" width="240" height="260" rx="16" fill="#0f172a" stroke="#1e293b" stroke-width="1.5"/>
+        <text x="24" y="38" fill="#fbbf24" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">📍 OBSERVATION POINT</text>
+        <text x="24" y="66" fill="#f8fafc" font-family="Georgia, serif" font-size="18" font-weight="700">Paris, France</text>
+        <text x="24" y="90" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="12">48.8566° N • 2.3522° E</text>
+        <line x1="24" y1="108" x2="216" y2="108" stroke="#334155" stroke-width="1"/>
+        <text x="24" y="132" fill="#fbbf24" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">📅 MOMENT IN TIME</text>
+        <text x="24" y="156" fill="#f8fafc" font-size="14" font-weight="600">June 18, 2021 • 22:30</text>
+        <text x="24" y="176" fill="#64748b" font-size="12">Moon Phase: Waxing Gibbous 🌔</text>
+        <rect x="24" y="200" width="192" height="36" rx="8" fill="#1e293b" stroke="#334155"/>
+        <text x="120" y="223" fill="#cbd5e1" font-size="12" font-weight="700" text-anchor="middle">✨ 88 Constellations Synced</text>
+      </g>
+    </svg>
+  `);
+
+  // 21. THEN VS NOW SLIDER
+  PREVIEWS.then_now_slider = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <defs>
+        <linearGradient id="thenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#475569"/>
+          <stop offset="100%" stop-color="#1e293b"/>
+        </linearGradient>
+        <linearGradient id="nowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#fb7185"/>
+          <stop offset="100%" stop-color="#e11d48"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="480" fill="#0f172a"/>
+      <text x="400" y="38" fill="#ff4365" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" text-anchor="middle">🌗 OUR JOURNEY THROUGH TIME</text>
+      <text x="400" y="65" fill="#f8fafc" font-family="Georgia, serif" font-size="24" font-weight="700" text-anchor="middle">Then vs. Now: How It Started &amp; How It's Going</text>
+
+      <!-- Slider Frame Container -->
+      <g transform="translate(100, 100)">
+        <rect x="0" y="0" width="600" height="270" rx="16" fill="#1e293b"/>
+        <!-- Left (Then) Half -->
+        <rect x="0" y="0" width="300" height="270" rx="16" fill="url(#thenGrad)"/>
+        <text x="150" y="115" font-size="44" text-anchor="middle">☕</text>
+        <text x="150" y="155" fill="#ffffff" font-family="Georgia, serif" font-size="20" font-weight="700" text-anchor="middle">THEN (2021)</text>
+        <text x="150" y="180" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="13" text-anchor="middle">Our very first nervous coffee date</text>
+
+        <!-- Right (Now) Half -->
+        <g transform="translate(300, 0)">
+          <rect x="0" y="0" width="300" height="270" rx="16" fill="url(#nowGrad)"/>
+          <text x="150" y="115" font-size="44" text-anchor="middle">💍</text>
+          <text x="150" y="155" fill="#ffffff" font-family="Georgia, serif" font-size="20" font-weight="700" text-anchor="middle">NOW (2026)</text>
+          <text x="150" y="180" fill="#ffe4e6" font-family="-apple-system, sans-serif" font-size="13" text-anchor="middle">5 years deep • Forever by your side</text>
+        </g>
+
+        <!-- Divider Line & Drag Handle -->
+        <line x1="300" y1="0" x2="300" y2="270" stroke="#ffffff" stroke-width="3"/>
+        <circle cx="300" cy="135" r="22" fill="#ffffff" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.3))"/>
+        <text x="300" y="141" fill="#0f172a" font-size="16" font-weight="800" text-anchor="middle">↔</text>
+      </g>
+
+      <!-- Bottom Drag Prompt -->
+      <text x="400" y="415" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="13" text-anchor="middle">👈 Drag handle left or right to compare our story over 5 years 👉</text>
+    </svg>
+  `);
+
+  // 22. COUPLE BUCKET LIST
+  PREVIEWS.bucket_list = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <defs>
+        <linearGradient id="listGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#10b981"/>
+          <stop offset="100%" stop-color="#059669"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="480" fill="#f8fafc"/>
+      <text x="400" y="38" fill="#10b981" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" text-anchor="middle">🎯 OUR SHARED HORIZON</text>
+      <text x="400" y="65" fill="#0f172a" font-family="Georgia, serif" font-size="24" font-weight="700" text-anchor="middle">The Couple Bucket List</text>
+      
+      <!-- Progress Bar Card -->
+      <g transform="translate(100, 85)">
+        <rect x="0" y="0" width="600" height="60" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+        <text x="24" y="26" fill="#0f172a" font-family="-apple-system, sans-serif" font-size="13" font-weight="700">4 of 6 Dreams Conquered</text>
+        <text x="576" y="26" fill="#10b981" font-family="-apple-system, sans-serif" font-size="13" font-weight="800" text-anchor="end">67%</text>
+        <rect x="24" y="36" width="552" height="10" rx="5" fill="#e2e8f0"/>
+        <rect x="24" y="36" width="370" height="10" rx="5" fill="url(#listGrad)"/>
+      </g>
+
+      <!-- Checklist Items -->
+      <g transform="translate(100, 165)">
+        <!-- Item 1 (Done) -->
+        <rect x="0" y="0" width="600" height="52" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+        <circle cx="28" cy="26" r="11" fill="#10b981"/>
+        <text x="28" y="30" fill="#ffffff" font-size="12" font-weight="800" text-anchor="middle">✓</text>
+        <text x="55" y="30" fill="#64748b" font-family="-apple-system, sans-serif" font-size="14" text-decoration="line-through">Watch Northern Lights in a glass igloo 🌌</text>
+        <rect x="495" y="15" width="85" height="22" rx="6" fill="#d1fae5"/>
+        <text x="537" y="30" fill="#065f46" font-size="11" font-weight="700" text-anchor="middle">Travel • Done</text>
+
+        <!-- Item 2 (Done) -->
+        <rect x="0" y="62" width="600" height="52" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+        <circle cx="28" cy="88" r="11" fill="#10b981"/>
+        <text x="28" y="92" fill="#ffffff" font-size="12" font-weight="800" text-anchor="middle">✓</text>
+        <text x="55" y="92" fill="#64748b" font-family="-apple-system, sans-serif" font-size="14" text-decoration="line-through">Adopt our rescue puppy together 🐶</text>
+        <rect x="495" y="77" width="85" height="22" rx="6" fill="#d1fae5"/>
+        <text x="537" y="92" fill="#065f46" font-size="11" font-weight="700" text-anchor="middle">Home • Done</text>
+
+        <!-- Item 3 (Pending) -->
+        <rect x="0" y="124" width="600" height="52" rx="12" fill="#ffffff" stroke="#cbd5e1"/>
+        <circle cx="28" cy="150" r="11" fill="none" stroke="#94a3b8" stroke-width="2"/>
+        <text x="55" y="154" fill="#0f172a" font-family="-apple-system, sans-serif" font-size="14" font-weight="600">Road trip along the Amalfi Coast 🚗</text>
+        <rect x="485" y="139" width="95" height="22" rx="6" fill="#fef3c7"/>
+        <text x="532" y="154" fill="#92400e" font-size="11" font-weight="700" text-anchor="middle">Target: 2027</text>
+
+        <!-- Item 4 (Pending) -->
+        <rect x="0" y="186" width="600" height="52" rx="12" fill="#ffffff" stroke="#cbd5e1"/>
+        <circle cx="28" cy="212" r="11" fill="none" stroke="#94a3b8" stroke-width="2"/>
+        <text x="55" y="216" fill="#0f172a" font-family="-apple-system, sans-serif" font-size="14" font-weight="600">Build our cozy countryside home with a garden 🏡</text>
+        <rect x="485" y="201" width="95" height="22" rx="6" fill="#fef3c7"/>
+        <text x="532" y="216" fill="#92400e" font-size="11" font-weight="700" text-anchor="middle">Target: 2029</text>
+      </g>
+    </svg>
+  `);
+
+  // 23. AUDIO TIME CAPSULE
+  PREVIEWS.audio_capsule = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <defs>
+        <linearGradient id="audioGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#8b5cf6"/>
+          <stop offset="100%" stop-color="#6366f1"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="480" fill="#090d16"/>
+      <text x="400" y="38" fill="#a78bfa" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" text-anchor="middle">🎙️ VOICE MEMORIES ACROSS TIME</text>
+      <text x="400" y="65" fill="#f8fafc" font-family="Georgia, serif" font-size="24" font-weight="700" text-anchor="middle">Audio Time Capsule</text>
+
+      <!-- Player Deck -->
+      <g transform="translate(80, 95)">
+        <rect x="0" y="0" width="640" height="340" rx="20" fill="#131b2e" stroke="#1f293d" stroke-width="1.5"/>
+        
+        <!-- Animated Waveform Section -->
+        <rect x="25" y="25" width="590" height="95" rx="14" fill="#0c1222"/>
+        <!-- Waveform Bars -->
+        <g transform="translate(45, 72)">
+          <line x1="0" y1="-15" x2="0" y2="15" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+          <line x1="16" y1="-28" x2="16" y2="28" stroke="#a78bfa" stroke-width="4" stroke-linecap="round"/>
+          <line x1="32" y1="-10" x2="32" y2="10" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+          <line x1="48" y1="-35" x2="48" y2="35" stroke="#c084fc" stroke-width="4" stroke-linecap="round"/>
+          <line x1="64" y1="-20" x2="64" y2="20" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+          <line x1="80" y1="-30" x2="80" y2="30" stroke="#a78bfa" stroke-width="4" stroke-linecap="round"/>
+          <line x1="96" y1="-12" x2="96" y2="12" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+          <line x1="112" y1="-26" x2="112" y2="26" stroke="#c084fc" stroke-width="4" stroke-linecap="round"/>
+          <line x1="128" y1="-18" x2="128" y2="18" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+          <line x1="144" y1="-32" x2="144" y2="32" stroke="#a78bfa" stroke-width="4" stroke-linecap="round"/>
+          <line x1="160" y1="-8" x2="160" y2="8" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+          <line x1="176" y1="-24" x2="176" y2="24" stroke="#c084fc" stroke-width="4" stroke-linecap="round"/>
+          <line x1="192" y1="-36" x2="192" y2="36" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+          <line x1="208" y1="-15" x2="208" y2="15" stroke="#a78bfa" stroke-width="4" stroke-linecap="round"/>
+          <line x1="224" y1="-28" x2="224" y2="28" stroke="#c084fc" stroke-width="4" stroke-linecap="round"/>
+          <line x1="240" y1="-10" x2="240" y2="10" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+          <line x1="256" y1="-30" x2="256" y2="30" stroke="#a78bfa" stroke-width="4" stroke-linecap="round"/>
+          <line x1="272" y1="-20" x2="272" y2="20" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/>
+        </g>
+        <circle cx="370" cy="72" r="22" fill="url(#audioGlow)"/>
+        <text x="372" y="77" fill="#ffffff" font-size="16" text-anchor="middle">▶</text>
+        <text x="410" y="65" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="14" font-weight="700">First Birthday Voice Note</text>
+        <text x="410" y="85" fill="#94a3b8" font-size="12">From Alex • Jun 18, 2021 (0:45)</text>
+
+        <!-- Archive List (Memos across years) -->
+        <g transform="translate(25, 140)">
+          <!-- Year Tabs -->
+          <rect x="0" y="0" width="55" height="26" rx="8" fill="#8b5cf6"/>
+          <text x="27" y="17" fill="#ffffff" font-size="11" font-weight="800" text-anchor="middle">All</text>
+          <rect x="65" y="0" width="55" height="26" rx="8" fill="#1e293b"/>
+          <text x="92" y="17" fill="#94a3b8" font-size="11" font-weight="600" text-anchor="middle">2021</text>
+          <rect x="130" y="0" width="55" height="26" rx="8" fill="#1e293b"/>
+          <text x="157" y="17" fill="#94a3b8" font-size="11" font-weight="600" text-anchor="middle">2022</text>
+          <rect x="195" y="0" width="55" height="26" rx="8" fill="#1e293b"/>
+          <text x="222" y="17" fill="#94a3b8" font-size="11" font-weight="600" text-anchor="middle">2023</text>
+          <rect x="260" y="0" width="55" height="26" rx="8" fill="#1e293b"/>
+          <text x="287" y="17" fill="#94a3b8" font-size="11" font-weight="600" text-anchor="middle">2024</text>
+
+          <!-- Memo 1 -->
+          <rect x="0" y="40" width="590" height="42" rx="8" fill="#1a2238"/>
+          <text x="20" y="66" fill="#f8fafc" font-size="13" font-weight="600">1. Midnight Flight Voice Note</text>
+          <text x="320" y="66" fill="#a78bfa" font-size="12">From Ella • 2022</text>
+          <text x="560" y="66" fill="#64748b" font-size="12" text-anchor="end">1:12 🎧</text>
+
+          <!-- Memo 2 -->
+          <rect x="0" y="90" width="590" height="42" rx="8" fill="#1a2238"/>
+          <text x="20" y="116" fill="#f8fafc" font-size="13" font-weight="600">2. Saying Yes in Tuscany</text>
+          <text x="320" y="116" fill="#a78bfa" font-size="12">From Both • 2023</text>
+          <text x="560" y="116" fill="#64748b" font-size="12" text-anchor="end">0:58 🎧</text>
+
+          <!-- Memo 3 -->
+          <rect x="0" y="140" width="590" height="42" rx="8" fill="#1a2238"/>
+          <text x="20" y="166" fill="#f8fafc" font-size="13" font-weight="600">3. Our 3-Year Anniversary Promise</text>
+          <text x="320" y="166" fill="#a78bfa" font-size="12">From Ella • 2024</text>
+          <text x="560" y="166" fill="#64748b" font-size="12" text-anchor="end">1:35 🎧</text>
+        </g>
+      </g>
+    </svg>
+  `);
+
+  // 24. MILESTONE ODYSSEY
+  PREVIEWS.milestone_odyssey = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <defs>
+        <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#ff4365"/>
+          <stop offset="50%" stop-color="#fbbf24"/>
+          <stop offset="100%" stop-color="#3b82f6"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="480" fill="#0f172a"/>
+      <text x="400" y="38" fill="#fbbf24" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" text-anchor="middle">🚀 OUR LOVE TIMELINE</text>
+      <text x="400" y="65" fill="#f8fafc" font-family="Georgia, serif" font-size="24" font-weight="700" text-anchor="middle">Milestone Odyssey</text>
+      
+      <!-- Horizontal Track Connecting Line -->
+      <path d="M 60 220 C 180 180, 240 260, 360 220 C 480 180, 540 260, 740 220" fill="none" stroke="url(#lineGrad)" stroke-width="4" stroke-dasharray="6,6"/>
+
+      <!-- Node 1: Met -->
+      <g transform="translate(100, 200)">
+        <circle cx="0" cy="0" r="24" fill="#1e293b" stroke="#ff4365" stroke-width="3"/>
+        <text x="0" y="6" font-size="16" text-anchor="middle">☕</text>
+        <rect x="-65" y="38" width="130" height="85" rx="10" fill="#1e293b" stroke="#334155"/>
+        <text x="0" y="58" fill="#ff4365" font-size="11" font-weight="800" text-anchor="middle">JUN 2021</text>
+        <text x="0" y="76" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle">The First Hello</text>
+        <text x="0" y="96" fill="#94a3b8" font-size="10" text-anchor="middle">Paris Bistro</text>
+      </g>
+
+      <!-- Node 2: Official -->
+      <g transform="translate(280, 235)">
+        <circle cx="0" cy="0" r="24" fill="#1e293b" stroke="#f59e0b" stroke-width="3"/>
+        <text x="0" y="6" font-size="16" text-anchor="middle">💍</text>
+        <rect x="-65" y="-105" width="130" height="85" rx="10" fill="#1e293b" stroke="#334155"/>
+        <text x="0" y="-85" fill="#fbbf24" font-size="11" font-weight="800" text-anchor="middle">OCT 2021</text>
+        <text x="0" y="-67" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle">Official Day 1</text>
+        <text x="0" y="-47" fill="#94a3b8" font-size="10" text-anchor="middle">City Park</text>
+      </g>
+
+      <!-- Node 3: First Flight -->
+      <g transform="translate(460, 200)">
+        <circle cx="0" cy="0" r="24" fill="#1e293b" stroke="#3b82f6" stroke-width="3"/>
+        <text x="0" y="6" font-size="16" text-anchor="middle">✈️</text>
+        <rect x="-65" y="38" width="130" height="85" rx="10" fill="#1e293b" stroke="#334155"/>
+        <text x="0" y="58" fill="#60a5fa" font-size="11" font-weight="800" text-anchor="middle">AUG 2022</text>
+        <text x="0" y="76" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle">Tokyo Adventure</text>
+        <text x="0" y="96" fill="#94a3b8" font-size="10" text-anchor="middle">Shibuya Crossing</text>
+      </g>
+
+      <!-- Node 4: Proposal -->
+      <g transform="translate(660, 235)">
+        <circle cx="0" cy="0" r="26" fill="#1e293b" stroke="#ec4899" stroke-width="3"/>
+        <text x="0" y="7" font-size="18" text-anchor="middle">💖</text>
+        <rect x="-70" y="-105" width="140" height="85" rx="10" fill="#1e293b" stroke="#ec4899"/>
+        <text x="0" y="-85" fill="#f472b6" font-size="11" font-weight="800" text-anchor="middle">SEP 2024</text>
+        <text x="0" y="-67" fill="#ffffff" font-size="13" font-weight="700" text-anchor="middle">The Proposal 💍</text>
+        <text x="0" y="-47" fill="#fbcfe8" font-size="10" text-anchor="middle">Tuscany Sunset</text>
+      </g>
+    </svg>
+  `);
+
   window.WIDGET_PREVIEWS = PREVIEWS;
   window.getWidgetPreviewImage = function(widgetId) {
     return PREVIEWS[widgetId] || null;
