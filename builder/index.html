@@ -367,7 +367,7 @@
       <div class="preview-iframe-wrapper" id="previewIframeWrapper">
         <div class="preview-device-chassis" id="previewDeviceChassis">
           <div class="device-speaker-notch" id="deviceSpeakerNotch"></div>
-          <iframe id="previewIframe" class="preview-iframe" src="/sites/demo?preview=builder" title="Live Website Preview"></iframe>
+          <iframe id="previewIframe" class="preview-iframe" src="about:blank" title="Live Website Preview"></iframe>
         </div>
       </div>
     </main>
@@ -542,6 +542,19 @@
       <button type="button" id="btnExploreDemoPreview" style="background: none; border: none; color: #94a3b8; font-size: 0.8rem; text-decoration: underline; cursor: pointer; margin-top: 10px; width: 100%; text-align: center;">
         👀 Or explore demo preview first
       </button>
+    </div>
+  </div>
+
+  <!-- DESIGN PICKER MODAL (Select or Create) -->
+  <div class="design-picker-backdrop hidden" id="builderDesignPickerModal">
+    <div class="design-picker-container">
+      <div class="design-picker-header">
+        <h2>💍 My Designs</h2>
+        <p id="designPickerSubtitle">Select a design to edit, or create a new one</p>
+      </div>
+      <div class="design-picker-grid" id="designPickerGrid">
+        <!-- Cards injected by JS -->
+      </div>
     </div>
   </div>
 

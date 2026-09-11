@@ -295,13 +295,17 @@ async function checkBuilderAccess() {
   const isDirectMasterAdmin = paramRole === "admin" || (localAuth && localAuth.role === "admin") || paramPin === "admin1234" || paramToken === "master-admin-token-lovesaas";
 
   if (isDirectMasterAdmin) {
-    state.slug = paramSlug || "demo";
     state.userRole = "admin";
     state.isPurchased = true;
     state.adminPin = "admin1234";
     state.authToken = "master-admin-token-lovesaas";
-    updateRoleUI();
-    return true;
+
+    if (paramSlug) {
+      state.slug = paramSlug;
+      updateRoleUI();
+      return true;
+    }
+    // No slug → fall through to design picker below
   }
 
   // Require user authentication
@@ -342,13 +346,17 @@ async function checkBuilderAccess() {
 
   // Admin has access to all sites
   if (isAdmin) {
-    state.slug = paramSlug || "demo";
     state.userRole = "admin";
     state.isPurchased = true;
     state.adminPin = "admin1234";
     state.authToken = "master-admin-token-lovesaas";
-    updateRoleUI();
-    return true;
+
+    if (paramSlug) {
+      state.slug = paramSlug;
+      updateRoleUI();
+      return true;
+    }
+    // No slug → fall through to design picker
   }
 
   // Non-admin user: fetch user's sites
@@ -387,37 +395,9 @@ async function checkBuilderAccess() {
     return true;
   }
 
-  // If user has existing sites, load primary site
-  if (userDesigns.length > 0) {
-    const primary = userDesigns[0];
-    state.slug = primary.slug;
-    state.userRole = "user";
-    state.isPurchased = true;
-    state.adminPin = primary.adminPin || "1234";
-    state.authToken = primary.authToken || "";
-    localStorage.setItem("lovesaas_auth", JSON.stringify({
-      slug: primary.slug,
-      role: "user",
-      authToken: state.authToken,
-      adminPin: state.adminPin,
-      plan: primary.plan || "vip"
-    }));
-    window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(primary.slug)}&token=${encodeURIComponent(state.authToken || "")}`);
-    updateRoleUI();
-    return true;
-  }
-
-  // Zero projects: prompt new blank project modal
-  state.slug = "demo";
-  state.userRole = "visitor";
-  state.isPurchased = false;
-  updateRoleUI();
-  setTimeout(() => {
-    if (typeof window.openNewProjectModal === "function") {
-      window.openNewProjectModal(true);
-    }
-  }, 300);
-  return true;
+  // Show design picker for user to choose or create
+  showDesignPickerModal(userDesigns);
+  return false;
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -4425,6 +4405,96 @@ function setupEventListeners() {
   setupBuilderAuthModals();
 }
 
+// ── Design Picker Modal ─────────────────────────────────────────
+function dpRelativeTime(dateStr) {
+  if (!dateStr) return "—";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function dpFormatDate(dateStr) {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function showDesignPickerModal(designs) {
+  const modal = document.getElementById("builderDesignPickerModal");
+  const grid = document.getElementById("designPickerGrid");
+  const subtitle = document.getElementById("designPickerSubtitle");
+  if (!modal || !grid) return;
+
+  subtitle.textContent = designs.length > 0
+    ? `You have ${designs.length} design${designs.length > 1 ? "s" : ""}. Select one to edit, or create a new one.`
+    : "You don't have any designs yet. Create your first one!";
+
+  // Build cards
+  let html = `
+    <div class="design-picker-card design-picker-card--create" id="dpCardCreateNew">
+      <div class="dp-create-icon">✨</div>
+      <div class="dp-create-title">+ Create New Site</div>
+      <div class="dp-create-sub">Start a brand new couple website</div>
+    </div>`;
+
+  designs.forEach(d => {
+    const name = [d.partner1, d.partner2].filter(Boolean).join(" & ") || d.slug;
+    html += `
+    <div class="design-picker-card" data-dp-slug="${escapeHtml(d.slug)}" data-dp-token="${escapeHtml(d.authToken || "")}" data-dp-pin="${escapeHtml(d.adminPin || "")}" data-dp-plan="${escapeHtml(d.plan || "vip")}">
+      <div class="dp-card-name">💍 ${escapeHtml(name)}</div>
+      <div class="dp-card-slug">/sites/${escapeHtml(d.slug)}</div>
+      <div class="dp-card-badges">
+        <span class="dp-badge dp-badge--theme">${escapeHtml(d.themeId || "romantic-rose")}</span>
+        <span class="dp-badge dp-badge--preset">${escapeHtml(d.preset || "complete")}</span>
+        <span class="dp-badge dp-badge--plan">⭐ ${escapeHtml((d.plan || "vip").toUpperCase())}</span>
+      </div>
+      <div class="dp-card-stats">
+        <div class="dp-stat"><span class="dp-stat-icon">📅</span> Created: ${dpFormatDate(d.createdAt)}</div>
+        <div class="dp-stat"><span class="dp-stat-icon">✏️</span> Last modified: ${dpRelativeTime(d.updatedAt || d.createdAt)}</div>
+      </div>
+      <button type="button" class="dp-card-action">Open in Studio →</button>
+    </div>`;
+  });
+
+  grid.innerHTML = html;
+  modal.classList.remove("hidden");
+
+  // Wire up "Create New" card
+  document.getElementById("dpCardCreateNew")?.addEventListener("click", () => {
+    modal.classList.add("hidden");
+    if (typeof window.openNewProjectModal === "function") {
+      window.openNewProjectModal(designs.length === 0);
+    }
+  });
+
+  // Wire up design cards
+  grid.querySelectorAll(".design-picker-card[data-dp-slug]").forEach(card => {
+    card.addEventListener("click", () => {
+      const slug = card.dataset.dpSlug;
+      const token = card.dataset.dpToken || "";
+      const pin = card.dataset.dpPin || "1234";
+      const plan = card.dataset.dpPlan || "vip";
+
+      state.slug = slug;
+      state.userRole = "user";
+      state.isPurchased = true;
+      state.adminPin = pin;
+      state.authToken = token;
+      localStorage.setItem("lovesaas_auth", JSON.stringify({ slug, role: "user", authToken: token, adminPin: pin, plan }));
+      window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(slug)}&token=${encodeURIComponent(token)}`);
+
+      modal.classList.add("hidden");
+      updateRoleUI();
+      loadTenantData(slug);
+    });
+  });
+}
+
 function setupNewProjectModal() {
   const modal = document.getElementById("builderNewProjectModal");
   const btnClose = document.getElementById("btnCloseNewProjectModal");
@@ -4548,13 +4618,22 @@ function setupNewProjectModal() {
   if (btnClose) {
     btnClose.addEventListener("click", () => {
       modal.classList.add("hidden");
+      // Return to design picker if no design is actively loaded
+      if (state.userDesigns && state.userDesigns.length > 0 && !new URLSearchParams(window.location.search).get("slug")) {
+        showDesignPickerModal(state.userDesigns);
+      }
     });
   }
 
   if (btnExplore) {
     btnExplore.addEventListener("click", () => {
       modal.classList.add("hidden");
-      showToast("Exploring demo preview. Click '+ New Site' whenever you are ready!", "info");
+      // Return to design picker if no design is actively loaded
+      if (state.userDesigns && state.userDesigns.length > 0 && !new URLSearchParams(window.location.search).get("slug")) {
+        showDesignPickerModal(state.userDesigns);
+      } else {
+        showToast("Exploring demo preview. Click '+ New Site' whenever you are ready!", "info");
+      }
     });
   }
 

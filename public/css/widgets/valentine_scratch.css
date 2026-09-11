@@ -1,0 +1,139 @@
+/* Valentine Scratch Card */
+.valentine-scratch-section { padding: 60px 0; }
+
+.vs-card-wrap {
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.vs-scratch-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 2px solid rgba(232, 67, 147, 0.2);
+}
+
+.vs-reveal-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #fff5f7 0%, #ffe0ec 100%);
+  padding: 20px;
+}
+
+.vs-scratch-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+  z-index: 2;
+  border-radius: var(--radius-md);
+}
+
+.vs-itinerary-card {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(232, 67, 147, 0.12);
+  border: 1px solid rgba(232, 67, 147, 0.15);
+}
+
+.vs-itinerary-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.vs-itinerary-badge {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e84393;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.vs-itinerary-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vs-itinerary-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: left;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.vs-itinerary-icon { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+.vs-itinerary-row strong { color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.vs-itinerary-message {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(232, 67, 147, 0.2);
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: #e84393;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.vs-progress-bar {
+  position: relative;
+  margin-top: 16px;
+  height: 24px;
+  background: #f1f5f9;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.vs-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #e84393, #fd79a8);
+  border-radius: 12px;
+  transition: width 0.3s ease;
+}
+
+.vs-progress-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.vs-reset-btn { margin-top: 12px; }
+
+.vs-card-wrap.vs-revealed .vs-scratch-canvas {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+
+.vs-confetti-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@media (max-width: 480px) {
+  .vs-card-wrap { max-width: 100%; }
+  .vs-itinerary-card { padding: 16px; }
+  .vs-itinerary-row { font-size: 0.82rem; }
+}
