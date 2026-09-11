@@ -1,6 +1,7 @@
 .then-now-slider-section {
-  padding: 70px 20px;
+  padding: 60px 0;
   position: relative;
+  width: 100%;
 }
 .then-now-slider-box {
   max-width: 960px;
@@ -51,6 +52,10 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
   z-index: 5;
   pointer-events: none;
+  max-width: calc(50% - 24px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .then-badge {
   left: 18px;
@@ -93,6 +98,12 @@
   font-weight: 800;
   box-shadow: 0 8px 24px rgba(255, 67, 101, 0.45);
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+}
+.then-now-handle::after {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
 }
 .then-now-viewport:hover .then-now-handle,
 .then-now-viewport.dragging .then-now-handle {
@@ -144,22 +155,31 @@
   line-height: 1.5;
   margin: 0;
 }
+
+@media (max-width: 768px) {
+  .then-now-slider-section { padding: 40px 0; }
+  .then-now-viewport { aspect-ratio: 4 / 3; min-height: 240px; border-radius: 20px; }
+  .then-now-captions-grid { gap: 14px; }
+}
+
 @media (max-width: 640px) {
-  .then-now-viewport {
-    aspect-ratio: 4 / 3;
-    min-height: 240px;
-    border-radius: 18px;
-  }
-  .then-now-captions-grid {
-    grid-template-columns: 1fr;
-  }
-  .then-now-handle {
-    width: 38px;
-    height: 38px;
-    font-size: 0.95rem;
-  }
-  .then-now-badge {
-    font-size: 0.7rem;
-    padding: 6px 12px;
-  }
+  .then-now-captions-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .then-now-slider-section { padding: 28px 0; }
+  .then-now-viewport { aspect-ratio: 1 / 1; min-height: 200px; border-radius: 16px; }
+  .then-now-badge { top: 10px; padding: 4px 10px; font-size: 0.65rem; max-width: calc(50% - 16px); }
+  .then-badge { left: 10px; }
+  .now-badge { right: 10px; }
+  .then-now-handle { width: 34px; height: 34px; font-size: 0.82rem; }
+  .then-now-caption-card { padding: 14px 14px; border-radius: 14px; }
+  .caption-lead { font-size: 0.74rem; }
+  .caption-body { font-size: 0.86rem; word-break: break-word; }
+}
+
+@media (max-width: 360px) {
+  .then-now-viewport { aspect-ratio: 1 / 1; min-height: 180px; }
+  .then-now-badge { font-size: 0.6rem; padding: 3px 8px; }
+  .then-now-handle { width: 30px; height: 30px; font-size: 0.75rem; }
 }

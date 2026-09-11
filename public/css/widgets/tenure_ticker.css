@@ -1,6 +1,7 @@
 .tenure-ticker-section {
-  padding: 70px 20px;
+  padding: 60px 0;
   position: relative;
+  width: 100%;
 }
 .tenure-ticker-box {
   max-width: 920px;
@@ -148,6 +149,9 @@
 .milestone-progress-labels {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
   font-size: 0.82rem;
   font-weight: 700;
   color: #475569;
@@ -166,4 +170,38 @@
   border-radius: 8px;
   transition: width 0.5s ease;
   box-shadow: 0 0 10px rgba(255, 67, 101, 0.5);
+}
+
+@media (max-width: 768px) {
+  .tenure-ticker-section { padding: 40px 0; }
+  .tenure-card { padding: 20px 16px; border-radius: 20px; }
+  .tenure-val { font-size: clamp(1.5rem, 3.5vw, 1.8rem); }
+  .milestone-heading { font-size: 1.2rem; }
+  .milestone-slot { min-width: 48px; padding: 8px 6px; }
+  .milestone-slot-val { font-size: 1.2rem; }
+}
+
+@media (max-width: 480px) {
+  .tenure-ticker-section { padding: 28px 0; }
+  .tenure-card { padding: 16px 12px; border-radius: 16px; margin-bottom: 14px; }
+  .tenure-header-row { flex-direction: column; align-items: flex-start; gap: 8px; margin-bottom: 14px; }
+  .tenure-pill { font-size: 0.72rem; padding: 5px 12px; }
+  .tenure-start-meta { font-size: 0.78rem; }
+  .tenure-grid-six { gap: 8px; }
+  .tenure-slot { padding: 10px 4px; border-radius: 12px; min-width: 0; }
+  .tenure-val { font-size: clamp(1.25rem, 4.2vw, 1.45rem); }
+  .tenure-label { font-size: clamp(0.62rem, 2vw, 0.68rem); margin-top: 3px; }
+  .milestone-top-row { flex-direction: column; align-items: stretch; gap: 10px; margin-bottom: 14px; }
+  .milestone-heading { font-size: 1.1rem; }
+  .milestone-remain-grid { display: grid; grid-template-columns: repeat(4, 1fr); width: 100%; gap: 6px; }
+  .milestone-slot { min-width: 0; padding: 8px 2px; border-radius: 10px; }
+  .milestone-slot-val { font-size: clamp(1rem, 3.2vw, 1.15rem); }
+  .milestone-slot-lbl { font-size: clamp(0.55rem, 1.8vw, 0.6rem); }
+}
+
+@media (max-width: 360px) {
+  .tenure-card { padding: 12px 8px; border-radius: 14px; }
+  .tenure-grid-six { gap: 6px; }
+  .tenure-slot { padding: 8px 2px; border-radius: 10px; }
+  .milestone-remain-grid { gap: 4px; }
 }

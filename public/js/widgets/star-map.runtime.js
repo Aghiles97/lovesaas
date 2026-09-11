@@ -216,20 +216,37 @@
     let hoveredStar = null;
     let mousePos = { x: -999, y: -999 };
 
-    canvas.onmousemove = (e) => {
+    const updatePos = (clientX, clientY) => {
       const rect = canvas.getBoundingClientRect();
       const scale = canvas.width / rect.width;
       mousePos = {
-        x: (e.clientX - rect.left) * scale,
-        y: (e.clientY - rect.top) * scale
+        x: (clientX - rect.left) * scale,
+        y: (clientY - rect.top) * scale
       };
     };
 
+    canvas.onmousemove = (e) => updatePos(e.clientX, e.clientY);
     canvas.onmouseleave = () => {
       mousePos = { x: -999, y: -999 };
       hoveredStar = null;
       if (tooltip) tooltip.style.opacity = "0";
     };
+
+    canvas.addEventListener("touchstart", (e) => {
+      if (e.touches && e.touches[0]) updatePos(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    canvas.addEventListener("touchmove", (e) => {
+      if (e.touches && e.touches[0]) updatePos(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    canvas.addEventListener("touchend", () => {
+      setTimeout(() => {
+        mousePos = { x: -999, y: -999 };
+        hoveredStar = null;
+        if (tooltip) tooltip.style.opacity = "0";
+      }, 2000);
+    }, { passive: true });
 
     const render = (time) => {
       const th = THEMES[themeKey] || THEMES.midnight;
@@ -360,8 +377,10 @@
             <small>Mag: ${hoveredStar.mag} • Alt: ${(hoveredStar.pt.alt * 180 / Math.PI).toFixed(1)}°</small>
           `;
           const rect = canvas.getBoundingClientRect();
-          const tipX = (hoveredStar.pt.x / 600) * rect.width;
-          const tipY = (hoveredStar.pt.y / 600) * rect.height;
+          const rawX = (hoveredStar.pt.x / 600) * rect.width;
+          const rawY = (hoveredStar.pt.y / 600) * rect.height;
+          const tipX = Math.max(65, Math.min(rect.width - 65, rawX));
+          const tipY = Math.max(35, rawY);
           tooltip.style.left = `${tipX}px`;
           tooltip.style.top = `${tipY - 14}px`;
           tooltip.style.opacity = "1";

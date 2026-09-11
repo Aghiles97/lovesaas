@@ -27,9 +27,14 @@
   transform-style: preserve-3d;
   cursor: pointer;
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .gift-box-3d:hover {
   transform: scale(1.05) rotateY(10deg);
+}
+.gift-box-3d:active {
+  transform: scale(0.98);
 }
 .box-body-cube {
   width: 170px;
@@ -414,4 +419,115 @@
 .gift-media-preview img, .gift-media-preview video {
   width: 100%;
   display: block;
+}
+
+/* Mobile & Touch Responsive Optimizations */
+@media (max-width: 640px) {
+  .gift-unboxer-section {
+    padding: 40px 12px;
+  }
+  .gift-stage-wrap {
+    margin: 20px auto;
+    width: 250px;
+    height: 250px;
+  }
+  .unbox-glow-rays {
+    width: 290px;
+    height: 290px;
+  }
+  .unbox-stepper {
+    margin-bottom: 14px;
+    gap: 8px;
+  }
+  .unbox-controls .btn {
+    width: 100%;
+    max-width: 280px;
+    min-height: 46px;
+    padding: 10px 20px;
+  }
+  .gift-surprise-reveal {
+    padding: 20px 14px;
+    border-radius: 20px;
+    margin: 16px auto 0;
+  }
+  .vip-coupon-header {
+    margin-bottom: 10px;
+  }
+  .gift-surprise-badge {
+    font-size: 0.72rem;
+    padding: 5px 12px;
+  }
+  .wax-seal {
+    width: 44px;
+    height: 44px;
+  }
+  .wax-seal-ring {
+    width: 34px;
+    height: 34px;
+  }
+  .wax-seal-initials {
+    font-size: 0.55rem;
+  }
+  .gift-surprise-title {
+    font-size: 1.35rem;
+    line-height: 1.25;
+  }
+  .gift-surprise-desc {
+    font-size: 0.92rem;
+    line-height: 1.45;
+    margin-bottom: 14px;
+  }
+  .vip-perks-list {
+    padding: 10px 14px;
+    margin-bottom: 14px;
+  }
+  .vip-perk-item {
+    font-size: 0.84rem;
+  }
+  .vip-barcode-strip {
+    padding: 8px 10px;
+    margin-bottom: 16px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .barcode-lines {
+    font-size: 1.02rem;
+    letter-spacing: 0.12em;
+    word-break: break-all;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  .barcode-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+  }
+  .btn-whatsapp {
+    width: 100%;
+    justify-content: center;
+    min-height: 46px;
+  }
+}
+
+@media (max-width: 380px) {
+  .gift-stage-wrap {
+    width: 220px;
+    height: 220px;
+  }
+  .gift-box-3d {
+    width: 145px;
+    height: 145px;
+  }
+  .box-body-cube {
+    width: 145px;
+    height: 118px;
+  }
+  .box-lid {
+    width: 158px;
+    height: 38px;
+    left: -7px;
+  }
+  .box-ribbon-v, .box-ribbon-h {
+    width: 22px;
+    height: 22px;
+  }
 }

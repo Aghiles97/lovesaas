@@ -250,9 +250,9 @@
     }
 
     if (canvas) {
-      canvas.onclick = (e) => {
+      const handleScrub = (clientX) => {
         const rect = canvas.getBoundingClientRect();
-        const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
         if (internalAudio && !isNaN(internalAudio.duration) && internalAudio.duration > 0) {
           internalAudio.currentTime = ratio * internalAudio.duration;
           if (timeCurEl) timeCurEl.textContent = formatTime(internalAudio.currentTime);
@@ -262,6 +262,13 @@
         }
         drawWaveform();
       };
+      canvas.onclick = (e) => handleScrub(e.clientX);
+      canvas.addEventListener("touchstart", (e) => {
+        if (e.touches && e.touches[0]) handleScrub(e.touches[0].clientX);
+      }, { passive: true });
+      canvas.addEventListener("touchmove", (e) => {
+        if (e.touches && e.touches[0]) handleScrub(e.touches[0].clientX);
+      }, { passive: true });
     }
 
     // Filter pills

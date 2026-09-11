@@ -154,11 +154,21 @@ function renderDOM() {
     updateThemeBackdropDecorations(themeClass);
   }
 
+  const isTenantViewer = typeof window !== "undefined" && (
+    window.location.pathname.includes("/sites/") ||
+    window.location.pathname.includes("/builder") ||
+    document.getElementById("modularGridContainer") !== null ||
+    Boolean(window.CURRENT_TENANT_SLUG)
+  );
+
   document.querySelectorAll(".partner-name-display").forEach(el => {
     el.textContent = state.partnerName || "Ella";
   });
   document.querySelectorAll(".recipient-name-preview").forEach(el => {
     el.textContent = state.partnerName || "Ella";
+  });
+  document.querySelectorAll(".sender-name-display").forEach(el => {
+    el.textContent = state.senderName || "Aghiles";
   });
 
   const senderEl = document.getElementById("senderNameDisplay");
@@ -954,8 +964,16 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(updateQuintillionLive, 250);
   setInterval(updateLDRClocks, 1000);
 
-  // Background server & IndexedDB sync (zero UI blocking)
+  // Background server & IndexedDB sync (zero UI blocking, standalone only)
   (async () => {
+    const isTenantViewer = typeof window !== "undefined" && (
+      window.location.pathname.includes("/sites/") ||
+      window.location.pathname.includes("/builder") ||
+      document.getElementById("modularGridContainer") !== null ||
+      Boolean(window.CURRENT_TENANT_SLUG)
+    );
+    if (isTenantViewer) return;
+
     if (typeof syncComputerData === "function") {
       const synced = await syncComputerData();
       if (synced) {

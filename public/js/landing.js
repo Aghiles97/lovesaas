@@ -3,6 +3,46 @@
  */
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Safe fetch helper that guarantees clean JSON parsing and friendly errors on HTML responses
+  async function safeJsonFetch(url, options = {}) {
+    let res;
+    try {
+      res = await fetch(url, options);
+    } catch (networkErr) {
+      const err = new Error("Network connection failed. Please check your internet connection.");
+      err.isNetwork = true;
+      throw err;
+    }
+
+    const contentType = res.headers.get("content-type") || "";
+    let data = null;
+    if (contentType.includes("application/json")) {
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        data = null;
+      }
+    }
+
+    if (!res.ok) {
+      let errorMsg = (data && data.error) ? data.error : "";
+      if (!errorMsg) {
+        if (res.status === 401) errorMsg = "Invalid email or password.";
+        else if (res.status === 403) errorMsg = "Access forbidden.";
+        else if (res.status === 404) errorMsg = "Service endpoint not found (404).";
+        else if (res.status === 429) errorMsg = "Too many requests. Please wait a moment.";
+        else if (res.status >= 500) errorMsg = "Server is temporarily unavailable. Please try again in a moment.";
+        else errorMsg = `Request failed (${res.status})`;
+      }
+      const err = new Error(errorMsg);
+      err.status = res.status;
+      err.data = data;
+      throw err;
+    }
+    return data || {};
+  }
+  window.safeJsonFetch = safeJsonFetch;
+
   // ------------------------------------------------------------------
   // 1. AMBIENT PARTICLES CANVAS (FLOATING HEARTS & SPARKLES)
   // ------------------------------------------------------------------
@@ -469,18 +509,28 @@ document.addEventListener("DOMContentLoaded", () => {
   // Mobile Menu Toggle
   const btnMobileMenuToggle = document.getElementById("btnMobileMenuToggle");
   const navLinks = document.getElementById("navLinks");
+  const mobileNavBackdrop = document.getElementById("mobileNavBackdrop");
   if (btnMobileMenuToggle && navLinks) {
     const toggleMenu = (open) => {
       const shouldOpen = open !== undefined ? open : !navLinks.classList.contains("mobile-open");
       navLinks.classList.toggle("mobile-open", shouldOpen);
+      const mainNav = document.getElementById("mainNav");
+      if (mainNav) mainNav.classList.toggle("navbar-menu-open", shouldOpen);
+      if (mobileNavBackdrop) mobileNavBackdrop.classList.toggle("active", shouldOpen);
       btnMobileMenuToggle.textContent = shouldOpen ? "✕" : "☰";
       btnMobileMenuToggle.setAttribute("aria-expanded", String(shouldOpen));
+      document.body.style.overflow = shouldOpen ? "hidden" : "";
     };
+    window.toggleMenu = toggleMenu;
 
     btnMobileMenuToggle.addEventListener("click", (e) => {
       e.stopPropagation();
       toggleMenu();
     });
+
+    if (mobileNavBackdrop) {
+      mobileNavBackdrop.addEventListener("click", () => toggleMenu(false));
+    }
 
     navLinks.querySelectorAll("a, button").forEach(item => {
       item.addEventListener("click", () => toggleMenu(false));
@@ -547,10 +597,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function openCheckoutModal(preferredPlan = "vip") {
-    if (currentUser) {
-      window.location.href = "/builder";
-      return;
-    }
     checkoutState.step = 1;
     const isAdmin = currentUser && currentUser.role === "admin";
     checkoutState.plan = isAdmin ? "vip" : preferredPlan;
@@ -560,16 +606,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const elP2 = document.getElementById("inputPartner2");
     const elEmail = document.getElementById("inputEmail");
     const elAnniv = document.getElementById("inputAnniversary");
+    const adminNotice = document.getElementById("checkoutAdminNotice");
 
     if (elP1 && !elP1.value && saved.partner1) elP1.value = saved.partner1;
     if (elP2 && !elP2.value && saved.partner2) elP2.value = saved.partner2;
     if (elAnniv && !elAnniv.value && saved.anniversaryDate) elAnniv.value = saved.anniversaryDate;
 
     if (currentUser && currentUser.email) {
-      if (elEmail) elEmail.value = currentUser.email;
-    } else if (elEmail && !elEmail.value && saved.email) {
-      elEmail.value = saved.email;
+      if (elEmail) {
+        elEmail.value = currentUser.email;
+        elEmail.readOnly = true;
+      }
+    } else if (elEmail) {
+      elEmail.value = saved.email || "";
+      elEmail.readOnly = false;
     }
+
+    if (adminNotice) adminNotice.style.display = isAdmin ? "flex" : "none";
 
     planChips.forEach(c => {
       if (c.dataset.plan === checkoutState.plan) c.classList.add("active");
@@ -722,7 +775,7 @@ document.addEventListener("DOMContentLoaded", () => {
       btnCheckoutNext.innerHTML = `<span>Activating Site & Studio...</span> <span>⏳</span>`;
 
       try {
-        const res = await fetch("/api/checkout", {
+        const data = await safeJsonFetch("/api/checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json", ...authHeaders() },
           body: JSON.stringify({
@@ -735,11 +788,6 @@ document.addEventListener("DOMContentLoaded", () => {
             anniversaryDate
           })
         });
-
-        const data = await res.json();
-        if (!res.ok || !data.success) {
-          throw new Error(data.error || "Failed to create couple website");
-        }
 
         if (data.userToken) {
           setUserToken(data.userToken);
@@ -807,6 +855,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const mobileAuthLoggedOut = document.getElementById("mobileAuthLoggedOut");
   const mobileAuthLoggedIn = document.getElementById("mobileAuthLoggedIn");
   const mobileUserName = document.getElementById("mobileUserName");
+  const mobileUserCard = document.getElementById("mobileUserCard");
+  const mobileUserAvatar = document.getElementById("mobileUserAvatar");
+  const mobileUserEmail = document.getElementById("mobileUserEmail");
+  const mobileBadgeSitesCount = document.getElementById("mobileBadgeSitesCount");
 
   function renderUserState() {
     const name = currentUser ? (currentUser.name || currentUser.email.split("@")[0]) : "";
@@ -821,6 +873,13 @@ document.addEventListener("DOMContentLoaded", () => {
       if (navAuthLoggedIn) navAuthLoggedIn.style.display = "flex";
       if (navUserName) navUserName.textContent = name;
       if (navUserAvatar) navUserAvatar.textContent = initial;
+
+      if (mobileUserCard) mobileUserCard.style.display = "flex";
+      if (mobileUserAvatar) mobileUserAvatar.textContent = initial;
+      if (mobileUserName) mobileUserName.textContent = name;
+      if (mobileUserEmail) mobileUserEmail.textContent = currentUser.email;
+      const countEl = document.getElementById("badgeDesignsCount");
+      if (mobileBadgeSitesCount && countEl) mobileBadgeSitesCount.textContent = countEl.textContent || "0";
 
       if (btnNavGetStarted) btnNavGetStarted.style.display = "none";
 
@@ -838,7 +897,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (mobileAuthLoggedOut) mobileAuthLoggedOut.style.display = "none";
       if (mobileAuthLoggedIn) mobileAuthLoggedIn.style.display = "flex";
-      if (mobileUserName) mobileUserName.textContent = name;
 
       const portalAvatar = document.getElementById("portalAvatar");
       const portalTitle = document.getElementById("userPortalModalTitle");
@@ -851,6 +909,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (profileName) profileName.value = currentUser.name || "";
       if (profileEmail) profileEmail.value = currentUser.email;
     } else {
+      if (mobileUserCard) mobileUserCard.style.display = "none";
       if (navAuthLoggedOut) navAuthLoggedOut.style.display = "flex";
       if (navAuthLoggedIn) navAuthLoggedIn.style.display = "none";
       if (btnNavGetStarted) btnNavGetStarted.style.display = "inline-flex";
@@ -881,15 +940,10 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     try {
-      const res = await fetch("/api/auth/user-me", { headers: authHeaders() });
-      if (res.ok) {
-        const data = await res.json();
-        currentUser = data.user;
-      } else {
-        clearUserToken();
-        currentUser = null;
-      }
+      const data = await safeJsonFetch("/api/auth/user-me", { headers: authHeaders() });
+      currentUser = data.user;
     } catch {
+      clearUserToken();
       currentUser = null;
     }
     renderUserState();
@@ -982,13 +1036,11 @@ document.addEventListener("DOMContentLoaded", () => {
       setAuthAlert("");
 
       try {
-        const res = await fetch("/api/auth/login", {
+        const data = await safeJsonFetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Invalid email or password");
 
         setUserToken(data.token);
         currentUser = data.user;
@@ -1003,6 +1055,24 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // Password visibility toggles
+  document.querySelectorAll(".btn-toggle-password").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const targetId = btn.dataset.target;
+      const input = document.getElementById(targetId);
+      if (!input) return;
+      if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "🙈";
+        btn.title = "Hide password";
+      } else {
+        input.type = "password";
+        btn.textContent = "👁️";
+        btn.title = "Show password";
+      }
+    });
+  });
 
   // 2. Register
   const formAuthRegister = document.getElementById("formAuthRegister");
@@ -1025,13 +1095,11 @@ document.addEventListener("DOMContentLoaded", () => {
       setAuthAlert("");
 
       try {
-        const res = await fetch("/api/auth/register", {
+        const data = await safeJsonFetch("/api/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email, password })
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to register account");
 
         setUserToken(data.token);
         currentUser = data.user;
@@ -1089,14 +1157,25 @@ document.addEventListener("DOMContentLoaded", () => {
     loadUserDesigns();
     loadUserPurchases();
   }
+  window.openUserPortal = openUserPortal;
 
   if (btnUserPortal) btnUserPortal.addEventListener("click", openUserPortal);
-  if (btnMobileUserPortal) btnMobileUserPortal.addEventListener("click", openUserPortal);
+  if (btnMobileUserPortal) btnMobileUserPortal.addEventListener("click", () => {
+    if (typeof window.toggleMenu === "function") window.toggleMenu(false);
+    openUserPortal();
+  });
   if (btnCloseUserPortalModal) btnCloseUserPortalModal.addEventListener("click", () => closeModal(userPortalModal));
   if (btnPortalCreateNewSite) {
     btnPortalCreateNewSite.addEventListener("click", () => {
       closeModal(userPortalModal);
-      window.location.href = "/builder?create=1";
+      openCheckoutModal("vip");
+    });
+  }
+  const btnPortalCreateNewSiteMain = document.getElementById("btnPortalCreateNewSiteMain");
+  if (btnPortalCreateNewSiteMain) {
+    btnPortalCreateNewSiteMain.addEventListener("click", () => {
+      closeModal(userPortalModal);
+      openCheckoutModal("vip");
     });
   }
 
@@ -1115,39 +1194,36 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (btnPortalLogout) btnPortalLogout.addEventListener("click", performLogout);
-  if (btnMobileLogout) btnMobileLogout.addEventListener("click", performLogout);
+  if (btnMobileLogout) btnMobileLogout.addEventListener("click", () => {
+    if (typeof window.toggleMenu === "function") window.toggleMenu(false);
+    performLogout();
+  });
 
   // Load User Designs
   async function loadUserDesigns() {
     const listEl = document.getElementById("portalDesignsList");
     const countBadge = document.getElementById("badgeDesignsCount");
+    const mobileBadge = document.getElementById("mobileBadgeSitesCount");
     if (!listEl) return;
 
-    listEl.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--text-muted);">Loading your websites...</div>`;
+    listEl.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--text-muted);"><div style="font-size: 2rem; margin-bottom: 8px;">⏳</div>Loading your websites...</div>`;
 
     try {
-      const res = await fetch("/api/user/designs", { headers: authHeaders() });
-      if (res.status === 401) {
-        clearUserToken();
-        currentUser = null;
-        renderUserState();
-        closeModal(userPortalModal);
-        openModal(signInModal);
-        return;
-      }
-      if (!res.ok) throw new Error("Could not load designs");
-      const data = await res.json();
+      const data = await safeJsonFetch("/api/user/designs", { headers: authHeaders() });
       const designs = data.designs || [];
       if (countBadge) countBadge.textContent = designs.length;
+      if (mobileBadge) mobileBadge.textContent = designs.length;
 
       if (designs.length === 0) {
         listEl.innerHTML = `
           <div class="portal-empty-state" style="grid-column: 1/-1;">
-            <div class="empty-icon">💍</div>
-            <h4>No couple sites found</h4>
-            <p>You haven't created any couple websites yet. Create one now to begin your romantic digital keepsake!</p>
-            <button type="button" class="btn btn-primary btn-sm" id="btnEmptyCreateSite" style="margin-top: 10px;">
-              <span>💖</span> Create Couple Site
+            <div class="empty-icon" style="font-size: 3rem; margin-bottom: 12px;">💍✨</div>
+            <h4 style="font-size: 1.3rem; margin-bottom: 8px;">Create Your First Couple Website</h4>
+            <p style="max-width: 440px; margin: 0 auto 16px; color: var(--text-secondary); line-height: 1.5;">
+              You don't have any couple websites yet. In less than 2 minutes, create a romantic private digital keepsake with love letters, interactive games, photo memories, and songs.
+            </p>
+            <button type="button" class="btn btn-primary btn-lg" id="btnEmptyCreateSite">
+              <span>💖</span> Create My Couple Website Now
             </button>
           </div>
         `;
@@ -1162,42 +1238,81 @@ document.addEventListener("DOMContentLoaded", () => {
       listEl.innerHTML = designs.map(d => {
         const studioUrl = `/builder?slug=${encodeURIComponent(d.slug)}&token=${encodeURIComponent(d.authToken || "")}`;
         const liveUrl = `/sites/${encodeURIComponent(d.slug)}`;
-        const planName = d.plan === "starter" ? "Starter ($19)" : "Forever VIP ($39)";
-        const dateStr = d.createdAt ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(d.createdAt)) : "Active";
 
         return `
-          <div class="portal-design-card" data-slug="${d.slug}">
-            <div class="portal-design-top">
-              <span class="portal-plan-tag ${d.plan === "starter" ? "plan-starter" : "plan-vip"}">${planName}</span>
-              <span style="font-size: 0.76rem; color: var(--text-muted);">${dateStr}</span>
+          <div class="portal-design-card" data-slug="${escapeHtml(d.slug)}" data-studio="${studioUrl}" data-token="${escapeHtml(d.authToken || "")}" data-plan="${escapeHtml(d.plan || "vip")}">
+            <div class="portal-card-top-row">
+              <div class="portal-card-title-group">
+                <span class="portal-card-icon">💍</span>
+                <h4 class="portal-card-name">${escapeHtml(d.partner1)} &amp; ${escapeHtml(d.partner2)}</h4>
+              </div>
+              <span class="portal-status-badge"><span class="status-dot"></span> Live</span>
             </div>
-            <h4 class="portal-design-title">${escapeHtml(d.partner1)} & ${escapeHtml(d.partner2)}</h4>
-            <div class="portal-design-slug">
-              <a href="${liveUrl}" target="_blank" rel="noopener">/sites/${escapeHtml(d.slug)} ↗</a>
-            </div>
-            <div class="portal-design-actions">
-              <a href="${studioUrl}" class="btn btn-primary btn-sm portal-studio-launch-btn" data-slug="${escapeHtml(d.slug)}" data-token="${escapeHtml(d.authToken || "")}" data-plan="${escapeHtml(d.plan || "vip")}" style="flex: 1; justify-content: center; text-decoration: none;">
-                <span>🚀 Open Studio</span>
-              </a>
-              <a href="${liveUrl}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="text-decoration: none;" title="View public site">
-                <span>👁️</span>
+            <div class="portal-card-bottom-row">
+              <div class="portal-card-links-group">
+                <a href="${liveUrl}" target="_blank" rel="noopener" class="portal-site-link" title="Visit live website">
+                  /sites/${escapeHtml(d.slug)} ↗
+                </a>
+                <button type="button" class="btn-copy-site-slug" data-url="${window.location.origin}${liveUrl}" title="Copy site link">
+                  📋 Copy
+                </button>
+              </div>
+              <a href="${studioUrl}" class="btn btn-primary btn-sm portal-studio-launch-btn" data-slug="${escapeHtml(d.slug)}" data-token="${escapeHtml(d.authToken || "")}" data-plan="${escapeHtml(d.plan || "vip")}">
+                <span>✏️ Edit</span>
               </a>
             </div>
           </div>
         `;
       }).join("");
 
+      const launchStudio = (slug, token, plan) => {
+        localStorage.setItem("lovesaas_auth", JSON.stringify({
+          slug: slug,
+          authToken: token,
+          plan: plan || "vip",
+          role: "user"
+        }));
+      };
+
+      listEl.querySelectorAll(".portal-design-card").forEach(card => {
+        card.addEventListener("click", (e) => {
+          if (e.target.closest(".portal-site-link") || e.target.closest(".btn-copy-site-slug")) return;
+          launchStudio(card.dataset.slug, card.dataset.token, card.dataset.plan);
+          window.location.href = card.dataset.studio;
+        });
+      });
+
       listEl.querySelectorAll(".portal-studio-launch-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          localStorage.setItem("lovesaas_auth", JSON.stringify({
-            slug: btn.dataset.slug,
-            authToken: btn.dataset.token,
-            plan: btn.dataset.plan,
-            role: "user"
-          }));
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          launchStudio(btn.dataset.slug, btn.dataset.token, btn.dataset.plan);
+        });
+      });
+
+      listEl.querySelectorAll(".btn-copy-site-slug").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const url = btn.getAttribute("data-url");
+          navigator.clipboard?.writeText(url);
+          btn.textContent = "✓ Copied!";
+          btn.style.borderColor = "#34d399";
+          btn.style.color = "#34d399";
+          setTimeout(() => {
+            btn.textContent = "📋 Copy";
+            btn.style.borderColor = "";
+            btn.style.color = "";
+          }, 1800);
         });
       });
     } catch (err) {
+      if (err.status === 401) {
+        clearUserToken();
+        currentUser = null;
+        renderUserState();
+        closeModal(userPortalModal);
+        openModal(signInModal);
+        return;
+      }
       listEl.innerHTML = `<div style="text-align: center; padding: 20px; color: #ef4444;">${err.message}</div>`;
     }
   }
@@ -1211,17 +1326,7 @@ document.addEventListener("DOMContentLoaded", () => {
     listEl.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--text-muted);">Loading receipts...</div>`;
 
     try {
-      const res = await fetch("/api/user/purchases", { headers: authHeaders() });
-      if (res.status === 401) {
-        clearUserToken();
-        currentUser = null;
-        renderUserState();
-        closeModal(userPortalModal);
-        openModal(signInModal);
-        return;
-      }
-      if (!res.ok) throw new Error("Could not load purchases");
-      const data = await res.json();
+      const data = await safeJsonFetch("/api/user/purchases", { headers: authHeaders() });
       const purchases = data.purchases || [];
       if (countBadge) countBadge.textContent = purchases.length;
 
@@ -1289,13 +1394,11 @@ document.addEventListener("DOMContentLoaded", () => {
           payload.password = password;
         }
 
-        const res = await fetch("/api/user/profile", {
+        const data = await safeJsonFetch("/api/user/profile", {
           method: "PUT",
           headers: { "Content-Type": "application/json", ...authHeaders() },
           body: JSON.stringify(payload)
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed to update profile");
 
         currentUser = data.user;
         renderUserState();

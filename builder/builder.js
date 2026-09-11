@@ -127,6 +127,8 @@ function getAuthHeaders(extra = {}) {
   return headers;
 }
 
+let _lastSavedConfigPayload = null;
+
 function debouncedAutoSaveLayout() {
   clearTimeout(autoSaveTimeout);
   const indicator = document.getElementById('autoSaveIndicator');
@@ -146,17 +148,28 @@ function debouncedAutoSaveLayout() {
 
   autoSaveTimeout = setTimeout(async () => {
     try {
+      const payloadStr = JSON.stringify({
+        templatePreset: state.templatePreset,
+        themeId: state.themeId,
+        layoutOrder: state.layoutOrder,
+        sectionsData: state.sectionsData,
+      });
+      if (payloadStr === _lastSavedConfigPayload) {
+        if (indicator) {
+          indicator.className = 'auto-save-indicator saved';
+          const textEl = indicator.querySelector('.indicator-text');
+          if (textEl) textEl.textContent = 'All changes saved';
+        }
+        return;
+      }
+      _lastSavedConfigPayload = payloadStr;
+
       const res = await fetch(
         `/api/tenants/${encodeURIComponent(state.slug)}/config`,
         {
           method: 'PUT',
           headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({
-            templatePreset: state.templatePreset,
-            themeId: state.themeId,
-            layoutOrder: state.layoutOrder,
-            sectionsData: state.sectionsData,
-          }),
+          body: payloadStr,
         },
       );
       if (indicator) {
@@ -172,7 +185,7 @@ function debouncedAutoSaveLayout() {
         if (textEl) textEl.textContent = 'Unsaved changes';
       }
     }
-  }, 450);
+  }, 800);
 }
 
 if (previewIframe) {
@@ -2063,10 +2076,12 @@ function renderWidgetInspector(widgetId) {
     formHolder.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted);">No custom inspector available for ${widgetId}.</p>`;
   }
 
-  if (savedScrollTop > 0) {
+  if (savedScrollTop > 0 && !state.targetChapterId && !state.targetMemoryId) {
     inspectorFormContainer.scrollTop = savedScrollTop;
     requestAnimationFrame(() => {
-      if (inspectorFormContainer) inspectorFormContainer.scrollTop = savedScrollTop;
+      if (inspectorFormContainer && !state.targetChapterId && !state.targetMemoryId) {
+        inspectorFormContainer.scrollTop = savedScrollTop;
+      }
     });
   }
 }
@@ -3597,8 +3612,8 @@ function initSidebarTabs() {
   }
 }
 
-function switchToTab(tabId) {
-  if (tabId === 'tab-inspector') {
+function switchToTab(tabId, skipWidgetSelect = false) {
+  if (tabId === 'tab-inspector' && !skipWidgetSelect) {
     if (!state.layoutOrder || !state.layoutOrder.length) {
       renderInspectorEmptyState();
     } else if (
@@ -3952,29 +3967,7 @@ function renderSiteSettingsUI() {
       </div>
 
       <div class="settings-group-title" style="font-size: 13px; font-weight: 700; margin-top: 14px;"><span>🖼️</span> Background Wallpaper & Imagery</div>
-      <div style="font-size: 11px; color: var(--text-muted, #64748b); margin-bottom: 10px;">Select an illustrated wallpaper preset or upload your own romantic background:</div>
-
-      <div class="custom-bg-picker-card" style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color, rgba(255,255,255,0.1)); border-radius: 10px; padding: 12px; margin-bottom: 14px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <strong style="font-size: 12px;">Custom Background Wallpaper</strong>
-          ${state.customBgUrl ? `<button type="button" id="btnClearCustomBg" style="background:none; border:1px solid rgba(239,68,68,0.4); color:#ef4444; font-size:11px; padding:2px 8px; border-radius:4px; cursor:pointer;">✕ Reset to Preset</button>` : ''}
-        </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <input type="text" id="site_customBgUrl" placeholder="Image URL or upload..." value="${escapeHtml(state.customBgUrl || '')}" style="flex: 1; font-size: 12px; padding: 6px 10px;">
-          <button type="button" id="btnPickBgFromLibrary" class="btn-sm btn-secondary" style="white-space: nowrap; padding: 6px 12px; font-size: 12px; cursor: pointer;">📁 Library</button>
-          <label class="file-upload-btn" style="cursor: pointer; display: inline-flex; align-items: center; padding: 6px 12px; background: var(--primary); color: #fff; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap;">
-            <span>⬆️ Upload</span>
-            <input type="file" id="uploadCustomBgFile" accept="image/*" style="display: none;">
-          </label>
-        </div>
-        ${
-          state.customBgUrl
-            ? `
-          <div style="margin-top: 10px; width: 100%; height: 95px; background: url('${escapeHtml(state.customBgUrl)}') center/cover no-repeat; border-radius: 8px; border: 2px solid var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
-        `
-            : ''
-        }
-      </div>
+      <div style="font-size: 11px; color: var(--text-muted, #64748b); margin-bottom: 10px;">Select a wallpaper preset or create your own custom theme:</div>
 
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
         <span style="font-size: 11px; font-weight: 600; color: var(--text-muted, #64748b);">Wallpaper Presets & Custom Themes:</span>
@@ -3985,7 +3978,7 @@ function renderSiteSettingsUI() {
           .map(
             (t) => `
           <div style="position: relative; width: 100%;">
-            <button type="button" class="theme-chip-btn ${!state.customBgUrl && currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden; width: 100%; border: 1px solid rgba(225,29,72,0.35);">
+            <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden; width: 100%; border: 1px solid rgba(225,29,72,0.35);">
               <div style="width: 100%; height: 75px; background: ${t.color || '#e11d48'} url('${escapeHtml(t.desktopImg || t.mobileImg)}') center/cover no-repeat; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1); position: relative;">
                 <span style="position: absolute; top: 4px; left: 4px; background: rgba(225,29,72,0.85); color: #fff; font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: 700;">CUSTOM</span>
               </div>
@@ -4003,7 +3996,7 @@ function renderSiteSettingsUI() {
         ${imageBackgroundThemes
           .map(
             (t) => `
-          <button type="button" class="theme-chip-btn ${!state.customBgUrl && currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden;">
+          <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden;">
             <div style="width: 100%; height: 75px; background: url('${t.img}') center/cover no-repeat; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1);"></div>
             <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
               <span class="theme-color-dot" style="background: ${t.color}"></span>
@@ -4071,128 +4064,7 @@ function renderSiteSettingsUI() {
   // Bind unified media and audio settings controls
   bindMediaSettingsControls(container, 'site_');
 
-  // Bind custom background wallpaper controls
-  const btnPickBg = document.getElementById('btnPickBgFromLibrary');
-  if (btnPickBg) {
-    btnPickBg.onclick = () => {
-      if (state.userRole === 'visitor') {
-        showToast(
-          '🔒 Purchase now to customize background wallpaper!',
-          'warning',
-        );
-        window.open('/welcome#pricing', '_blank');
-        return;
-      }
-      openMediaPicker({
-        filter: 'image',
-        onSelect: (url) => {
-          state.customBgUrl = url;
-          if (previewIframe && previewIframe.contentWindow) {
-            previewIframe.contentWindow.postMessage(
-              {
-                type: 'SET_THEME',
-                themeId: state.themeId,
-                customBgUrl: state.customBgUrl,
-              },
-              window.location.origin,
-            );
-          }
-          renderSiteSettingsUI();
-          debouncedLiveUpdate(true);
-          debouncedAutoSaveLayout();
-        },
-      });
-    };
-  }
 
-  const bgUploadInput = document.getElementById('uploadCustomBgFile');
-  if (bgUploadInput) {
-    bgUploadInput.onchange = async (e) => {
-      if (state.userRole === 'visitor') {
-        showToast('🔒 Purchase now to upload background images!', 'warning');
-        window.open('/welcome#pricing', '_blank');
-        return;
-      }
-      const file = e.target.files[0];
-      if (!file) return;
-      try {
-        const uploaded = await uploadFileToR2(file);
-        const url =
-          typeof uploaded === 'string'
-            ? uploaded
-            : uploaded?.url || uploaded?.publicUrl;
-        if (url) {
-          state.customBgUrl = url;
-          if (previewIframe && previewIframe.contentWindow) {
-            previewIframe.contentWindow.postMessage(
-              {
-                type: 'SET_THEME',
-                themeId: state.themeId,
-                customBgUrl: state.customBgUrl,
-              },
-              window.location.origin,
-            );
-          }
-          renderSiteSettingsUI();
-          debouncedLiveUpdate(true);
-          debouncedAutoSaveLayout();
-        }
-      } catch (err) {
-        showToast('Failed to upload background image: ' + err.message, 'error');
-      }
-    };
-  }
-
-  const btnClearBg = document.getElementById('btnClearCustomBg');
-  if (btnClearBg) {
-    btnClearBg.onclick = () => {
-      if (state.userRole === 'visitor') {
-        showToast(
-          '🔒 Purchase now to customize background wallpaper!',
-          'warning',
-        );
-        window.open('/welcome#pricing', '_blank');
-        return;
-      }
-      state.customBgUrl = '';
-      if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage(
-          { type: 'SET_THEME', themeId: state.themeId, customBgUrl: '' },
-          window.location.origin,
-        );
-      }
-      renderSiteSettingsUI();
-      debouncedLiveUpdate(true);
-      debouncedAutoSaveLayout();
-    };
-  }
-
-  const inputCustomBg = document.getElementById('site_customBgUrl');
-  if (inputCustomBg) {
-    inputCustomBg.onchange = (e) => {
-      if (state.userRole === 'visitor') {
-        showToast(
-          '🔒 Purchase now to customize background wallpaper!',
-          'warning',
-        );
-        window.open('/welcome#pricing', '_blank');
-        return;
-      }
-      state.customBgUrl = e.target.value.trim();
-      if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage(
-          {
-            type: 'SET_THEME',
-            themeId: state.themeId,
-            customBgUrl: state.customBgUrl,
-          },
-          window.location.origin,
-        );
-      }
-      debouncedLiveUpdate(true);
-      debouncedAutoSaveLayout();
-    };
-  }
 
   // Bind theme clicks
   container.querySelectorAll('.theme-chip-btn').forEach((btn) => {
@@ -4486,7 +4358,12 @@ function renderSiteSettingsUI() {
         if (!res.ok) throw new Error(result.error || 'Failed to delete theme');
 
         if (!state.sectionsData) state.sectionsData = {};
-        state.sectionsData.customThemes = result.customThemes || [];
+        const returnedThemes = Array.isArray(result.customThemes)
+          ? result.customThemes
+          : state.sectionsData.customThemes || [];
+        state.sectionsData.customThemes = returnedThemes.filter(
+          (t) => t && t.id !== themeId,
+        );
         if (state.themeId === themeId) {
           state.themeId = 'theme-img-theme1';
         }
@@ -4517,11 +4394,13 @@ function renderSiteSettingsUI() {
   const bindInput = (id, setter) => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.oninput = (e) => {
+    const handleInput = (e) => {
       setter(e.target.value.trim());
-      debouncedLiveUpdate();
+      debouncedLiveUpdate(false, 'hero');
       debouncedAutoSaveLayout();
     };
+    el.oninput = handleInput;
+    el.onchange = handleInput;
   };
 
   bindInput('site_p1', (v) => {
@@ -4814,6 +4693,7 @@ function renderProjectSwitcher() {
       document.getElementById('projectSwitcherDropdown')?.classList.add('hidden');
       document.getElementById('projectSwitcher')?.classList.remove('open');
       document.getElementById('btnProjectSwitcher')?.setAttribute('aria-expanded', 'false');
+      toggleDropdownBackdrop(false);
 
       if (slug === state.slug) return;
 
@@ -4890,6 +4770,34 @@ async function fetchUserProjects() {
   return designs;
 }
 
+function toggleDropdownBackdrop(show) {
+  let bd = document.getElementById('headerDropdownBackdrop');
+  const nav = document.querySelector('.builder-nav');
+  if (nav) nav.classList.toggle('dropdown-active', Boolean(show));
+
+  if (!bd && show) {
+    bd = document.createElement('div');
+    bd.id = 'headerDropdownBackdrop';
+    bd.className = 'dropdown-backdrop';
+    const closeAll = (e) => {
+      e.stopPropagation();
+      document.getElementById('projectSwitcherDropdown')?.classList.add('hidden');
+      document.getElementById('projectSwitcher')?.classList.remove('open');
+      document.getElementById('btnProjectSwitcher')?.setAttribute('aria-expanded', 'false');
+      document.getElementById('userMenuDropdown')?.classList.add('hidden');
+      document.getElementById('headerUserMenu')?.classList.remove('open');
+      document.getElementById('btnUserMenuToggle')?.setAttribute('aria-expanded', 'false');
+      document.querySelector('.builder-nav')?.classList.remove('dropdown-active');
+      toggleDropdownBackdrop(false);
+    };
+    bd.addEventListener('click', closeAll);
+    bd.addEventListener('touchstart', closeAll, { passive: true });
+    document.body.appendChild(bd);
+  } else if (bd) {
+    bd.style.display = show ? 'block' : 'none';
+  }
+}
+
 function initProjectSwitcher() {
   const container = document.getElementById('projectSwitcher');
   const btn = document.getElementById('btnProjectSwitcher');
@@ -4908,6 +4816,7 @@ function initProjectSwitcher() {
     const isHidden = dropdown.classList.toggle('hidden');
     container?.classList.toggle('open', !isHidden);
     btn.setAttribute('aria-expanded', !isHidden ? 'true' : 'false');
+    toggleDropdownBackdrop(!isHidden);
 
     if (!isHidden) {
       fetchUserProjects();
@@ -4920,6 +4829,7 @@ function initProjectSwitcher() {
       dropdown.classList.add('hidden');
       container?.classList.remove('open');
       btn.setAttribute('aria-expanded', 'false');
+      toggleDropdownBackdrop(false);
       if (typeof window.openNewProjectModal === 'function') {
         window.openNewProjectModal(false);
       }
@@ -4932,6 +4842,7 @@ function initProjectSwitcher() {
       dropdown.classList.add('hidden');
       container?.classList.remove('open');
       btn.setAttribute('aria-expanded', 'false');
+      toggleDropdownBackdrop(false);
       showDesignPickerModal(state.userDesigns || []);
     });
   }
@@ -4958,6 +4869,7 @@ function initHeaderUserMenu() {
     const isHidden = dropdown.classList.toggle('hidden');
     container?.classList.toggle('open', !isHidden);
     btn.setAttribute('aria-expanded', !isHidden ? 'true' : 'false');
+    toggleDropdownBackdrop(!isHidden);
   });
 
   if (btnSwitch) {
@@ -4966,6 +4878,7 @@ function initHeaderUserMenu() {
       dropdown.classList.add('hidden');
       container?.classList.remove('open');
       btn.setAttribute('aria-expanded', 'false');
+      toggleDropdownBackdrop(false);
       const switcherBtn = document.getElementById('btnProjectSwitcher');
       if (switcherBtn) switcherBtn.click();
     });
@@ -4977,6 +4890,7 @@ function initHeaderUserMenu() {
       dropdown.classList.add('hidden');
       container?.classList.remove('open');
       btn.setAttribute('aria-expanded', 'false');
+      toggleDropdownBackdrop(false);
       if (typeof window.openNewProjectModal === 'function') {
         window.openNewProjectModal(false);
       }
@@ -4989,6 +4903,7 @@ function initHeaderUserMenu() {
       dropdown.classList.add('hidden');
       container?.classList.remove('open');
       btn.setAttribute('aria-expanded', 'false');
+      toggleDropdownBackdrop(false);
       const url = `${window.location.origin}/sites/${encodeURIComponent(state.slug || 'demo')}`;
       navigator.clipboard?.writeText(url).then(() => {
         showToast('Live site URL copied to clipboard! 📋', 'success');
@@ -5001,6 +4916,7 @@ function initHeaderUserMenu() {
   if (btnLogout) {
     btnLogout.addEventListener('click', async (e) => {
       e.stopPropagation();
+      toggleDropdownBackdrop(false);
       try {
         const token = localStorage.getItem('lovesaas_user_token');
         if (token) {
@@ -5078,23 +4994,41 @@ function initKeyboardShortcuts() {
       document.getElementById('userMenuDropdown')?.classList.add('hidden');
       document.getElementById('headerUserMenu')?.classList.remove('open');
       document.getElementById('btnInspectorMore')?.classList.remove('active');
+      toggleDropdownBackdrop(false);
     }
   });
 
-  document.addEventListener('click', (e) => {
+  const handleOutsideClose = (e) => {
     const switcher = document.getElementById('projectSwitcher');
     const userMenu = document.getElementById('headerUserMenu');
+    let closed = false;
     if (switcher && !switcher.contains(e.target)) {
       document.getElementById('projectSwitcherDropdown')?.classList.add('hidden');
       switcher.classList.remove('open');
       document.getElementById('btnProjectSwitcher')?.setAttribute('aria-expanded', 'false');
+      closed = true;
     }
     if (userMenu && !userMenu.contains(e.target)) {
       document.getElementById('userMenuDropdown')?.classList.add('hidden');
       userMenu.classList.remove('open');
       document.getElementById('btnUserMenuToggle')?.setAttribute('aria-expanded', 'false');
+      closed = true;
     }
-  });
+    if (closed) {
+      const swHidden = document.getElementById('projectSwitcherDropdown')?.classList.contains('hidden') ?? true;
+      const usHidden = document.getElementById('userMenuDropdown')?.classList.contains('hidden') ?? true;
+      if (swHidden && usHidden) toggleDropdownBackdrop(false);
+    }
+  };
+
+  document.addEventListener('click', handleOutsideClose);
+  document.addEventListener('touchend', (e) => {
+    const switcher = document.getElementById('projectSwitcher');
+    const userMenu = document.getElementById('headerUserMenu');
+    if (switcher && !switcher.contains(e.target) && userMenu && !userMenu.contains(e.target)) {
+      handleOutsideClose(e);
+    }
+  }, { passive: true });
 }
 
 // ----------------------------------------------------
@@ -5143,15 +5077,52 @@ function setupEventListeners() {
       removeWidgetFromLayout(e.data.widgetId);
     }
     if (e.data.type === 'SELECT_WIDGET' && e.data.widgetId) {
-      if (typeof switchToTab === 'function') switchToTab('tab-inspector');
+      const ws = document.getElementById('builderWorkspace');
+      if (ws && ws.classList.contains('show-preview')) {
+        ws.classList.remove('show-preview');
+        ws.classList.add('show-editor');
+        const btnEd = document.getElementById('btnMobileShowEditor');
+        const btnPrev = document.getElementById('btnMobileShowPreview');
+        if (btnEd) btnEd.classList.add('active');
+        if (btnPrev) btnPrev.classList.remove('active');
+      }
+
+      const sb = document.getElementById('builderSidebar');
+      if (sb && sb.classList.contains('collapsed')) {
+        sb.classList.remove('collapsed');
+        const arrow = document.getElementById('sidebarCollapseArrow');
+        if (arrow) arrow.textContent = '◀';
+      }
+
+      state.activeInspectorWidget = e.data.widgetId;
       if (e.data.chapterId) state.targetChapterId = e.data.chapterId;
+      if (e.data.cityKey) state.targetCityKey = e.data.cityKey;
       if (e.data.memoryId) state.targetMemoryId = e.data.memoryId;
+
       selectWidgetForInspector(e.data.widgetId);
+      if (typeof switchToTab === 'function') switchToTab('tab-inspector');
+      const tabBtn = document.getElementById('btnTabInspector') || document.querySelector('.sidebar-tab-btn[data-tab="tab-inspector"]');
+      if (tabBtn && !tabBtn.classList.contains('active')) {
+        tabBtn.click();
+      }
+
       if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage(
-          { type: 'SCROLL_TO_WIDGET', widgetId: e.data.widgetId },
-          window.location.origin,
-        );
+        if (e.data.chapterId) {
+          previewIframe.contentWindow.postMessage(
+            { type: 'SCROLL_TO_CHAPTER', chapterId: e.data.chapterId, cityKey: e.data.cityKey },
+            window.location.origin,
+          );
+        } else if (e.data.memoryId) {
+          previewIframe.contentWindow.postMessage(
+            { type: 'SCROLL_TO_MEMORY', memoryId: e.data.memoryId },
+            window.location.origin,
+          );
+        } else {
+          previewIframe.contentWindow.postMessage(
+            { type: 'SCROLL_TO_WIDGET', widgetId: e.data.widgetId },
+            window.location.origin,
+          );
+        }
       }
     }
     if (e.data.type === 'SYNC_REASONS' && Array.isArray(e.data.reasons)) {
@@ -5786,5 +5757,14 @@ function setupNewProjectModal() {
         btnSubmit.innerHTML = `<span>🚀 Create Website & Launch Studio</span>`;
       }
     });
+  }
+
+  const autoCreateParams = new URLSearchParams(window.location.search);
+  if (autoCreateParams.get('create') === '1' || autoCreateParams.get('new') === '1') {
+    setTimeout(() => {
+      if (typeof window.openNewProjectModal === 'function') {
+        window.openNewProjectModal(false);
+      }
+    }, 450);
   }
 }

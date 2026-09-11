@@ -150,8 +150,10 @@ class DynamicRenderer {
       if (hero.partner1) DEFAULTS.senderName = hero.partner1;
       if (hero.anniversaryDate) DEFAULTS.startDate = hero.anniversaryDate;
     }
-    if (sectionsData.reasons && Array.isArray(sectionsData.reasons)) {
-      window.REASONS = sectionsData.reasons;
+    if (sectionsData.reasons) {
+      window.REASONS = Array.isArray(sectionsData.reasons)
+        ? sectionsData.reasons
+        : (Array.isArray(sectionsData.reasons.list) ? sectionsData.reasons.list : []);
     }
     if (sectionsData.timeline) {
       const chs = Array.isArray(sectionsData.timeline)
@@ -276,7 +278,6 @@ class DynamicRenderer {
 
     if (isSameLayout) {
       const activeId = config.activeWidgetId || config.modifiedWidgetId;
-      const templates = (typeof window !== "undefined" && window.WIDGET_TEMPLATES) ? window.WIDGET_TEMPLATES : (typeof WIDGET_TEMPLATES !== "undefined" ? WIDGET_TEMPLATES : {});
       const isIframe = typeof window !== "undefined" && window.parent && window.parent !== window;
       const urlParams = (typeof window !== "undefined" && window.location) ? new URLSearchParams(window.location.search) : null;
       const isBuilder = (typeof document !== "undefined" && (
@@ -284,57 +285,8 @@ class DynamicRenderer {
         document.body.classList.contains("in-builder-preview")
       )) || (isIframe && Boolean(urlParams && (urlParams.get("preview") === "builder" || urlParams.get("builder") === "1")));
 
-      if (activeId && !["timeline", "memories", "reasons", "coupons", "quiz", "hero", "letter"].includes(activeId) && templates[activeId]) {
-        const existingEl = document.getElementById("section-" + activeId) || document.querySelector(`[data-widget-id="${activeId}"]`);
-        if (existingEl) {
-          const wrapper = document.createElement("div");
-          wrapper.className = `widget-module-wrap widget-wrap-${activeId}`;
-          wrapper.innerHTML = templates[activeId](sectionsData[activeId] || sectionsData, sectionsData.hero || sectionsData);
-          const newEl = wrapper.firstElementChild || wrapper;
-          if (!newEl.id) newEl.id = "section-" + activeId;
-          newEl.dataset.widgetId = activeId;
-          if (isBuilder) {
-            const reg = (typeof WIDGET_REGISTRY !== "undefined" && WIDGET_REGISTRY[activeId]) ? WIDGET_REGISTRY[activeId] : { title: activeId, icon: "🧩" };
-            const toolbar = document.createElement("div");
-            toolbar.className = "site-section-admin-toolbar";
-            toolbar.innerHTML = `
-              <span class="site-section-badge">${reg.icon || "🧩"} ${escapeHtml(reg.title || activeId)}</span>
-              <button type="button" class="btn-site-edit-section" data-edit-widget="${activeId}" title="Edit this section">
-                <span>✏️</span> Edit
-              </button>
-              <button type="button" class="btn-site-remove-section" data-remove-widget="${activeId}" title="Remove this section from website">
-                <span>✕</span> Remove
-              </button>
-            `;
-            toolbar.querySelector(".btn-site-edit-section").onclick = (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (isIframe) {
-                window.parent.postMessage({ type: "SELECT_WIDGET", widgetId: activeId }, "*");
-              }
-            };
-            const removeBtn = toolbar.querySelector(".btn-site-remove-section");
-            removeBtn.onclick = (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (isIframe) {
-                window.parent.postMessage({ type: "REMOVE_WIDGET", widgetId: activeId }, "*");
-              } else if (typeof window.removeWidgetFromSite === "function") {
-                window.removeWidgetFromSite(activeId);
-              }
-            };
-            newEl.style.position = "relative";
-            newEl.prepend(toolbar);
-          }
-          existingEl.replaceWith(newEl);
-          this.initSingleWidgetEngine(activeId, sectionsData);
-          this.bindDynamicEditTriggers();
-          return;
-        }
-      }
-
-      if (!activeId || activeId === "timeline") {
-        if (layoutOrder.includes("timeline")) {
+      if (activeId) {
+        if (activeId === "timeline") {
           const tlSec = document.getElementById("section-timeline") || document.querySelector(".timeline-section");
           if (tlSec && sectionsData.timeline && !Array.isArray(sectionsData.timeline)) {
             const t = sectionsData.timeline;
@@ -345,13 +297,8 @@ class DynamicRenderer {
             if (titleEl && t.title) titleEl.textContent = t.title;
             if (descEl && t.desc) descEl.textContent = t.desc;
           }
-          if (typeof renderTimeline === "function") {
-            try { renderTimeline(); } catch (e) {}
-          }
-        }
-      }
-      if (!activeId || activeId === "memories") {
-        if (layoutOrder.includes("memories")) {
+          if (typeof renderTimeline === "function") try { renderTimeline(); } catch (e) {}
+        } else if (activeId === "memories") {
           const memSec = document.getElementById("section-memories") || document.querySelector(".memories-section");
           if (memSec && sectionsData.memories && !Array.isArray(sectionsData.memories)) {
             const m = sectionsData.memories;
@@ -362,49 +309,25 @@ class DynamicRenderer {
             if (titleEl && m.title) titleEl.textContent = m.title;
             if (descEl && m.desc) descEl.textContent = m.desc;
           }
-          if (typeof renderPolaroids === "function") {
-            try { renderPolaroids(); } catch (e) {}
-          }
+          if (typeof renderPolaroids === "function") try { renderPolaroids(); } catch (e) {}
+        } else {
+          this.replaceWidgetElement(activeId, sectionsData, isBuilder, isIframe);
         }
-      }
-      if (!activeId || activeId === "reasons") {
-        if (layoutOrder.includes("reasons")) {
-          if (typeof renderCurrentReason === "function") try { renderCurrentReason(false); } catch (e) {}
-          if (typeof updateFilterCounts === "function") try { updateFilterCounts(); } catch (e) {}
-          if (typeof renderAllNotesDrawer === "function") try { renderAllNotesDrawer(); } catch (e) {}
-        }
-      }
-      if (!activeId || activeId === "coupons") {
-        if (layoutOrder.includes("coupons") && typeof renderScratchCoupons === "function") {
-          try { renderScratchCoupons(); } catch (e) {}
-        }
-      }
-      if (!activeId || activeId === "quiz") {
-        if (layoutOrder.includes("quiz") && typeof renderQuizStep === "function") {
-          try { renderQuizStep(); } catch (e) {}
-        }
-      }
-      if (!activeId || activeId === "hero") {
-        if (typeof renderDOM === "function") {
+        if (activeId === "hero" && typeof renderDOM === "function") {
           try { renderDOM(); } catch (e) {}
         }
-        if (layoutOrder.includes("hero")) {
-          if (typeof updateQuintillionLive === "function") try { updateQuintillionLive(); } catch (e) {}
-          if (typeof updateLDRClocks === "function") try { updateLDRClocks(); } catch (e) {}
-        }
-      }
-      if (!activeId || activeId === "letter") {
-        if (typeof setupLoveLetterFeatures === "function") {
-          try { setupLoveLetterFeatures(); } catch (e) {}
-        }
-      }
-      if (!activeId) {
-        layoutOrder.forEach(wid => {
-          if (!["timeline", "memories", "reasons", "coupons", "quiz", "hero", "letter"].includes(wid)) {
-            this.initSingleWidgetEngine(wid, sectionsData);
+      } else {
+        this.replaceWidgetElement("hero", sectionsData, isBuilder, isIframe);
+        if (typeof renderDOM === "function") try { renderDOM(); } catch (e) {}
+        if (typeof renderTimeline === "function") try { renderTimeline(); } catch (e) {}
+        if (typeof renderPolaroids === "function") try { renderPolaroids(); } catch (e) {}
+        layoutOrder.forEach((wid) => {
+          if (!["timeline", "memories", "hero"].includes(wid)) {
+            this.replaceWidgetElement(wid, sectionsData, isBuilder, isIframe);
           }
         });
       }
+
       this.bindDynamicEditTriggers();
       return;
     }
@@ -479,10 +402,11 @@ class DynamicRenderer {
               <span>✕</span> Remove
             </button>
           `;
-          toolbar.querySelector(".btn-site-edit-section").onclick = (e) => {
+          const editBtn = toolbar.querySelector(".btn-site-edit-section");
+          editBtn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (isIframe) {
+            if (window.parent && window.parent !== window) {
               window.parent.postMessage({ type: "SELECT_WIDGET", widgetId }, "*");
             }
           };
@@ -490,7 +414,7 @@ class DynamicRenderer {
           removeBtn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            if (isIframe) {
+            if (window.parent && window.parent !== window) {
               window.parent.postMessage({ type: "REMOVE_WIDGET", widgetId }, "*");
             } else if (typeof window.removeWidgetFromSite === "function") {
               window.removeWidgetFromSite(widgetId);
@@ -524,6 +448,62 @@ class DynamicRenderer {
     } else {
       this.container.style.minHeight = "";
     }
+  }
+
+  replaceWidgetElement(widgetId, sectionsData = {}, isBuilder = false, isIframe = false) {
+    const templates = (typeof window !== "undefined" && window.WIDGET_TEMPLATES) ? window.WIDGET_TEMPLATES : (typeof WIDGET_TEMPLATES !== "undefined" ? WIDGET_TEMPLATES : {});
+    if (typeof templates[widgetId] !== "function") return false;
+
+    const existingEl = document.getElementById("section-" + widgetId) ||
+      document.querySelector(`[data-widget-id="${widgetId}"]`) ||
+      document.querySelector(`.${widgetId}-section`);
+    if (!existingEl) return false;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = `widget-module-wrap widget-wrap-${widgetId}`;
+    wrapper.innerHTML = templates[widgetId](sectionsData[widgetId] || sectionsData, sectionsData.hero || sectionsData);
+    const newEl = wrapper.firstElementChild || wrapper;
+    if (!newEl.id) newEl.id = "section-" + widgetId;
+    newEl.dataset.widgetId = widgetId;
+
+    if (isBuilder) {
+      const reg = (typeof WIDGET_REGISTRY !== "undefined" && WIDGET_REGISTRY[widgetId]) ? WIDGET_REGISTRY[widgetId] : { title: widgetId, icon: "🧩" };
+      const toolbar = document.createElement("div");
+      toolbar.className = "site-section-admin-toolbar";
+      toolbar.innerHTML = `
+        <span class="site-section-badge">${reg.icon || "🧩"} ${escapeHtml(reg.title || widgetId)}</span>
+        <button type="button" class="btn-site-edit-section" data-edit-widget="${widgetId}" title="Edit this section">
+          <span>✏️</span> Edit
+        </button>
+        <button type="button" class="btn-site-remove-section" data-remove-widget="${widgetId}" title="Remove this section from website">
+          <span>✕</span> Remove
+        </button>
+      `;
+      const editBtn = toolbar.querySelector(".btn-site-edit-section");
+      editBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: "SELECT_WIDGET", widgetId }, "*");
+        }
+      };
+      const removeBtn = toolbar.querySelector(".btn-site-remove-section");
+      removeBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: "REMOVE_WIDGET", widgetId }, "*");
+        } else if (typeof window.removeWidgetFromSite === "function") {
+          window.removeWidgetFromSite(widgetId);
+        }
+      };
+      newEl.style.position = "relative";
+      newEl.prepend(toolbar);
+    }
+
+    existingEl.replaceWith(newEl);
+    this.initSingleWidgetEngine(widgetId, sectionsData);
+    return true;
   }
 
   initSingleWidgetEngine(widgetId, sectionsData = {}) {
@@ -685,20 +665,40 @@ class DynamicRenderer {
         }
       });
     }
-
-    // Timeline chapter edit buttons
-    document.querySelectorAll(".timeline-edit-chapter-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        if (isIframe) {
-          const item = btn.closest(".timeline-item");
-          const chapterId = item ? item.id : undefined;
-          window.parent.postMessage({ type: "SELECT_WIDGET", widgetId: "timeline", chapterId }, "*");
-        }
-      });
-    });
   }
 }
 
 if (typeof window !== "undefined") {
   window.DynamicRenderer = DynamicRenderer;
+
+  if (typeof document !== "undefined") {
+    document.addEventListener("click", (e) => {
+      const editSecBtn = e.target && e.target.closest ? e.target.closest(".btn-site-edit-section") : null;
+      if (editSecBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const wid = editSecBtn.getAttribute("data-edit-widget") || editSecBtn.dataset.editWidget;
+        if (wid && window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: "SELECT_WIDGET", widgetId: wid }, "*");
+        }
+        return;
+      }
+      const editChapBtn = e.target && e.target.closest ? e.target.closest(".timeline-edit-chapter-btn, .timeline-photo-edit-hint") : null;
+      if (editChapBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const item = editChapBtn.closest(".timeline-item");
+        const chId = item?.getAttribute("data-chapter-id") || item?.dataset?.id || item?.id;
+        const cityKey = item?.getAttribute("data-city-key") || item?.dataset?.cityKey;
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({
+            type: "SELECT_WIDGET",
+            widgetId: "timeline",
+            chapterId: chId,
+            cityKey: cityKey
+          }, "*");
+        }
+      }
+    }, true);
+  }
 }

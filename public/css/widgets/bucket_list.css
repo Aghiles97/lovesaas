@@ -210,12 +210,37 @@
 .bucket-card.is-completed .bucket-completed-badge {
   display: block;
 }
+@media (max-width: 768px) {
+  .bucket-list-section { padding: 48px 16px; }
+  .bucket-stats-panel { padding: 18px 20px; border-radius: 18px; }
+  .bucket-card { padding: 14px 16px; gap: 12px; }
+}
+
 @media (max-width: 640px) {
-  .bucket-card {
-    padding: 14px 16px;
-    gap: 12px;
+  .bucket-completed-badge { display: none !important; }
+}
+
+@media (max-width: 480px) {
+  .bucket-list-section { padding: 36px 12px; }
+  .bucket-stats-panel { padding: 14px 14px; border-radius: 16px; margin-bottom: 18px; }
+  .bucket-stats-title { font-size: 0.84rem; }
+  .bucket-stats-counter { font-size: 0.74rem; }
+  .bucket-stats-pct { font-size: 1.45rem; }
+  .bucket-progress-track { height: 10px; }
+  .bucket-filter-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 6px;
+    margin-bottom: 16px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
-  .bucket-completed-badge {
-    display: none !important;
-  }
+  .bucket-filter-tabs::-webkit-scrollbar { display: none; }
+  .bucket-tab { padding: 6px 12px; font-size: 0.75rem; white-space: nowrap; flex-shrink: 0; }
+  .bucket-card { padding: 12px 12px; gap: 10px; border-radius: 14px; }
+  .bucket-checkmark { width: 22px; height: 22px; border-radius: 6px; }
+  .bucket-icon { font-size: 1.35rem; }
+  .bucket-title { font-size: 0.88rem; line-height: 1.35; }
+  .bucket-category-pill { font-size: 0.65rem; padding: 2px 7px; }
+  .bucket-date { font-size: 0.72rem; }
 }

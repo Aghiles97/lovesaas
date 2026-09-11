@@ -582,6 +582,8 @@ function loadStoredMemories() {
   return JSON.parse(JSON.stringify(DEFAULTS.memories));
 }
 
+let _workingUrlTemplate = null;
+
 async function sendApiRequest(endpoint, options = {}) {
   const clean = endpoint.replace(/^\//, "");
   const authData = (() => {
@@ -594,24 +596,32 @@ async function sendApiRequest(endpoint, options = {}) {
     options.headers['X-User-Token'] = userToken;
     options.headers['Authorization'] = `Bearer ${userToken}`;
   }
+
+  if (_workingUrlTemplate) {
+    try {
+      const u = _workingUrlTemplate.replace("{clean}", clean);
+      const res = await fetch(u, options);
+      if (res && res.ok) return res;
+    } catch {}
+    _workingUrlTemplate = null;
+  }
+
   const urls = [];
   if (typeof window !== "undefined" && window.location?.protocol.startsWith("http")) {
     const p = window.location.pathname.replace(/\/index\.html$/i, "").replace(/\/$/, "");
     urls.push(
+      `/api/${clean}`,
+      `/api.php?endpoint=${clean}`,
       `api.php?endpoint=${clean}`,
-      `${window.location.origin}${p}/api.php?endpoint=${clean}`,
-      `${window.location.origin}/api.php?endpoint=${clean}`,
-      `api/${clean}`,
-      `${window.location.origin}${p}/api/${clean}`,
       `${window.location.origin}/api/${clean}`,
-      `${window.location.origin}/${clean}`
+      `${window.location.origin}/api.php?endpoint=${clean}`,
+      `${window.location.origin}${p}/api/${clean}`,
+      `${window.location.origin}${p}/api.php?endpoint=${clean}`
     );
   }
   urls.push(
     `http://localhost:3000/api/${clean}`,
-    `http://127.0.0.1:3000/api/${clean}`,
-    `http://localhost:5173/api/${clean}`,
-    `http://127.0.0.1:5173/api/${clean}`
+    `http://localhost:5173/api/${clean}`
   );
   for (const u of [...new Set(urls)]) {
     try {
@@ -619,6 +629,7 @@ async function sendApiRequest(endpoint, options = {}) {
       if (res && res.ok) {
         const ct = res.headers.get("content-type") || "";
         if (ct.includes("json") || ct.includes("javascript")) {
+          _workingUrlTemplate = u.replace(clean, "{clean}");
           return res;
         }
       }
@@ -631,26 +642,37 @@ const _origSetItem = localStorage.setItem.bind(localStorage);
 const _origRemoveItem = localStorage.removeItem.bind(localStorage);
 let _saveDebounceTimer = null;
 let _isHydrating = false;
+let _isSaving = false;
+
+function isInsideBuilderContext() {
+  if (typeof window === "undefined") return false;
+  return window.parent !== window ||
+    window.location.search.includes("preview=builder") ||
+    window.location.search.includes("builder=1") ||
+    (document.body && (document.body.classList.contains("in-builder-preview") || document.body.classList.contains("builder-mode")));
+}
 
 function debouncedSaveToComputer() {
-  if (_isHydrating) return;
+  if (_isHydrating || isInsideBuilderContext()) return;
   clearTimeout(_saveDebounceTimer);
   _saveDebounceTimer = setTimeout(() => {
     saveToComputer();
-  }, 350);
+  }, 800);
 }
 
-// Auto-sync any gf_* modification directly to disk
+// Auto-sync gf_* modifications directly to disk (exclude internal/runtime keys)
+const IGNORED_SYNC_KEYS = new Set(["gf_saved_at", "gf_volume", "gf_redeemed_coupons"]);
+
 localStorage.setItem = function(key, val) {
   _origSetItem(key, val);
-  if (typeof key === "string" && key.startsWith("gf_")) {
+  if (typeof key === "string" && key.startsWith("gf_") && !IGNORED_SYNC_KEYS.has(key)) {
     debouncedSaveToComputer();
   }
 };
 
 localStorage.removeItem = function(key) {
   _origRemoveItem(key);
-  if (typeof key === "string" && key.startsWith("gf_")) {
+  if (typeof key === "string" && key.startsWith("gf_") && !IGNORED_SYNC_KEYS.has(key)) {
     debouncedSaveToComputer();
   }
 };
@@ -765,6 +787,8 @@ async function syncComputerData() {
 }
 
 async function saveToComputer(extraData = {}) {
+  if (isInsideBuilderContext() || _isSaving) return false;
+  _isSaving = true;
   try {
     const nowIso = new Date().toISOString();
     const payload = {
@@ -772,7 +796,7 @@ async function saveToComputer(extraData = {}) {
       gf_saved_at: nowIso,
       ...extraData
     };
-    try { localStorage.setItem("gf_saved_at", nowIso); } catch (e) {}
+    try { _origSetItem("gf_saved_at", nowIso); } catch (e) {}
 
     // Collect all gf_* keys from localStorage (skip coupons and memories — save memories only on explicit action)
     for (let i = 0; i < localStorage.length; i++) {
@@ -816,6 +840,8 @@ async function saveToComputer(extraData = {}) {
     return res ? res.ok : false;
   } catch (e) {
     return false;
+  } finally {
+    _isSaving = false;
   }
 }
 

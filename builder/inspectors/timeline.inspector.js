@@ -56,8 +56,18 @@
       else state.sectionsData.timeline = chapters;
     }
 
-    if (state.targetChapterId) {
-      expandedChapterIds.add(state.targetChapterId);
+    let targetChId = null;
+    const requestedTarget = state.targetChapterId || state.targetCityKey;
+    if (requestedTarget) {
+      const match = chapters.find((c, i) =>
+        c.id === requestedTarget ||
+        c.cityKey === requestedTarget ||
+        `chap-${i}` === requestedTarget ||
+        String(i) === requestedTarget
+      );
+      targetChId = match ? (match.id || `chap-${chapters.indexOf(match)}`) : requestedTarget;
+      expandedChapterIds.clear();
+      expandedChapterIds.add(targetChId);
     } else if (expandedChapterIds.size === 0 && chapters.length > 0) {
       expandedChapterIds.add(chapters[0].id || "chap-0");
     }
@@ -718,23 +728,29 @@
     const chapCards = inspectorFormContainer.querySelectorAll ? inspectorFormContainer.querySelectorAll(".chap-card-accordion") : [];
     chapCards.forEach(bindChapterCardEvents);
 
-    if (state.targetChapterId) {
-      const targetId = state.targetChapterId;
-      delete state.targetChapterId;
+    if (targetChId) {
+      const targetId = targetChId;
       setTimeout(() => {
-        const targetCard = inspectorFormContainer.querySelector ? inspectorFormContainer.querySelector(`.chap-card-accordion[data-id="${targetId}"]`) : null;
+        const targetCard = inspectorFormContainer.querySelector
+          ? (inspectorFormContainer.querySelector(`.chap-card-accordion[data-id="${targetId}"]`) ||
+             inspectorFormContainer.querySelector(`.chap-card-accordion[data-id="${targetChId}"]`))
+          : null;
         if (targetCard) {
-          targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+          targetCard.classList.remove("is-collapsed");
+          targetCard.classList.add("is-open");
+          const formPane = document.getElementById("inspectorFormContainer");
+          if (formPane) {
+            const topOffset = targetCard.offsetTop - formPane.offsetTop - 12;
+            formPane.scrollTo({ top: Math.max(0, topOffset), behavior: "smooth" });
+          } else {
+            targetCard.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
           targetCard.classList.add("highlight-pulse");
           setTimeout(() => targetCard.classList.remove("highlight-pulse"), 2200);
         }
-        if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({
-            type: "SCROLL_TO_CHAPTER",
-            chapterId: targetId
-          }, window.location.origin);
-        }
-      }, 60);
+        delete state.targetChapterId;
+        delete state.targetCityKey;
+      }, 50);
     }
 
     // Add New Chapter Bottom

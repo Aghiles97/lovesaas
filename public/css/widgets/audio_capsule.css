@@ -395,9 +395,16 @@
   transform: scale(1.08);
 }
 
+@media (max-width: 768px) {
+  .audio-capsule-section { padding: 48px 16px; }
+  .capsule-player-deck { padding: 20px 18px; border-radius: 20px; }
+  .capsule-memos-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 640px) {
   .capsule-deck-controls {
-    flex-direction: column;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
     gap: 12px;
   }
@@ -408,4 +415,45 @@
     width: 44px;
     height: 44px;
   }
+}
+
+@media (max-width: 480px) {
+  .audio-capsule-section { padding: 36px 12px; }
+  .capsule-player-deck { padding: 16px 14px; border-radius: 18px; margin-bottom: 24px; }
+  .capsule-reels-row { padding: 10px 12px; gap: 8px; border-radius: 14px; }
+  .capsule-reel { width: 38px; height: 38px; }
+  .capsule-reel-spokes { width: 16px; height: 16px; }
+  .capsule-now-title { font-size: 1rem; }
+  .capsule-speaker-glow { font-size: 0.68rem; }
+  .capsule-now-date { font-size: 0.72rem; }
+  .capsule-waveform-container { padding: 8px 10px; }
+  .capsule-waveform-canvas { height: 52px; }
+  .capsule-deck-controls {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+  }
+  .capsule-time-box { font-size: 0.76rem; min-width: 0; }
+  .capsule-btns-group { grid-column: 1 / -1; justify-content: center; gap: 8px; }
+  .btn-capsule-ctrl { width: 32px; height: 32px; font-size: 0.75rem; }
+  .btn-capsule-play-main { width: 44px; height: 44px; font-size: 1.05rem; }
+  .btn-capsule-speed { font-size: 0.7rem; padding: 4px 7px; }
+  .capsule-vol-wrap { grid-column: 2; justify-self: end; gap: 4px; }
+  .capsule-vol-slider { width: 65px; }
+  .capsule-filters-row {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .capsule-filters-row::-webkit-scrollbar { display: none; }
+  .capsule-filter-label { font-size: 0.75rem; white-space: nowrap; }
+  .capsule-filter-pill { font-size: 0.74rem; padding: 5px 12px; white-space: nowrap; flex-shrink: 0; }
+  .capsule-memo-card { padding: 12px 14px; border-radius: 14px; gap: 10px; }
+  .capsule-memo-title { font-size: 0.88rem; margin-bottom: 6px; }
+  .capsule-speaker-badge { font-size: 0.68rem; padding: 2px 6px; }
+  .capsule-memo-date { font-size: 0.7rem; }
 }

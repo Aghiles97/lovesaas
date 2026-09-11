@@ -264,3 +264,75 @@
 .hidden {
   display: none !important;
 }
+
+/* Mobile & Touch Responsive Optimizations */
+.roast-toast-section {
+  overflow: hidden;
+}
+#btnSpinRoastToast, #btnCounterKisses, #btnCloseRoastToastResult {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 640px) {
+  .roast-toast-section {
+    padding: 40px 12px;
+  }
+  .roast-toast-box {
+    padding: 24px 14px;
+    border-radius: 20px;
+  }
+  .wheel-controls {
+    margin-top: 16px;
+  }
+  .wheel-controls .btn {
+    width: 100%;
+    max-width: 280px;
+    min-height: 48px;
+    font-size: 1.05rem;
+  }
+  .roast-toast-result-modal {
+    padding: 20px 14px;
+    border-radius: 20px;
+    margin-top: 18px;
+  }
+  .result-msg-body {
+    font-size: 1.05rem;
+    line-height: 1.45;
+    margin: 10px 0 16px;
+  }
+  .result-action-btns {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .result-action-btns .btn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 440px) {
+  .wheel-container {
+    transform: scale(0.85);
+    transform-origin: center center;
+    margin: 5px auto -20px;
+    height: 310px;
+  }
+}
+
+@media (max-width: 370px) {
+  .wheel-container {
+    transform: scale(0.74);
+    margin: -8px auto -38px;
+    height: 270px;
+  }
+}
+
+@media (max-width: 340px) {
+  .wheel-container {
+    transform: scale(0.67);
+    margin: -16px auto -48px;
+    height: 245px;
+  }
+}

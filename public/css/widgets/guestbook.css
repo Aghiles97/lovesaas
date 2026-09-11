@@ -379,3 +379,105 @@
 .hidden {
   display: none !important;
 }
+
+/* Mobile & Touch Responsive Optimizations */
+.sticky-note-card, .btn-lightbox-love, .btn-pin-note, .stamp-opt, .color-opt {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 640px) {
+  .guestbook-section {
+    padding: 40px 12px;
+  }
+  .corkboard-canvas {
+    border-width: 8px;
+    border-radius: 18px;
+    padding: 16px 10px;
+    min-height: 360px;
+  }
+  .guestbook-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+  }
+  .corkboard-title-badge {
+    text-align: center;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 12px;
+  }
+  .btn-pin-note {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+    font-size: 0.95rem;
+  }
+  .sticky-notes-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .sticky-note-card {
+    padding: 24px 14px 14px;
+    min-height: 180px;
+  }
+  .note-content-text {
+    font-size: 1.18rem;
+    line-height: 1.35;
+  }
+  .note-photo-pin {
+    height: 140px;
+  }
+  .guestbook-modal-overlay {
+    padding: 12px;
+  }
+  .guestbook-modal-card {
+    padding: 20px 14px;
+    border-radius: 18px;
+    width: 100%;
+    max-height: 85vh;
+  }
+  .polaroid-lightbox-overlay {
+    padding: 12px;
+  }
+  .polaroid-card {
+    padding: 14px 14px 20px;
+    border-radius: 6px;
+    width: 100%;
+  }
+  .polaroid-photo-frame {
+    max-height: 220px;
+    margin-bottom: 12px;
+  }
+  .polaroid-photo-display {
+    height: 200px;
+  }
+  .polaroid-message {
+    font-size: 1.3rem;
+    line-height: 1.35;
+    margin-bottom: 12px;
+  }
+  .polaroid-footer {
+    padding-top: 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .corkboard-canvas {
+    border-width: 6px;
+    padding: 12px 8px;
+    border-radius: 14px;
+  }
+  .sticky-note-card {
+    padding: 22px 10px 12px;
+  }
+  .note-content-text {
+    font-size: 1.1rem;
+  }
+  .guestbook-modal-card {
+    padding: 16px 10px;
+  }
+}

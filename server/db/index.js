@@ -1350,29 +1350,40 @@ function enrichSectionsData(rawSections, partner1, partner2) {
     }
   }
 
-  // Preserve partner names from tenant table if raw config has placeholder names
-  if (partner1) {
-    if (merged.hero && (!merged.hero.partner1 || merged.hero.partner1 === "Alex")) {
-      merged.hero.partner1 = partner1;
+  const cleanP2 = (partner2 === "ddEllaa" || partner2 === "lllElla" || partner2 === "tetstete") ? "Ella" : partner2;
+  const cleanP1 = (partner1 === "tette" || partner1 === "tet") ? "Aghiles" : partner1;
+
+  if (merged.hero) {
+    if (cleanP1 && (!merged.hero.partner1 || merged.hero.partner1 === "Alex" || merged.hero.partner1 === "tette" || merged.hero.partner1 === "tet")) {
+      merged.hero.partner1 = cleanP1;
     }
-    if (merged.letter && (!merged.letter.sender || merged.letter.sender === "Alex ❤️" || merged.letter.sender.includes("Your Love from Algeria"))) {
-      merged.letter.sender = `${partner1} ❤️`;
-    }
-    if (merged.quiz && (!merged.quiz.certSender || merged.quiz.certSender.includes("Your Love from Algeria"))) {
-      merged.quiz.certSender = partner1;
+    if (cleanP2 && (!merged.hero.partner2 || merged.hero.partner2 === "Sam" || merged.hero.partner2 === "ddEllaa" || merged.hero.partner2 === "lllElla" || merged.hero.partner2 === "tetstete")) {
+      merged.hero.partner2 = cleanP2;
     }
   }
-  if (partner2) {
-    if (merged.hero && (!merged.hero.partner2 || merged.hero.partner2 === "Sam")) {
-      merged.hero.partner2 = partner2;
+
+  if (merged.letter) {
+    if (typeof merged.letter === "string") {
+      merged.letter = merged.letter.replaceAll("tetstete", cleanP2 || "Ella").replaceAll("tette ❤️", `${cleanP1 || "Aghiles"} ❤️`).replaceAll("tette", cleanP1 || "Aghiles");
+    } else if (merged.letter.body) {
+      merged.letter.body = merged.letter.body.replaceAll("tetstete", cleanP2 || "Ella").replaceAll("tette ❤️", `${cleanP1 || "Aghiles"} ❤️`).replaceAll("tette", cleanP1 || "Aghiles");
     }
-    if (merged.letter && (!merged.letter.recipient || merged.letter.recipient === "Sam" || merged.letter.recipient === "Ella")) {
-      merged.letter.recipient = partner2;
-      merged.letter.envelopeBadge = `👑 For My Love ${partner2}`;
+    if (typeof merged.letter === "object") {
+      if (cleanP2) merged.letter.recipient = cleanP2;
+      if (cleanP1) merged.letter.sender = `${cleanP1} ❤️`;
     }
-    if (merged.quiz && (!merged.quiz.certAwardee || merged.quiz.certAwardee.includes("Ella"))) {
-      merged.quiz.certAwardee = `This prestigious lifelong honor is officially presented to ${partner2}`;
-    }
+  }
+  if (typeof merged.gf_letter === "string") {
+    merged.gf_letter = merged.gf_letter.replaceAll("tetstete", cleanP2 || "Ella").replaceAll("tette ❤️", `${cleanP1 || "Aghiles"} ❤️`).replaceAll("tette", cleanP1 || "Aghiles");
+  }
+  if (merged.gf_name === "tetstete" || merged.gf_name === "ddEllaa" || merged.gf_name === "lllElla") {
+    merged.gf_name = cleanP2 || "Ella";
+  }
+  if (merged.partnerName === "tetstete" || merged.partnerName === "ddEllaa" || merged.partnerName === "lllElla") {
+    merged.partnerName = cleanP2 || "Ella";
+  }
+  if (merged.quiz && merged.quiz.certAwardee) {
+    merged.quiz.certAwardee = merged.quiz.certAwardee.replaceAll("ddEllaa", "Ella").replaceAll("lllElla", "Ella").replaceAll("tetstete", "Ella");
   }
 
   return merged;
@@ -1520,7 +1531,25 @@ async function updateSiteConfig(slug, { templatePreset, themeId, layoutOrder, se
   const nextPreset = templatePreset || tenant.templatePreset;
   const nextTheme = themeId || tenant.themeId;
   const nextLayout = layoutOrder || tenant.layoutOrder;
-  const nextSections = sectionsData || tenant.sectionsData;
+  let nextSections = sectionsData || tenant.sectionsData;
+
+  if (cleanSlug === "demo" && nextSections) {
+    if (typeof nextSections.letter === "string" && nextSections.letter.includes("tetstete")) {
+      nextSections.letter = nextSections.letter.replaceAll("tetstete", "Ella").replaceAll("tette ❤️", "Aghiles ❤️").replaceAll("tette", "Aghiles");
+    } else if (nextSections.letter && typeof nextSections.letter === "object" && nextSections.letter.body && nextSections.letter.body.includes("tetstete")) {
+      nextSections.letter.body = nextSections.letter.body.replaceAll("tetstete", "Ella").replaceAll("tette ❤️", "Aghiles ❤️").replaceAll("tette", "Aghiles");
+    }
+    if (typeof nextSections.gf_letter === "string" && nextSections.gf_letter.includes("tetstete")) {
+      nextSections.gf_letter = nextSections.gf_letter.replaceAll("tetstete", "Ella").replaceAll("tette ❤️", "Aghiles ❤️").replaceAll("tette", "Aghiles");
+    }
+    if (nextSections.hero) {
+      if (nextSections.hero.partner2 === "ddEllaa" || nextSections.hero.partner2 === "lllElla" || nextSections.hero.partner2 === "tetstete") {
+        nextSections.hero.partner2 = "Ella";
+      }
+    }
+    if (nextSections.gf_name === "tetstete" || nextSections.gf_name === "ddEllaa" || nextSections.gf_name === "lllElla") nextSections.gf_name = "Ella";
+    if (nextSections.partnerName === "tetstete" || nextSections.partnerName === "ddEllaa" || nextSections.partnerName === "lllElla") nextSections.partnerName = "Ella";
+  }
 
   if (isPgConnected) {
     await pool.query(
@@ -1531,8 +1560,10 @@ async function updateSiteConfig(slug, { templatePreset, themeId, layoutOrder, se
     );
 
     if (sectionsData && sectionsData.hero) {
-      const p1 = sectionsData.hero.partner1;
-      const p2 = sectionsData.hero.partner2;
+      let p1 = sectionsData.hero.partner1;
+      let p2 = sectionsData.hero.partner2;
+      if (cleanSlug === "demo" && (p2 === "ddEllaa" || p2 === "lllElla" || p2 === "tetstete")) p2 = "Ella";
+      if (cleanSlug === "demo" && (p1 === "tette" || p1 === "tet")) p1 = "Aghiles";
       if (p1 || p2) {
         await pool.query(
           `UPDATE tenants SET partner1_name = COALESCE($1, partner1_name), partner2_name = COALESCE($2, partner2_name) WHERE id = $3`,
@@ -1553,8 +1584,8 @@ async function updateSiteConfig(slug, { templatePreset, themeId, layoutOrder, se
       updated_at: new Date().toISOString()
     };
     if (sectionsData && sectionsData.hero && store.tenants && store.tenants[cleanSlug]) {
-      if (sectionsData.hero.partner1) store.tenants[cleanSlug].partner1_name = sectionsData.hero.partner1;
-      if (sectionsData.hero.partner2) store.tenants[cleanSlug].partner2_name = sectionsData.hero.partner2;
+      if (sectionsData.hero.partner1) store.tenants[cleanSlug].partner1_name = (cleanSlug === "demo" && (sectionsData.hero.partner1 === "tette" || sectionsData.hero.partner1 === "tet")) ? "Aghiles" : sectionsData.hero.partner1;
+      if (sectionsData.hero.partner2) store.tenants[cleanSlug].partner2_name = (cleanSlug === "demo" && (sectionsData.hero.partner2 === "ddEllaa" || sectionsData.hero.partner2 === "lllElla" || sectionsData.hero.partner2 === "tetstete")) ? "Ella" : sectionsData.hero.partner2;
     }
     saveLocalStore(store);
   }

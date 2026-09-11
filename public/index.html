@@ -33,35 +33,75 @@
       </a>
 
       <nav class="nav-links" id="navLinks" aria-label="Main Navigation">
-        <a href="#demo-preview" class="nav-link">Live Demo</a>
-        <a href="#features" class="nav-link">13 Modules</a>
-        <a href="#presets" class="nav-link">Themes</a>
-        <a href="#why-us" class="nav-link">Why Us</a>
-        <a href="#pricing" class="nav-link">Pricing</a>
-        <a href="#faq" class="nav-link">FAQ</a>
-        <div class="mobile-nav-ctas" style="display: none;">
+        <!-- Mobile User Account Header (visible when logged in) -->
+        <div class="mobile-user-card" id="mobileUserCard" style="display: none;">
+          <div class="mobile-user-profile">
+            <div class="mobile-user-avatar" id="mobileUserAvatar">A</div>
+            <div class="mobile-user-details">
+              <div class="mobile-user-name-line">
+                <span class="mobile-user-name" id="mobileUserName">Admin</span>
+                <span class="mobile-user-badge">VIP</span>
+              </div>
+              <span class="mobile-user-email" id="mobileUserEmail">admin@admin.com</span>
+            </div>
+          </div>
+          <div class="mobile-user-quick-actions">
+            <button type="button" class="btn btn-secondary btn-sm mobile-quick-btn" id="btnMobileUserPortal">
+              <span>💖</span> My Sites <span class="portal-badge-count" id="mobileBadgeSitesCount">0</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm mobile-quick-btn" id="btnMobileLogout" title="Sign Out">
+              <span>🚪</span> Sign Out
+            </button>
+          </div>
+        </div>
+
+        <div class="mobile-nav-list">
+          <a href="#demo-preview" class="nav-link">
+            <span class="nav-link-icon">✨</span>
+            <span class="nav-link-text">Live Demo</span>
+            <span class="nav-link-chevron">›</span>
+          </a>
+          <a href="#features" class="nav-link">
+            <span class="nav-link-icon">💎</span>
+            <span class="nav-link-text">13 Love Modules</span>
+            <span class="nav-link-chevron">›</span>
+          </a>
+          <a href="#presets" class="nav-link">
+            <span class="nav-link-icon">🎨</span>
+            <span class="nav-link-text">Romantic Themes</span>
+            <span class="nav-link-chevron">›</span>
+          </a>
+          <a href="#why-us" class="nav-link">
+            <span class="nav-link-icon">⭐</span>
+            <span class="nav-link-text">Why Couples Love It</span>
+            <span class="nav-link-chevron">›</span>
+          </a>
+          <a href="#pricing" class="nav-link">
+            <span class="nav-link-icon">🏷️</span>
+            <span class="nav-link-text">Pricing &amp; Plans</span>
+            <span class="nav-link-chevron">›</span>
+          </a>
+          <a href="#faq" class="nav-link">
+            <span class="nav-link-icon">❓</span>
+            <span class="nav-link-text">Help &amp; FAQ</span>
+            <span class="nav-link-chevron">›</span>
+          </a>
+        </div>
+
+        <div class="mobile-nav-ctas">
           <div id="mobileAuthLoggedOut" style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
-            <a href="/builder?slug=demo" class="btn btn-secondary btn-sm mobile-cta-btn">
-              <span>🎨</span> Try Studio Demo
-            </a>
+            <button type="button" class="btn btn-primary btn-lg mobile-cta-btn" id="btnMobileGetStarted">
+              <span>💖</span> Create Couple Website
+            </button>
             <button type="button" class="btn btn-secondary btn-sm mobile-cta-btn" id="btnMobileSignIn">
               <span>🔑</span> Sign In / Register
             </button>
           </div>
           <div id="mobileAuthLoggedIn" style="display: none; flex-direction: column; gap: 8px; width: 100%;">
-            <a href="/builder" class="btn btn-primary btn-sm mobile-cta-btn" id="btnMobileGoToBuilder" style="text-decoration: none; justify-content: center;">
-              <span>🚀</span> Go to Builder
+            <a href="/builder" class="btn btn-primary btn-lg mobile-cta-btn" id="btnMobileGoToBuilder" style="text-decoration: none; justify-content: center;">
+              <span>🚀</span> Open Studio Builder →
             </a>
-            <button type="button" class="btn btn-secondary btn-sm mobile-cta-btn" id="btnMobileUserPortal">
-              <span>👤</span> <span id="mobileUserName">My Account</span> (Designs & Orders)
-            </button>
-            <button type="button" class="btn btn-secondary btn-sm mobile-cta-btn" id="btnMobileLogout" style="color: #fda4af;">
-              <span>🚪</span> Sign Out
-            </button>
           </div>
-          <button type="button" class="btn btn-primary btn-sm mobile-cta-btn" id="btnMobileGetStarted">
-            <span>💖</span> Create Site
-          </button>
         </div>
       </nav>
 
@@ -88,6 +128,7 @@
       </div>
     </div>
   </header>
+  <div class="mobile-nav-backdrop" id="mobileNavBackdrop"></div>
 
   <!-- Hero Section -->
   <section class="hero-section">
@@ -1011,7 +1052,10 @@
           </div>
           <div class="form-group">
             <label for="loginPassword">Password</label>
-            <input type="password" id="loginPassword" class="form-input" placeholder="Your password" autocomplete="current-password" required>
+            <div class="password-input-wrap">
+              <input type="password" id="loginPassword" class="form-input" placeholder="Your password" autocomplete="current-password" required>
+              <button type="button" class="btn-toggle-password" data-target="loginPassword" title="Show or hide password" aria-label="Toggle password visibility">👁️</button>
+            </div>
           </div>
           <button type="submit" class="btn btn-primary btn-lg" id="btnSubmitLogin" style="width: 100%; justify-content: center; margin-top: 6px;">
             <span>🔑 Sign In</span>
@@ -1033,7 +1077,10 @@
           </div>
           <div class="form-group">
             <label for="regPassword">Password (min 4 characters)</label>
-            <input type="password" id="regPassword" class="form-input" placeholder="••••••••" minlength="4" autocomplete="new-password" required>
+            <div class="password-input-wrap">
+              <input type="password" id="regPassword" class="form-input" placeholder="••••••••" minlength="4" autocomplete="new-password" required>
+              <button type="button" class="btn-toggle-password" data-target="regPassword" title="Show or hide password" aria-label="Toggle password visibility">👁️</button>
+            </div>
           </div>
           <button type="submit" class="btn btn-primary btn-lg" id="btnSubmitRegister" style="width: 100%; justify-content: center; margin-top: 6px;">
             <span>✨ Create My Account</span>
@@ -1057,40 +1104,38 @@
             <p class="portal-email" id="portalEmail">user@example.com</p>
           </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <button type="button" class="btn btn-secondary btn-sm" id="btnPortalLogout" title="Sign out of your account" style="color: #fda4af;">
-            <span>🚪</span> Sign Out
+        <div class="user-portal-header-actions">
+          <button type="button" class="btn btn-primary btn-sm btn-portal-create-head" id="btnPortalCreateNewSite" title="Create a new website">
+            <span>✨</span> New Site
           </button>
-          <button type="button" class="modal-close-btn" id="btnCloseUserPortalModal">✕</button>
+          <button type="button" class="btn btn-ghost btn-sm btn-portal-logout" id="btnPortalLogout" title="Sign out of your account">
+            <span>🚪</span> <span class="logout-text">Sign Out</span>
+          </button>
+          <button type="button" class="modal-close-btn" id="btnCloseUserPortalModal" aria-label="Close">✕</button>
         </div>
       </div>
 
       <!-- Portal Navigation Tabs -->
       <div class="portal-tabs-bar">
         <button type="button" class="portal-tab-btn active" data-portal-tab="designs">
-          <span>📂</span> My Designs <span class="portal-badge-count" id="badgeDesignsCount">0</span>
+          <span>💖</span> My Sites <span class="portal-badge-count" id="badgeDesignsCount">0</span>
         </button>
         <button type="button" class="portal-tab-btn" data-portal-tab="purchases">
-          <span>🧾</span> Order History <span class="portal-badge-count" id="badgePurchasesCount">0</span>
+          <span>🧾</span> Receipts <span class="portal-badge-count" id="badgePurchasesCount">0</span>
         </button>
         <button type="button" class="portal-tab-btn" data-portal-tab="settings">
-          <span>⚙️</span> Profile Settings
+          <span>⚙️</span> Settings
         </button>
       </div>
 
       <div class="modal-body user-portal-body">
         <!-- TAB 1: DESIGNS -->
         <div class="portal-pane active" id="panePortalDesigns">
-          <div class="portal-pane-header">
-            <div>
-              <h4 style="font-size: 1.12rem; font-weight: 800; margin-bottom: 3px;">Your Romantic Websites</h4>
-              <p style="font-size: 0.85rem; color: var(--text-secondary);">Manage and edit all couple websites linked to your account</p>
-            </div>
-            <button type="button" class="btn btn-primary btn-sm" id="btnPortalCreateNewSite">
-              <span>💖</span> Create New Site
+          <div class="portal-create-bar" style="margin-bottom: 14px;">
+            <button type="button" class="btn btn-primary btn-lg" id="btnPortalCreateNewSiteMain" style="width: 100%; justify-content: center; font-weight: 800; font-size: 0.95rem; padding: 12px 18px; border-radius: 12px; box-shadow: 0 4px 18px rgba(244, 63, 94, 0.4);">
+              <span>✨</span> Create New Couple Website →
             </button>
           </div>
-
           <div id="portalDesignsList" class="portal-designs-grid">
             <!-- Dynamically populated -->
           </div>

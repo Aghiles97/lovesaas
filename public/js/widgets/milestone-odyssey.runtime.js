@@ -56,15 +56,15 @@
     }
 
     // Horizontal Scroll Controls
-    const scrollStep = 380;
+    const getScrollStep = () => Math.min(380, Math.max(220, (container?.clientWidth || 300) * 0.85));
     if (btnPrev && container) {
       btnPrev.onclick = () => {
-        container.scrollBy({ left: -scrollStep, behavior: "smooth" });
+        container.scrollBy({ left: -getScrollStep(), behavior: "smooth" });
       };
     }
     if (btnNext && container) {
       btnNext.onclick = () => {
-        container.scrollBy({ left: scrollStep, behavior: "smooth" });
+        container.scrollBy({ left: getScrollStep(), behavior: "smooth" });
       };
     }
 
@@ -159,12 +159,12 @@
 
     window.addEventListener("message", (e) => {
       if (e.data && e.data.type === "ODYSSEY_SCROLL_NEXT" && container) {
-        container.scrollBy({ left: scrollStep, behavior: "smooth" });
+        container.scrollBy({ left: getScrollStep(), behavior: "smooth" });
       }
     });
 
     window.odysseyScrollNext = () => {
-      if (container) container.scrollBy({ left: scrollStep, behavior: "smooth" });
+      if (container) container.scrollBy({ left: getScrollStep(), behavior: "smooth" });
     };
   };
 })();

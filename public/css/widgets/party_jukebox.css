@@ -477,3 +477,118 @@
 .hidden {
   display: none !important;
 }
+
+/* Mobile & Touch Responsive Optimizations */
+.btn-deck-ctrl, .btn-deck-play, .btn-mode-toggle, .playlist-track-item {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 640px) {
+  .party-jukebox-section {
+    padding: 40px 12px;
+  }
+  .jukebox-deck {
+    padding: 20px 14px;
+    border-radius: 20px;
+  }
+  .jukebox-mode-selector {
+    max-width: 290px;
+    margin: 0 auto 18px;
+  }
+  .btn-mode-toggle {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+  .deck-media-container {
+    min-height: 240px;
+  }
+  .jukebox-track-title {
+    font-size: 1.25rem;
+    line-height: 1.25;
+  }
+  .jukebox-track-artist {
+    font-size: 0.88rem;
+  }
+  .visualizer-bars-row {
+    height: 42px;
+    gap: 3px;
+    margin: 12px 0;
+  }
+  .v-bar {
+    max-width: 6px;
+  }
+  .jukebox-controls-row {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .volume-slider-wrap {
+    width: 100%;
+    justify-content: center;
+    margin-top: 8px;
+    margin-left: 0;
+  }
+  .btn-deck-ctrl {
+    width: 44px;
+    height: 44px;
+  }
+  .btn-deck-play {
+    min-height: 44px;
+    padding: 10px 22px;
+  }
+  .jukebox-playlist-list {
+    max-height: 150px;
+    padding: 4px;
+    margin-top: 16px;
+  }
+  .playlist-track-item {
+    padding: 8px 10px;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .turntable-deck-area {
+    width: 240px;
+    height: 240px;
+    padding: 10px;
+    border-radius: 16px;
+  }
+  .vinyl-platter-well {
+    width: 216px;
+    height: 216px;
+  }
+  .vinyl-platter {
+    width: 208px;
+    height: 208px;
+  }
+  .tone-arm {
+    height: 132px;
+    right: 6px;
+  }
+  .cassette-deck-area {
+    width: 240px;
+    height: 240px;
+  }
+  .cassette-shell {
+    width: 226px;
+    height: 146px;
+  }
+}
+
+@media (max-width: 360px) {
+  .turntable-deck-area, .cassette-deck-area {
+    transform: scale(0.92);
+    transform-origin: center center;
+    margin: -8px 0;
+  }
+}
+
+@media (max-width: 330px) {
+  .turntable-deck-area, .cassette-deck-area {
+    transform: scale(0.85);
+    margin: -16px 0;
+  }
+}

@@ -1093,6 +1093,12 @@
         document.querySelectorAll(".recipient-name-preview").forEach(el => el.textContent = p2);
         const envSender = document.getElementById("envelopePreviewSender");
         if (envSender) envSender.textContent = `From ${p1} with Infinite Lof & Birthday Kisses 🎂💕`;
+        try {
+          if (typeof localStorage !== "undefined") {
+            localStorage.setItem("gf_name", p2);
+            localStorage.setItem("gf_sender", p1);
+          }
+        } catch (e) {}
 
         const urlParams = new URLSearchParams(window.location.search);
         const isIframe = window.parent && window.parent !== window;
@@ -1117,17 +1123,14 @@
         }
 
         if (isBuilderPreview) {
-          document.body.classList.add("builder-mode", "in-builder-preview");
-          if (urlParams.get("unsealed") === "1" || isLayoutEmpty) {
-            document.body.classList.add("letter-unsealed");
-            const env = document.getElementById("envelopeScreen");
-            if (env) {
-              env.classList.add("opened");
-              if (isLayoutEmpty) env.style.display = "none";
-            }
-            const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
-            if (app) app.classList.add("app-revealed");
+          document.body.classList.add("builder-mode", "in-builder-preview", "letter-unsealed");
+          const env = document.getElementById("envelopeScreen");
+          if (env) {
+            env.classList.add("opened");
+            env.style.display = "none";
           }
+          const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
+          if (app) app.classList.add("app-revealed");
 
           const bgAudioEl = document.getElementById("bgAudioPlayer");
           if (bgAudioEl) {

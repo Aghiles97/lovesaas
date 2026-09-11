@@ -227,10 +227,11 @@ function renderTimeline() {
     // Direct Chapter Edit button click
     const editBtn = item.querySelector(".timeline-edit-chapter-btn");
     if (editBtn) {
-      editBtn.addEventListener("click", (e) => {
+      editBtn.onclick = (e) => {
+        e.preventDefault();
         e.stopPropagation();
         openDirectChapterEditor(ch.id, ch.cityKey);
-      });
+      };
     }
 
     // Auto-slide & thumbnail switcher for multi-photo chapters
@@ -520,8 +521,9 @@ function openDirectChapterEditor(chapterIdOrCityKey, fallbackCityKey) {
     window.parent.postMessage({
       type: "SELECT_WIDGET",
       widgetId: "timeline",
-      chapterId: currentEditingChapterKey
-    }, window.location.origin);
+      chapterId: currentEditingChapterKey,
+      cityKey: currentEditingChapterFallback
+    }, "*");
     return;
   }
 

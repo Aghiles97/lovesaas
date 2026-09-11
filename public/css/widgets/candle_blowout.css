@@ -110,8 +110,19 @@
   position: relative;
   cursor: pointer;
   transition: transform 0.2s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
-.cake-candle:hover {
+.cake-candle::before {
+  content: "";
+  position: absolute;
+  top: -32px;
+  bottom: -10px;
+  left: -12px;
+  right: -12px;
+  z-index: 10;
+}
+.cake-candle:hover, .cake-candle:active {
   transform: scale(1.1);
 }
 .candle-wick {
@@ -393,4 +404,100 @@
 .btn-whatsapp:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 24px rgba(37, 211, 102, 0.45);
+}
+
+/* Mobile & Touch Responsive Optimizations */
+@media (max-width: 640px) {
+  .candle-blowout-section {
+    padding: 40px 12px;
+  }
+  .candle-blowout-card {
+    padding: 24px 14px;
+    border-radius: 20px;
+  }
+  .cake-stage {
+    margin: 25px auto 15px;
+    width: 260px;
+    height: 230px;
+  }
+  .cake-stand {
+    width: 240px;
+    max-width: 92%;
+  }
+  .cake-body {
+    width: 200px;
+    max-width: 88%;
+  }
+  .cake-tier.bottom {
+    width: 200px;
+    height: 70px;
+  }
+  .cake-tier.top {
+    width: 146px;
+    height: 52px;
+  }
+  .candles-row {
+    gap: 8px;
+  }
+  .cake-candle {
+    width: 8px;
+    height: 40px;
+  }
+  .candle-flame {
+    width: 12px;
+    height: 20px;
+    top: -24px;
+  }
+  .candle-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .candle-controls .btn {
+    flex: 1 1 140px;
+    min-height: 46px;
+    padding: 10px 16px;
+    font-size: 0.92rem;
+  }
+  .mic-meter-wrap {
+    width: 100%;
+    max-width: 260px;
+    margin: 10px auto 0;
+  }
+  .wish-reveal-card {
+    padding: 22px 16px;
+    margin: 18px auto 0;
+    border-radius: 20px;
+  }
+  .wish-card-title {
+    font-size: 1.35rem;
+    line-height: 1.25;
+  }
+  .wish-card-text {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+  .wish-card-actions {
+    width: 100%;
+  }
+  .btn-whatsapp {
+    width: 100%;
+    justify-content: center;
+    min-height: 46px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .cake-stage {
+    transform: scale(0.9);
+    transform-origin: bottom center;
+    margin: 15px auto 10px;
+  }
+  .candles-row {
+    gap: 6px;
+  }
 }
