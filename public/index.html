@@ -32,9 +32,68 @@
         <span class="nav-brand-text">LoveSaas <span class="nav-brand-badge">STUDIO</span></span>
       </a>
 
-      <nav class="nav-links" id="navLinks" aria-label="Main Navigation">
-        <!-- Mobile User Account Header (visible when logged in) -->
-        <div class="mobile-user-card" id="mobileUserCard" style="display: none;">
+      <nav class="desktop-nav-links" aria-label="Main Navigation">
+        <a href="#demo-preview" class="nav-link">Live Demo</a>
+        <a href="#features" class="nav-link">13 Modules</a>
+        <a href="#presets" class="nav-link">Themes</a>
+        <a href="#why-us" class="nav-link">Why Us</a>
+        <a href="#pricing" class="nav-link">Pricing</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+      </nav>
+
+      <div class="nav-actions">
+        <div id="navAuthLoggedOut" style="display: flex; align-items: center; gap: 8px;">
+          <button type="button" class="btn btn-ghost btn-sm" id="btnOpenSignInModal">
+            <span>🔑</span> Sign In
+          </button>
+        </div>
+        <div id="navAuthLoggedIn" style="display: none; align-items: center; gap: 8px;">
+          <a href="/builder" class="btn btn-primary btn-sm desktop-only" id="btnNavGoToBuilder">
+            <span>🚀</span> Go to Builder
+          </a>
+          <button type="button" class="btn btn-secondary btn-sm btn-header-projects" id="btnUserPortal" title="My Websites">
+            <span>💖</span> <span class="header-projects-text">Sites</span>
+            <span class="header-projects-badge" id="navBadgeSitesCount">0</span>
+          </button>
+          <div class="nav-user-dropdown" id="navUserDropdownWrap">
+            <button type="button" class="nav-user-avatar-btn" id="btnNavUserAvatar" title="Account menu">
+              <span class="nav-user-avatar-letter" id="navUserAvatarLetter">A</span>
+            </button>
+            <div class="nav-user-dropdown-menu hidden" id="navUserDropdownMenu">
+              <button type="button" class="nav-dropdown-item" id="btnDropdownMyWebsites">
+                <span>💖</span> My Websites
+              </button>
+              <button type="button" class="nav-dropdown-item" id="btnDesktopAccountSettings">
+                <span>⚙️</span> Account Settings
+              </button>
+              <div class="nav-dropdown-divider"></div>
+              <button type="button" class="nav-dropdown-item nav-dropdown-item--danger" id="btnDesktopLogout">
+                <span>🚪</span> Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm desktop-only" id="btnNavGetStarted">
+          <span>💖</span> Create Site
+        </button>
+        <button type="button" class="mobile-menu-btn" id="btnMobileMenuToggle" aria-label="Toggle navigation">☰</button>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Full-Height Drawer -->
+    <div class="mobile-nav-drawer nav-links" id="navLinks" aria-label="Mobile Navigation">
+      <!-- Top bar inside full-height mobile drawer -->
+      <div class="mobile-drawer-topbar">
+        <div class="nav-brand">
+          <span class="nav-brand-icon">💍</span>
+          <span class="nav-brand-text">LoveSaas</span>
+        </div>
+        <button type="button" class="mobile-drawer-close-btn" id="btnCloseMobileDrawer" aria-label="Close menu">✕</button>
+      </div>
+
+      <!-- 1. LOGGED-IN VIEW: ONLY ACCOUNT RELATED STUFF -->
+      <div id="drawerAccountSection" style="display: none; flex-direction: column; gap: 14px; width: 100%;">
+        <div class="mobile-user-card" id="mobileUserCard">
           <div class="mobile-user-profile">
             <div class="mobile-user-avatar" id="mobileUserAvatar">A</div>
             <div class="mobile-user-details">
@@ -45,16 +104,38 @@
               <span class="mobile-user-email" id="mobileUserEmail">admin@admin.com</span>
             </div>
           </div>
-          <div class="mobile-user-quick-actions">
-            <button type="button" class="btn btn-secondary btn-sm mobile-quick-btn" id="btnMobileUserPortal">
-              <span>💖</span> My Sites <span class="portal-badge-count" id="mobileBadgeSitesCount">0</span>
-            </button>
-            <button type="button" class="btn btn-ghost btn-sm mobile-quick-btn" id="btnMobileLogout" title="Sign Out">
-              <span>🚪</span> Sign Out
-            </button>
-          </div>
         </div>
 
+        <div class="mobile-account-menu-list">
+          <button type="button" class="mobile-menu-row-btn" id="btnDrawerOpenProjects">
+            <span class="row-btn-icon">💖</span>
+            <span class="row-btn-text">My Websites</span>
+            <span class="row-btn-badge" id="mobileBadgeSitesCount">0</span>
+            <span class="row-btn-chevron">›</span>
+          </button>
+          <button type="button" class="mobile-menu-row-btn" id="btnDrawerOpenSettings">
+            <span class="row-btn-icon">⚙️</span>
+            <span class="row-btn-text">Account Settings</span>
+            <span class="row-btn-chevron">›</span>
+          </button>
+          <button type="button" class="mobile-menu-row-btn" id="btnDrawerOpenReceipts">
+            <span class="row-btn-icon">🧾</span>
+            <span class="row-btn-text">Order Receipts</span>
+            <span class="row-btn-chevron">›</span>
+          </button>
+        </div>
+
+        <a href="/builder" class="btn btn-primary btn-lg mobile-cta-btn" id="btnMobileGoToBuilder" style="text-decoration: none; justify-content: center; margin-top: 8px;">
+          <span>🚀</span> Open Studio Builder →
+        </a>
+
+        <button type="button" class="mobile-drawer-logout-btn" id="btnDrawerLogout">
+          <span>🚪</span> Log Out
+        </button>
+      </div>
+
+      <!-- 2. LOGGED-OUT VIEW: MARKETING LINKS -->
+      <div id="drawerGuestSection" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
         <div class="mobile-nav-list">
           <a href="#demo-preview" class="nav-link">
             <span class="nav-link-icon">✨</span>
@@ -89,42 +170,13 @@
         </div>
 
         <div class="mobile-nav-ctas">
-          <div id="mobileAuthLoggedOut" style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
-            <button type="button" class="btn btn-primary btn-lg mobile-cta-btn" id="btnMobileGetStarted">
-              <span>💖</span> Create Couple Website
-            </button>
-            <button type="button" class="btn btn-secondary btn-sm mobile-cta-btn" id="btnMobileSignIn">
-              <span>🔑</span> Sign In / Register
-            </button>
-          </div>
-          <div id="mobileAuthLoggedIn" style="display: none; flex-direction: column; gap: 8px; width: 100%;">
-            <a href="/builder" class="btn btn-primary btn-lg mobile-cta-btn" id="btnMobileGoToBuilder" style="text-decoration: none; justify-content: center;">
-              <span>🚀</span> Open Studio Builder →
-            </a>
-          </div>
-        </div>
-      </nav>
-
-      <div class="nav-actions">
-        <div id="navAuthLoggedOut" style="display: flex; align-items: center; gap: 8px;">
-          <button type="button" class="btn btn-ghost btn-sm" id="btnOpenSignInModal">
-            <span>🔑</span> Sign In
+          <button type="button" class="btn btn-primary btn-lg mobile-cta-btn" id="btnMobileGetStarted">
+            <span>💖</span> Create Couple Website
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm mobile-cta-btn" id="btnMobileSignIn">
+            <span>🔑</span> Sign In / Register
           </button>
         </div>
-        <div id="navAuthLoggedIn" style="display: none; align-items: center; gap: 8px;">
-          <a href="/builder" class="btn btn-primary btn-sm" id="btnNavGoToBuilder">
-            <span>🚀</span> Go to Builder
-          </a>
-          <button type="button" class="user-chip-btn" id="btnUserPortal" title="Account, Designs & Orders">
-            <span class="user-avatar-circle" id="navUserAvatar">👤</span>
-            <span class="user-name-text" id="navUserName">My Account</span>
-            <span style="font-size: 0.72rem; opacity: 0.7;">▾</span>
-          </button>
-        </div>
-        <button type="button" class="btn btn-primary btn-sm" id="btnNavGetStarted">
-          <span>💖</span> Create Site
-        </button>
-        <button type="button" class="mobile-menu-btn" id="btnMobileMenuToggle" aria-label="Toggle navigation">☰</button>
       </div>
     </div>
   </header>
@@ -1093,92 +1145,83 @@
     </div>
   </div>
 
-  <!-- 3. USER PORTAL MODAL (Designs, Purchases, Profile, Logout) -->
+  <!-- 3. USER PORTAL MODAL (Dedicated Websites List) -->
   <div class="modal-overlay" id="userPortalModal" role="dialog" aria-modal="true" aria-labelledby="userPortalModalTitle">
-    <div class="modal-card user-portal-card">
+    <div class="modal-card user-portal-card" style="max-width: 560px;">
       <div class="modal-header user-portal-header">
         <div class="user-portal-profile-bar">
-          <div class="user-portal-avatar" id="portalAvatar">👤</div>
+          <div class="user-portal-avatar" id="portalAvatar">💖</div>
           <div>
-            <h3 id="userPortalModalTitle" class="portal-name">My Account</h3>
-            <p class="portal-email" id="portalEmail">user@example.com</p>
+            <h3 id="userPortalModalTitle" class="portal-name">My Websites</h3>
+            <p class="portal-email" id="portalEmail">Manage your couple websites</p>
           </div>
         </div>
         <div class="user-portal-header-actions">
-          <button type="button" class="btn btn-primary btn-sm btn-portal-create-head" id="btnPortalCreateNewSite" title="Create a new website">
-            <span>✨</span> New Site
-          </button>
-          <button type="button" class="btn btn-ghost btn-sm btn-portal-logout" id="btnPortalLogout" title="Sign out of your account">
-            <span>🚪</span> <span class="logout-text">Sign Out</span>
+          <button type="button" class="btn-portal-add-compact" id="btnPortalCreateNewSite" title="Create a new website">
+            + New Site
           </button>
           <button type="button" class="modal-close-btn" id="btnCloseUserPortalModal" aria-label="Close">✕</button>
         </div>
       </div>
 
-      <!-- Portal Navigation Tabs -->
-      <div class="portal-tabs-bar">
-        <button type="button" class="portal-tab-btn active" data-portal-tab="designs">
-          <span>💖</span> My Sites <span class="portal-badge-count" id="badgeDesignsCount">0</span>
-        </button>
-        <button type="button" class="portal-tab-btn" data-portal-tab="purchases">
-          <span>🧾</span> Receipts <span class="portal-badge-count" id="badgePurchasesCount">0</span>
-        </button>
-        <button type="button" class="portal-tab-btn" data-portal-tab="settings">
-          <span>⚙️</span> Settings
-        </button>
-      </div>
-
       <div class="modal-body user-portal-body">
-        <!-- TAB 1: DESIGNS -->
-        <div class="portal-pane active" id="panePortalDesigns">
-          <div class="portal-create-bar" style="margin-bottom: 14px;">
-            <button type="button" class="btn btn-primary btn-lg" id="btnPortalCreateNewSiteMain" style="width: 100%; justify-content: center; font-weight: 800; font-size: 0.95rem; padding: 12px 18px; border-radius: 12px; box-shadow: 0 4px 18px rgba(244, 63, 94, 0.4);">
-              <span>✨</span> Create New Couple Website →
-            </button>
-          </div>
-          <div id="portalDesignsList" class="portal-designs-grid">
-            <!-- Dynamically populated -->
-          </div>
+        <div id="portalDesignsList" class="portal-designs-simple-list">
+          <!-- Dynamically populated with simple rows -->
         </div>
+      </div>
+    </div>
+  </div>
 
-        <!-- TAB 2: PURCHASES -->
-        <div class="portal-pane" id="panePortalPurchases">
-          <div class="portal-pane-header">
-            <div>
-              <h4 style="font-size: 1.12rem; font-weight: 800; margin-bottom: 3px;">Purchase Receipts</h4>
-              <p style="font-size: 0.85rem; color: var(--text-secondary);">Lifetime ownership confirmations and orders</p>
-            </div>
-          </div>
-
-          <div id="portalPurchasesList" class="portal-purchases-list">
-            <!-- Dynamically populated -->
-          </div>
+  <!-- 3b. ACCOUNT SETTINGS MODAL -->
+  <div class="modal-overlay" id="accountSettingsModal" role="dialog" aria-modal="true" aria-labelledby="accountSettingsModalTitle">
+    <div class="modal-card user-portal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 id="accountSettingsModalTitle">⚙️ Account Settings</h3>
+          <p>Update your personal profile & password</p>
         </div>
+        <button type="button" class="modal-close-btn" id="btnCloseAccountSettingsModal" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body user-portal-body">
+        <form id="formPortalUpdateProfile" style="width: 100%;">
+          <div id="profileAlert" class="auth-alert-box success" style="display: none;"></div>
 
-        <!-- TAB 3: SETTINGS -->
-        <div class="portal-pane" id="panePortalSettings">
-          <form id="formPortalUpdateProfile" style="max-width: 460px;">
-            <div id="profileAlert" class="auth-alert-box success" style="display: none;"></div>
+          <div class="form-group">
+            <label for="profileName">Full Name</label>
+            <input type="text" id="profileName" class="form-input" placeholder="Your Name" autocomplete="name">
+          </div>
 
-            <div class="form-group">
-              <label for="profileName">Full Name</label>
-              <input type="text" id="profileName" class="form-input" placeholder="Your Name" autocomplete="name">
-            </div>
+          <div class="form-group">
+            <label for="profileEmail">Email (Account ID)</label>
+            <input type="email" id="profileEmail" class="form-input" readonly disabled style="opacity: 0.6; cursor: not-allowed;">
+          </div>
 
-            <div class="form-group">
-              <label for="profileEmail">Email (Account ID)</label>
-              <input type="email" id="profileEmail" class="form-input" readonly disabled style="opacity: 0.6; cursor: not-allowed;">
-            </div>
+          <div class="form-group">
+            <label for="profileNewPassword">New Password (leave blank to keep current)</label>
+            <input type="password" id="profileNewPassword" class="form-input" placeholder="••••••••" minlength="4" autocomplete="new-password">
+          </div>
 
-            <div class="form-group">
-              <label for="profileNewPassword">New Password (leave blank to keep current)</label>
-              <input type="password" id="profileNewPassword" class="form-input" placeholder="••••••••" minlength="4" autocomplete="new-password">
-            </div>
+          <button type="submit" class="btn btn-primary btn-sm" id="btnSaveProfile" style="width: 100%; justify-content: center; padding: 12px 20px; font-weight: 700; margin-top: 8px;">
+            <span>💾 Save Changes</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
 
-            <button type="submit" class="btn btn-primary btn-sm" id="btnSaveProfile" style="padding: 10px 20px;">
-              <span>💾 Save Changes</span>
-            </button>
-          </form>
+  <!-- 3c. RECEIPTS MODAL -->
+  <div class="modal-overlay" id="receiptsModal" role="dialog" aria-modal="true" aria-labelledby="receiptsModalTitle">
+    <div class="modal-card user-portal-card" style="max-width: 580px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 id="receiptsModalTitle">🧾 Order Receipts</h3>
+          <p>Lifetime ownership confirmations and orders</p>
+        </div>
+        <button type="button" class="modal-close-btn" id="btnCloseReceiptsModal" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body user-portal-body">
+        <div id="portalPurchasesList" class="portal-purchases-list">
+          <!-- Dynamically populated -->
         </div>
       </div>
     </div>

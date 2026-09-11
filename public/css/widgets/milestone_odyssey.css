@@ -7,8 +7,10 @@
 }
 
 .milestone-odyssey-box {
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 /* Controls */
@@ -377,39 +379,51 @@
 }
 
 @media (max-width: 768px) {
-  .milestone-odyssey-section { padding: 40px 0; }
-  .odyssey-node { width: 250px; }
-  .odyssey-runway-track { gap: 28px; padding: 30px 20px; }
-  .btn-odyssey-nav { width: 38px; height: 38px; font-size: 1rem; }
+  .milestone-odyssey-section { padding: 36px 0; }
+  .odyssey-node { width: 280px; }
+  .odyssey-runway-track { gap: 24px; padding: 28px 16px; }
+  .btn-odyssey-nav { width: 40px; height: 40px; font-size: 1.05rem; }
+}
+
+@media (max-width: 640px) {
+  .odyssey-node {
+    width: min(340px, calc(100vw - 44px));
+    max-width: 88vw;
+    scroll-snap-align: center;
+  }
+  .odyssey-card-thumb { height: 135px; border-radius: 12px; }
+  .odyssey-card { padding: 16px 14px; border-radius: 18px; width: 100%; box-sizing: border-box; }
 }
 
 @media (max-width: 480px) {
-  .milestone-odyssey-section { padding: 28px 0; }
+  .milestone-odyssey-section { padding: 24px 0; }
   .odyssey-runway-controls { margin-bottom: 14px; padding: 0 4px; }
   .odyssey-hint-drag { font-size: 0.72rem; }
   .odyssey-runway-container {
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x mandatory;
     padding: 10px 0 18px 0;
+    width: 100%;
   }
   .odyssey-node {
-    width: min(230px, 75vw);
+    width: min(330px, calc(100vw - 36px));
+    max-width: 90vw;
     scroll-snap-align: center;
   }
   .odyssey-runway-track {
     gap: 16px;
-    padding: 20px 14px;
+    padding: 20px 10px;
   }
   .odyssey-pin-wrap { margin-bottom: 16px; }
   .odyssey-pin { width: 38px; height: 38px; }
   .odyssey-pin-pulse { width: 44px; height: 44px; }
   .odyssey-pin-icon { font-size: 1rem; }
-  .odyssey-card { padding: 14px 12px; border-radius: 16px; gap: 8px; }
+  .odyssey-card { padding: 14px 12px; border-radius: 16px; gap: 8px; width: 100%; box-sizing: border-box; }
   .odyssey-card-title { font-size: 0.95rem; word-break: break-word; }
   .odyssey-date-tag { font-size: 0.7rem; padding: 2px 6px; }
-  .odyssey-loc-badge { font-size: 0.68rem; max-width: 100px; }
-  .odyssey-card-snippet { font-size: 0.8rem; }
-  .odyssey-card-thumb { height: 95px; border-radius: 10px; }
+  .odyssey-loc-badge { font-size: 0.68rem; max-width: 110px; }
+  .odyssey-card-snippet { font-size: 0.82rem; }
+  .odyssey-card-thumb { height: 120px; border-radius: 10px; }
   .odyssey-card-link { font-size: 0.72rem; }
   .odyssey-modal-card { width: min(440px, 94vw); border-radius: 20px; max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .odyssey-modal-media { height: 160px; }
@@ -419,8 +433,8 @@
 }
 
 @media (max-width: 360px) {
-  .odyssey-node { width: min(205px, 72vw); }
-  .odyssey-card { padding: 10px 8px; border-radius: 14px; }
-  .odyssey-card-thumb { height: 80px; }
-  .odyssey-card-title { font-size: 0.88rem; }
+  .odyssey-node { width: calc(100vw - 28px); max-width: 290px; }
+  .odyssey-card { padding: 12px 10px; border-radius: 14px; }
+  .odyssey-card-thumb { height: 100px; }
+  .odyssey-card-title { font-size: 0.9rem; }
 }

@@ -349,6 +349,7 @@ async function checkBuilderAccess() {
     if (paramSlug) {
       state.slug = paramSlug;
       updateRoleUI();
+      updateUserMenuUI();
       fetchUserProjects();
       return true;
     }
@@ -479,7 +480,18 @@ async function checkBuilderAccess() {
     return true;
   }
 
-  // Show design picker for user to choose or create
+  // Show design picker or directly open new project modal if requested
+  if (paramCreate === '1' || urlParams.get('new') === '1') {
+    document.getElementById('builderDesignPickerModal')?.classList.add('hidden');
+    document.documentElement.classList.remove('builder-gate-active');
+    setTimeout(() => {
+      if (typeof window.openNewProjectModal === 'function') {
+        window.openNewProjectModal(userDesigns.length === 0);
+      }
+    }, 150);
+    return false;
+  }
+
   showDesignPickerModal(userDesigns);
   return false;
 }
@@ -1992,9 +2004,17 @@ async function deleteAssetFromR2(urlOrKey) {
   }
 }
 
-function renderWidgetInspector(widgetId) {
+let lastInspectedWidgetId = null;
+
+function renderWidgetInspector(widgetId, forceScrollTop = false) {
   if (!inspectorFormContainer) return;
-  const savedScrollTop = inspectorFormContainer.scrollTop;
+  const tabPane = document.getElementById('tab-inspector') || inspectorFormContainer.parentElement;
+  const isWidgetSwitch = lastInspectedWidgetId !== null && lastInspectedWidgetId !== widgetId;
+  lastInspectedWidgetId = widgetId;
+  const savedScrollTop = (forceScrollTop || isWidgetSwitch) ? 0 : (tabPane ? tabPane.scrollTop : 0);
+  if (tabPane && tabPane.scrollHeight > 0 && !isWidgetSwitch) {
+    tabPane.style.minHeight = tabPane.scrollHeight + 'px';
+  }
   inspectorFormContainer.innerHTML = '';
 
   const meta = WIDGET_REGISTRY[widgetId] || {
@@ -2076,13 +2096,25 @@ function renderWidgetInspector(widgetId) {
     formHolder.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted);">No custom inspector available for ${widgetId}.</p>`;
   }
 
-  if (savedScrollTop > 0 && !state.targetChapterId && !state.targetMemoryId) {
-    inspectorFormContainer.scrollTop = savedScrollTop;
-    requestAnimationFrame(() => {
-      if (inspectorFormContainer && !state.targetChapterId && !state.targetMemoryId) {
-        inspectorFormContainer.scrollTop = savedScrollTop;
-      }
-    });
+  if (tabPane) {
+    tabPane.style.minHeight = '';
+    const hasTargetScroll =
+      (widgetId === 'timeline' && Boolean(state.targetChapterId || state.targetCityKey)) ||
+      (widgetId === 'memories' && Boolean(state.targetMemoryId));
+
+    if (savedScrollTop > 0 && !hasTargetScroll) {
+      tabPane.scrollTop = savedScrollTop;
+      requestAnimationFrame(() => {
+        if (tabPane && !hasTargetScroll) {
+          tabPane.scrollTop = savedScrollTop;
+        }
+      });
+      setTimeout(() => {
+        if (tabPane && !hasTargetScroll) {
+          tabPane.scrollTop = savedScrollTop;
+        }
+      }, 50);
+    }
   }
 }
 
@@ -4645,12 +4677,13 @@ function updateUserMenuUI() {
           ? '🛡️ Master Admin • Full Access'
           : user.email || 'User';
   } else {
-    if (headerUserAvatar) headerUserAvatar.textContent = '👤';
-    if (headerUserName) headerUserName.textContent = 'Account';
-    if (userMenuDisplayName) userMenuDisplayName.textContent = 'My Account';
+    const isMasterAdmin = state.userRole === 'admin';
+    if (headerUserAvatar) headerUserAvatar.textContent = isMasterAdmin ? 'A' : '👤';
+    if (headerUserName) headerUserName.textContent = isMasterAdmin ? 'Admin' : 'Account';
+    if (userMenuDisplayName) userMenuDisplayName.textContent = isMasterAdmin ? 'Master Admin' : 'My Account';
     if (userMenuRoleBadge)
       userMenuRoleBadge.textContent =
-        state.userRole === 'admin' ? '🛡️ Admin' : state.userRole || 'Visitor';
+        isMasterAdmin ? '🛡️ Master Admin • Full Access' : state.userRole || 'Visitor';
   }
 }
 
@@ -5547,16 +5580,8 @@ function setupNewProjectModal() {
     btnExplore.addEventListener('click', () => {
       modal.classList.add('hidden');
       modal.style.display = 'none';
-      // Return to design picker if no design is actively loaded
-      if (!new URLSearchParams(window.location.search).get('slug')) {
-        document.documentElement.classList.add('builder-gate-active');
-        showDesignPickerModal(state.userDesigns || []);
-      } else {
-        showToast(
-          "Exploring demo preview. Click '+ New Site' whenever you are ready!",
-          'info',
-        );
-      }
+      document.documentElement.classList.remove('builder-gate-active');
+      window.location.href = '/builder?slug=demo';
     });
   }
 
@@ -5762,9 +5787,11 @@ function setupNewProjectModal() {
   const autoCreateParams = new URLSearchParams(window.location.search);
   if (autoCreateParams.get('create') === '1' || autoCreateParams.get('new') === '1') {
     setTimeout(() => {
+      document.getElementById('builderDesignPickerModal')?.classList.add('hidden');
+      document.documentElement.classList.remove('builder-gate-active');
       if (typeof window.openNewProjectModal === 'function') {
         window.openNewProjectModal(false);
       }
-    }, 450);
+    }, 200);
   }
 }

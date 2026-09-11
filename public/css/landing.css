@@ -300,6 +300,21 @@ body {
   border-radius: var(--radius-full);
 }
 
+.desktop-nav-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 1.8vw, 24px);
+  flex-wrap: nowrap;
+}
+
+.mobile-nav-drawer {
+  display: none !important;
+}
+
+.mobile-nav-drawer.mobile-open {
+  display: flex !important;
+}
+
 .nav-links {
   display: flex;
   align-items: center;
@@ -329,6 +344,92 @@ body {
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+}
+
+/* Nav User Avatar Dropdown */
+.nav-user-dropdown {
+  position: relative;
+}
+
+.nav-user-avatar-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgba(244, 63, 94, 0.5);
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.nav-user-avatar-btn:hover {
+  transform: scale(1.08);
+  border-color: rgba(244, 63, 94, 0.8);
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.4);
+}
+
+.nav-user-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 200px;
+  background: rgba(15, 20, 35, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 2000;
+  animation: navDropFade 0.15s ease;
+}
+
+.nav-user-dropdown-menu.hidden {
+  display: none;
+}
+
+@keyframes navDropFade {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.nav-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s ease;
+  text-align: left;
+}
+
+.nav-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.nav-dropdown-item--danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.nav-dropdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
 }
 
 .mobile-menu-btn {
@@ -2282,27 +2383,162 @@ body {
 
 .nav-links.mobile-open {
   display: flex !important;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  width: 100%;
-  max-width: 100vw;
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-height: none !important;
+  max-width: 100vw !important;
   box-sizing: border-box;
-  background: rgba(6, 10, 22, 0.98);
-  backdrop-filter: blur(32px);
-  -webkit-backdrop-filter: blur(32px);
+  background: #070c18 !important;
   flex-direction: column;
+  justify-content: flex-start !important;
   align-items: stretch;
-  padding: 14px 16px 20px;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 18px calc(24px + env(safe-area-inset-bottom, 0px)) !important;
   gap: 12px;
-  border-bottom: 1px solid rgba(244, 63, 94, 0.25);
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.95);
-  animation: slideDownMenu 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  max-height: calc(100vh - 65px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  z-index: 1001;
+  z-index: 10002 !important;
+  animation: fadeInDrawer 0.18s ease;
+}
+
+.btn-portal-add-compact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px !important;
+  height: 28px !important;
+  border-radius: 9999px !important;
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(244, 63, 94, 0.35);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-portal-add-compact:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(244, 63, 94, 0.45);
+}
+
+@keyframes fadeInDrawer {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.mobile-drawer-topbar {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 4px;
+}
+
+.mobile-drawer-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.mobile-drawer-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.mobile-account-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.mobile-menu-row-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.mobile-menu-row-btn:hover,
+.mobile-menu-row-btn:active {
+  background: rgba(244, 63, 94, 0.12);
+  border-color: rgba(244, 63, 94, 0.3);
+  color: #fda4af;
+}
+
+.mobile-menu-row-btn .row-btn-icon {
+  font-size: 1.15rem;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.mobile-menu-row-btn .row-btn-text {
+  flex: 1;
+}
+
+.mobile-menu-row-btn .row-btn-badge {
+  background: #f43f5e;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  margin-right: 8px;
+}
+
+.mobile-menu-row-btn .row-btn-chevron {
+  font-size: 1.25rem;
+  color: #64748b;
+  font-weight: 400;
+}
+
+.mobile-drawer-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 12px;
+  color: #fca5a5;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.15s ease;
+}
+.mobile-drawer-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ffffff;
 }
 
 /* Mobile User Account Card inside Drawer */
@@ -2488,7 +2724,9 @@ body {
   .preset-preview-content { grid-template-columns: 1fr; }
   .why-us-grid { grid-template-columns: 1fr; }
   .steps-grid { grid-template-columns: 1fr; }
-  .nav-links:not(.mobile-open) { display: none; }
+  .desktop-nav-links { display: none !important; }
+  .nav-links:not(.mobile-open),
+  .mobile-nav-drawer:not(.mobile-open) { display: none; }
   .mobile-menu-btn {
     display: flex;
     align-items: center;
@@ -2508,12 +2746,263 @@ body {
   .macbook-glass-frame:hover { transform: none !important; }
 }
 
+/* ================================================================== */
+/*  USER PORTAL - GLOBAL (Desktop + Mobile)                           */
+/* ================================================================== */
+
+#userPortalModal .modal-card {
+  border-radius: 20px !important;
+  max-height: 80dvh !important;
+  height: auto !important;
+  width: min(480px, calc(100vw - 32px)) !important;
+  max-width: calc(100vw - 32px) !important;
+  margin: auto !important;
+  background: #0b1120 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8) !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#userPortalModal.modal-overlay,
+#accountSettingsModal.modal-overlay,
+#receiptsModal.modal-overlay {
+  padding: 12px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-portal-header {
+  padding: 16px 20px !important;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.user-portal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-portal-body {
+  padding: 12px 16px !important;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.portal-designs-simple-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.portal-simple-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+}
+
+.portal-simple-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(244, 63, 94, 0.25);
+}
+
+.portal-simple-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.portal-simple-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.portal-simple-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.portal-simple-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-simple-link {
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.35);
+  text-decoration: none;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-simple-link:hover {
+  color: #38bdf8;
+}
+
+.portal-simple-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn-icon-action {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.88rem;
+  cursor: pointer;
+  padding: 0 !important;
+  color: #ffffff;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.btn-icon-action:hover {
+  background: rgba(244, 63, 94, 0.2);
+  border-color: rgba(244, 63, 94, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-delete-icon:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.btn-portal-add-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.btn-portal-add-compact:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(244, 63, 94, 0.4);
+}
+
+.user-portal-profile-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-portal-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.portal-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.portal-email {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.portal-empty-state {
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.btn-header-projects {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  height: 36px;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  color: #ffffff;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.btn-header-projects:hover {
+  background: rgba(244, 63, 94, 0.25);
+  border-color: rgba(244, 63, 94, 0.5);
+}
+
+.header-projects-badge {
+  background: #f43f5e;
+  color: #ffffff;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  min-width: 16px;
+  text-align: center;
+}
+
 @media (max-width: 768px) {
   #btnNavTryStudio,
   #btnOpenSignInModal,
   #btnNavGetStarted,
   #btnNavGoToBuilder {
     display: none !important;
+  }
+  .landing-nav.navbar-menu-open {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    position: static !important;
   }
   .landing-nav.navbar-menu-open #navAuthLoggedIn,
   .landing-nav.navbar-menu-open #navAuthLoggedOut {
@@ -2530,98 +3019,154 @@ body {
   .user-name-text {
     max-width: 80px;
   }
-  .portal-designs-grid {
-    grid-template-columns: 1fr !important;
-    gap: 12px;
-  }
-  #userPortalModal.modal-overlay {
-    padding: 0;
-    align-items: stretch;
-  }
   #userPortalModal .modal-card {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    border-radius: 0 !important;
-    border: none !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    border-radius: 20px !important;
+    max-height: 85dvh !important;
+    height: auto !important;
+    width: min(480px, calc(100vw - 24px)) !important;
+    max-width: calc(100vw - 24px) !important;
+    margin: auto !important;
+    background: #0b1120 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8) !important;
     display: flex;
     flex-direction: column;
-  }
-  .user-portal-body {
-    padding: 14px 16px 40px !important;
-    box-sizing: border-box;
-    width: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    flex: 1;
+    overflow: hidden;
   }
   .user-portal-header {
-    padding: 12px 16px !important;
+    padding: 14px 16px !important;
     background: rgba(255, 255, 255, 0.03);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
-  /* Hide squeezed header button on mobile in favor of prominent in-pane banner */
-  .btn-portal-create-head {
-    display: none !important;
+  .user-portal-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
-  .portal-tabs-bar {
-    padding: 8px 16px !important;
-    gap: 8px !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  .portal-designs-simple-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
   }
-  .portal-tab-btn {
-    padding: 8px 14px !important;
-    font-size: 0.82rem !important;
-    font-weight: 700 !important;
-    border-radius: 8px !important;
-  }
-  .portal-design-card {
-    padding: 14px 16px !important;
-    border-radius: 14px !important;
-    background: rgba(255, 255, 255, 0.03) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
-    width: 100% !important;
-    box-sizing: border-box;
-    margin-bottom: 10px;
-  }
-  .portal-card-bottom-row {
+  .portal-simple-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 11px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
     gap: 10px;
-    margin-top: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.15s ease;
   }
-  .portal-site-link {
-    max-width: 130px !important;
-    font-size: 0.82rem !important;
-    color: #38bdf8 !important;
+  .portal-simple-row:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .portal-simple-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+  }
+  .portal-simple-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .portal-simple-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .portal-simple-name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .btn-copy-site-slug {
-    padding: 4px 8px !important;
-    font-size: 0.74rem !important;
-    border-radius: 6px !important;
+  .portal-simple-link {
+    font-size: 0.74rem;
+    color: #38bdf8;
+    text-decoration: none;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .portal-simple-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     flex-shrink: 0;
   }
-  .portal-studio-launch-btn {
-    padding: 6px 14px !important;
-    font-size: 0.82rem !important;
+  .btn-icon-action {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.92rem;
+    cursor: pointer;
+    padding: 0 !important;
+    color: #ffffff;
+    text-decoration: none;
+    transition: all 0.15s ease;
+  }
+  .btn-icon-action:hover,
+  .btn-icon-action:active {
+    background: rgba(244, 63, 94, 0.2);
+    border-color: rgba(244, 63, 94, 0.5);
+    transform: translateY(-1px);
+  }
+  .btn-delete-icon:hover,
+  .btn-delete-icon:active {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+  }
+  .btn-header-projects {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 4px 10px !important;
+    height: 32px !important;
+    border-radius: 9999px !important;
     font-weight: 700 !important;
-    flex-shrink: 0;
+    font-size: 0.78rem !important;
+    background: rgba(244, 63, 94, 0.15) !important;
+    border: 1px solid rgba(244, 63, 94, 0.35) !important;
+    color: #ffffff !important;
+    cursor: pointer;
+    white-space: nowrap;
   }
-  .logout-text {
-    display: none;
+  .header-projects-badge {
+    background: #f43f5e;
+    color: #ffffff;
+    padding: 1px 6px;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 800;
   }
-  .portal-email {
-    max-width: 180px !important;
-    font-size: 0.74rem !important;
+  #userPortalModal.modal-overlay,
+  #accountSettingsModal.modal-overlay,
+  #receiptsModal.modal-overlay {
+    padding: 12px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .container { padding: 0 16px; }
   .hero-section { padding: 42px 0 32px; }

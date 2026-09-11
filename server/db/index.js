@@ -1987,7 +1987,7 @@ async function linkTenantToUser(slug, userId) {
   }
 
   const store = loadLocalStore();
-  if (store.tenants && store.tenants[cleanSlug]) {
+  if (store.tenants[cleanSlug]) {
     store.tenants[cleanSlug].user_id = userId;
     saveLocalStore(store);
   }

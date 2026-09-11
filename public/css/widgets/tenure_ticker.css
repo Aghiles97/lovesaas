@@ -4,10 +4,14 @@
   width: 100%;
 }
 .tenure-ticker-box {
+  width: 100%;
   max-width: 920px;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 .tenure-card {
+  width: 100%;
+  box-sizing: border-box;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 245, 248, 0.82));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -24,6 +28,7 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 20px;
+  width: 100%;
 }
 .tenure-pill {
   background: linear-gradient(135deg, #ff4365, #ff6b8b);
@@ -44,6 +49,7 @@
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 12px;
+  width: 100%;
 }
 @media (max-width: 768px) {
   .tenure-grid-six {
@@ -52,7 +58,8 @@
 }
 @media (max-width: 480px) {
   .tenure-grid-six {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
   }
 }
 .tenure-slot {

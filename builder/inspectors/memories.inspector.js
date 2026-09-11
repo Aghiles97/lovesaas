@@ -267,8 +267,10 @@ if (!state.sectionsData.memories) {
       });
 
       document.getElementById("btnAddMem").onclick = () => {
+        const newId = "mem-" + Date.now();
+        state.targetMemoryId = newId;
         memories.push({
-          id: "mem-" + Date.now(),
+          id: newId,
           title: "Our Special Moment ❤️",
           desc: "A warm memory we will cherish forever.",
           img: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600&auto=format&fit=crop"

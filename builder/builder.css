@@ -4010,9 +4010,6 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
 
 /* SIDEBAR CONTAINER QUERIES & RESPONSIVE RULES */
 @container sidebar (max-width: 420px) {
-  .btn-preset-pill .active-preset-name {
-    max-width: 65px;
-  }
   .sections-toolbar-row {
     flex-wrap: wrap;
   }
@@ -4048,12 +4045,14 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
   .builder-nav {
     height: 52px;
     padding: 0 12px;
-    gap: 8px;
     width: 100%;
     max-width: 100vw;
     box-sizing: border-box;
     overflow: visible !important;
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     z-index: 100 !important;
     background: #ffffff;
     border-bottom: 1px solid var(--border, #e2e8f0);
@@ -4066,12 +4065,11 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
   }
 
   .brand-box {
-    gap: 6px;
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: visible !important;
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    min-width: 0;
   }
 
   .brand-logo-link {
@@ -4100,23 +4098,30 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
     display: none !important;
   }
 
-  /* Project Switcher on Mobile */
+  /* Project Switcher in the Middle Center of the Header */
   .project-switcher {
-    position: relative;
-    flex-shrink: 1;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    z-index: 10;
+    max-width: min(150px, 40vw);
     min-width: 0;
   }
 
   .project-switcher-btn {
-    padding: 3px 8px !important;
-    font-size: 0.74rem !important;
-    gap: 4px !important;
+    padding: 3px 10px !important;
+    font-size: 0.76rem !important;
+    gap: 5px !important;
     height: 32px;
     background: #f8fafc !important;
     border: 1px solid var(--border, #e2e8f0) !important;
     border-radius: var(--radius-full, 9999px) !important;
-    max-width: 110px;
-    min-width: 0;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .project-switcher-btn .tenant-label {
@@ -4124,12 +4129,13 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
   }
 
   .project-switcher-btn .tenant-pill {
-    max-width: 52px;
+    max-width: 75px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.72rem !important;
-    padding: 1px 6px !important;
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    padding: 0 2px !important;
   }
 
   .nav-actions {
@@ -4169,30 +4175,42 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
     display: none !important;
   }
 
-  /* User menu pill on mobile */
+  /* User menu pill on mobile: Only avatar icon 'First letter' A, remove word Admin to save space */
   .header-user-menu {
     position: relative;
     flex-shrink: 0;
   }
 
   .btn-user-menu {
+    width: 32px !important;
     height: 32px !important;
-    padding: 2px 8px 2px 4px !important;
-    gap: 5px !important;
-    border-radius: var(--radius-full, 9999px) !important;
+    min-width: 32px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
     background: #ffffff !important;
     border: 1px solid var(--border, #e2e8f0) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer;
   }
 
   .user-menu-avatar {
-    width: 22px !important;
-    height: 22px !important;
-    font-size: 0.7rem !important;
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 50% !important;
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
-  .user-menu-name {
-    max-width: 55px !important;
-    font-size: 0.75rem !important;
+  .user-menu-name,
+  .user-menu-chevron {
+    display: none !important;
   }
 
   /* Mobile Dropdown Popovers */
@@ -4609,7 +4627,7 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
   }
 
   .btn-preset-pill {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-width: 0;
     height: 36px;
     padding: 0 12px;
@@ -4620,14 +4638,24 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
     border: 1px solid #e2e8f0;
     display: inline-flex;
     align-items: center;
+    justify-content: flex-start;
     gap: 6px;
     color: #0f172a;
   }
 
   .btn-preset-pill .active-preset-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 100% !important;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    text-align: left;
+  }
+
+  .btn-preset-pill .preset-arrow {
+    margin-left: auto;
+    flex-shrink: 0;
   }
 
   .btn-add-section-pill {
@@ -4644,6 +4672,7 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    white-space: nowrap;
   }
 
   /* Hide redundant "All None" buttons on mobile */
@@ -4655,15 +4684,20 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
     margin-top: 8px;
     display: flex;
     flex-direction: column;
+    align-items: stretch !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
     gap: 6px;
   }
 
   .widget-search-wrap {
-    height: 34px;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    height: 36px;
     border-radius: 9999px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
-    padding: 0 10px 0 30px;
+    padding: 0 12px 0 32px;
     position: relative;
     display: flex;
     align-items: center;
@@ -4682,7 +4716,8 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
     background: transparent;
     font-size: 0.82rem;
     color: #0f172a;
-    width: 100%;
+    width: 100% !important;
+    box-sizing: border-box !important;
     outline: none;
   }
 

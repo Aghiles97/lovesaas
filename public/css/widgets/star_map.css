@@ -203,36 +203,46 @@
   box-shadow: 0 2px 8px rgba(217, 119, 6, 0.35);
 }
 
+.star-map-container {
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+}
+
 @media (max-width: 768px) {
-  .star-map-section { padding: 40px 0; }
-  .astrolabe-rim { width: min(440px, 86vw); height: min(440px, 86vw); }
+  .star-map-section { padding: 36px 0; }
+  .astrolabe-rim { width: min(480px, calc(100vw - 40px)); height: min(480px, calc(100vw - 40px)); max-width: calc(100vw - 40px); max-height: calc(100vw - 40px); }
   .astrolabe-cardinal { font-size: 0.95rem; }
   .celestial-badge { padding: 8px 14px; }
 }
 
 @media (max-width: 480px) {
-  .star-map-section { padding: 28px 0; }
-  .astrolabe-rim { width: min(320px, 84vw); height: min(320px, 84vw); max-width: 84vw; max-height: 84vw; }
+  .star-map-section { padding: 24px 0; }
+  .astrolabe-rim { width: min(360px, calc(100vw - 24px)); height: min(360px, calc(100vw - 24px)); max-width: calc(100vw - 24px); max-height: calc(100vw - 24px); }
   .astrolabe-cardinal { font-size: 0.8rem; }
   .cardinal-n { top: 6px; }
   .cardinal-s { bottom: 6px; }
   .cardinal-e { right: 8px; }
   .cardinal-w { left: 8px; }
-  .star-map-meta-panel { flex-direction: column; align-items: stretch; gap: 8px; }
-  .celestial-badge { width: 100%; justify-content: flex-start; padding: 8px 12px; min-width: 0; }
+  .star-map-meta-panel { flex-direction: column; align-items: stretch; gap: 8px; width: 100%; }
+  .celestial-badge { width: 100%; justify-content: flex-start; padding: 10px 14px; min-width: 0; box-sizing: border-box; }
   .celestial-badge-text { min-width: 0; }
-  .celestial-badge-icon { font-size: 1.1rem; flex-shrink: 0; }
-  .celestial-badge-title { font-size: 0.78rem; }
-  .celestial-badge-sub { font-size: 0.7rem; word-break: break-all; }
-  .celestial-controls { flex-direction: column; align-items: stretch; gap: 10px; }
-  .celestial-toggles { justify-content: center; width: 100%; }
-  .celestial-themes { justify-content: center; width: 100%; }
-  .celestial-btn { padding: 6px 11px; font-size: 0.74rem; }
-  .celestial-theme-btn { padding: 5px 9px; font-size: 0.72rem; }
+  .celestial-badge-icon { font-size: 1.15rem; flex-shrink: 0; }
+  .celestial-badge-title { font-size: 0.82rem; }
+  .celestial-badge-sub { font-size: 0.72rem; word-break: break-all; }
+  .celestial-controls { flex-direction: column; align-items: stretch; gap: 10px; width: 100%; }
+  .celestial-toggles { justify-content: center; width: 100%; gap: 6px; }
+  .celestial-themes { justify-content: center; width: 100%; gap: 6px; }
+  .celestial-btn { padding: 7px 12px; font-size: 0.76rem; flex: 1 1 auto; }
+  .celestial-theme-btn { padding: 6px 10px; font-size: 0.74rem; flex: 1 1 auto; }
 }
 
 @media (max-width: 360px) {
-  .astrolabe-rim { width: min(270px, 82vw); height: min(270px, 82vw); }
-  .celestial-btn { font-size: 0.7rem; padding: 5px 8px; }
-  .celestial-theme-btn { font-size: 0.68rem; padding: 4px 7px; }
+  .astrolabe-rim { width: calc(100vw - 20px); height: calc(100vw - 20px); max-width: calc(100vw - 20px); max-height: calc(100vw - 20px); }
+  .celestial-btn { font-size: 0.7rem; padding: 6px 6px; }
+  .celestial-theme-btn { font-size: 0.68rem; padding: 5px 6px; }
 }

@@ -4,10 +4,14 @@
   width: 100%;
 }
 .bucket-list-box {
+  width: 100%;
   max-width: 900px;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 .bucket-stats-panel {
+  width: 100%;
+  box-sizing: border-box;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 240, 245, 0.8));
   backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 105, 135, 0.25);
@@ -90,11 +94,14 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
 }
 .bucket-card {
   display: flex;
   align-items: center;
   gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.8);
@@ -220,9 +227,20 @@
   display: block;
 }
 @media (max-width: 768px) {
-  .bucket-list-section { padding: 40px 0; }
-  .bucket-stats-panel { padding: 18px 20px; border-radius: 18px; }
-  .bucket-card { padding: 14px 16px; gap: 12px; }
+  .bucket-list-section { padding: 36px 0; }
+  .bucket-stats-panel { padding: 18px 20px; border-radius: 18px; width: 100%; box-sizing: border-box; }
+  .bucket-card { padding: 14px 16px; gap: 12px; width: 100%; box-sizing: border-box; }
+  .bucket-filter-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 6px;
+    margin-bottom: 16px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    width: 100%;
+  }
+  .bucket-filter-tabs::-webkit-scrollbar { display: none; }
+  .bucket-tab { padding: 7px 16px; min-height: 36px; font-size: 0.78rem; white-space: nowrap; flex-shrink: 0; }
 }
 
 @media (max-width: 640px) {
@@ -230,22 +248,17 @@
 }
 
 @media (max-width: 480px) {
-  .bucket-list-section { padding: 28px 0; }
+  .bucket-list-section { padding: 24px 0; }
   .bucket-stats-panel { padding: 14px 12px; border-radius: 16px; margin-bottom: 16px; }
   .bucket-stats-title { font-size: 0.84rem; }
   .bucket-stats-counter { font-size: 0.74rem; }
   .bucket-stats-pct { font-size: 1.45rem; }
   .bucket-progress-track { height: 10px; }
   .bucket-filter-tabs {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: 6px;
     margin-bottom: 14px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    padding-bottom: 4px;
   }
-  .bucket-filter-tabs::-webkit-scrollbar { display: none; }
-  .bucket-tab { padding: 6px 14px; min-height: 36px; font-size: 0.76rem; white-space: nowrap; flex-shrink: 0; }
+  .bucket-tab { padding: 6px 13px; font-size: 0.74rem; }
   .bucket-card { padding: 12px 10px; gap: 10px; border-radius: 14px; }
   .bucket-checkmark { width: 22px; height: 22px; border-radius: 6px; }
   .bucket-icon { font-size: 1.35rem; }

@@ -276,22 +276,46 @@
 
 @media (max-width: 640px) {
   .roast-toast-section {
-    padding: 40px 12px;
+    padding: 36px 0;
   }
   .roast-toast-box {
-    padding: 24px 14px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 24px 12px;
     border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+  }
+  .wheel-container {
+    width: min(330px, calc(100vw - 44px));
+    height: min(330px, calc(100vw - 44px));
+    margin: 15px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .wheel-gold-rim {
+    transform: scale(0.95);
+    transform-origin: center center;
+    flex-shrink: 0;
   }
   .wheel-controls {
     margin-top: 16px;
+    width: 100%;
   }
   .wheel-controls .btn {
     width: 100%;
-    max-width: 280px;
+    max-width: 300px;
     min-height: 48px;
     font-size: 1.05rem;
   }
   .roast-toast-result-modal {
+    width: 100%;
+    box-sizing: border-box;
     padding: 20px 14px;
     border-radius: 20px;
     margin-top: 18px;
@@ -304,6 +328,7 @@
   .result-action-btns {
     flex-direction: column;
     gap: 8px;
+    width: 100%;
   }
   .result-action-btns .btn {
     width: 100%;
@@ -312,27 +337,14 @@
   }
 }
 
-@media (max-width: 440px) {
-  .wheel-container {
+@media (max-width: 380px) {
+  .wheel-gold-rim {
     transform: scale(0.85);
-    transform-origin: center center;
-    margin: 5px auto -20px;
-    height: 310px;
-  }
-}
-
-@media (max-width: 370px) {
-  .wheel-container {
-    transform: scale(0.74);
-    margin: -8px auto -38px;
-    height: 270px;
   }
 }
 
 @media (max-width: 340px) {
-  .wheel-container {
-    transform: scale(0.67);
-    margin: -16px auto -48px;
-    height: 245px;
+  .wheel-gold-rim {
+    transform: scale(0.76);
   }
 }

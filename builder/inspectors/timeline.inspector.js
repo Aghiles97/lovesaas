@@ -535,6 +535,114 @@
         if (countPill) countPill.textContent = `📷 ${imgs.length}`;
       };
 
+      const renderTiles = () => {
+        const imgs = ensureImagesArray();
+        const pool = card.querySelector(".photo-pool");
+        if (!pool) return;
+        pool.querySelectorAll(".photo-pool-tile").forEach(t => t.remove());
+        const dropzone = pool.querySelector(".photo-pool-dropzone");
+        imgs.forEach((imgUrl, imgIdx) => {
+          const tile = document.createElement("div");
+          tile.className = `photo-pool-tile ${imgIdx === 0 ? 'is-main' : ''}`;
+          tile.draggable = true;
+          tile.dataset.photoIdx = String(imgIdx);
+          tile.title = imgIdx === 0 ? 'Main Cover' : 'Drag to reorder / Click ⭐ to make main';
+          tile.innerHTML = `
+            <img src="${imgUrl || 'https://via.placeholder.com/80'}" alt="Photo" onerror="this.src='https://via.placeholder.com/80';">
+            ${imgIdx === 0
+              ? `<span class="tile-main-badge">⭐ Main</span>`
+              : `<button type="button" class="tile-make-main-btn" data-make-main="${imgIdx}" title="Make Main">⭐ Main</button>`}
+            <button type="button" class="tile-del-btn" data-del-photo="${imgIdx}" title="Delete">✕</button>
+          `;
+          if (dropzone) {
+            pool.insertBefore(tile, dropzone);
+          } else {
+            pool.appendChild(tile);
+          }
+        });
+        bindTileEvents();
+      };
+
+      const bindTileEvents = () => {
+        const tiles = card.querySelectorAll(".photo-pool-tile");
+        tiles.forEach(tile => {
+          const pIdx = parseInt(tile.dataset.photoIdx, 10);
+          tile.ondragstart = (e) => {
+            e.stopPropagation();
+            e.dataTransfer.setData("application/x-photo-idx", String(pIdx));
+            e.dataTransfer.effectAllowed = "move";
+            tile.classList.add("is-dragging");
+          };
+          tile.ondragend = (e) => {
+            e.stopPropagation();
+            tile.classList.remove("is-dragging");
+            card.querySelectorAll(".photo-pool-tile").forEach(t => t.classList.remove("drag-over"));
+          };
+          tile.ondragover = (e) => {
+            if (e.dataTransfer && e.dataTransfer.types.includes("application/x-photo-idx")) {
+              e.preventDefault();
+              e.stopPropagation();
+              e.dataTransfer.dropEffect = "move";
+              tile.classList.add("drag-over");
+            }
+          };
+          tile.ondragleave = (e) => {
+            e.stopPropagation();
+            tile.classList.remove("drag-over");
+          };
+          tile.ondrop = (e) => {
+            if (e.dataTransfer && e.dataTransfer.types.includes("application/x-photo-idx")) {
+              e.preventDefault();
+              e.stopPropagation();
+              tile.classList.remove("drag-over");
+              const fromIdx = parseInt(e.dataTransfer.getData("application/x-photo-idx"), 10);
+              if (!isNaN(fromIdx) && fromIdx !== pIdx) {
+                const imgs = ensureImagesArray();
+                const [moved] = imgs.splice(fromIdx, 1);
+                imgs.splice(pIdx, 0, moved);
+                syncCoverImage();
+                renderTiles();
+                notifyUpdate();
+              }
+            }
+          };
+        });
+
+        // Make Main Photo
+        card.querySelectorAll("[data-make-main]").forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            const pIdx = parseInt(btn.dataset.makeMain, 10);
+            const imgs = ensureImagesArray();
+            if (!isNaN(pIdx) && imgs[pIdx]) {
+              const [picked] = imgs.splice(pIdx, 1);
+              imgs.unshift(picked);
+              syncCoverImage();
+              renderTiles();
+              notifyUpdate();
+            }
+          };
+        });
+
+        // Delete Photo
+        card.querySelectorAll("[data-del-photo]").forEach(btn => {
+          btn.onclick = async (e) => {
+            e.stopPropagation();
+            const pIdx = parseInt(btn.dataset.delPhoto, 10);
+            const imgs = ensureImagesArray();
+            if (!isNaN(pIdx)) {
+              const [removed] = imgs.splice(pIdx, 1);
+              if (removed && typeof deleteAssetFromR2 === "function") {
+                await deleteAssetFromR2(removed);
+              }
+              syncCoverImage();
+              renderTiles();
+              notifyUpdate();
+            }
+          };
+        });
+      };
+
       const uploadFiles = async (fileList) => {
         if (!fileList || fileList.length === 0) return;
         const files = Array.from(fileList).filter(f => f.type && f.type.startsWith("image/"));
@@ -553,7 +661,7 @@
           }
         }
         syncCoverImage();
-        renderWidgetInspector("timeline");
+        renderTiles();
         notifyUpdate();
       };
 
@@ -613,84 +721,8 @@
         }
       });
 
-      // Draggable Tile Reordering (drag & drop between tiles)
-      const tiles = card.querySelectorAll(".photo-pool-tile");
-      tiles.forEach(tile => {
-        const pIdx = parseInt(tile.dataset.photoIdx, 10);
-        tile.ondragstart = (e) => {
-          e.stopPropagation();
-          e.dataTransfer.setData("application/x-photo-idx", String(pIdx));
-          e.dataTransfer.effectAllowed = "move";
-          tile.classList.add("is-dragging");
-        };
-        tile.ondragend = (e) => {
-          e.stopPropagation();
-          tile.classList.remove("is-dragging");
-          card.querySelectorAll(".photo-pool-tile").forEach(t => t.classList.remove("drag-over"));
-        };
-        tile.ondragover = (e) => {
-          if (e.dataTransfer && e.dataTransfer.types.includes("application/x-photo-idx")) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.dataTransfer.dropEffect = "move";
-            tile.classList.add("drag-over");
-          }
-        };
-        tile.ondragleave = (e) => {
-          e.stopPropagation();
-          tile.classList.remove("drag-over");
-        };
-        tile.ondrop = (e) => {
-          if (e.dataTransfer && e.dataTransfer.types.includes("application/x-photo-idx")) {
-            e.preventDefault();
-            e.stopPropagation();
-            tile.classList.remove("drag-over");
-            const fromIdx = parseInt(e.dataTransfer.getData("application/x-photo-idx"), 10);
-            if (!isNaN(fromIdx) && fromIdx !== pIdx) {
-              const imgs = ensureImagesArray();
-              const [moved] = imgs.splice(fromIdx, 1);
-              imgs.splice(pIdx, 0, moved);
-              syncCoverImage();
-              renderWidgetInspector("timeline");
-              notifyUpdate();
-            }
-          }
-        };
-      });
-
-      // Make Main Photo
-      card.querySelectorAll("[data-make-main]").forEach(btn => {
-        btn.onclick = (e) => {
-          e.stopPropagation();
-          const pIdx = parseInt(btn.dataset.makeMain, 10);
-          const imgs = ensureImagesArray();
-          if (!isNaN(pIdx) && imgs[pIdx]) {
-            const [picked] = imgs.splice(pIdx, 1);
-            imgs.unshift(picked);
-            syncCoverImage();
-            renderWidgetInspector("timeline");
-            notifyUpdate();
-          }
-        };
-      });
-
-      // Delete Photo
-      card.querySelectorAll("[data-del-photo]").forEach(btn => {
-        btn.onclick = async (e) => {
-          e.stopPropagation();
-          const pIdx = parseInt(btn.dataset.delPhoto, 10);
-          const imgs = ensureImagesArray();
-          if (!isNaN(pIdx)) {
-            const [removed] = imgs.splice(pIdx, 1);
-            if (removed && typeof deleteAssetFromR2 === "function") {
-              await deleteAssetFromR2(removed);
-            }
-            syncCoverImage();
-            renderWidgetInspector("timeline");
-            notifyUpdate();
-          }
-        };
-      });
+      // Bind initial tiles
+      bindTileEvents();
 
       // Media Library Picker & URL Modal/Prompt
       const btnLib = card.querySelector(".btn-pool-lib");
@@ -703,7 +735,7 @@
                 const imgs = ensureImagesArray();
                 imgs.push(url);
                 syncCoverImage();
-                renderWidgetInspector("timeline");
+                renderTiles();
                 notifyUpdate();
               }
             }
@@ -718,7 +750,7 @@
             const imgs = ensureImagesArray();
             imgs.push(u.trim());
             syncCoverImage();
-            renderWidgetInspector("timeline");
+            renderTiles();
             notifyUpdate();
           }
         };
@@ -738,7 +770,7 @@
         if (targetCard) {
           targetCard.classList.remove("is-collapsed");
           targetCard.classList.add("is-open");
-          const formPane = document.getElementById("inspectorFormContainer");
+          const formPane = document.getElementById("tab-inspector") || document.getElementById("inspectorFormContainer");
           if (formPane) {
             const topOffset = targetCard.offsetTop - formPane.offsetTop - 12;
             formPane.scrollTo({ top: Math.max(0, topOffset), behavior: "smooth" });
@@ -759,6 +791,7 @@
       btnAddBottom.onclick = () => {
         const newId = "chap-" + Date.now();
         expandedChapterIds.add(newId);
+        state.targetChapterId = newId;
         chapters.push({
           id: newId,
           icon: "💖",

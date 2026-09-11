@@ -424,12 +424,17 @@
 /* Mobile & Touch Responsive Optimizations */
 @media (max-width: 640px) {
   .gift-unboxer-section {
-    padding: 40px 12px;
+    padding: 36px 0;
+  }
+  .gift-unboxer-box {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   .gift-stage-wrap {
     margin: 20px auto;
-    width: 250px;
-    height: 250px;
+    width: min(270px, calc(100vw - 44px));
+    height: min(270px, calc(100vw - 44px));
   }
   .unbox-glow-rays {
     width: 290px;
@@ -438,20 +443,35 @@
   .unbox-stepper {
     margin-bottom: 14px;
     gap: 8px;
+    width: 100%;
+    justify-content: center;
+  }
+  .unbox-controls {
+    width: 100%;
+    display: flex;
+    justify-content: center;
   }
   .unbox-controls .btn {
     width: 100%;
-    max-width: 280px;
+    max-width: 300px;
     min-height: 46px;
     padding: 10px 20px;
   }
   .gift-surprise-reveal {
-    padding: 20px 14px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 22px 14px;
     border-radius: 20px;
     margin: 16px auto 0;
   }
   .vip-coupon-header {
-    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    margin-bottom: 12px;
   }
   .gift-surprise-badge {
     font-size: 0.72rem;
@@ -478,6 +498,8 @@
     margin-bottom: 14px;
   }
   .vip-perks-list {
+    width: 100%;
+    box-sizing: border-box;
     padding: 10px 14px;
     margin-bottom: 14px;
   }
@@ -487,6 +509,7 @@
   .vip-barcode-strip {
     padding: 8px 10px;
     margin-bottom: 16px;
+    width: 100%;
     max-width: 100%;
     box-sizing: border-box;
   }
@@ -510,8 +533,8 @@
 
 @media (max-width: 380px) {
   .gift-stage-wrap {
-    width: 220px;
-    height: 220px;
+    width: min(230px, calc(100vw - 32px));
+    height: min(230px, calc(100vw - 32px));
   }
   .gift-box-3d {
     width: 145px;

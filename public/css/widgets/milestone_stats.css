@@ -212,23 +212,34 @@
 
 @media (max-width: 640px) {
   .milestone-stats-section {
-    padding: 40px 12px;
+    padding: 36px 0;
+  }
+  .milestone-stats-box {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   .alive-ticker-card {
-    padding: 20px 12px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 20px 10px;
     border-radius: 20px;
-    margin-bottom: 22px;
+    margin-bottom: 18px;
   }
   .alive-ticker-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
   }
   .ticker-slot {
-    padding: 12px 8px;
+    padding: 14px 6px;
     border-radius: 14px;
+    box-sizing: border-box;
   }
   .ticker-val {
-    font-size: clamp(1.45rem, 5.8vw, 1.95rem);
+    font-size: clamp(1.5rem, 6.2vw, 2.1rem);
   }
   .ticker-label {
     font-size: 0.74rem;
@@ -236,15 +247,20 @@
   }
   .quirky-metrics-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 10px;
+    width: 100%;
+    box-sizing: border-box;
   }
   .quirky-metric-card {
+    width: 100%;
+    box-sizing: border-box;
     padding: 16px 14px;
     border-radius: 18px;
     gap: 12px;
   }
   .quirky-metric-icon {
     font-size: 2.1rem;
+    flex-shrink: 0;
   }
   .quirky-metric-title {
     font-size: 0.98rem;
@@ -263,7 +279,7 @@
     padding: 10px 4px;
   }
   .ticker-val {
-    font-size: 1.35rem;
+    font-size: 1.4rem;
   }
 }
 

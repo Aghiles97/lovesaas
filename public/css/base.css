@@ -2884,7 +2884,12 @@ body.letter-unsealed .floating-controls {
   }
 
   .section {
-    padding: 38px 0;
+    padding: 36px 0;
+  }
+
+  .section:not(:first-of-type) {
+    content-visibility: visible !important;
+    contain-intrinsic-size: auto !important;
   }
 
   /* Prevent iOS Safari auto-zoom on input focus */
@@ -2892,7 +2897,16 @@ body.letter-unsealed .floating-controls {
     font-size: 16px !important;
   }
 
-  .container { padding: 0 12px; }
+  .container {
+    padding: 0 10px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .intro-floating-emojis {
+    inset: 0;
+  }
 
   /* Floating Controls (Header) */
   .floating-controls {

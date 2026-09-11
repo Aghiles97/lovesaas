@@ -388,12 +388,19 @@
 
 @media (max-width: 640px) {
   .guestbook-section {
-    padding: 40px 12px;
+    padding: 36px 0;
+  }
+  .guestbook-box {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   .corkboard-canvas {
+    width: 100%;
+    box-sizing: border-box;
     border-width: 8px;
     border-radius: 18px;
-    padding: 16px 10px;
+    padding: 16px 8px;
     min-height: 360px;
   }
   .guestbook-toolbar {
@@ -418,9 +425,12 @@
   }
   .sticky-notes-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 14px;
+    width: 100%;
   }
   .sticky-note-card {
+    width: 100%;
+    box-sizing: border-box;
     padding: 24px 14px 14px;
     min-height: 180px;
   }
@@ -430,6 +440,7 @@
   }
   .note-photo-pin {
     height: 140px;
+    width: 100%;
   }
   .guestbook-modal-overlay {
     padding: 12px;
@@ -439,6 +450,7 @@
     border-radius: 18px;
     width: 100%;
     max-height: 85vh;
+    box-sizing: border-box;
   }
   .polaroid-lightbox-overlay {
     padding: 12px;
@@ -447,13 +459,16 @@
     padding: 14px 14px 20px;
     border-radius: 6px;
     width: 100%;
+    box-sizing: border-box;
   }
   .polaroid-photo-frame {
     max-height: 220px;
     margin-bottom: 12px;
+    width: 100%;
   }
   .polaroid-photo-display {
     height: 200px;
+    width: 100%;
   }
   .polaroid-message {
     font-size: 1.3rem;
@@ -468,7 +483,7 @@
 @media (max-width: 360px) {
   .corkboard-canvas {
     border-width: 6px;
-    padding: 12px 8px;
+    padding: 12px 6px;
     border-radius: 14px;
   }
   .sticky-note-card {

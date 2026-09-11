@@ -486,13 +486,22 @@
 
 @media (max-width: 640px) {
   .party-jukebox-section {
-    padding: 40px 12px;
+    padding: 36px 0;
+  }
+  .party-jukebox-box {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   .jukebox-deck {
-    padding: 20px 14px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 20px 12px;
     border-radius: 20px;
   }
   .jukebox-mode-selector {
+    width: 100%;
     max-width: 290px;
     margin: 0 auto 18px;
   }
@@ -501,7 +510,50 @@
     font-size: 0.8rem;
   }
   .deck-media-container {
-    min-height: 240px;
+    width: 100%;
+    min-height: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .turntable-deck-area {
+    width: min(280px, calc(100vw - 44px));
+    height: min(280px, calc(100vw - 44px));
+    padding: 12px;
+    border-radius: 18px;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  .vinyl-platter-well {
+    width: 100%;
+    height: 100%;
+    max-width: 240px;
+    max-height: 240px;
+  }
+  .vinyl-platter {
+    width: 96%;
+    height: 96%;
+    max-width: 232px;
+    max-height: 232px;
+  }
+  .tone-arm {
+    height: 132px;
+    right: 8px;
+  }
+  .cassette-deck-area {
+    width: min(280px, calc(100vw - 44px));
+    height: min(240px, calc((100vw - 44px) * 0.8));
+    padding: 10px;
+    box-sizing: border-box;
+  }
+  .cassette-shell {
+    width: 100%;
+    max-width: 250px;
+    height: 155px;
+  }
+  .jukebox-player-card {
+    width: 100%;
+    box-sizing: border-box;
   }
   .jukebox-track-title {
     font-size: 1.25rem;
@@ -511,14 +563,17 @@
     font-size: 0.88rem;
   }
   .visualizer-bars-row {
+    width: 100%;
     height: 42px;
     gap: 3px;
     margin: 12px 0;
   }
   .v-bar {
+    flex: 1;
     max-width: 6px;
   }
   .jukebox-controls-row {
+    width: 100%;
     justify-content: center;
     flex-wrap: wrap;
     gap: 10px;
@@ -539,6 +594,8 @@
     padding: 10px 22px;
   }
   .jukebox-playlist-list {
+    width: 100%;
+    box-sizing: border-box;
     max-height: 150px;
     padding: 4px;
     margin-top: 16px;
@@ -549,46 +606,21 @@
   }
 }
 
-@media (max-width: 420px) {
-  .turntable-deck-area {
-    width: 240px;
-    height: 240px;
-    padding: 10px;
-    border-radius: 16px;
-  }
-  .vinyl-platter-well {
-    width: 216px;
-    height: 216px;
-  }
-  .vinyl-platter {
-    width: 208px;
-    height: 208px;
-  }
-  .tone-arm {
-    height: 132px;
-    right: 6px;
-  }
-  .cassette-deck-area {
-    width: 240px;
-    height: 240px;
-  }
-  .cassette-shell {
-    width: 226px;
-    height: 146px;
-  }
-}
-
 @media (max-width: 360px) {
   .turntable-deck-area, .cassette-deck-area {
-    transform: scale(0.92);
+    transform: scale(0.94);
     transform-origin: center center;
-    margin: -8px 0;
+    margin: -6px 0;
   }
 }
 
-@media (max-width: 330px) {
+@media (max-width: 340px) {
   .turntable-deck-area, .cassette-deck-area {
     transform: scale(0.85);
-    margin: -16px 0;
+    transform-origin: center center;
+    margin: -12px 0;
+  }
+  .tone-arm {
+    right: 14px;
   }
 }
