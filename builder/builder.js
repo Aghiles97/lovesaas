@@ -2882,6 +2882,9 @@ function renderSiteSettingsUI() {
   ];
 
   const imageBackgroundThemes = [
+    { id: "theme-img-theme1", name: "Theme 1 (Adaptive) 🎀", desc: "Watercolor clouds & ribbons (Auto 16:9 / 9:16)", color: "#e11d48", img: "/images/themes/theme1-16-9.PNG" },
+    { id: "theme-img-theme1-16-9", name: "Theme 1 (16:9) 🖼️", desc: "Watercolor clouds & ribbons (Landscape 16:9)", color: "#e11d48", img: "/images/themes/theme1-16-9.PNG" },
+    { id: "theme-img-theme1-9-16", name: "Theme 1 (9:16) 📱", desc: "Watercolor clouds & ribbons (Portrait 9:16)", color: "#e11d48", img: "/images/themes/theme1-9-16.PNG" },
     { id: "theme-img-gold-hearts", name: "Watercolor Gold Hearts 💛", desc: "Gold leaf hearts & blush wash", color: "#d97706", img: "/images/themes/bg-watercolor-gold.jpeg" },
     { id: "theme-img-love-letter", name: "Love Letter Envelope 💌", desc: "Pink letter & floating hearts", color: "#fb7185", img: "/images/themes/bg-love-letter.jpg" },
     { id: "theme-img-be-mine", name: "Be Mine Sunset Sky 🌅", desc: "Sunset sky & sparkling heart trail", color: "#f43f5e", img: "/images/themes/bg-be-mine-sky.jpg" },

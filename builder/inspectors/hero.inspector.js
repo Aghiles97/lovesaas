@@ -181,6 +181,32 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
             </div>
           </div>
         </div>
+
+        <!-- PANE 4: THEME & BACKGROUND WALLPAPER -->
+        <div class="hero-subpane" id="heroSubtab_theme">
+          <div class="section-settings-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h4 style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin: 0;">🎨 Website Visual Theme & Wallpaper</h4>
+              <button type="button" id="btnGoToSiteThemeTab" class="btn-sm btn-secondary" style="font-size: 11px; cursor: pointer;">⚙️ All Themes →</button>
+            </div>
+            <div class="input-group">
+              <label>Custom Background Wallpaper Image</label>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="text" id="h_customBgUrl" placeholder="Paste image URL or upload..." value="${escapeHtml(state.customBgUrl || '')}" style="flex: 1; font-size: 12px;">
+                <button type="button" id="btnHeroPickBg" class="btn-sm btn-secondary" style="cursor: pointer; white-space: nowrap;">📁 Library</button>
+                <label class="file-upload-btn" style="cursor: pointer; display: inline-flex; align-items: center; padding: 5px 10px; background: rgba(255,255,255,0.08); border-radius: 6px; font-size: 12px; white-space: nowrap;">
+                  <span>⬆️ Upload</span>
+                  <input type="file" id="heroUploadBgFile" accept="image/*" style="display: none;">
+                </label>
+              </div>
+              ${state.customBgUrl ? `
+                <div style="margin-top: 10px; width: 100%; height: 90px; background: url('${escapeHtml(state.customBgUrl)}') center/cover no-repeat; border-radius: 6px; border: 1px solid var(--primary);"></div>
+              ` : `
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Currently using theme preset background. You can choose a custom wallpaper above or pick from 11 illustrated presets in <a href="#" id="linkGoToTheme" style="color: var(--primary); text-decoration: underline;">Site & Theme</a>.</p>
+              `}
+            </div>
+          </div>
+        </div>
       `;
 
       // Subtab switcher bindings
@@ -466,6 +492,72 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
           if (previewIframe && previewIframe.contentWindow) {
             previewIframe.contentWindow.postMessage({ type: "MUSIC_TOGGLE" }, "*");
           }
+        };
+      }
+
+      // Theme & Wallpaper subtab bindings
+      const btnGoToTheme = document.getElementById("btnGoToSiteThemeTab");
+      if (btnGoToTheme) {
+        btnGoToTheme.onclick = () => {
+          if (window.switchToTab) window.switchToTab("tab-website");
+        };
+      }
+      const linkGoToTheme = document.getElementById("linkGoToTheme");
+      if (linkGoToTheme) {
+        linkGoToTheme.onclick = (e) => {
+          e.preventDefault();
+          if (window.switchToTab) window.switchToTab("tab-website");
+        };
+      }
+      const btnHeroPickBg = document.getElementById("btnHeroPickBg");
+      if (btnHeroPickBg) {
+        btnHeroPickBg.onclick = () => {
+          if (typeof openMediaPicker === "function") {
+            openMediaPicker({
+              filter: "image",
+              onSelect: (url) => {
+                state.customBgUrl = url;
+                if (previewIframe && previewIframe.contentWindow) {
+                  previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, "*");
+                }
+                debouncedLiveUpdate(true);
+                debouncedAutoSaveLayout();
+                renderWidgetInspector("hero");
+              }
+            });
+          }
+        };
+      }
+      const heroUploadBgFile = document.getElementById("heroUploadBgFile");
+      if (heroUploadBgFile) {
+        heroUploadBgFile.onchange = async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          try {
+            const uploaded = await uploadFileToR2(file, file.name);
+            if (uploaded && uploaded.url) {
+              state.customBgUrl = uploaded.url;
+              if (previewIframe && previewIframe.contentWindow) {
+                previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, "*");
+              }
+              debouncedLiveUpdate(true);
+              debouncedAutoSaveLayout();
+              renderWidgetInspector("hero");
+            }
+          } catch (err) {
+            alert("Upload failed: " + err.message);
+          }
+        };
+      }
+      const inputHeroBg = document.getElementById("h_customBgUrl");
+      if (inputHeroBg) {
+        inputHeroBg.onchange = (e) => {
+          state.customBgUrl = e.target.value.trim();
+          if (previewIframe && previewIframe.contentWindow) {
+            previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, "*");
+          }
+          debouncedLiveUpdate(true);
+          debouncedAutoSaveLayout();
         };
       }
   };
