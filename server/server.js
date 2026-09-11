@@ -117,7 +117,8 @@ function serveFile(res, filePath) {
   }
   const ext = path.extname(filePath).toLowerCase();
   const mime = MIME_TYPES[ext] || "application/octet-stream";
-  res.writeHead(200, { "Content-Type": mime, "Access-Control-Allow-Origin": "*" });
+  const cacheControl = (ext === ".html" || ext === ".js" || ext === ".css") ? "no-cache, must-revalidate" : "public, max-age=86400";
+  res.writeHead(200, { "Content-Type": mime, "Access-Control-Allow-Origin": "*", "Cache-Control": cacheControl });
   fs.createReadStream(filePath).pipe(res);
 }
 
