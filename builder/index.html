@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Couple Site Builder Studio</title>
+  <link rel="stylesheet" href="/builder/builder.css">
+</head>
+<body>
+
+  <!-- TOP NAV -->
+  <header class="builder-nav">
+    <div class="brand-box">
+      <span class="brand-icon">💍</span>
+      <span class="brand-title">LoveSaas <span class="brand-badge">Studio</span></span>
+      <span class="live-status-pill" title="Real-time live sync active"><span class="live-status-dot"></span> Live Sync</span>
+    </div>
+    <div class="tenant-bar">
+      <button type="button" class="tenant-selector-btn" id="btnSwitchTenant" title="Switch or create couple site">
+        <span class="tenant-label">Site:</span>
+        <span class="tenant-pill" id="currentTenantBadge">demo</span>
+        <span class="tenant-chevron">▾</span>
+      </button>
+      <div class="auto-save-indicator" id="autoSaveIndicator">
+        <span class="indicator-dot"></span>
+        <span class="indicator-text">All changes saved</span>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <button type="button" id="btnCopyLiveLink" class="btn-secondary" title="Copy public website link">
+        <span class="btn-icon">📋</span> Copy Link
+      </button>
+      <a id="btnViewLive" href="/sites/demo" target="_blank" class="btn-secondary" title="Open live site in new tab">
+        <span class="btn-icon">↗</span> View Live
+      </a>
+      <button type="button" class="btn-primary btn-save" id="btnSaveConfig" title="Save changes (Ctrl+S / Cmd+S)">
+        <span class="btn-save-icon">💾</span>
+        <span class="btn-save-text">Save & Publish</span>
+        <kbd class="kbd-shortcut">⌘S</kbd>
+      </button>
+    </div>
+  </header>
+
+  <!-- DEMO MODE NOTIFICATION BANNER -->
+  <div class="demo-banner-bar" id="demoBannerBar" style="display: none; background: linear-gradient(90deg, #2563eb 0%, #db2777 100%); color: #fff; padding: 7px 16px; font-size: 0.85rem; font-weight: 600; text-align: center; justify-content: center; align-items: center; gap: 12px; z-index: 50;">
+    <span>🎨 Sandbox Demo Mode — You are previewing sample couple site 'demo'.</span>
+    <a href="/welcome#pricing" target="_blank" style="background: #ffffff; color: #111827; padding: 3px 12px; font-size: 0.78rem; font-weight: 700; border-radius: 9999px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+      Buy Your Site ($19+) ↗
+    </a>
+  </div>
+
+  <!-- WORKSPACE SPLIT SCREEN -->
+  <div class="builder-workspace" id="builderWorkspace">
+    <!-- LEFT CONTROLS -->
+    <aside class="builder-sidebar" id="builderSidebar">
+      
+      <!-- TOP TAB BAR -->
+      <nav class="sidebar-tab-bar" aria-label="Builder Navigation">
+        <button type="button" class="sidebar-tab-btn active" data-tab="tab-widgets">
+          <span class="tab-icon">🧩</span>
+          <span class="tab-text">Sections</span>
+          <span class="tab-badge-count" id="tabWidgetCountBadge">0</span>
+        </button>
+        <button type="button" class="sidebar-tab-btn" data-tab="tab-inspector" id="btnTabInspector">
+          <span class="tab-icon">🎛️</span>
+          <span class="tab-text">Customize</span>
+          <span class="tab-pill" id="tabActiveWidgetPill" style="display: none;"></span>
+        </button>
+        <button type="button" class="sidebar-tab-btn" data-tab="tab-website">
+          <span class="tab-icon">⚙️</span>
+          <span class="tab-text">Site & Theme</span>
+        </button>
+        <button type="button" class="sidebar-tab-btn" data-tab="tab-media">
+          <span class="tab-icon">☁️</span>
+          <span class="tab-text">Media</span>
+          <span class="tab-badge-count" id="tabMediaCountBadge">0</span>
+        </button>
+      </nav>
+
+      <!-- TAB 1: WIDGETS & ORDER -->
+      <div class="sidebar-tab-pane active" id="tab-widgets">
+        <div class="sections-header-panel">
+          <!-- Main Control Bar -->
+          <div class="sections-control-bar">
+            <div class="sections-title-group">
+              <span class="sections-icon">🧩</span>
+              <span class="sections-title-text">Sections</span>
+              <span class="sections-counter-pill" id="activeWidgetsCount">0/13</span>
+            </div>
+            <div class="sections-control-actions">
+              <button type="button" class="btn-preset-pill" id="btnTogglePresets" title="Change layout preset">
+                <span class="preset-icon">🎨</span>
+                <span class="active-preset-name" id="currentPresetNameBadge">Storyteller</span>
+                <span class="preset-arrow" id="btnPresetToggleText">▾</span>
+              </button>
+              <button type="button" class="btn-add-section-pill" id="btnSidebarAddSection" title="Add a new section">
+                <span>+</span> Add
+              </button>
+              <div class="sections-quick-actions">
+                <button type="button" class="btn-quick-action" id="btnEnableAllWidgets" title="Enable all sections">All</button>
+                <button type="button" class="btn-quick-action" id="btnDisableAllWidgets" title="Disable optional sections">None</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preset Selection Tray (toggled) -->
+          <div class="preset-grid-wrapper hidden" id="presetGridWrapper">
+            <p class="preset-grid-desc">Choose a pre-configured template order:</p>
+            <div class="preset-grid" id="presetGrid"></div>
+          </div>
+
+          <!-- Search & Filter Row -->
+          <div class="sections-toolbar-row">
+            <div class="widget-search-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="widgetSearchInput" class="widget-search-input" placeholder="Search sections...">
+              <button type="button" id="btnClearWidgetSearch" class="btn-clear-search hidden" title="Clear search">✕</button>
+            </div>
+            <div class="widget-filter-chips">
+              <button type="button" class="filter-chip active" data-filter="all">All <span id="filterCountAll">13</span></button>
+              <button type="button" class="filter-chip" data-filter="active">Active <span id="filterCountActive">0</span></button>
+              <button type="button" class="filter-chip" data-filter="inactive">Off <span id="filterCountInactive">0</span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="widget-tray" id="widgetTray"></div>
+      </div>
+
+      <!-- TAB 2: WIDGET CONTENT INSPECTOR -->
+      <div class="sidebar-tab-pane" id="tab-inspector">
+        <div class="inspector-sticky-header">
+          <div class="inspector-header-bar">
+            <button type="button" class="btn-inspector-back" id="btnBackToWidgets" title="Back to All Widgets">
+              ← Sections
+            </button>
+            <div class="inspector-select-container">
+              <select id="inspectorWidgetSelect" class="inspector-select-clean" title="Select Widget to Edit"></select>
+            </div>
+            <div class="inspector-header-tools">
+              <label class="toggle-switch-sm" title="Enable or Disable Widget on Website">
+                <input type="checkbox" id="inspectorWidgetActiveToggle">
+                <span class="slider-sm"></span>
+              </label>
+              <div class="inspector-actions-dropdown">
+                <button type="button" class="btn-inspector-more" id="btnInspectorMore" title="Widget Options">⋯</button>
+                <div class="inspector-actions-menu hidden" id="inspectorMoreMenu">
+                  <button type="button" class="menu-action-item" id="btnLocateInPreview">
+                    <span>👁️</span> Locate in Preview
+                  </button>
+                  <button type="button" class="menu-action-item" id="btnInspectorMoveUp">
+                    <span>▲</span> Move Up <span id="inspectorOrderBadge" class="menu-item-badge">#1</span>
+                  </button>
+                  <button type="button" class="menu-action-item" id="btnInspectorMoveDown">
+                    <span>▼</span> Move Down
+                  </button>
+                  <div class="menu-action-sep"></div>
+                  <button type="button" class="menu-action-item danger" id="btnRemoveCurrentWidget">
+                    <span>🗑️</span> Remove from Website
+                  </button>
+                  <button type="button" class="menu-action-item danger" id="btnResetWidgetContent">
+                    <span>↺</span> Reset to Defaults
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Slim Meta Bar -->
+          <div class="inspector-meta-bar" id="inspectorMetaBar">
+            <div class="inspector-meta-left">
+              <span class="inspector-meta-category" id="inspectorMetaCat">Modular</span>
+              <span class="inspector-meta-desc" id="inspectorMetaDesc">Widget settings</span>
+            </div>
+            <span class="inspector-meta-sync" id="inspectorLiveSyncPill">⚡ Live Synced</span>
+          </div>
+        </div>
+        <div id="inspectorFormContainer" class="inspector-form-pane"></div>
+      </div>
+
+      <!-- TAB 3: WEBSITE SETTINGS & THEME -->
+      <div class="sidebar-tab-pane" id="tab-website">
+        <div class="site-settings-pane" id="siteSettingsContainer"></div>
+      </div>
+
+      <!-- TAB 4: MEDIA & ASSETS -->
+      <div class="sidebar-tab-pane" id="tab-media">
+        <!-- Sub-navigation between Library and Media Settings -->
+        <div class="media-subnav-bar">
+          <button type="button" class="media-subnav-btn active" id="btnMediaSubnavLibrary" data-pane="media-pane-library">
+            <span>📁</span> Asset Library
+          </button>
+          <button type="button" class="media-subnav-btn" id="btnMediaSubnavSettings" data-pane="media-pane-settings">
+            <span>🎵</span> Media & Audio Settings
+          </button>
+        </div>
+
+        <!-- SUBPANE 1: ASSET LIBRARY -->
+        <div class="media-subpane active" id="media-pane-library">
+          <section class="panel-section" style="padding-top: 12px;">
+            <!-- Storage Quota Bar -->
+            <div class="media-storage-card">
+              <div class="media-storage-header">
+                <div class="media-storage-count">
+                  <span class="storage-icon">💾</span>
+                  <span class="storage-text"><strong id="mediaStorageAssetCount">0</strong> files in library</span>
+                </div>
+                <div class="media-storage-size">
+                  <span id="mediaStorageTotalSize">0 B</span>
+                  <span class="storage-limit">/ 10 MB per file</span>
+                </div>
+              </div>
+              <div class="storage-meter-track">
+                <div class="storage-meter-fill" id="storageMeterFill" style="width: 4%;"></div>
+              </div>
+              <div class="storage-card-actions">
+                <button type="button" class="btn-storage-action" id="btnToggleUrlImport">
+                  <span>🔗</span> Import via URL
+                </button>
+                <button type="button" class="btn-storage-action" id="btnRefreshMediaLibrary" title="Sync & refresh storage">
+                  <span>🔄</span> Sync R2 / Local
+                </button>
+              </div>
+            </div>
+
+            <!-- Import from URL Popover (hidden by default) -->
+            <div class="media-url-import-box hidden" id="mediaUrlImportBox">
+              <div class="url-import-header">
+                <span>🔗 Add Media via Web Link</span>
+                <button type="button" class="btn-close-mini" id="btnCloseUrlImport">✕</button>
+              </div>
+              <div class="url-import-row">
+                <input type="url" id="mediaImportUrlInput" placeholder="https://example.com/photo.jpg or audio.mp3" class="media-url-input">
+                <button type="button" class="btn-primary btn-sm" id="btnSubmitUrlImport">Add</button>
+              </div>
+              <div id="mediaUrlImportStatus" class="url-import-status"></div>
+            </div>
+
+            <!-- Dropzone -->
+            <div class="media-dropzone" id="mediaDropZone">
+              <input type="file" id="mediaUploadInput" accept="image/*,audio/*" multiple>
+              <div class="dropzone-inner">
+                <span class="dropzone-icon">☁️</span>
+                <p class="dropzone-text">Drag & drop photos or songs here</p>
+                <span class="dropzone-subtext">JPG, PNG, WEBP, GIF, MP3, M4A, M4R (≤ 10 Mo)</span>
+                <div class="dropzone-quick-actions">
+                  <button type="button" class="btn-dropzone-pick" id="btnPickPhotos">📷 Add Photos</button>
+                  <button type="button" class="btn-dropzone-pick" id="btnPickAudio">🎵 Add Audio</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="media-upload-progress" id="mediaUploadProgress">
+              <div class="media-upload-progress-fill"></div>
+            </div>
+
+            <div id="uploadStatusText" class="media-upload-status"></div>
+
+            <!-- Media Search & Filter & View Switcher Toolbar -->
+            <div class="media-toolbar">
+              <div class="media-search-row">
+                <div class="media-search-wrap">
+                  <span class="search-icon">🔍</span>
+                  <input type="text" id="mediaSearchInput" class="media-search-input" placeholder="Search media files...">
+                  <button type="button" id="btnClearMediaSearch" class="btn-clear-search hidden" title="Clear search">✕</button>
+                </div>
+                <select id="mediaSortSelect" class="media-sort-select" title="Sort assets">
+                  <option value="newest">🕒 Newest</option>
+                  <option value="oldest">🕒 Oldest</option>
+                  <option value="name">🔤 Name A-Z</option>
+                  <option value="size">📦 Largest</option>
+                </select>
+                <div class="media-view-toggle">
+                  <button type="button" class="btn-view-mode active" id="btnViewGrid" title="Grid View">▦</button>
+                  <button type="button" class="btn-view-mode" id="btnViewList" title="List View">☰</button>
+                </div>
+              </div>
+              <div class="media-filter-chips">
+                <button type="button" class="media-filter-btn active" data-filter="all">All (<span id="mediaCountAll">0</span>)</button>
+                <button type="button" class="media-filter-btn" data-filter="image">📷 Photos (<span id="mediaCountImages">0</span>)</button>
+                <button type="button" class="media-filter-btn" data-filter="audio">🎵 Audio (<span id="mediaCountAudio">0</span>)</button>
+                <button type="button" class="media-refresh-btn" id="btnRefreshMedia" title="Refresh media library">🔄</button>
+              </div>
+            </div>
+
+            <!-- Media Assets Grid / List Container -->
+            <div class="media-library-grid" id="mediaLibraryGrid"></div>
+          </section>
+        </div>
+
+        <!-- SUBPANE 2: MEDIA & AUDIO SETTINGS -->
+        <div class="media-subpane" id="media-pane-settings">
+          <div class="site-settings-pane" id="mediaSettingsContainer"></div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- RESIZER DRAG HANDLE -->
+    <div class="builder-resizer" id="builderResizer" role="separator" aria-label="Resize sidebar" title="Drag to resize panel (Double-click to reset width)">
+      <div class="resizer-handle-grip"></div>
+    </div>
+
+    <!-- COLLAPSE/EXPAND TOGGLE BUTTON -->
+    <button type="button" class="btn-sidebar-collapse" id="btnCollapseSidebar" title="Toggle Sidebar (Collapse/Expand)">
+      <span class="collapse-arrow" id="collapseArrow">◀</span>
+    </button>
+
+    <!-- RIGHT PREVIEW PANE -->
+    <main class="builder-preview-pane" id="builderPreviewPane">
+      <div class="preview-header">
+        <div class="preview-address-bar" title="Simulated Live URL">
+          <span class="preview-ssl-icon">🔒</span>
+          <span class="preview-url-text" id="previewUrlText">lovesaas.site/sites/demo</span>
+        </div>
+        <div class="device-toggles" role="group" aria-label="Viewport Switcher">
+          <button type="button" class="device-btn active" id="btnDeviceDesktop" title="Desktop view (100%)">
+            <span class="device-icon">🖥️</span> Desktop
+          </button>
+          <button type="button" class="device-btn" id="btnDeviceTablet" title="Tablet view (768px)">
+            <span class="device-icon">📱</span> Tablet
+          </button>
+          <button type="button" class="device-btn" id="btnDeviceMobile" title="Mobile view (375px)">
+            <span class="device-icon">📱</span> Mobile
+          </button>
+        </div>
+        <div class="preview-header-right">
+          <div class="preview-zoom-wrap">
+            <select id="previewZoomSelect" class="preview-zoom-select" title="Preview Zoom">
+              <option value="1">100%</option>
+              <option value="0.9">90%</option>
+              <option value="0.8">80%</option>
+              <option value="0.7">70%</option>
+            </select>
+          </div>
+          <button type="button" class="device-btn" id="btnRefreshPreview" title="Refresh preview iframe">
+            <span class="refresh-icon">🔄</span> Reload
+          </button>
+        </div>
+      </div>
+      <div class="preview-iframe-wrapper" id="previewIframeWrapper">
+        <div class="preview-device-chassis" id="previewDeviceChassis">
+          <div class="device-speaker-notch" id="deviceSpeakerNotch"></div>
+          <iframe id="previewIframe" class="preview-iframe" src="/sites/demo?preview=builder" title="Live Website Preview"></iframe>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- BUILDER ACCESS GATE MODAL -->
+  <div class="modal-backdrop hidden" id="builderAccessGateModal" style="z-index: 9999;">
+    <div class="modal-box" style="max-width: 440px; text-align: center; border: 1px solid rgba(244, 63, 94, 0.4); box-shadow: 0 25px 60px -15px rgba(0,0,0,0.8), 0 0 40px -10px rgba(244,63,94,0.3);">
+      <div style="font-size: 2.8rem; margin-bottom: 6px;">💍</div>
+      <h3 style="font-size: 1.4rem; margin-bottom: 6px; font-weight: 800;">Couple Studio Access</h3>
+      <p style="font-size: 0.88rem; color: #94a3b8; margin-bottom: 18px;">
+        Design your couple website with real-time live preview.
+      </p>
+
+      <div style="background: rgba(244, 63, 94, 0.12); border: 1px solid rgba(244, 63, 94, 0.35); border-radius: 12px; padding: 14px; margin-bottom: 18px; text-align: center;">
+        <div style="font-weight: 700; color: #fff; font-size: 0.92rem; margin-bottom: 8px;">Want to test the studio first?</div>
+        <button type="button" class="btn-primary" id="btnGateDemo" style="width: 100%; justify-content: center; padding: 10px; font-weight: 700; font-size: 0.92rem;">
+          ✨ Try Demo Studio (1-Click Free Sandbox)
+        </button>
+      </div>
+
+      <div style="position: relative; margin: 18px 0; text-align: center;">
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.12);">
+        <span style="position: absolute; top: -9px; left: 50%; transform: translateX(-50%); background: #111827; padding: 0 10px; color: #64748b; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.5px;">OR UNLOCK YOUR SITE</span>
+      </div>
+
+      <div style="text-align: left;">
+        <div class="input-group" style="margin-bottom: 12px;">
+          <label style="font-size: 0.82rem; font-weight: 600; color: #cbd5e1;">Couple Website Slug</label>
+          <input type="text" id="gateSlugInput" placeholder="e.g. demo or alex-and-sam">
+        </div>
+        <div class="input-group" style="margin-bottom: 8px;">
+          <label style="font-size: 0.82rem; font-weight: 600; color: #cbd5e1;">Admin PIN (4 Digits)</label>
+          <input type="password" id="gatePinInput" placeholder="1234" maxlength="8">
+        </div>
+        <div id="gateErrorMsg" style="color: #ef4444; font-size: 0.82rem; margin-top: 4px; display: none;"></div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px;">
+        <button type="button" class="btn-secondary" id="btnGateUnlock" style="width: 100%; justify-content: center; padding: 10px; font-weight: 700;">
+          <span>Unlock Studio</span> <span>🔑</span>
+        </button>
+        <a href="/welcome#pricing" target="_blank" style="text-align: center; color: #fb7185; text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 6px;">
+          Don't have a site yet? Get Started ($19+) ↗
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- TENANT CREATE / SWITCH MODAL -->
+  <div class="modal-backdrop hidden" id="tenantModal">
+    <div class="modal-box">
+      <h3>Couple Account</h3>
+      <div class="input-group">
+        <label>Couple URL Slug (e.g., 'john-and-emma')</label>
+        <input type="text" id="modalSlug" placeholder="alex-sam">
+      </div>
+      <div class="input-group">
+        <label>Admin PIN (4 digits)</label>
+        <input type="password" id="modalPin" placeholder="1234" maxlength="8">
+      </div>
+      <div id="newCoupleFields">
+        <div class="input-group">
+          <label>Partner 1</label>
+          <input type="text" id="modalP1" placeholder="Alex">
+        </div>
+        <div class="input-group">
+          <label>Partner 2</label>
+          <input type="text" id="modalP2" placeholder="Sam">
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px;">
+        <button class="btn-secondary" id="btnModalCancel">Cancel</button>
+        <button class="btn-primary" id="btnModalSubmit">Load / Create Site</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Media Preview Lightbox Modal -->
+  <div class="tenant-modal-overlay hidden" id="mediaLightboxModal">
+    <div class="tenant-modal-card media-lightbox-card">
+      <div class="lightbox-header">
+        <div class="lightbox-title-wrap">
+          <span class="lightbox-icon" id="lightboxIcon">👁️</span>
+          <h3 id="lightboxTitle">Media Preview</h3>
+        </div>
+        <button type="button" id="btnCloseLightbox" class="btn-modal-close" title="Close">✕</button>
+      </div>
+      <div id="lightboxContent" class="lightbox-content-area"></div>
+      <div class="lightbox-meta-bar" id="lightboxMetaBar">
+        <span class="lightbox-url-text" id="lightboxUrlText"></span>
+      </div>
+      <div class="lightbox-actions-bar">
+        <button type="button" class="btn-secondary btn-sm" id="btnCopyLightboxUrl">📋 Copy Link</button>
+        <a id="btnOpenLightboxUrl" href="#" target="_blank" class="btn-secondary btn-sm">↗ Open in New Tab</a>
+        <div style="flex:1;"></div>
+        <button type="button" class="btn-secondary btn-sm" id="btnCloseLightboxAlt">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Media Picker Modal -->
+  <div class="tenant-modal-overlay hidden" id="mediaPickerModal">
+    <div class="tenant-modal-card media-picker-modal-card">
+      <div class="media-picker-header">
+        <div class="media-picker-header-left">
+          <h3 id="mediaPickerTitle">📁 Choose from Media Library</h3>
+          <span class="media-picker-subtitle" id="mediaPickerSubtitle">Select a file to insert into this widget</span>
+        </div>
+        <div class="media-picker-header-right">
+          <label class="btn-picker-upload" title="Upload new file directly">
+            <span>⬆️ Upload New</span>
+            <input type="file" id="mediaPickerDirectUpload" accept="image/*,audio/*" style="display:none;">
+          </label>
+          <button type="button" id="btnCloseMediaPicker" class="btn-modal-close" title="Close">✕</button>
+        </div>
+      </div>
+      <div class="media-picker-toolbar">
+        <div class="media-picker-search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="mediaPickerSearchInput" class="media-picker-search" placeholder="Search files...">
+        </div>
+        <div class="media-picker-filter-chips">
+          <button type="button" class="picker-filter-chip active" data-picker-filter="all">All</button>
+          <button type="button" class="picker-filter-chip" data-picker-filter="image">📷 Photos</button>
+          <button type="button" class="picker-filter-chip" data-picker-filter="audio">🎵 Audio</button>
+        </div>
+      </div>
+      <div class="media-picker-grid" id="mediaPickerGrid"></div>
+      <div class="media-picker-footer">
+        <span class="media-picker-counter" id="mediaPickerCounter">0 assets available</span>
+        <button type="button" class="btn-secondary" id="btnCancelMediaPicker">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Section / Widget Picker Modal -->
+  <div class="tenant-modal-overlay hidden" id="addSectionModal" role="dialog" aria-modal="true" aria-labelledby="addSectionModalTitle">
+    <div class="tenant-modal-card add-section-modal-card">
+      <div class="add-section-modal-header">
+        <div>
+          <h3 id="addSectionModalTitle" class="add-section-modal-title">✨ Add Section</h3>
+          <p id="addSectionModalSubtitle" class="add-section-modal-subtitle">Choose a widget to insert into your website</p>
+        </div>
+        <button type="button" id="btnCloseAddSectionModal" class="btn-modal-close" title="Close">✕</button>
+      </div>
+
+      <div class="add-section-search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="addSectionSearchInput" placeholder="Search widgets (e.g., quiz, roulette, map, polaroids, coupons)..." />
+        <button type="button" id="btnClearAddSectionSearch" class="btn-clear-search hidden" title="Clear search">✕</button>
+      </div>
+
+      <div class="add-section-filter-chips" id="addSectionFilterChips">
+        <button type="button" class="add-sec-filter-chip active" data-cat="all">All (<span id="addSecCountAll">13</span>)</button>
+        <button type="button" class="add-sec-filter-chip" data-cat="story">📖 Story</button>
+        <button type="button" class="add-sec-filter-chip" data-cat="interactive">⚡ Interactive</button>
+        <button type="button" class="add-sec-filter-chip" data-cat="games">🎮 Games</button>
+        <button type="button" class="add-sec-filter-chip" data-cat="gallery">📸 Gallery</button>
+        <button type="button" class="add-sec-filter-chip" data-cat="letter">💌 Letter</button>
+      </div>
+
+      <div class="add-section-widgets-grid" id="addSectionWidgetsGrid"></div>
+
+      <div class="add-section-modal-footer">
+        <span class="add-section-hint">💡 Click any widget to immediately insert it into your website preview.</span>
+        <button type="button" class="btn-secondary" id="btnCancelAddSectionModal">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Widget Visual Preview Lightbox Modal -->
+  <div class="tenant-modal-overlay hidden" id="widgetPreviewModal" role="dialog" aria-modal="true" aria-labelledby="widgetPreviewModalTitle">
+    <div class="tenant-modal-card widget-preview-modal-card">
+      <div class="widget-preview-header">
+        <div class="widget-preview-title-wrap">
+          <span class="widget-preview-icon" id="widgetPreviewIcon">📜</span>
+          <div>
+            <h3 id="widgetPreviewModalTitle" class="widget-preview-title">Wax-Sealed Love Letter</h3>
+            <span id="widgetPreviewCategory" class="widget-preview-cat-badge">LETTER</span>
+          </div>
+        </div>
+        <button type="button" id="btnCloseWidgetPreviewModal" class="btn-modal-close" title="Close preview">✕</button>
+      </div>
+
+      <div class="widget-preview-body">
+        <p id="widgetPreviewDesc" class="widget-preview-desc">Preview of this widget fully opened and visible on your website.</p>
+        <div class="widget-preview-image-container" id="widgetPreviewImageContainer">
+          <img id="widgetPreviewImg" class="widget-preview-img" src="" alt="Widget Full Preview" />
+        </div>
+      </div>
+
+      <div class="widget-preview-footer">
+        <button type="button" class="btn-secondary" id="btnCancelWidgetPreview">Close</button>
+        <button type="button" class="btn-primary" id="btnAddFromPreviewBtn">
+          <span>+</span> Add This Section
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/core/widget-registry.js"></script>
+  <script src="/builder/widget-previews.js"></script>
+  <!-- Modular Widget Templates -->
+  <script src="/core/templates/hero.template.js"></script>
+  <script src="/core/templates/love_meter.template.js"></script>
+  <script src="/core/templates/reasons.template.js"></script>
+  <script src="/core/templates/timeline.template.js"></script>
+  <script src="/core/templates/map.template.js"></script>
+  <script src="/core/templates/truth_dare.template.js"></script>
+  <script src="/core/templates/spinner.template.js"></script>
+  <script src="/core/templates/memories.template.js"></script>
+  <script src="/core/templates/coupons.template.js"></script>
+  <script src="/core/templates/boarding_pass.template.js"></script>
+  <script src="/core/templates/quiz.template.js"></script>
+  <script src="/core/templates/letter.template.js"></script>
+  <script src="/core/templates/playful.template.js"></script>
+  <script src="/core/widget-templates.js"></script>
+
+  <!-- Modular Widget Inspectors -->
+  <script src="/builder/inspectors/hero.inspector.js"></script>
+  <script src="/builder/inspectors/love_meter.inspector.js"></script>
+  <script src="/builder/inspectors/reasons.inspector.js"></script>
+  <script src="/builder/inspectors/timeline.inspector.js"></script>
+  <script src="/builder/inspectors/map.inspector.js"></script>
+  <script src="/builder/inspectors/truth_dare.inspector.js"></script>
+  <script src="/builder/inspectors/spinner.inspector.js"></script>
+  <script src="/builder/inspectors/memories.inspector.js"></script>
+  <script src="/builder/inspectors/coupons.inspector.js"></script>
+  <script src="/builder/inspectors/boarding_pass.inspector.js"></script>
+  <script src="/builder/inspectors/quiz.inspector.js"></script>
+  <script src="/builder/inspectors/letter.inspector.js"></script>
+  <script src="/builder/inspectors/playful.inspector.js"></script>
+
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <script src="/builder/builder.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+/**
+ * Couple SaaS Platform - Modular CSS Bundle Aggregator
+ * Decomposed into dedicated component stylesheets per widget.
+ */
+@import "./base.css";
+
+/* Modular Widget Stylesheets */
+@import "./widgets/hero.css";
+@import "./widgets/love_meter.css";
+@import "./widgets/reasons.css";
+@import "./widgets/timeline.css";
+@import "./widgets/map.css";
+@import "./widgets/truth_dare.css";
+@import "./widgets/spinner.css";
+@import "./widgets/memories.css";
+@import "./widgets/coupons.css";
+@import "./widgets/boarding_pass.css";
+@import "./widgets/quiz.css";
+@import "./widgets/letter.css";
+@import "./widgets/playful.css";

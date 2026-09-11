@@ -1,0 +1,205 @@
+/* Date Night Spinner Roulette */
+.roulette-box {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 40px 30px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 24px;
+  border: 2px solid rgba(255, 182, 193, 0.45);
+  box-shadow: 0 16px 45px rgba(255, 105, 135, 0.12);
+}
+
+.spinner-reels-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 28px 0;
+}
+
+.reel-box {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 18px 14px;
+  border: 1.5px solid rgba(255, 182, 193, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.reel-box:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(255, 105, 135, 0.15);
+}
+
+.reel-label {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #7f8c8d;
+  letter-spacing: 1.2px;
+  margin-bottom: 12px;
+}
+
+.reel-window {
+  min-height: 72px;
+  background: linear-gradient(135deg, #fff7f9 0%, #fffbf7 100%);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(255, 105, 135, 0.28);
+  box-shadow: inset 0 2px 6px rgba(255, 105, 135, 0.05);
+  padding: 10px 14px;
+  overflow: hidden;
+  position: relative;
+}
+
+.reel-strip {
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #2c3e50;
+  line-height: 1.35;
+  transition: transform 0.1s ease;
+  word-break: break-word;
+}
+
+.reel-strip.spinning {
+  animation: reelBlur 0.15s linear infinite;
+  color: var(--primary);
+}
+
+.roulette-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.roulette-actions .btn {
+  min-height: 48px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 10px 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.roulette-actions #spinDateBtn {
+  background: var(--primary-gradient);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 4px 16px var(--primary-glow);
+}
+
+.roulette-actions #spinDateBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--primary-glow);
+}
+
+.roulette-actions #lockDateBtn {
+  background: #ffffff;
+  color: var(--primary);
+  border: 1.5px solid var(--primary-border);
+}
+
+.roulette-actions #lockDateBtn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.roulette-actions #shareDateWhatsAppBtn,
+#shareDateWhatsAppBtn.btn-whatsapp {
+  background: linear-gradient(135deg, #25d366, #128c7e) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35) !important;
+  text-decoration: none;
+}
+
+.roulette-actions #shareDateWhatsAppBtn:hover,
+#shareDateWhatsAppBtn.btn-whatsapp:hover {
+  background: linear-gradient(135deg, #1ebe5d, #0e7165) !important;
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.45) !important;
+  transform: translateY(-2px);
+}
+
+.date-lock-alert {
+  margin-top: 20px;
+  padding: 14px 22px;
+  background: linear-gradient(135deg, #e8f8f5, #d4efdf);
+  border: 1.5px solid #27ae60;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #145a32;
+  box-shadow: 0 4px 15px rgba(39, 174, 96, 0.15);
+  animation: modalPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  line-height: 1.4;
+  max-width: 100%;
+}
+
+
+@media (max-width: 480px) {
+  /* Date Night Roulette - iPhone 15 Pro Max (430px) & Mobile */
+  .roulette-box {
+    padding: 24px 12px;
+    border-radius: 20px;
+  }
+  .spinner-reels-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin: 18px 0;
+  }
+  .reel-box {
+    padding: 14px 12px;
+    border-radius: 16px;
+  }
+  .reel-label {
+    font-size: 0.72rem;
+    margin-bottom: 8px;
+  }
+  .reel-window {
+    min-height: 58px;
+    height: auto;
+    padding: 8px 12px;
+    border-radius: 12px;
+  }
+  .reel-strip {
+    font-size: 0.92rem;
+    line-height: 1.35;
+  }
+  .roulette-actions {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  .roulette-actions .btn {
+    width: 100%;
+    min-height: 48px;
+    font-size: 0.86rem;
+  }
+  .date-lock-alert {
+    margin-top: 16px;
+    padding: 12px 14px;
+    font-size: 0.82rem;
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: center;
+    text-align: center;
+  }
+
+}

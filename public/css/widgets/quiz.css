@@ -1,0 +1,170 @@
+/* Couple Trivia Mini-Quiz */
+.quiz-box {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 30px;
+}
+
+.quiz-card {
+  background: #ffffff;
+  border-radius: var(--radius-sm);
+  padding: 28px 24px;
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.quiz-step-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.quiz-question-title {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.quiz-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quiz-option-btn {
+  padding: 14px 18px;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quiz-option-btn:hover {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  transform: translateX(4px);
+}
+
+.quiz-option-btn:disabled {
+  cursor: default;
+  transform: none !important;
+}
+
+.quiz-comment-card {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border-radius: var(--radius-sm, 12px);
+  background: var(--primary-light);
+  border: 1px solid var(--primary-border);
+  animation: todPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.quiz-comment-card.correct {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.quiz-comment-badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.quiz-comment-card.correct .quiz-comment-badge {
+  color: #16a34a;
+}
+
+.quiz-comment-body {
+  font-size: 0.95rem;
+  color: #333333;
+  line-height: 1.5;
+  margin: 0 0 14px 0;
+}
+
+.quiz-next-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  background: var(--primary-gradient);
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  font-family: var(--font-body, sans-serif);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px var(--primary-glow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quiz-next-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--primary-glow);
+}
+
+/* Certificate Modal */
+.certificate-content {
+  max-width: 540px;
+  text-align: center;
+  padding: 30px;
+}
+
+.cert-border {
+  border: 3px double var(--accent-gold);
+  border-radius: var(--radius-sm);
+  padding: 30px 20px;
+  background: #fffdfa;
+}
+
+.cert-seal {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.cert-awardee {
+  font-family: var(--font-hand);
+  font-size: 2rem;
+  color: var(--primary);
+  margin: 12px 0;
+}
+
+.cert-body {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.cert-footer {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: var(--font-hand);
+  font-size: 1.4rem;
+  color: var(--text-muted);
+}
+
+
+@media (max-width: 480px) {
+  /* Trivia Quiz */
+  .quiz-box { padding: 26px 12px; }
+  .quiz-card { padding: 18px 12px; }
+  .quiz-question-title { font-size: 1.15rem; margin-bottom: 14px; }
+  .quiz-option-btn { font-size: 0.85rem; padding: 12px 12px; min-height: 44px; }
+
+}

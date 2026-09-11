@@ -1,0 +1,502 @@
+/* Interactive Next Trip Generator & Boarding Pass */
+.mystery-gift-box {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.trip-generator-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 14px;
+}
+
+.dest-selector-bar {
+  text-align: left;
+}
+
+.dest-label-text {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.destination-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.dest-chip {
+  background: #ffffff;
+  border: 1.5px solid var(--surface-border);
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  text-align: center;
+}
+
+.dest-chip:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.dest-chip.active,
+.dest-chip.selected {
+  background: var(--primary-gradient);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px var(--primary-glow);
+  transform: translateY(-2px);
+}
+
+.custom-dest-input-wrap {
+  margin-top: 6px;
+  width: 100%;
+}
+
+.custom-dest-input {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1.5px solid var(--surface-border);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  outline: none;
+  background: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.custom-dest-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 67, 101, 0.15);
+}
+
+/* Embedded Boarding Pass Card */
+.live-ticket-wrap {
+  width: 100%;
+}
+
+
+
+.city-photo-btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+
+/* Golden Boarding Pass & Trip Confirmed Modal */
+.flight-ticket-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 650;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: modalPop 0.4s ease;
+}
+
+.flight-ticket-overlay.hidden {
+  display: none;
+}
+
+.flight-ticket-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 10, 25, 0.75);
+  backdrop-filter: blur(12px);
+}
+
+.boarding-pass-card,
+#embeddedBoardingPass {
+  position: relative;
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 22px;
+  border: 2px solid rgba(224, 172, 105, 0.6);
+  box-shadow: 0 16px 45px rgba(255, 67, 101, 0.16), 0 4px 16px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  z-index: 2;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.boarding-pass-header {
+  background: linear-gradient(135deg, #141724, #242a3c);
+  color: #ffffff;
+  padding: 16px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px dashed rgba(255, 209, 102, 0.65);
+  position: relative;
+}
+
+.airline-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.plane-icon-flight {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.airline-name {
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #ffd166;
+  white-space: nowrap;
+}
+
+.flight-class-badge {
+  background: var(--primary-gradient);
+  color: #ffffff;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.boarding-pass-body {
+  padding: 20px 22px 16px;
+  box-sizing: border-box;
+}
+
+.ticket-route-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1.5px dashed var(--surface-border);
+  gap: 8px;
+}
+
+.airport-code-box {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.airport-code-box:last-child {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.airport-code {
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1.1;
+  letter-spacing: 0.5px;
+}
+
+.airport-name {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-top: 2px;
+  line-height: 1.25;
+  max-width: 155px;
+  word-break: break-word;
+}
+
+.flight-arrow-path {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.flight-duration-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #b7791f;
+  background: #fff8e7;
+  padding: 2px 7px;
+  border-radius: 999px;
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+}
+
+.ticket-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px 18px;
+  margin-bottom: 16px;
+}
+
+.ticket-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.t-label {
+  font-size: 0.64rem;
+  font-weight: 800;
+  color: #888888;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.t-val {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #222222;
+  margin-top: 2px;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.highlight-gold {
+  color: #b7791f;
+}
+
+.status-confirmed {
+  color: #27ae60;
+  font-weight: 800;
+  white-space: nowrap;
+  font-size: 0.84rem;
+}
+
+.ticket-note-box {
+  background: linear-gradient(135deg, #fffcf6 0%, #fff7f9 100%);
+  border: 1.5px dashed rgba(255, 120, 150, 0.45);
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.84rem;
+  color: #795548;
+  line-height: 1.45;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.02);
+}
+
+.boarding-pass-footer {
+  padding: 0 22px 20px;
+  text-align: center;
+}
+
+.ticket-barcode-wrap {
+  margin: 14px 0 6px;
+  padding: 10px 14px;
+  background: rgba(250, 248, 245, 0.85);
+  border-radius: 12px;
+  border: 1px dashed rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.ticket-barcode {
+  width: 100%;
+  max-width: 320px;
+  height: 40px;
+  background: repeating-linear-gradient(
+    90deg,
+    #1e272e 0,
+    #1e272e 2px,
+    transparent 2px,
+    transparent 4px,
+    #1e272e 4px,
+    #1e272e 7px,
+    transparent 7px,
+    transparent 9px,
+    #1e272e 9px,
+    #1e272e 13px,
+    transparent 13px,
+    transparent 15px
+  );
+}
+
+.barcode-number {
+  font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: #555555;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.boarding-pass-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 0 18px 18px;
+}
+
+@media (min-width: 520px) {
+  .boarding-pass-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .boarding-pass-actions #claimGiftBtn {
+    grid-column: 1 / -1;
+  }
+}
+
+.boarding-pass-actions .btn {
+  width: 100%;
+  min-height: 38px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  box-sizing: border-box;
+  padding: 7px 12px;
+  line-height: 1.25;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.boarding-pass-actions #shareTripWhatsAppBtn,
+.btn.btn-whatsapp {
+  background: linear-gradient(135deg, #25d366, #128c7e) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35) !important;
+}
+
+.boarding-pass-actions #shareTripWhatsAppBtn:hover,
+.btn.btn-whatsapp:hover {
+  background: linear-gradient(135deg, #1ebe5d, #0e7165) !important;
+  box-shadow: 0 6px 18px rgba(37, 211, 102, 0.45) !important;
+  transform: translateY(-2px);
+}
+
+.trip-confirmed-notice {
+  margin: 12px 20px 20px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #e8f8f5, #d4efdf);
+  border: 1.5px solid #27ae60;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #117a65;
+  text-align: center;
+  line-height: 1.4;
+  box-shadow: 0 4px 14px rgba(39, 174, 96, 0.12);
+  animation: modalPop 0.3s ease;
+}
+
+
+@media (max-width: 480px) {
+  /* Dream Adventure & VIP Boarding Pass - iPhone 15 Pro Max (430px) & Mobile */
+  .mystery-gift-box { padding: 22px 10px; }
+  .destination-chips-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .dest-chip {
+    font-size: 0.76rem;
+    padding: 10px 8px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .boarding-pass-card,
+  #embeddedBoardingPass {
+    border-radius: 18px;
+    border-width: 2px;
+  }
+  .boarding-pass-header {
+    padding: 13px 15px;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .airline-name { font-size: 0.72rem; letter-spacing: 0.8px; white-space: normal; }
+  .flight-class-badge { font-size: 0.64rem; padding: 3px 8px; }
+  .boarding-pass-body { padding: 16px 14px 12px; }
+  .ticket-route-row {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    gap: 6px;
+  }
+  .airport-code-box:last-child {
+    text-align: center;
+    align-items: center;
+  }
+  .airport-code { font-size: 1.35rem; }
+  .airport-name { font-size: 0.72rem; max-width: none; }
+  .flight-duration-tag { font-size: 0.62rem; padding: 2px 6px; }
+  .ticket-details-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 12px;
+    margin-bottom: 14px;
+  }
+  .t-label { font-size: 0.62rem; }
+  .t-val { font-size: 0.84rem; word-break: break-word; }
+  .status-confirmed { font-size: 0.74rem; white-space: normal; word-break: break-word; }
+  .ticket-note-box { padding: 10px 12px; font-size: 0.78rem; line-height: 1.4; }
+  .ticket-barcode-wrap {
+    margin: 12px 0 4px;
+    padding: 8px 10px;
+    overflow: hidden;
+  }
+  .ticket-barcode { height: 34px; max-width: 100%; }
+  .barcode-number {
+    font-size: 0.55rem;
+    letter-spacing: 0.8px;
+    white-space: normal;
+    text-align: center;
+    word-break: break-word;
+  }
+  .boarding-pass-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 8px;
+    padding: 0 14px 14px;
+  }
+  .boarding-pass-actions .btn {
+    width: 100%;
+    min-height: 35px;
+    font-size: 0.75rem;
+    padding: 6px 10px;
+  }
+  .trip-confirmed-notice {
+    margin: 10px 14px 16px;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+
+}

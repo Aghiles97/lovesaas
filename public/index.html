@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LoveSaas — The World's Most Luxurious Interactive Couple Platform</title>
+  <meta name="description" content="Turn your romance into an unforgettable interactive digital masterpiece with 13 modular widgets, milestone story chapters, wax-sealed voice letters, and real-time love physics.">
+  <link rel="stylesheet" href="/css/landing.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💍</text></svg>">
+</head>
+<body>
+
+  <!-- Ambient Particles Canvas -->
+  <canvas id="ambientCanvas"></canvas>
+
+  <!-- Glowing Aurora Orbs -->
+  <div class="aurora-orb orb-1"></div>
+  <div class="aurora-orb orb-2"></div>
+
+  <!-- Urgent Announcement Top Banner -->
+  <div class="urgent-announcement-bar">
+    <span>💖</span>
+    <span><strong>SPECIAL ROMANTIC OFFER:</strong> 50% Off Lifetime Access • Create Your Private Couple Website in 2 Minutes!</span>
+    <a href="#pricing" class="badge badge-gold" style="font-size: 0.74rem; padding: 3px 10px; text-decoration: none; font-weight: 800;">SEE PLANS</a>
+  </div>
+
+  <!-- Sticky Navbar -->
+  <header class="landing-nav" id="mainNav">
+    <div class="container nav-inner">
+      <a href="/welcome" class="nav-brand">
+        <span class="nav-brand-icon">💍</span>
+        <span class="nav-brand-text">LoveSaas <span class="nav-brand-badge">STUDIO</span></span>
+      </a>
+
+      <nav class="nav-links" id="navLinks" aria-label="Main Navigation">
+        <a href="#demo-preview" class="nav-link">Interactive Demo</a>
+        <a href="#features" class="nav-link">13 Modules</a>
+        <a href="#presets" class="nav-link">Themes</a>
+        <a href="#why-us" class="nav-link">Why Couples Love It</a>
+        <a href="#pricing" class="nav-link">Pricing</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="/builder?slug=demo" class="btn btn-secondary btn-sm" id="btnNavTryStudio" title="Try Studio Editor Sandbox without signup">
+          <span>🎨</span> Try Studio Demo
+        </a>
+        <button type="button" class="btn btn-secondary btn-sm" id="btnOpenSignInModal">
+          <span>🔑</span> Sign In
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" id="btnNavGetStarted">
+          <span>💖</span> Create Site
+        </button>
+        <button type="button" class="mobile-menu-btn" id="btnMobileMenuToggle" aria-label="Toggle navigation">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-badge-wrap">
+        <span class="badge-luxury">💖 The Sweetest Way to Celebrate Your Love Story</span>
+      </div>
+
+      <h1 class="hero-title">
+        Create a Magical Website for <br/>
+        <span class="text-shimmer">The One You Love</span> 💍
+      </h1>
+
+      <p class="hero-subtitle">
+        Surprise your partner with an unforgettable, private digital keepsake. Features wax-sealed audio voice letters, interactive couples games, polaroid memories, long-distance timezone clocks, and custom soundtrack players.
+      </p>
+
+      <div class="hero-ctas">
+        <button type="button" class="btn btn-primary btn-lg" id="btnHeroBuy">
+          <span>💖</span> Create Our Couple Site — From $19
+        </button>
+        <a href="/builder?slug=demo" class="btn btn-secondary btn-lg" id="btnHeroTryStudio">
+          <span>🎨</span> Try Studio Demo (Free 1-Click)
+        </a>
+        <button type="button" class="btn btn-secondary btn-lg" id="btnHeroDemo">
+          <span>👁️</span> View Sample Website
+        </button>
+      </div>
+
+      <!-- Live Metric Stats -->
+      <div class="hero-stats-row">
+        <div class="stat-item">
+          <div class="stat-number text-shimmer">1,280+</div>
+          <div class="stat-label">Couples Celebrated</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number text-gold">100%</div>
+          <div class="stat-label">Lifetime Keeper</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" style="color: #38bdf8;">$0</div>
+          <div class="stat-label">Zero Monthly Fees</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" style="color: #4ade80;">5 / 5 ★</div>
+          <div class="stat-label">Couple Satisfaction</div>
+        </div>
+      </div>
+
+      <!-- Press & Media As Seen In -->
+      <div class="press-marquee-wrap">
+        <div class="press-label">Celebrated by romantic tastemakers & publications worldwide</div>
+        <div class="press-logos">
+          <span class="press-logo-text">VOGUE WEDDINGS</span>
+          <span class="press-logo-text">THE KNOT</span>
+          <span class="press-logo-text">BRIDES</span>
+          <span class="press-logo-text">GQ ROMANCE</span>
+          <span class="press-logo-text">COSMOPOLITAN</span>
+          <span class="press-logo-text">HARPER'S BAZAAR</span>
+        </div>
+      </div>
+
+      <!-- 3D DUAL-DEVICE SHOWCASE WITH ORBITING BADGES -->
+      <div class="hero-devices-stage" id="demo-preview">
+        <!-- Floating Orbit Badges -->
+        <div class="orbit-badge orbit-top-right">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.5rem;">📈</span>
+            <div style="text-align: left;">
+              <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">LOF-O-METER STATUS</div>
+              <div style="font-size: 0.95rem; font-weight: 900; color: #f43f5e;">9.8 Quintillion • Exploding ❤️</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="orbit-badge orbit-bottom-left">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.5rem;">✈️</span>
+            <div style="text-align: left;">
+              <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">REUNION FLIGHT</div>
+              <div style="font-size: 0.95rem; font-weight: 900; color: #38bdf8;">Flight LOF-777 • Boarded</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="macbook-glass-frame" id="heroMockupFrame">
+          <div class="browser-bar">
+            <div class="browser-dots">
+              <span class="browser-dot dot-red"></span>
+              <span class="browser-dot dot-yellow"></span>
+              <span class="browser-dot dot-green"></span>
+            </div>
+            <div class="browser-address">
+              <span>🔒</span> https://lovesaas.com/sites/alex-and-sam
+            </div>
+            <div style="font-size: 0.8rem; color: #f43f5e; font-weight: 800; letter-spacing: 0.4px;">
+              ⚡ LIVE INTERACTIVE PLAYGROUND
+            </div>
+          </div>
+
+          <!-- Mockup Tab Bar -->
+          <div class="mockup-tabs">
+            <button type="button" class="mockup-tab-btn active" data-mockup-tab="clocks">👑 Header & Clocks</button>
+            <button type="button" class="mockup-tab-btn" data-mockup-tab="meter">📈 Lof-O-Meter (Pump Live!)</button>
+            <button type="button" class="mockup-tab-btn" data-mockup-tab="letter">💌 Wax Love Letter (Click Seal)</button>
+            <button type="button" class="mockup-tab-btn" data-mockup-tab="bottle">🍾 Truth or Dare (Spin!)</button>
+          </div>
+
+          <div class="browser-content">
+            <!-- TAB 1: CLOCKS & HERO -->
+            <div class="mockup-tab-pane active" id="paneClocks">
+              <div class="clocks-pane-grid">
+                <div class="mockup-hero-card">
+                  <div class="mockup-names">Alex & Sam 💍</div>
+                  <div class="mockup-subtitle">Our Infinite Journey • Happy Anniversary! ❤️</div>
+
+                  <div class="mockup-clocks">
+                    <div class="clock-item">
+                      <div class="city">Paris 🇫🇷 (Alex)</div>
+                      <div class="time" id="mockParisTime">22:45</div>
+                    </div>
+                    <div class="clock-item">
+                      <div class="city">Tokyo 🇯🇵 (Sam)</div>
+                      <div class="time" id="mockTokyoTime">06:45</div>
+                    </div>
+                  </div>
+
+                  <div class="mockup-flight-pass">
+                    <div>✈️ <strong>Flight LOF-777</strong> (Direct Reunion)</div>
+                    <span class="badge" style="padding: 3px 10px; font-size: 0.74rem;">BOARDED</span>
+                  </div>
+                </div>
+
+                <div class="mockup-widgets-grid">
+                  <div class="mockup-mini-card">
+                    <div class="card-icon">🗺️</div>
+                    <div class="card-label" style="color: var(--text-muted);">Travel Map</div>
+                    <div class="card-val">8 Cities Visited</div>
+                  </div>
+                  <div class="mockup-mini-card">
+                    <div class="card-icon">📸</div>
+                    <div class="card-label" style="color: var(--text-muted);">Memories</div>
+                    <div class="card-val">128 Polaroids</div>
+                  </div>
+                  <div class="mockup-mini-card">
+                    <div class="card-icon">🎵</div>
+                    <div class="card-label" style="color: var(--text-muted);">Soundtrack</div>
+                    <div class="card-val">Taylor Swift ✨</div>
+                  </div>
+                  <div class="mockup-mini-card">
+                    <div class="card-icon">🎟️</div>
+                    <div class="card-label" style="color: var(--text-muted);">Coupons</div>
+                    <div class="card-val">10 Unclaimed</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 2: INTERACTIVE LOF-O-METER -->
+            <div class="mockup-tab-pane" id="paneMeter">
+              <div class="interactive-meter-box">
+                <span class="badge-luxury" style="margin-bottom: 10px;">⚡ Quantum Love Measurement</span>
+                <h3 style="font-size: 1.5rem;">The Real-Time Lof-O-Meter 📈</h3>
+                <p style="font-size: 0.92rem; color: var(--text-secondary);">Click the pump button below to inject quintillions of raw affection!</p>
+
+                <div class="meter-counter-display" id="mockMeterDisplay">9,847,293,847,192,840,320</div>
+                <div class="meter-bar-track">
+                  <div class="meter-bar-fill" id="mockMeterFill"></div>
+                </div>
+
+                <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                  <button type="button" class="btn btn-primary btn-sm" id="btnMockPump">
+                    💖 Pump Lof! (+500 Quadrillion)
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" id="btnMockKiss">
+                    💋 Send Kiss Kiss
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" id="btnMockHug">
+                    🤗 Send Hug Hug
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 3: WAX LOVE LETTER -->
+            <div class="mockup-tab-pane" id="paneLetter">
+              <div class="wax-letter-box">
+                <div class="wax-seal-btn" id="btnBreakWaxSeal" title="Click to break the wax seal!">
+                  <span>💌</span>
+                </div>
+                <div id="waxPromptText" style="font-weight: 800; color: #991b1b; font-size: 1rem; margin-bottom: 6px;">
+                  Tap the royal wax seal to break and unfold the letter!
+                </div>
+                <div class="wax-letter-text" id="waxLetterContent">
+                  <p style="margin-bottom: 12px; font-weight: 800;">My Dearest Baby Ella,</p>
+                  <p style="margin-bottom: 12px;">
+                    From our late-night talks by Canton Tower until 6 AM to freezing 5,000m alpine summits, every single breath with you is pure magic. No airport transit, no timezone difference, and no distance on Earth could ever weaken how fiercely and endlessly I love you.
+                  </p>
+                  <p style="text-align: right; font-weight: 800; margin-top: 16px;">Forever Yours, Aghiles ❤️</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 4: TRUTH OR DARE -->
+            <div class="mockup-tab-pane" id="paneBottle">
+              <div class="bottle-spin-box">
+                <div style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 14px;">
+                  Tap the champagne bottle below to spin and draw an intimate couple challenge!
+                </div>
+                <div class="bottle-spin-icon" id="mockSpinBottle" title="Tap to spin!">🍾</div>
+                <div class="bottle-prompt-card" id="mockPromptCard">
+                  Tap the champagne bottle above to spin! ✨
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 13 Modular Widgets Grid -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <span class="badge-luxury" style="margin-bottom: 14px;">✨ Handcrafted Romantic Modules</span>
+        <h2>Everything You Need to Tell Your Love Story</h2>
+        <p>Preview any module with 1 click. Easily enable, customize, and arrange them inside the Studio.</p>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="widget-filter-bar">
+        <button type="button" class="widget-filter-btn active" data-cat="all">✨ All Modules (13)</button>
+        <button type="button" class="widget-filter-btn" data-cat="story">💌 Story & Letters</button>
+        <button type="button" class="widget-filter-btn" data-cat="memories">📸 Photos & Maps</button>
+        <button type="button" class="widget-filter-btn" data-cat="games">🎮 Couples Games</button>
+      </div>
+
+      <div class="widgets-grid">
+        <!-- 1. Hero Header -->
+        <div class="widget-card" data-category="story">
+          <div class="widget-card-header">
+            <div class="widget-icon">👑</div>
+            <span class="widget-tag">Story</span>
+          </div>
+          <h3 class="widget-title">Hero Header & LDR Clocks</h3>
+          <p class="widget-desc">Live dual timezone clocks for long-distance couples, reunion flight ticket, live countdown timer, and floating ambient hearts.</p>
+          <div style="margin-top: auto; padding-top: 14px;">
+            <button type="button" class="btn-preview-widget" data-preview-id="hero">
+              <span>👁️</span> Quick Preview
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Interactive Map -->
+        <div class="widget-card" data-category="memories">
+          <div class="widget-card-header">
+            <div class="widget-icon">🗺️</div>
+            <span class="widget-tag">Memories</span>
+          </div>
+          <h3 class="widget-title">Interactive Love Map</h3>
+          <p class="widget-desc">World travel map showing cities you visited together, flight paths, date markers, and popup memory photos.</p>
+          <div style="margin-top: auto; padding-top: 14px;">
+            <button type="button" class="btn-preview-widget" data-preview-id="map">
+              <span>👁️</span> Quick Preview
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Love Meter -->
+        <div class="widget-card" data-category="games">
+          <div class="widget-card-header">
+            <div class="widget-icon">📈</div>
+            <span class="widget-tag">Games</span>
+          </div>
+          <h3 class="widget-title">The Real-Time Lof-O-Meter</h3>
+          <p class="widget-desc">A playful, tactile pump gauge scaling to quintillions. Boost with virtual kisses, hugs, and confetti particle bursts.</p>
+          <div style="margin-top: auto; padding-top: 14px;">
+            <button type="button" class="btn-preview-widget" data-preview-id="love_meter">
+              <span>👁️</span> Quick Preview
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. Timeline Chapters -->
+        <div class="widget-card" data-category="story">
+          <div class="widget-card-header">
+            <div class="widget-icon">📖</div>
+            <span class="widget-tag">Story</span>
+          </div>
+          <h3 class="widget-title">Milestone Chapters</h3>
+          <p class="widget-desc">Rich chronological story timeline with photo carousels, memory highlights, and full-screen reading modals.</p>
+          <div style="margin-top: auto; padding-top: 14px;">
+            <button type="button" class="btn-preview-widget" data-preview-id="timeline">
+              <span>👁️</span> Quick Preview
+            </button>
+          </div>
+        </div>
+
+        <!-- 5. Wax-Sealed Letter -->
+        <div class="widget-card" data-category="story">
+          <div class="widget-card-header">
+            <div class="widget-icon">💌</div>
+            <span class="widget-tag">Story</span>
+          </div>
+          <h3 class="widget-title">Wax-Sealed Love Letter</h3>
+          <p class="widget-desc">Interactive 3D wax seal that breaks open to reveal your handwritten note, accompanied by a custom recorded voice memo.</p>
+          <div style="margin-top: auto; padding-top: 14px;">
+            <button type="button" class="btn-preview-widget" data-preview-id="letter">
+              <span>👁️</span> Quick Preview
+            </button>
+          </div>
+        </div>
+
+        <!-- 6. Polaroid Memories -->
+        <div class="widget-card" data-category="memories">
+          <div class="widget-card-header">
+            <div class="widget-icon">📸</div>
+            <span class="widget-tag">Memories</span>
+          </div>
+          <h3 class="widget-title">Polaroid Memories Gallery</h3>
+          <p class="widget-desc">Draggable vintage photo cards with authentic rotation physics, retro film borders, and sweet memory captions.</p>
+          <div style="margin-top: auto; padding-top: 14px;">
+            <button type="button" class="btn-preview-widget" data-preview-id="memories">
+              <span>👁️</span> Quick Preview
+            </button>
+          </div>
+        </div>
+
+        <!-- 7. Truth or Dare -->
+        <div class="widget-card" data-category="games">
+          <div class="widget-card-header">
+            <div class="widget-icon">🍾</div>
+            <span class="widget-tag">Games</span>
+          </div>
+          <h3 class="widget-title">Truth or Dare Bottle Spin</h3>
+          <p class="widget-desc">Interactive spinning champagne bottle with romantic and spicy truth/dare prompts. Fully customizable question bank.</p>
+          <div style="margin-top: auto; padding-top: 14px;">
+            <button type="button" class="btn-preview-widget" data-preview-id="truth_dare">
+              <span>👁️</span> Quick Preview
+            </button>
+          </div>
+        </div>
+
+        <!-- 8. Wheel Spinner -->
+        <div class="widget-card" data-category="games">
+          <div class="widget-card-header">
+            <div class="widget-icon">🎡</div>
+            <span class="widget-tag">Games</span>
+          </div>
+          <h3 class="widget-title">Date Night Spinner</h3>
+          <p class="widget-desc">Can't decide where to eat or what to do? Spin the custom roulette wheel for spontaneous date night surprises.</p>
+          <div style="margin-top: auto; padding-top: 14px;">
+            <button type="button" class="btn-preview-widget" data-preview-id="spinner">
+              <span>👁️</span> Quick Preview
+            </button>
+          </div>
+        </div>
+
+        <!-- 9. Love Coupons -->
+        <div class="widget-card" data-category="games">
+          <div class="widget-card-header">
+            <div class="widget-icon">🎟️</div>
+            <span class="widget-tag">Games</span>
+          </div>
+          <h3 class="widget-title">Scratchable Love Coupons</h3>
+          <p class="widget-desc">Redeemable relationship coupons ('Massage Night', 'Breakfast in Bed', 'Cook Dinner') with scratch-off reveal.</p>
+          <div style="margin-top: auto; padding-top: 14px;">
+            <button type="button" class="btn-preview-widget" data-preview-id="coupons">
+              <span>👁️</span> Quick Preview
+            </button>
+          </div>
+        </div>
+
+        <!-- 10. Boarding Pass -->
+        <div class="widget-card" data-category="story">
+          <div class="widget-card-header">
+            <div class="widget-icon">✈️</div>
+            <span class="widget-tag">Story</span>
+          </div>
+          <h3 class="widget-title">First-Class Boarding Pass</h3>
+          <p class="widget-desc">A gorgeous airline boarding pass tailored to your upcoming reunion trip, anniversary getaway, or flight milestones.</p>
+          <div style="margin-top: auto; padding-top: 14px;">
+            <button type="button" class="btn-preview-widget" data-preview-id="boarding_pass">
+              <span>👁️</span> Quick Preview
+            </button>
+          </div>
+        </div>
+
+        <!-- 11. Love Quiz -->
+        <div class="widget-card" data-category="games">
+          <div class="widget-card-header">
+            <div class="widget-icon">❓</div>
+            <span class="widget-tag">Games</span>
+          </div>
+          <h3 class="widget-title">Couples Trivia Quiz</h3>
+          <p class="widget-desc">Who remembers the first date spot? Test your partner with interactive trivia questions and celebratory confetti.</p>
+          <div style="margin-top: auto; padding-top: 14px;">
+            <button type="button" class="btn-preview-widget" data-preview-id="quiz">
+              <span>👁️</span> Quick Preview
+            </button>
+          </div>
+        </div>
+
+        <!-- 12. Reasons Why I Love You -->
+        <div class="widget-card" data-category="story">
+          <div class="widget-card-header">
+            <div class="widget-icon">💌</div>
+            <span class="widget-tag">Story</span>
+          </div>
+          <h3 class="widget-title">Reasons Why I Lof You</h3>
+          <p class="widget-desc">Tactile swipeable card deck categorized by Romance, Travel, Humor, and Food with personalized messages.</p>
+          <div style="margin-top: auto; padding-top: 14px;">
+            <button type="button" class="btn-preview-widget" data-preview-id="reasons">
+              <span>👁️</span> Quick Preview
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Presets & Themes Section -->
+  <section class="section" id="presets" style="background: rgba(11, 17, 32, 0.5);">
+    <div class="container">
+      <div class="section-header">
+        <span class="badge-luxury" style="margin-bottom: 14px;">Pre-Configured Editorial Layouts</span>
+        <h2>Choose a Preset, or Build From Scratch</h2>
+        <p>Switch between tailored presets in seconds. Rearrange any section effortlessly inside the Builder Studio.</p>
+      </div>
+
+      <div class="presets-showcase">
+        <div class="presets-nav">
+          <button type="button" class="preset-tab-btn active" data-preset="complete">✨ Complete Suite (All 13)</button>
+          <button type="button" class="preset-tab-btn" data-preset="storyteller">📖 Storyteller</button>
+          <button type="button" class="preset-tab-btn" data-preset="playful">🎮 Playful & Fun</button>
+          <button type="button" class="preset-tab-btn" data-preset="minimal">📸 Minimal Gallery</button>
+        </div>
+
+        <div class="preset-preview-content">
+          <div class="preset-details">
+            <h3 id="presetTitle">Complete Romance Suite</h3>
+            <p id="presetDesc">The full production experience containing all 13 interactive widgets. Perfect for anniversaries, milestones, and lifelong memory preservation.</p>
+            <div class="preset-widget-badges" id="presetBadges">
+              <span class="preset-widget-badge">👑 Hero & Clocks</span>
+              <span class="preset-widget-badge">📈 Lof-O-Meter</span>
+              <span class="preset-widget-badge">🗺️ Interactive Map</span>
+              <span class="preset-widget-badge">📖 Timeline</span>
+              <span class="preset-widget-badge">💌 Audio Letter</span>
+              <span class="preset-widget-badge">📸 Polaroids</span>
+              <span class="preset-widget-badge">🍾 Truth / Dare</span>
+              <span class="preset-widget-badge">🎡 Spinner</span>
+              <span class="preset-widget-badge">🎟️ Coupons</span>
+              <span class="preset-widget-badge">✈️ Boarding Pass</span>
+              <span class="preset-widget-badge">❓ Love Quiz</span>
+              <span class="preset-widget-badge">🎵 Soundtrack</span>
+            </div>
+            <button type="button" class="btn btn-primary" id="btnChoosePreset">
+              <span>🚀</span> Start With This Layout
+            </button>
+          </div>
+
+          <div class="preset-visual" style="text-align: center;">
+            <div style="background: rgba(0,0,0,0.5); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 28px; box-shadow: 0 15px 40px rgba(0,0,0,0.6);">
+              <div style="font-size: 3.2rem; margin-bottom: 12px;" id="presetIcon">💖</div>
+              <h4 style="font-size: 1.3rem; margin-bottom: 8px;">5 Luxury Theme Palettes</h4>
+              <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 14px;">
+                Tap any swatch below to transform the mockup styling live:
+              </p>
+              <div class="theme-swatches">
+                <button type="button" class="theme-swatch active" data-theme="pink" style="background: #f43f5e;" title="Romantic Rose"></button>
+                <button type="button" class="theme-swatch" data-theme="indigo" style="background: #6366f1;" title="Starry Night"></button>
+                <button type="button" class="theme-swatch" data-theme="peach" style="background: #f97316;" title="Sunset Peach"></button>
+                <button type="button" class="theme-swatch" data-theme="emerald" style="background: #10b981;" title="Emerald Forest"></button>
+                <button type="button" class="theme-swatch" data-theme="purple" style="background: #a855f7;" title="Velvet Midnight"></button>
+              </div>
+              <div id="activeThemeLabel" style="font-size: 0.9rem; font-weight: 800; color: #f43f5e; margin-top: 14px;">
+                Theme: Romantic Rose
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Couples Love It Section -->
+  <section class="section" id="why-us">
+    <div class="container">
+      <div class="section-header">
+        <span class="badge-luxury" style="margin-bottom: 14px;">✨ Pure Romantic Delight</span>
+        <h2>Why Couples Love LoveSaas</h2>
+        <p>A personal digital keepsake that will make them smile, cry happy tears, and keep forever.</p>
+      </div>
+
+      <div class="why-us-grid">
+        <div class="why-card">
+          <div class="why-icon">💐</div>
+          <h3>More Meaningful Than Flowers</h3>
+          <p>Bouquets wilt in 4 days, but your couple website is a living digital heirloom you'll revisit on every anniversary for decades to come.</p>
+        </div>
+        <div class="why-card highlight">
+          <div class="why-icon">🔒</div>
+          <h3>100% Private & Intimate</h3>
+          <p>Protected by your private 4-digit PIN. No social media ads, no algorithms, and no public scrutiny. Just a quiet sanctuary for the two of you.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">♾️</div>
+          <h3>Zero Monthly Subscriptions</h3>
+          <p>Pay once, keep it forever. Update your polaroids, add new travel destinations, and create new coupons whenever your love story grows.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="section" id="how-it-works" style="background: rgba(11, 17, 32, 0.5);">
+    <div class="container">
+      <div class="section-header">
+        <span class="badge-luxury" style="margin-bottom: 14px;">Effortless 3-Step Setup</span>
+        <h2>How to Create & Share Your Site</h2>
+        <p>From checkout to a published romantic website in under 5 minutes.</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3 class="step-title">Claim Your URL</h3>
+          <p class="step-desc">Pick your unique couple URL (e.g., <code>lovesaas.com/sites/alex-and-sam</code>) and set a private 4-digit Admin PIN for editing.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3 class="step-title">Instant Activation</h3>
+          <p class="step-desc">Choose your plan with a one-time payment. No recurring monthly subscriptions. Immediate database provisioning and studio unlock.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3 class="step-title">Build & Share</h3>
+          <p class="step-desc">Access your Builder Studio right away. Upload photos, record audio memos, reorder widgets, and send the link to your special someone!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <span class="badge-luxury" style="margin-bottom: 14px;">Verified Couple Love Stories</span>
+        <h2>Loved by 1,200+ Couples All Over the World</h2>
+        <p>See how real couples used LoveSaas for anniversaries, proposals, and distance.</p>
+      </div>
+
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <div class="test-stars">★★★★★</div>
+          <p class="test-quote">
+            "I sent this to my girlfriend on our 2nd anniversary while we were in an LDR between Paris and Tokyo. When she broke open the wax letter and heard my voice note, she burst into happy tears!"
+          </p>
+          <div class="test-author">
+            <div class="test-avatar">💑</div>
+            <div>
+              <div class="test-author-name">Lucas & Maya</div>
+              <div class="test-author-meta">Paris 🇫🇷 ✈️ Tokyo 🇯🇵 • 2nd Anniversary</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="test-stars">★★★★★</div>
+          <p class="test-quote">
+            "The interactive travel map and chapter timeline allowed us to document all 6 countries we backpacked together. The builder studio made uploading our photos and custom audio tracks so effortless."
+          </p>
+          <div class="test-author">
+            <div class="test-avatar">💍</div>
+            <div>
+              <div class="test-author-name">David & Sarah</div>
+              <div class="test-author-meta">New York, USA • Wedding Proposal Surprise</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="test-stars">★★★★★</div>
+          <p class="test-quote">
+            "We played Truth or Dare and the Love Quiz on date night directly from our phones on the couch. It is hilarious, beautifully designed, and feels like a luxury personalized app."
+          </p>
+          <div class="test-author">
+            <div class="test-avatar">✨</div>
+            <div>
+              <div class="test-author-name">Amina & Tariq</div>
+              <div class="test-author-meta">London, UK • Anniversary Date Night</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section class="section" id="pricing" style="background: rgba(11, 17, 32, 0.5);">
+    <div class="container">
+      <div class="section-header">
+        <span class="badge-luxury" style="margin-bottom: 14px;">Lifetime Keepsake Guarantee</span>
+        <h2>Simple, One-Time Investment in Your Love Story</h2>
+        <p>No subscriptions. Pay once, own your private couple website forever.</p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Starter Plan -->
+        <div class="pricing-card">
+          <h3 class="pricing-title">Love Story Starter</h3>
+          <p class="pricing-desc">Essential romantic keepsake with core story chapters, interactive map, and photo memories.</p>
+
+          <div class="pricing-price-wrap">
+            <span class="pricing-currency">$</span>
+            <span class="pricing-amount">19</span>
+            <span class="pricing-period">one-time / lifetime</span>
+          </div>
+
+          <ul class="pricing-features-list">
+            <li><span class="feat-check">✓</span> <strong>Full Access to Builder Studio</strong></li>
+            <li><span class="feat-check">✓</span> 6 Core Story Widgets (Hero, Timeline, Map, Polaroids, Letter, Boarding Pass)</li>
+            <li><span class="feat-check">✓</span> Custom Couple URL Slug</li>
+            <li><span class="feat-check">✓</span> 50 Photo Upload Storage</li>
+            <li><span class="feat-check">✓</span> 4-Digit Admin PIN Protection</li>
+            <li><span class="feat-check">✓</span> 100% Mobile & Desktop Responsive</li>
+            <li class="disabled"><span class="feat-check">✕</span> Interactive Couple Games (Truth/Dare, Spinner, Coupons, Quiz)</li>
+            <li class="disabled"><span class="feat-check">✕</span> Unlimited Cloudflare R2 Media Storage</li>
+            <li class="disabled"><span class="feat-check">✕</span> Wax-Sealed Audio Voice Recording</li>
+          </ul>
+
+          <button type="button" class="btn btn-secondary btn-lg" data-plan-trigger="starter">
+            Select Starter — $19
+          </button>
+        </div>
+
+        <!-- VIP Suite Plan (Popular) -->
+        <div class="pricing-card popular">
+          <div class="pricing-popular-pill">✨ Most Popular • Best Value</div>
+          <h3 class="pricing-title">Forever VIP Suite</h3>
+          <p class="pricing-desc">The complete luxury package with all 13 interactive widgets, custom audio notes, couple games, and unlimited storage.</p>
+
+          <div class="pricing-price-wrap">
+            <span class="pricing-currency">$</span>
+            <span class="pricing-amount">39</span>
+            <span class="pricing-strike">$99</span>
+            <span class="pricing-period">one-time / lifetime</span>
+          </div>
+
+          <ul class="pricing-features-list">
+            <li><span class="feat-check">✓</span> <strong>Full Access to Builder Studio (Instant Unlock)</strong></li>
+            <li><span class="feat-check">✓</span> <strong>All 13 Interactive Widgets & Modules</strong></li>
+            <li><span class="feat-check">✓</span> Couples Games (Truth/Dare, Wheel Spinner, Love Coupons, Love Quiz)</li>
+            <li><span class="feat-check">✓</span> Wax-Sealed Audio Voice Letter Player</li>
+            <li><span class="feat-check">✓</span> Background Music Player & Soundtracks</li>
+            <li><span class="feat-check">✓</span> <strong>Unlimited Photos & Audio Files (Cloudflare R2 High-Speed CDN)</strong></li>
+            <li><span class="feat-check">✓</span> All 5 Luxury Romantic Themes</li>
+            <li><span class="feat-check">✓</span> Custom Couple URL Slug & Admin PIN</li>
+            <li><span class="feat-check">✓</span> Lifetime Hosting & Priority VIP Support</li>
+          </ul>
+
+          <button type="button" class="btn btn-primary btn-lg" data-plan-trigger="vip">
+            <span>💖</span> Get Forever VIP — $39
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="section" id="faq">
+    <div class="container">
+      <div class="section-header">
+        <span class="badge-luxury" style="margin-bottom: 14px;">Frequently Asked Questions</span>
+        <h2>Everything You Need to Know</h2>
+      </div>
+
+      <div class="faq-wrap">
+        <div class="faq-item open">
+          <button type="button" class="faq-question">
+            <span>How do I access the Builder Studio after purchasing?</span>
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-answer">
+            Immediately after checkout, you receive instant access to your private Builder Studio link (<code>/builder?slug=your-names&token=...</code>). You can also log in anytime using your Couple URL Slug and 4-digit Admin PIN.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button type="button" class="faq-question">
+            <span>Do I need any programming or design skills?</span>
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-answer">
+            Zero technical knowledge required! The Builder Studio is 100% visual with live real-time preview. Type your partner's name, upload your favorite photos, customize quiz questions, and click Save.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button type="button" class="faq-question">
+            <span>How long will our couple website stay active online?</span>
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-answer">
+            Forever! Both plans include lifetime hosting with no recurring monthly fees or unexpected renewal charges.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button type="button" class="faq-question">
+            <span>Can my partner and I view the website on our phones?</span>
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-answer">
+            Yes, every single widget is engineered to look magnificent and perform fluidly across iPhones, Android devices, iPads, and desktop computers.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button type="button" class="faq-question">
+            <span>Can we add our own personal music and recorded voice letters?</span>
+            <span class="faq-chevron">▾</span>
+          </button>
+          <div class="faq-answer">
+            Yes! With the Forever VIP Suite, you can upload audio files (MP3, M4A, WAV) or record custom voice notes that play when your partner breaks open the wax-sealed letter.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sticky Floating Bottom CTA Bar -->
+  <div class="sticky-cta-bar" id="stickyCtaBar">
+    <div class="container sticky-cta-inner">
+      <div>
+        <strong style="color: #fff;">💍 Build Your Forever Couple Website</strong>
+        <span style="color: var(--text-secondary); font-size: 0.88rem; margin-left: 8px;">
+          50% Off Lifetime Access • Zero subscriptions • Instant Studio Unlock
+        </span>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <button type="button" class="btn btn-secondary btn-sm" id="btnStickyDemo">Live Demo</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btnStickyBuy">Create Site 🚀</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="landing-footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span style="font-size: 1.6rem;">💍</span>
+          <span>LoveSaas Platform</span>
+        </div>
+        <div class="footer-links">
+          <a href="#demo-preview">Interactive Demo</a>
+          <a href="#features">13 Modules</a>
+          <a href="#why-us">Why Couples Love It</a>
+          <a href="/builder?slug=demo">Try Studio Demo</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#faq">FAQ</a>
+          <a href="#" id="footerSignInBtn">Sign In to Studio</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        &copy; 2026 LoveSaas Engine. All rights reserved. Crafted with infinite lof for couples worldwide ❤️
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================================================================ -->
+  <!-- MODALS -->
+  <!-- ================================================================ -->
+
+  <!-- 1. CHECKOUT MODAL -->
+  <div class="modal-overlay" id="checkoutModal" role="dialog" aria-modal="true" aria-labelledby="checkoutModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 id="checkoutModalTitle">💖 Claim Your Couple Website</h3>
+          <p id="checkoutModalSubtitle">One-time payment • Lifetime access • Instant Studio unlock</p>
+        </div>
+        <button type="button" class="modal-close-btn" id="btnCloseCheckoutModal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- STEP 1: COUPLE DETAILS & ACTIVATION -->
+        <div id="checkoutStep1">
+          <label style="display: block; font-size: 0.88rem; font-weight: 700; margin-bottom: 8px;">Select Plan</label>
+          <div class="plan-chips">
+            <div class="plan-chip" data-plan="starter">
+              <span class="chip-name">Story Starter</span>
+              <span class="chip-price">$19</span>
+              <span style="font-size: 0.76rem; color: var(--text-muted);">6 Core Widgets</span>
+            </div>
+            <div class="plan-chip active" data-plan="vip">
+              <span class="chip-name">Forever VIP Suite 💖</span>
+              <span class="chip-price">$39</span>
+              <span style="font-size: 0.76rem; color: #fda4af;">All 13 Widgets & Games</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="inputPartner1">Partner 1 Name *</label>
+              <input type="text" id="inputPartner1" class="form-input" placeholder="e.g., Alex" required>
+            </div>
+            <div class="form-group">
+              <label for="inputPartner2">Partner 2 Name *</label>
+              <input type="text" id="inputPartner2" class="form-input" placeholder="e.g., Sam" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="inputSlug">Choose Your Website URL Slug *</label>
+            <div class="slug-input-wrap">
+              <span class="slug-prefix">/sites/</span>
+              <input type="text" id="inputSlug" class="form-input" placeholder="alex-and-sam" required>
+            </div>
+            <div class="slug-feedback" id="slugFeedback">Enter 2-40 letters, numbers, or dashes</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="inputEmail">Account Email *</label>
+              <input type="email" id="inputEmail" class="form-input" placeholder="you@love.com" required>
+              <div class="form-hint">For site recovery & receipts</div>
+            </div>
+            <div class="form-group">
+              <label for="inputPin">Admin PIN (4 Digits) *</label>
+              <input type="password" id="inputPin" class="form-input" placeholder="1234" maxlength="8" required>
+              <div class="form-hint">Protects your builder studio</div>
+            </div>
+          </div>
+
+          <div style="background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.25); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 0.85rem; color: #fda4af; display: flex; align-items: center; gap: 10px; margin-top: 6px;">
+            <span>✨</span> Instant setup • Zero subscription fees • Private & secure
+          </div>
+        </div>
+
+        <!-- STEP 2: ORDER SUCCESS & ACCESS HANDOFF -->
+        <div id="checkoutStep3" class="success-screen" style="display: none;">
+          <div class="success-icon">🎉</div>
+          <h3 class="success-title">Congratulations! Your Site is Ready</h3>
+          <p class="success-desc">Your couple website has been created and your Builder Studio is unlocked!</p>
+
+          <div class="access-credential-box">
+            <div class="cred-row">
+              <span class="cred-label">Couple Website:</span>
+              <span class="cred-val" id="successSiteUrl">/sites/alex-and-sam</span>
+            </div>
+            <div class="cred-row">
+              <span class="cred-label">Admin PIN:</span>
+              <span class="cred-val" id="successPin">••••</span>
+            </div>
+            <div class="cred-row">
+              <span class="cred-label">Plan Activated:</span>
+              <span class="cred-val" id="successPlanBadge" style="color: #f43f5e;">Forever VIP Suite</span>
+            </div>
+          </div>
+
+          <div class="success-actions">
+            <a href="#" class="btn btn-primary btn-lg" id="btnLaunchBuilderStudio">
+              <span>🚀</span> Launch Builder Studio Now
+            </a>
+            <a href="#" class="btn btn-secondary" id="btnViewLiveSite" target="_blank">
+              <span>↗</span> View Public Website
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" id="checkoutModalFooter">
+        <button type="button" class="btn btn-secondary" id="btnCancelCheckout">Cancel</button>
+        <button type="button" class="btn btn-primary btn-lg" id="btnCheckoutNext" style="flex: 1;">
+          <span>💖 Claim Site & Launch Studio ($39)</span> <span>🚀</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. SIGN IN / ACCESS MODAL -->
+  <div class="modal-overlay" id="signInModal" role="dialog" aria-modal="true" aria-labelledby="signInModalTitle">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 id="signInModalTitle">🔑 Enter Builder Studio</h3>
+          <p>Access your existing couple website</p>
+        </div>
+        <button type="button" class="modal-close-btn" id="btnCloseSignInModal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="signInSlug">Couple Website Slug</label>
+          <div class="slug-input-wrap">
+            <span class="slug-prefix">/sites/</span>
+            <input type="text" id="signInSlug" class="form-input" placeholder="alex-and-sam">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="signInPin">Admin PIN (4 Digits)</label>
+          <input type="password" id="signInPin" class="form-input" placeholder="1234" maxlength="8">
+        </div>
+
+        <div id="signInError" style="color: #ef4444; font-size: 0.85rem; margin-top: 10px; display: none;"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btnCancelSignIn">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btnSubmitSignIn">
+          <span>Unlock Studio</span> <span>🚀</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. LIVE DEMO PREVIEW MODAL -->
+  <div class="modal-overlay" id="demoPreviewModal" role="dialog" aria-modal="true" aria-labelledby="demoModalTitle">
+    <div class="modal-card preview-modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 id="demoModalTitle">👁️ Live Couple Website Preview</h3>
+          <p>Interactive preview of sample couple site (Alex & Sam)</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <a href="/sites/demo" target="_blank" class="btn btn-secondary btn-sm">↗ Open in New Tab</a>
+          <button type="button" class="modal-close-btn" id="btnCloseDemoModal">✕</button>
+        </div>
+      </div>
+      <div class="preview-iframe-wrap">
+        <iframe id="demoIframe" src="" title="Live Couple Site Preview"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. HIGH-RES WIDGET LIGHTBOX MODAL -->
+  <div class="modal-overlay" id="widgetLightboxModal" role="dialog" aria-modal="true" aria-labelledby="widgetLightboxTitle">
+    <div class="modal-card widget-lightbox-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 id="widgetLightboxTitle">✨ Widget Visual Preview</h3>
+          <p id="widgetLightboxSubtitle">Fully active state</p>
+        </div>
+        <button type="button" class="modal-close-btn" id="btnCloseWidgetLightbox">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="widget-lightbox-image-wrap">
+          <img id="widgetLightboxImg" src="" alt="Widget Preview">
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+          <div>
+            <span class="badge-luxury" id="widgetLightboxCatBadge">FEATURE</span>
+            <span style="font-size: 0.92rem; color: var(--text-secondary); margin-left: 10px;" id="widgetLightboxHint">
+              Fully customizable in the studio
+            </span>
+          </div>
+          <button type="button" class="btn btn-primary" id="btnLightboxGetStarted">
+            <span>💖</span> Get This Widget with Studio
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/builder/widget-previews.js"></script>
+  <script src="/js/landing.js"></script>
+</body>
+</html>

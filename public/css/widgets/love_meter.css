@@ -1,0 +1,353 @@
+/* Lof-O-Meter Section */
+.meter-box {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 30px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.meter-display-wrap {
+  margin: 28px 0;
+}
+
+.meter-bar-track {
+  width: 100%;
+  height: 32px;
+  background: #f1e2e7;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 2px solid var(--surface-border);
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.08);
+  position: relative;
+}
+
+.meter-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff758c 0%, #ff4b72 50%, #feca57 80%, #c56cf0 100%);
+  border-radius: 999px;
+  transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 16px rgba(255, 75, 114, 0.6);
+}
+
+.meter-number-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding: 0 4px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.meter-number {
+  font-family: var(--font-serif);
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-weight: 700;
+  color: var(--primary);
+  word-break: break-all;
+}
+
+.meter-status {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.meter-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-pulse {
+  animation: pulseBeat 2s infinite;
+}
+
+.floating-kiss-stamp {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  transform: translate(-50%, -50%);
+  animation: floatKissPop 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  filter: drop-shadow(0 4px 12px rgba(255, 60, 100, 0.45));
+  user-select: none;
+}
+
+@keyframes floatKissPop {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.3) rotate(var(--rot, 0deg));
+  }
+  30% {
+    opacity: 1;
+    transform: translate(-50%, calc(-50% - 25px)) scale(1.3) rotate(var(--rot, 0deg));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% - 95px)) scale(1.7) rotate(calc(var(--rot, 0deg) * 1.5));
+  }
+}
+
+
+/* Screen Shake Animation for Cosmic Supernova */
+.screen-shake {
+  animation: screenShake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes screenShake {
+  10%, 90% { transform: translate3d(-2px, 1px, 0) rotate(-0.5deg); }
+  20%, 80% { transform: translate3d(3px, -2px, 0) rotate(0.5deg); }
+  30%, 50%, 70% { transform: translate3d(-5px, 3px, 0) rotate(-1deg); }
+  40%, 60% { transform: translate3d(5px, -3px, 0) rotate(1deg); }
+}
+
+/* Cosmic Supernova Glow for Love Meter */
+.meter-cosmic-glow {
+  box-shadow: 0 0 25px #ff007f, 0 0 50px #ff00ff, inset 0 0 15px #ffffff !important;
+  animation: cosmicRainbow 2s linear infinite !important;
+}
+
+@keyframes cosmicRainbow {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+
+
+/* Grand Hugs & Kisses Epic Overlay */
+.hug-kiss-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 105, 135, 0.94);
+  backdrop-filter: blur(16px);
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  animation: modalPop 0.4s ease;
+}
+
+.hug-kiss-overlay.hidden {
+  display: none;
+}
+
+.hug-kiss-content {
+  max-width: 520px;
+  color: #ffffff;
+}
+
+.hug-giant-bear {
+  font-size: clamp(4rem, 12vw, 7rem);
+  animation: pulseBeat 1.2s infinite;
+}
+
+.hug-title {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  margin: 10px 0;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.hug-sub {
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-bottom: 24px;
+}
+
+.flying-kissies-cluster {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  font-size: 2.2rem;
+  margin-bottom: 28px;
+}
+
+.kiss-emoji {
+  animation: floatSparkle 1.5s ease-in-out infinite alternate;
+}
+
+.k1 { animation-delay: 0s; }
+.k2 { animation-delay: 0.3s; }
+.k3 { animation-delay: 0.6s; }
+.k4 { animation-delay: 0.9s; }
+.k5 { animation-delay: 1.2s; }
+
+
+/* Pump Blocker Modal */
+.pump-blocker-content {
+  text-align: center;
+  max-width: 480px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+}
+
+.pump-blocker-emoji {
+  font-size: 3.5rem;
+  margin-bottom: 12px;
+  animation: pulseBeat 1.2s infinite;
+}
+
+.pump-blocker-title {
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  color: var(--primary);
+  margin-bottom: 12px;
+  font-weight: 800;
+}
+
+.pump-blocker-desc {
+  font-size: 1rem;
+  color: var(--text-main);
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.pump-blocker-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-highlight-shake {
+  animation: btnWiggle 0.6s ease infinite alternate !important;
+  box-shadow: 0 0 30px var(--primary) !important;
+  transform: scale(1.08) !important;
+}
+
+@keyframes btnWiggle {
+  0% { transform: scale(1.06) rotate(-2deg); }
+  50% { transform: scale(1.1) rotate(2deg); }
+  100% { transform: scale(1.06) rotate(-2deg); }
+}
+
+
+/* Cardio Pulses */
+.pulse-alg {
+  animation: cardioThump 1.15s ease-in-out infinite;
+}
+
+.pulse-jak {
+  animation: cardioThump 1.08s ease-in-out infinite 0.15s;
+}
+
+.pulse-synced {
+  animation: cardioThumpSync 0.85s ease-in-out infinite !important;
+  background: var(--primary-light) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 20px var(--primary-glow) !important;
+}
+
+@keyframes cardioThump {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.14); }
+  30% { transform: scale(1.02); }
+  45% { transform: scale(1.09); }
+}
+
+@keyframes cardioThumpSync {
+  0%, 100% { transform: scale(1); }
+  20% { transform: scale(1.22); }
+  40% { transform: scale(1.04); }
+  60% { transform: scale(1.15); }
+}
+
+@media (max-width: 640px) {
+  .love-connection-hub {
+    padding: 16px 14px;
+    margin: 12px auto 24px;
+  }
+  .hub-header {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+  }
+  .hub-status-live {
+    font-size: 0.8rem;
+    gap: 6px;
+  }
+  .hub-bpm-pill {
+    font-size: 0.72rem;
+    padding: 3px 10px;
+    gap: 5px;
+  }
+  .hub-stage-track {
+    gap: 8px;
+  }
+  .hub-avatar-node {
+    min-width: 68px;
+  }
+  .hub-avatar-ring {
+    width: 58px;
+    height: 58px;
+  }
+  .hub-avatar-face {
+    font-size: 1.85rem;
+  }
+  .hub-flag-badge {
+    width: 22px;
+    height: 22px;
+    font-size: 0.95rem;
+  }
+  .hub-city-name {
+    font-size: 0.82rem;
+  }
+  .hub-center-core {
+    min-width: 120px;
+    padding: 0 4px;
+  }
+  .hub-ekg-display {
+    height: 38px;
+  }
+  .dist-odometer {
+    font-size: 1.45rem;
+  }
+  .hub-distance-subtext {
+    font-size: 0.65rem;
+    max-width: 170px;
+    line-height: 1.25;
+    margin: 3px auto 0;
+  }
+  .love-connection-hub.is-synced #hubAvatarLeftRing {
+    transform: translateX(var(--pull-left, min(70px, 18vw)));
+  }
+  .love-connection-hub.is-synced #hubAvatarRightRing {
+    transform: translateX(var(--pull-right, max(-70px, -18vw)));
+  }
+  .hub-footer-bar {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+  .btn-hub-sync {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Love-O-Meter */
+  .meter-box { padding: 26px 14px; }
+  .meter-number {
+    font-size: clamp(1.2rem, 5vw, 1.75rem);
+    word-break: break-word;
+  }
+  .meter-status { font-size: 0.85rem; }
+  .meter-actions { gap: 8px; }
+  .meter-actions .btn {
+    flex: 1 1 calc(50% - 6px);
+    min-height: 44px;
+    font-size: 0.82rem;
+    padding: 8px 10px;
+  }
+  #pumpMeterBtn { flex: 1 1 100%; }
+
+}

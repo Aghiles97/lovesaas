@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Our Infinite Love Story ❤️</title>
+  <meta name="description" content="A cute, magical, and romantic surprise website made with endless lof lof.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/public/css/style.css">
+
+  <style>
+    /* SaaS Viewer Top Floating Bar */
+    .saas-badge-bar {
+      position: fixed;
+      top: 12px;
+      right: 16px;
+      z-index: 99999;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn-edit-link {
+      background: rgba(255, 67, 101, 0.9);
+      backdrop-filter: blur(8px);
+      color: white;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(255, 67, 101, 0.3);
+      transition: transform 0.2s, background 0.2s;
+    }
+    .btn-edit-link:hover {
+      background: #ff4365;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SaaS Viewer Top Floating Bar -->
+  <div class="saas-badge-bar" id="saasBadgeBar" style="display: none;">
+    <a href="/welcome" class="btn-edit-link" style="background: rgba(17, 24, 39, 0.85); border: 1px solid rgba(255,255,255,0.2); font-size: 0.82rem;">
+      💍 Made with LoveSaas
+    </a>
+    <a href="/builder?slug=demo" id="btnViewerEditStudio" class="btn-edit-link" style="font-size: 0.82rem;">
+      ✏️ Studio
+    </a>
+  </div>
+
+  <!-- Ambient Thematic Background Illustrations -->
+  <div id="themeBackdropDecorations" class="theme-backdrop-decorations" aria-hidden="true"></div>
+
+  <!-- Ambient Particle & Bubble Canvas -->
+  <canvas id="particleCanvas"></canvas>
+  <div id="bubbleContainer" class="bubble-container"></div>
+
+    <!-- Floating Music Player & Settings Controls -->
+  <div class="floating-controls">
+    <div id="musicPlayerWidget" class="music-player-widget">
+      <div class="vinyl-disc" id="vinylDisc">
+        <span class="vinyl-center">💿</span>
+      </div>
+      <div class="music-meta">
+        <span class="song-title">The Fate of Ophelia</span>
+        <span class="song-artist">Taylor Swift ✨</span>
+      </div>
+      <div class="audio-equalizer" id="audioEqualizer" title="Live Music Visualizer">
+        <span class="eq-bar eq-bar-1"></span>
+        <span class="eq-bar eq-bar-2"></span>
+        <span class="eq-bar eq-bar-3"></span>
+        <span class="eq-bar eq-bar-4"></span>
+      </div>
+      <button id="musicToggle" class="float-btn music-play-btn" title="Play Music" aria-label="Play Music">
+        <span class="btn-icon" id="musicPlayIcon">▶️</span>
+        <span class="btn-text" id="musicPlayLabel">Play</span>
+      </button>
+      <div class="volume-control-wrap" id="volumeControlWrap">
+        <button id="volumeBtn" class="float-btn volume-btn" title="Adjust Volume" type="button" aria-label="Adjust Volume">
+          <span id="volumeIcon">🔊</span>
+        </button>
+        <div class="volume-slider-popover" id="volumeSliderPopover">
+          <input type="range" id="volumeSlider" min="0" max="100" value="80" step="1" aria-label="Volume Slider" />
+          <span id="volumeVal" class="volume-val-text">80%</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <audio id="bgAudioPlayer" preload="none">
+    <source src="taylor-swift-fate-of-ophelia.m4r" type="audio/mp4">
+    <source src="lady-gaga-always-remember-us-this-way.m4r" type="audio/mp4">
+    <source src="imagine-dragons-i-follow-you.m4r" type="audio/mp4">
+    <source src="music.mp4" type="audio/mp4">
+  </audio>
+
+
+  <!-- Intro Envelope & Music Selection Screen -->
+  <div id="envelopeScreen" class="envelope-screen">
+    <div class="envelope-wrapper intro-full-wrapper">
+      <div class="sparkle-cluster top-left">✨</div>
+      <!-- Ambient Floating Romantic Elements -->
+      <div class="intro-floating-emojis">
+        <span class="float-item f1">💖</span>
+        <span class="float-item f2">🎂</span>
+        <span class="float-item f3">✨</span>
+        <span class="float-item f4">💌</span>
+        <span class="float-item f5">🎁</span>
+        <span class="float-item f6">🎉</span>
+      </div>
+
+      <div class="intro-header-block">
+        <h1 class="intro-main-title">Happy Birthday <span class="partner-name-display">Ella</span> 🎂❤️</h1>
+        <p class="intro-sub-prompt">I created a special magical world for your birthday! Please pick our romantic song below 🎵, then tap the wax seal to enter your magical birthday world! 🎂✨</p>
+      </div>
+
+      <!-- Cute, Compact & Elegant Vinyl Soundtrack Bar -->
+      <div class="soundtrack-selector-bar">
+        <div class="soundtrack-bar-header">
+          <span class="music-note-icon">🎵</span>
+          <span class="soundtrack-bar-title">Choose Our Birthday Soundtrack:</span>
+          <span class="soundtrack-badge-req">Required 🎵</span>
+        </div>
+        <div class="soundtrack-chips-grid" id="soundtrackGrid">
+          <!-- Track 1: Taylor Swift -->
+          <div class="soundtrack-chip" data-src="taylor-swift-fate-of-ophelia.m4r" data-start="46" data-title="The Fate of Ophelia" data-artist="Taylor Swift ✨">
+            <div class="track-vinyl-mini">💿</div>
+            <div class="chip-info">
+              <strong class="chip-name">The Fate of Ophelia</strong>
+              <span class="chip-artist">Taylor Swift ✨</span>
+            </div>
+            <button type="button" class="btn-sample-preview" title="Preview Sample" aria-label="Preview">
+              <span class="sample-icon">▶️</span>
+            </button>
+          </div>
+
+          <!-- Track 2: Lady Gaga -->
+          <div class="soundtrack-chip" data-src="lady-gaga-always-remember-us-this-way.m4r" data-start="45" data-title="Always Remember Us This Way" data-artist="Lady Gaga 🌹">
+            <div class="track-vinyl-mini">💿</div>
+            <div class="chip-info">
+              <strong class="chip-name">Always Remember Us</strong>
+              <span class="chip-artist">Lady Gaga 🌹</span>
+            </div>
+            <button type="button" class="btn-sample-preview" title="Preview Sample" aria-label="Preview">
+              <span class="sample-icon">▶️</span>
+            </button>
+          </div>
+
+          <!-- Track 3: Imagine Dragons -->
+          <div class="soundtrack-chip" data-src="imagine-dragons-i-follow-you.m4r" data-start="0" data-title="Follow You" data-artist="Imagine Dragons 💫">
+            <div class="track-vinyl-mini">💿</div>
+            <div class="chip-info">
+              <strong class="chip-name">Follow You</strong>
+              <span class="chip-artist">Imagine Dragons 💫</span>
+            </div>
+            <button type="button" class="btn-sample-preview" title="Preview Sample" aria-label="Preview">
+              <span class="sample-icon">▶️</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flower Opening Style Selector -->
+      <div class="flower-selector-bar" id="flowerSelectorBar">
+        <div class="flower-bar-header">
+          <span class="flower-note-icon">🌸</span>
+          <span class="flower-bar-title">Choose Opening Flowers:</span>
+          <span class="flower-badge-req">Burst Style ✨</span>
+        </div>
+        <div class="flower-chips-grid" id="flowerStyleGrid">
+          <div class="flower-chip selected" data-style="royal-blend" role="button" tabindex="0">
+            <span class="flower-chip-emoji">💐</span>
+            <div class="chip-info">
+              <strong class="chip-name">Royal Mix</strong>
+              <span class="chip-sub">Peonies & Roses</span>
+            </div>
+          </div>
+          <div class="flower-chip" data-style="garden-roses" role="button" tabindex="0">
+            <span class="flower-chip-emoji">🌹</span>
+            <div class="chip-info">
+              <strong class="chip-name">Garden Roses</strong>
+              <span class="chip-sub">Peach & Rosebuds</span>
+            </div>
+          </div>
+          <div class="flower-chip" data-style="sakura-dream" role="button" tabindex="0">
+            <span class="flower-chip-emoji">🌸</span>
+            <div class="chip-info">
+              <strong class="chip-name">Sakura Dream</strong>
+              <span class="chip-sub">Cherry Blossoms</span>
+            </div>
+          </div>
+          <div class="flower-chip" data-style="golden-sunflower" role="button" tabindex="0">
+            <span class="flower-chip-emoji">🌻</span>
+            <div class="chip-info">
+              <strong class="chip-name">Sunflowers</strong>
+              <span class="chip-sub">Golden & Daisies</span>
+            </div>
+          </div>
+          <div class="flower-chip" data-style="spring-tulips" role="button" tabindex="0">
+            <span class="flower-chip-emoji">🌷</span>
+            <div class="chip-info">
+              <strong class="chip-name">Spring Tulips</strong>
+              <span class="chip-sub">Tulips & Poppies</span>
+            </div>
+          </div>
+          <div class="flower-chip" data-style="lavender-lilac" role="button" tabindex="0">
+            <span class="flower-chip-emoji">💜</span>
+            <div class="chip-info">
+              <strong class="chip-name">Lilac & Viola</strong>
+              <span class="chip-sub">Purple Blooms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Luxury 3D Romantic Love Envelope -->
+      <div class="envelope-section-wrapper">
+        <div class="envelope-card" id="mainEnvelopeCard">
+          <div class="envelope-gold-trim"></div>
+          <div class="envelope-flap"></div>
+          <div class="envelope-pocket"></div>
+          <div class="letter-preview">
+            <span class="preview-sub">A Magical Birthday World For</span>
+            <h2 class="recipient-name-preview preview-name">Ella</h2>
+            <span class="preview-sender" id="envelopePreviewSender">From <span class="sender-name-display">Aghiles</span> with Infinite Lof & Birthday Kisses 🎂💕</span>
+          </div>
+          <div class="wax-seal" id="openEnvelopeBtn" role="button" tabindex="0" aria-label="Open Letter">
+            <div class="seal-glow-halo"></div>
+            <div class="seal-inner">
+              <span class="seal-heart">❤️</span>
+              <span class="seal-text">OPEN</span>
+            </div>
+          </div>
+        </div>
+        <p class="envelope-hint" id="envelopeHint">🎵 Choose our soundtrack above to enter your magical birthday world ✨</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DYNAMIC MODULAR CONTAINER -->
+  <main id="modularGridContainer" class="main-content">
+    <div style="text-align: center; padding: 120px 20px; font-family: 'Playfair Display', serif; font-size: 1.5rem; color: #ff4365;">
+      Loading your love story... ✨
+    </div>
+  </main>
+
+    <!-- Top-Level Map Story Postcard Modal -->
+  <div id="mapStoryModal" class="map-story-modal hidden" role="dialog" aria-modal="true">
+    <div class="map-modal-backdrop" id="mapModalBackdrop"></div>
+    <div class="map-story-postcard glass-panel">
+      <div class="postcard-stamp-mark">LOF AIR • AIRMAIL 💌</div>
+      <button id="closeMapPopup" class="close-map-popup-btn" aria-label="Close memory" type="button">✕</button>
+      
+      <div class="postcard-header-row">
+        <div class="popup-icon" id="mapPopupIcon">🇨🇳</div>
+        <div class="postcard-header-meta">
+          <span class="popup-tag" id="mapPopupTag">Main Destination</span>
+          <h3 class="popup-title" id="mapPopupTitle">Guangzhou (Our Main City ⭐)</h3>
+        </div>
+      </div>
+
+      <!-- Polaroid Memory Photo Preview -->
+      <div class="map-polaroid-wrap" id="mapPolaroidWrap">
+        <div class="map-polaroid-frame" id="mapPolaroidCard" role="button" tabindex="0" title="Click to view full photo in lightbox">
+          <div class="polaroid-washi-tape"></div>
+          <div class="map-polaroid-img-box">
+            <button type="button" id="mapImgSliderPrev" class="map-slider-nav-btn prev hidden" aria-label="Previous photo">❮</button>
+            <img id="mapStoryImg" src="" alt="Destination Photo" loading="lazy" decoding="async" />
+            <button type="button" id="mapImgSliderNext" class="map-slider-nav-btn next hidden" aria-label="Next photo">❯</button>
+            <span class="polaroid-zoom-hint">🔍 Tap to Zoom</span>
+          </div>
+          <div class="map-slider-dots-bar hidden" id="mapImgSliderDots"></div>
+          <div class="polaroid-caption-line">
+            <span id="mapStoryCaption">Our favorite shared memories here ❤️</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="popup-desc" id="mapPopupDesc">Our favorite shared home base where we had countless dates, food adventures, and memories together!</p>
+      
+      <div class="map-popup-chapter-cta-box">
+        <p class="map-popup-insist-note">✨ Full romantic memories, complete story &amp; all gallery photos in Chapter!</p>
+        <button type="button" id="mapOpenChapterDetailCtaBtn" class="btn btn-primary map-popup-cta-btn">
+          <span>📖 View Full Chapter Story &amp; Photos →</span>
+        </button>
+      </div>
+      
+      <!-- Destination Sequential Navigation -->
+      <div class="map-modal-nav-row">
+        <button type="button" id="prevCityBtn" class="btn btn-sm btn-outline nav-city-btn" title="Previous Destination">
+          <span>◀ Prev</span>
+        </button>
+        <span class="city-step-counter" id="cityStepCounter">Destination 1 of 15</span>
+        <button type="button" id="nextCityBtn" class="btn btn-sm btn-outline nav-city-btn" title="Next Destination">
+          <span>Next ▶</span>
+        </button>
+      </div>
+
+      <div class="popup-action-buttons">
+        <button id="editCityDirectBtn" class="btn btn-secondary" type="button">
+          <span>✏️ Edit Photo & Story</span>
+        </button>
+        <button id="closePopupAltBtn" class="btn btn-outline" type="button">
+          <span>Close ✕</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Flight & Journey Distance Breakdown Modal -->
+  <div id="mapDistanceBreakdownModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="mapDistanceModalTitle">
+    <div class="modal-backdrop" id="mapDistanceModalBackdrop"></div>
+    <div class="modal-content glass-panel" style="max-width: 580px; max-height: 90vh; overflow-y: auto; padding: 26px 20px;">
+      <button class="modal-close" id="closeDistanceModalBtn" aria-label="Close modal">&times;</button>
+      <div style="text-align: center; margin-bottom: 16px;">
+        <span style="font-size: 2.2rem; display: block; margin-bottom: 4px;">✈️🌍</span>
+        <h3 id="mapDistanceModalTitle" style="margin: 0; font-size: 1.3rem; color: var(--primary);">Total Flight &amp; Journey Mileage</h3>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin: 4px 0 0;">Every single kilometer flown &amp; traveled across our love story</p>
+      </div>
+
+      <!-- Main Combined Stat Box -->
+      <div class="distance-modal-summary-box">
+        <div class="distance-modal-km">80,750+ km</div>
+        <div class="distance-modal-sub">Over 2× Around the Earth for Love! 💫</div>
+        <div class="distance-modal-detail">Earth's Circumference: ~40,075 km • Hand-in-Hand Across 3 Continents</div>
+      </div>
+
+      <!-- Itemized List of All Segments -->
+      <div class="distance-legs-container">
+        <!-- 1. Algeria <-> China Sept -->
+        <div class="distance-leg-row">
+          <div class="dist-icon">🇩🇿⇄🇨🇳</div>
+          <div class="dist-info">
+            <strong>Algeria ⇄ China (Where We Met • Sept 2025)</strong>
+            <span>Algiers ➔ Guangzhou ➔ Algiers round-trip (10,250 km × 2)</span>
+          </div>
+          <div class="dist-num">20,500 km</div>
+        </div>
+
+        <!-- 2. Algeria -> China Dec -->
+        <div class="distance-leg-row">
+          <div class="dist-icon">🇩🇿➔🇨🇳</div>
+          <div class="dist-info">
+            <strong>Algeria ➔ China Airport Reunion (Dec 10, 2025)</strong>
+            <span>Counting hours until landing back in Guangzhou for birthday perfume</span>
+          </div>
+          <div class="dist-num">10,250 km</div>
+        </div>
+
+        <!-- 3. China -> Vietnam -> Indonesia -->
+        <div class="distance-leg-row">
+          <div class="dist-icon">🇨🇳➔🇻🇳➔🇮🇩</div>
+          <div class="dist-info">
+            <strong>China ➔ Vietnam ➔ Bali (Jan 19–20, 2026)</strong>
+            <span>Guangzhou ➔ Vietnam (16h layover &amp; 4 pants sprint) ➔ Bali</span>
+          </div>
+          <div class="dist-num">4,720 km</div>
+        </div>
+
+        <!-- 4. Bali -> Jakarta -->
+        <div class="distance-leg-row highlight-row">
+          <div class="dist-icon">🌴➔🏡</div>
+          <div class="dist-info">
+            <strong>Bali ➔ Jakarta Island Flight (Jan 27, 2026)</strong>
+            <span>Denpasar Bali (DPS) ➔ Jakarta (CGK) direct flight</span>
+          </div>
+          <div class="dist-num">980 km</div>
+        </div>
+
+        <!-- 5. Jakarta -> Algeria -->
+        <div class="distance-leg-row">
+          <div class="dist-icon">🇮🇩➔🇩🇿</div>
+          <div class="dist-info">
+            <strong>Jakarta ➔ Algeria Flight Home (Feb 7, 2026)</strong>
+            <span>Flying home across Indian Ocean after meeting Lili &amp; Ayung</span>
+          </div>
+          <div class="dist-num">11,550 km</div>
+        </div>
+
+        <!-- 6. Baby back to China -->
+        <div class="distance-leg-row">
+          <div class="dist-icon">🇮🇩➔🇨🇳</div>
+          <div class="dist-info">
+            <strong>Baby Flying Back: Jakarta ➔ China</strong>
+            <span>Ella returning home to Guangzhou from Jakarta</span>
+          </div>
+          <div class="dist-num">3,350 km</div>
+        </div>
+
+        <!-- 7. Boy coming back in April -->
+        <div class="distance-leg-row">
+          <div class="dist-icon">🇩🇿➔🇨🇳</div>
+          <div class="dist-info">
+            <strong>Boy Returns to China (April 7, 2026)</strong>
+            <span>Algiers ➔ Guangzhou for Canton Fair, bike cuddles &amp; proposal</span>
+          </div>
+          <div class="dist-num">10,250 km</div>
+        </div>
+
+        <!-- 8. May farewell flight back to Algeria -->
+        <div class="distance-leg-row">
+          <div class="dist-icon">🇨🇳➔🇩🇿</div>
+          <div class="dist-info">
+            <strong>Guangzhou ➔ Algeria Farewell Flight (May 25, 2026)</strong>
+            <span>Flight back home to Algeria with tearful airport promises</span>
+          </div>
+          <div class="dist-num">10,250 km</div>
+        </div>
+
+        <!-- 9. All inside China trips -->
+        <div class="distance-leg-row">
+          <div class="dist-icon">🚄✈️🚌</div>
+          <div class="dist-info">
+            <strong>All Inside-China Expeditions (Winter &amp; Spring)</strong>
+            <span>Shenzhen, Chongqing, Baby CQ-GZ &amp; GZ-Chengdu flights, Sichuan Alpine loop, Nansha, Wuhan, Nanjing, Shanghai &amp; domestic flights</span>
+          </div>
+          <div class="dist-num">~8,900 km</div>
+        </div>
+      </div>
+
+      <!-- Footer Grand Total -->
+      <div class="distance-modal-footer-sum">
+        <span>Combined Love Journey Total:</span>
+        <strong>80,750+ km</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed Story Chapter Modal (Full Destination Memories) -->
+  <div id="storyChapterDetailModal" class="story-chapter-modal hidden" role="dialog" aria-modal="true" aria-labelledby="chapterDetailTitle">
+    <div class="story-chapter-backdrop" id="storyChapterBackdrop"></div>
+    <div class="story-chapter-content glass-panel">
+      <button class="close-chapter-detail-btn" id="closeChapterDetailBtn" aria-label="Close story chapter">&times;</button>
+      
+      <!-- Prominent Country & Location Hero Banner -->
+      <div class="chapter-location-hero-card">
+        <div class="chapter-loc-country-badge">
+          <span class="chapter-loc-flag" id="chapterDetailFlag">🇨🇳</span>
+          <span class="chapter-loc-country-name" id="chapterDetailCountry">CHINA</span>
+        </div>
+        <div class="chapter-loc-city-wrap">
+          <span class="chapter-loc-pin-icon">📍</span>
+          <h3 class="chapter-loc-city-name" id="chapterDetailCity">Guangzhou</h3>
+        </div>
+        <span class="chapter-loc-tag-badge hidden" id="chapterDetailTag"></span>
+      </div>
+
+      <!-- Main Title & Icon -->
+      <div class="chapter-detail-heading">
+        <span class="chapter-detail-icon" id="chapterDetailIcon"></span>
+        <h2 class="chapter-detail-title" id="chapterDetailTitle"></h2>
+      </div>
+
+      <!-- Photo Showcase with Multi-Photo Slider (Natural Image Ratio) -->
+      <div class="chapter-detail-photo-wrap" id="chapterDetailPhotoWrap">
+        <button type="button" class="chapter-detail-slider-nav prev hidden" id="chapterDetailPrevPhotoBtn" aria-label="Previous photo">◀</button>
+        <img id="chapterDetailImg" src="" alt="Story Chapter Photo" loading="lazy" decoding="async">
+        <button type="button" class="chapter-detail-slider-nav next hidden" id="chapterDetailNextPhotoBtn" aria-label="Next photo">▶</button>
+        <span class="chapter-photo-counter-badge hidden" id="chapterDetailPhotoCounter">📷 1 / 1</span>
+      </div>
+      <div class="chapter-detail-photo-dots hidden" id="chapterDetailPhotoDots"></div>
+
+      <!-- Full Rich Story Narrative -->
+      <div class="chapter-detail-body">
+        <h4 class="chapter-section-subtitle">📖 Complete Journey Story</h4>
+        <div class="chapter-detail-text" id="chapterDetailText"></div>
+
+        <!-- Highlight Badges -->
+        <h4 class="chapter-section-subtitle">✨ Chapter Highlights & Sweet Memories</h4>
+        <div class="chapter-detail-highlights" id="chapterDetailHighlights"></div>
+      </div>
+
+      <div class="chapter-detail-actions">
+        <button type="button" id="backToMapPostcardBtn" class="btn btn-secondary">
+          <span>🗺️ Back to Map Postcard</span>
+        </button>
+        <button type="button" id="editChapterFromDetailBtn" class="btn btn-primary">
+          <span>✏️ Edit This Chapter</span>
+        </button>
+        <button type="button" id="closeChapterDetailAltBtn" class="btn btn-outline">
+          <span>Close ✕</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Photo Lightbox Modal -->
+  <div id="photoLightbox" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" id="lightboxBackdrop"></div>
+    <div class="modal-content photo-modal-content">
+      <button class="modal-close" id="closeLightbox" aria-label="Close modal">&times;</button>
+      <div class="lightbox-img-wrap">
+        <img id="lightboxImg" src="" alt="Memory preview" decoding="async">
+      </div>
+      <p id="lightboxCaption" class="lightbox-caption"></p>
+      <p id="lightboxDesc" class="lightbox-desc"></p>
+      <div style="text-align: center; margin-top: 14px;">
+        <a id="lightboxDownloadBtn" download="memory.jpg" href="#" class="btn btn-sm btn-outline">
+          <span>📥 Save</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Direct In-Place Memory Editor Modal (Our Favorite Moments) -->
+  <div id="directMemoryModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" id="directMemoryBackdrop"></div>
+    <div class="modal-content direct-editor-content direct-memory-modal-content glass-panel">
+      <button class="modal-close" id="closeDirectMemoryModal" aria-label="Close modal">&times;</button>
+      <div class="direct-editor-header">
+        <span class="direct-editor-badge" id="directMemoryModalBadge">📷 Our Favorite Moments</span>
+        <h3 id="directMemoryModalTitle">Edit Photo Memory</h3>
+        <p class="direct-editor-sub">Add your photo and romantic description directly to this memory.</p>
+      </div>
+
+      <div class="memory-editor-grid">
+        <div class="memory-editor-left">
+          <div class="direct-editor-preview-wrap" id="directMemoryDropZone">
+            <img id="directMemoryPreviewImg" src="" alt="Memory photo preview" decoding="async">
+            <span class="preview-zoom-tag">Current Photo</span>
+            <span class="preview-paste-hint">📋 Paste (Ctrl+V / ⌘V)</span>
+          </div>
+
+          <div class="form-group memory-input-group">
+            <label for="directMemoryTitle">Memory Title / Date</label>
+            <input type="text" id="directMemoryTitle" placeholder="e.g. Reunion in China ✈️ (Dec 10)" class="caption-input">
+          </div>
+          <div class="form-group memory-input-group">
+            <label for="directMemoryDesc">Memory Description</label>
+            <textarea id="directMemoryDesc" rows="3" placeholder="Tell the sweet story of this memory..." class="caption-input story-textarea"></textarea>
+          </div>
+        </div>
+
+        <div class="memory-editor-right">
+          <div class="memory-source-tabs">
+            <button type="button" class="memory-tab-btn active" id="tabChooseProjectPhoto" data-tab="choose">
+              <span>🖼️ Choose Project Photo (<span id="projectMemoryImgCount">0</span>)</span>
+            </button>
+            <button type="button" class="memory-tab-btn" id="tabUploadNewPhoto" data-tab="upload">
+              <span>📤 Upload / Paste</span>
+            </button>
+          </div>
+
+          <div class="memory-tab-panel active" id="panelChooseProjectPhoto">
+            <div class="project-images-browser" id="projectImagesBrowser">
+              <div class="project-images-toolbar">
+                <div class="project-search-wrap">
+                  <input type="text" id="projectImagesSearch" placeholder="🔍 Search uploaded photos (e.g. bali, mem, chengdu...)" class="caption-input project-search-input">
+                  <button type="button" id="clearProjectSearchBtn" class="clear-search-btn hidden" aria-label="Clear search">✕</button>
+                </div>
+                <div class="project-images-tags" id="projectImagesFilterChips">
+                  <button type="button" class="project-filter-chip active" data-filter="all">All</button>
+                  <button type="button" class="project-filter-chip" data-filter="mem">Moments</button>
+                  <button type="button" class="project-filter-chip" data-filter="guangzhou">Guangzhou</button>
+                  <button type="button" class="project-filter-chip" data-filter="bali">Bali</button>
+                  <button type="button" class="project-filter-chip" data-filter="chongqing">Chongqing</button>
+                  <button type="button" class="project-filter-chip" data-filter="chengdu">Chengdu</button>
+                  <button type="button" class="project-filter-chip" data-filter="mountains">Mountains</button>
+                  <button type="button" class="project-filter-chip" data-filter="jakarta">Jakarta</button>
+                  <button type="button" class="project-filter-chip" data-filter="shenzhen">Shenzhen</button>
+                  <button type="button" class="project-filter-chip" data-filter="vietnam">Vietnam</button>
+                </div>
+              </div>
+
+              <div class="project-selection-bar">
+                <div class="selection-status-wrap">
+                  <span class="selection-status-label">Selected:</span>
+                  <span class="project-images-active-name" id="projectMemorySelectedName">Click a photo to choose</span>
+                </div>
+                <div class="project-grid-size-toggle" id="projectGridSizeToggle" role="group" aria-label="Thumbnail size">
+                  <button type="button" class="grid-size-btn" data-size="medium" title="Medium thumbnails"><span>🔲 Medium</span></button>
+                  <button type="button" class="grid-size-btn active" data-size="large" title="Large thumbnails"><span>🔳 Large</span></button>
+                </div>
+              </div>
+
+              <div class="project-images-grid" id="projectImagesGrid" role="listbox" aria-label="Available project photos">
+                <!-- Dynamically populated with loaded project images -->
+              </div>
+              <div id="projectImagesEmpty" class="project-images-empty hidden">No project photos found matching search.</div>
+            </div>
+          </div>
+
+          <div class="memory-tab-panel" id="panelUploadNewPhoto">
+            <div class="memory-upload-drop-card" id="memoryUploadDropZone">
+              <div class="upload-drop-icon">📷</div>
+              <h4>Upload or Paste Photo</h4>
+              <p>Drag & drop an image file here, or choose a file from your computer</p>
+              <label for="directMemoryFile" class="btn btn-primary upload-browse-label">
+                <span>📁 Browse From Computer</span>
+              </label>
+              <input type="file" id="directMemoryFile" accept="image/*" class="custom-file-input memory-file-hidden">
+              <div class="upload-paste-hint-box">
+                <span>📋 Or press <strong>Ctrl+V / ⌘V</strong> anywhere to paste an image immediately</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="direct-editor-actions">
+        <button type="button" id="saveDirectMemoryBtn" class="btn btn-primary"><span>💾 Save Memory</span></button>
+        <button type="button" id="downloadDirectMemoryBtn" class="btn btn-outline" title="Save file directly to your images/ folder"><span>📥 Save to images/ folder</span></button>
+        <button type="button" id="deleteDirectMemoryBtn" class="btn btn-outline"><span>🗑️ Delete</span></button>
+        <button type="button" id="cancelDirectMemoryBtn" class="btn btn-secondary"><span>Cancel</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Direct In-Place Chapter Editor Modal (Chapters of Our Lof Story) -->
+  <div id="directChapterModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" id="directChapterBackdrop"></div>
+    <div class="modal-content direct-editor-content glass-panel">
+      <button class="modal-close" id="closeDirectChapterModal" aria-label="Close modal">&times;</button>
+      <div class="direct-editor-header">
+        <span class="direct-editor-badge" id="directChapterModalBadge">🗺️ Chapters of Our Lof Story</span>
+        <h3 id="directChapterModalTitle">Edit Chapter Story</h3>
+        <p class="direct-editor-sub" id="directChapterModalSub">Customize your photo, caption & romantic story for this destination.</p>
+      </div>
+
+      <div class="direct-editor-preview-wrap" id="directChapterDropZone">
+        <button type="button" id="setAsMainPhotoBtn" class="set-main-action-btn hidden" title="Make this photo the main cover photo for this chapter"><span>⭐ Set as Main Photo</span></button>
+        <img id="directChapterPreviewImg" src="" alt="Chapter photo preview" decoding="async">
+        <span class="preview-zoom-tag">Current Photo</span>
+        <span class="preview-paste-hint">📋 Paste (Ctrl+V / ⌘V)</span>
+      </div>
+
+      <div class="direct-editor-inputs">
+        <div class="form-group">
+          <label for="directChapterTitle">Chapter Headline Title</label>
+          <input type="text" id="directChapterTitle" placeholder="e.g. Where Our Story Began 🗼✨" class="caption-input">
+        </div>
+        <div class="form-group">
+          <label for="directChapterFile">Upload Photos or Paste Images Directly (Multiple Allowed, Ctrl+V / ⌘V)</label>
+          <input type="file" id="directChapterFile" accept="image/*" multiple class="custom-file-input">
+        </div>
+        <div class="chapter-photos-gallery-manager" id="directChapterGalleryWrap">
+          <div class="gallery-mgr-header">
+            <span class="gallery-mgr-title">📷 Location Photos (<span id="directChapterPhotoCount">0</span>)</span>
+            <span class="gallery-mgr-hint">Drag or ◀ ▶ to reorder • ⭐ Main • 🗑️ remove</span>
+          </div>
+          <div class="chapter-gallery-thumbs" id="directChapterGalleryThumbs"></div>
+        </div>
+        <div class="form-group">
+          <label for="directChapterCaption">Photo Caption</label>
+          <input type="text" id="directChapterCaption" placeholder="Caption (e.g. Facing Canton tower at night ❤️)..." class="caption-input">
+        </div>
+        <div class="form-group">
+          <label for="directChapterDesc">Romantic Story Description</label>
+          <textarea id="directChapterDesc" rows="3" placeholder="Tell the romantic story of this stop..." class="caption-input story-textarea"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="directChapterHighlights">✨ Chapter Highlights & Sweet Memories (One per line)</label>
+          <textarea id="directChapterHighlights" rows="3" placeholder="7 hours talking non-stop until sunrise by Canton Tower&#10;Sitting by the window watching city traffic" class="caption-input story-textarea"></textarea>
+          <span class="direct-editor-field-hint">💡 Each line becomes a highlight pill in the story & timeline cards.</span>
+          <div class="chapter-highlights-live-preview" id="directChapterHighlightsPreview"></div>
+        </div>
+      </div>
+
+      <div class="direct-editor-actions">
+        <button type="button" id="saveDirectChapterBtn" class="btn btn-primary"><span>💾 Save Chapter Story</span></button>
+        <button type="button" id="downloadDirectChapterBtn" class="btn btn-outline" title="Save file directly to your images/ folder"><span>📥 Save to images/ folder</span></button>
+        <button type="button" id="resetDirectChapterBtn" class="btn btn-outline"><span>Reset</span></button>
+        <button type="button" id="cancelDirectChapterBtn" class="btn btn-secondary"><span>Cancel</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit All Reasons Modal -->
+  <div id="editAllReasonsModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="editAllReasonsTitle">
+    <div class="modal-backdrop" id="editAllReasonsBackdrop"></div>
+    <div class="modal-content edit-all-reasons-content glass-panel">
+      <div class="edit-all-header">
+        <div class="edit-all-header-text">
+          <span class="direct-editor-badge">💌 Full Love Deck Manager</span>
+          <h3 id="editAllReasonsTitle">Edit All Reasons Why I Lof You</h3>
+          <p class="direct-editor-sub">Edit, add, reorder, or delete any of your sweet reasons. All changes update your live love deck!</p>
+        </div>
+        <button class="modal-close" id="closeEditAllReasonsModal" aria-label="Close modal">&times;</button>
+      </div>
+
+      <!-- Top Action Toolbar -->
+      <div class="edit-all-toolbar">
+        <div class="edit-all-search-wrap">
+          <input type="text" id="editAllSearchInput" placeholder="🔍 Search reasons or tags..." class="caption-input edit-search-input">
+        </div>
+        <div class="edit-all-filter-select-wrap">
+          <select id="editAllCategoryFilter" class="caption-input edit-category-select">
+            <option value="all">✨ All Categories</option>
+            <option value="romance">💖 Romance</option>
+            <option value="travel">✈️ Adventures</option>
+            <option value="humor">😂 Inside Jokes</option>
+            <option value="food">🍜 Foodie</option>
+            <option value="ldr">🌙 LDR</option>
+          </select>
+        </div>
+        <button type="button" id="addNewReasonTopBtn" class="btn btn-secondary btn-sm">
+          <span>➕ Add Reason</span>
+        </button>
+        <button type="button" id="resetAllReasonsBtn" class="btn btn-outline btn-sm" title="Reset reasons to original defaults">
+          <span>🔄 Reset</span>
+        </button>
+      </div>
+
+      <!-- Scrollable List of All Reasons -->
+      <div id="editAllReasonsList" class="edit-all-reasons-list">
+        <!-- Rendered dynamically via JS -->
+      </div>
+
+      <!-- Sticky Footer Actions -->
+      <div class="edit-all-footer">
+        <button type="button" id="addNewReasonBottomBtn" class="btn btn-outline btn-sm">
+          <span>➕ Add Another Reason</span>
+        </button>
+        <span class="edit-all-status" id="editAllStatusText">Loaded in deck: 37 reasons</span>
+        <div class="edit-all-footer-actions">
+          <button type="button" id="cancelEditAllBtn" class="btn btn-secondary"><span>Cancel</span></button>
+          <button type="button" id="saveAllReasonsBtn" class="btn btn-primary btn-save-all"><span>💾 Save All Changes ✨</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Yes Celebration Modal -->
+  <div id="celebrationModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" id="celebrationBackdrop"></div>
+    <div class="modal-content celebration-content glass-panel">
+      <div class="celebration-emoji" id="celebrationEmoji">🥰🎉💖</div>
+      <h2 id="celebrationTitle">I Knew It!</h2>
+      <p id="celebrationBody">You're stuck with your Algerian boy forever and ever! Sending you a million kiss kiss and hug hug right now! 💋🤗</p>
+      <button id="closeCelebration" class="btn btn-primary">
+        <span id="celebrationBtnText">Yaaay! Lof Lof! 🥰</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Grand Hugs & Kisses Epic Overlay Animation -->
+  <div id="hugKissOverlay" class="hug-kiss-overlay hidden">
+    <div class="hug-kiss-content">
+      <div class="hug-giant-bear">🤗🐻❤️💋</div>
+      <h2 class="hug-title">MEGA HUG & KISS INCOMING!</h2>
+      <p class="hug-sub">Wrapping my arms around you from across the world! Kiss kiss kiss! 💋💋💋</p>
+      <div class="flying-kissies-cluster">
+        <span class="kiss-emoji k1">💋</span>
+        <span class="kiss-emoji k2">💖</span>
+        <span class="kiss-emoji k3">🤗</span>
+        <span class="kiss-emoji k4">💋</span>
+        <span class="kiss-emoji k5">🥰</span>
+      </div>
+      <button id="closeHugKissBtn" class="btn btn-primary btn-pulse">
+        <span>Hugs Received! Lof You So Much ❤️</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Return & Give Me More Lof Blocker Modal -->
+  <div id="pumpBlockerModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" id="pumpBlockerBackdrop"></div>
+    <div class="modal-content pump-blocker-content glass-panel">
+      <div class="pump-blocker-emoji">🛑🥺💖</div>
+      <h2 class="pump-blocker-title">Return and give me more lof!</h2>
+      <p class="pump-blocker-desc">
+        Where are you going, sweetheart? 😜 You pumped even more lof, but you stopped just before the big hugs &amp; kisses surprise! Go back and finish pumping to maximum lof! 🚀💋
+      </p>
+      <div class="pump-blocker-actions">
+        <button id="returnToPumpBtn" class="btn btn-primary btn-pulse">
+          <span>Return &amp; Give Me More Lof! 🚀💖</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Golden Boarding Pass & Trip Confirmed Modal -->
+  <div id="flightTicketOverlay" class="flight-ticket-overlay hidden" role="dialog" aria-modal="true">
+    <div class="flight-ticket-backdrop" id="flightTicketBackdrop"></div>
+    <div class="boarding-pass-card glass-panel">
+      <div class="boarding-pass-header">
+        <div class="airline-brand">
+          <span class="plane-icon-flight">✈️</span>
+          <span class="airline-name">INFINITE LOF AIRWAYS</span>
+        </div>
+        <div class="flight-class-badge">FIRST CLASS VIP 💕</div>
+      </div>
+
+      <div class="boarding-pass-body">
+        <div class="ticket-route-row">
+          <div class="airport-code-box">
+            <span class="airport-code">ALG / CGK</span>
+            <span class="airport-name">Algiers & Jakarta</span>
+          </div>
+          <div class="flight-arrow-path">
+            <span class="flight-duration-tag">NON-STOP LOF</span>
+          </div>
+          <div class="airport-code-box">
+            <span class="airport-code" id="overlayTicketDestCode">PARADISE</span>
+            <span class="airport-name" id="overlayTicketDestName">Our Next Dream Trip</span>
+          </div>
+        </div>
+
+        <div class="ticket-details-grid">
+          <div class="ticket-col">
+            <span class="t-label">PASSENGER</span>
+            <strong class="t-val partner-name-display">Ella</strong>
+          </div>
+          <div class="ticket-col">
+            <span class="t-label">SEAT</span>
+            <strong class="t-val highlight-gold">1A (Beside Me Forever)</strong>
+          </div>
+          <div class="ticket-col">
+            <span class="t-label">FLIGHT</span>
+            <strong class="t-val">LOF-999</strong>
+          </div>
+          <div class="ticket-col">
+            <span class="t-label">STATUS</span>
+            <strong class="t-val status-confirmed">CONFIRMED 🎟️✨</strong>
+          </div>
+        </div>
+
+        <div class="ticket-note-box">
+          <span>💌 <em>"Pack your bags baby! Wherever you choose in the world, our next grand adventure awaits!"</em></span>
+        </div>
+      </div>
+
+      <div class="boarding-pass-footer">
+        <button id="closeFlightTicketBtn" class="btn btn-primary btn-pulse">
+          <span>✈️ Pack Bags & Fly Together! 💖</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trivia Certificate Modal -->
+  <div id="certificateModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop" id="certificateBackdrop"></div>
+    <div class="modal-content certificate-content glass-panel">
+      <div class="cert-border">
+        <span class="cert-seal">🏆</span>
+        <h2 id="certModalTitle">Certificate of Infinite Lof</h2>
+        <p class="cert-awardee" id="certModalAwardee">Awarded to <strong class="partner-name-display">Ella</strong></p>
+        <p class="cert-body" id="certModalBody">For scoring 100% on Couple Trivia and holding the irreplaceable title of <em>The Greatest & Prettiest Girlfriend in the Entire Universe</em>.</p>
+        <div class="cert-footer" id="certModalFooter">
+          <span id="certModalFooterPrefix">Signed with Kiss Kiss & Hug Hug,</span>
+          <strong id="certSenderName">Your Love from Algeria ❤️</strong>
+        </div>
+      </div>
+      <div class="cert-actions-row" style="display:flex; flex-direction:column; gap:10px; margin-top:18px;">
+        <button id="downloadCertificateBtn" class="btn btn-secondary" type="button">
+          <span>📥 Download Official Certificate (PNG) 🏆</span>
+        </button>
+        <button id="claimCertificateHugs" class="btn btn-primary btn-pulse" type="button">
+          <span>Claim Giant Hugs & Kissies! 🤗💋</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Browse All Reasons Drawer / Modal -->
+  <div id="allNotesDrawer" class="drawer hidden" role="dialog" aria-modal="true" aria-labelledby="allNotesDrawerTitle">
+    <div class="drawer-backdrop" id="allNotesBackdrop"></div>
+    <div class="drawer-content notes-drawer-content">
+      <div class="drawer-header">
+        <h3 id="allNotesDrawerTitle">All Reasons Why I Lof Lof You 💖</h3>
+        <button type="button" id="editAllFromDrawerBtn" class="btn btn-primary btn-sm" style="margin-left: auto; margin-right: 12px;"><span>✏️ Edit All Reasons</span></button>
+        <button id="closeAllNotes" class="drawer-close" aria-label="Close notes modal">&times;</button>
+      </div>
+      <div class="drawer-body">
+        <p class="drawer-sub-hint">Tap any sweet note below to flip to it in the Love Deck!</p>
+        <div id="allNotesGrid" class="all-notes-grid">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+    <!-- Floating Glide to Top Heart Button -->
+  <button id="scrollTopBtn" class="scroll-top-btn hidden" aria-label="Fly back to top" title="Fly back to top">
+    <span class="scroll-heart-icon">💖</span>
+  </button>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/core/widget-registry.js"></script>
+  <!-- Modular Widget Templates -->
+  <script src="/core/templates/hero.template.js"></script>
+  <script src="/core/templates/love_meter.template.js"></script>
+  <script src="/core/templates/reasons.template.js"></script>
+  <script src="/core/templates/timeline.template.js"></script>
+  <script src="/core/templates/map.template.js"></script>
+  <script src="/core/templates/truth_dare.template.js"></script>
+  <script src="/core/templates/spinner.template.js"></script>
+  <script src="/core/templates/memories.template.js"></script>
+  <script src="/core/templates/coupons.template.js"></script>
+  <script src="/core/templates/boarding_pass.template.js"></script>
+  <script src="/core/templates/quiz.template.js"></script>
+  <script src="/core/templates/letter.template.js"></script>
+  <script src="/core/templates/playful.template.js"></script>
+  <script src="/core/widget-templates.js"></script>
+  <script src="/public/js/data.js"></script>
+  <script src="/public/js/storage.js"></script>
+  <script src="/public/js/audio.js"></script>
+  <script src="/public/js/particles.js"></script>
+  <script src="/public/js/memories.js"></script>
+  <script src="/public/js/timeline.js"></script>
+  <script src="/public/js/map.js"></script>
+  <script src="/public/js/reasons.js"></script>
+  <!-- Modular Interactive Widget Runtime Engines -->
+  <script src="/public/js/widgets/ambient-effects.runtime.js"></script>
+  <script src="/public/js/widgets/scratch-coupons.runtime.js"></script>
+  <script src="/public/js/widgets/love-meter.runtime.js"></script>
+  <script src="/public/js/widgets/truth-dare.runtime.js"></script>
+  <script src="/public/js/widgets/date-spinner.runtime.js"></script>
+  <script src="/public/js/widgets/boarding-pass.runtime.js"></script>
+  <script src="/public/js/widgets/quiz-trivia.runtime.js"></script>
+  <script src="/public/js/widgets/voice-player.runtime.js"></script>
+  <script src="/public/js/widgets/playful-game.runtime.js"></script>
+  <script src="/public/js/widgets/ambient-soundtrack.runtime.js"></script>
+  <script src="/public/js/widgets/love-letter.runtime.js"></script>
+  <script src="/public/js/games-widgets.js"></script>
+  <script src="/public/js/main.js"></script>
+  <script src="/core/dynamic-renderer.js"></script>
+
+  <script>
+    (async function bootstrapTenantSite() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const slugParam = urlParams.get("slug");
+      const pathParts = window.location.pathname.split("/").filter(Boolean);
+      const slug = slugParam || (pathParts[0] === "sites" ? pathParts[1] : pathParts[pathParts.length - 1]) || "demo";
+      window.CURRENT_TENANT_SLUG = slug;
+
+
+      try {
+        const res = await fetch(`/api/tenants/${encodeURIComponent(slug)}`);
+        if (!res.ok) {
+          document.getElementById("modularGridContainer").innerHTML = `
+            <div style="text-align:center; padding: 100px 20px; font-family: sans-serif;">
+              <h2>Couple Website Not Found (404)</h2>
+              <p style="color: #666; margin-top: 8px;">The couple link may be invalid.</p>
+              <br/>
+              <a href="/welcome" class="btn-edit-link" style="display:inline-block;">Create Couple Site</a>
+            </div>
+          `;
+          return;
+        }
+
+        const data = await res.json();
+        const heroData = (data.sectionsData && data.sectionsData.hero) || {};
+        const p1 = heroData.partner1 || data.partner1 || "Alex";
+        const p2 = heroData.partner2 || data.partner2 || "Sam";
+        document.title = heroData.pageTitle || `${p1} & ${p2} | Our Love Story ❤️`;
+
+        const applyTheme = (themeId) => {
+          let cleanTheme = (themeId === "romantic-rose" || themeId === "pink") ? "theme-pink" : (themeId || "theme-pink");
+          if (cleanTheme === "blue" || cleanTheme === "theme-blue") cleanTheme = "theme-midnight";
+          document.documentElement.setAttribute("data-theme", cleanTheme);
+          document.body.setAttribute("data-theme", cleanTheme);
+          const themeClasses = ["theme-pink", "theme-purple", "theme-gold", "theme-midnight", "theme-emerald", "theme-peach", "theme-birthday", "theme-birthday-cake", "theme-birthday-midnight", "theme-birthday-pastel", "theme-birthday-carnival", "theme-birthday-emoji", "theme-birthday-pixel", "theme-birthday-neon", "theme-birthday-papercraft", "theme-birthday-watercolor", "theme-watercolor-frame", "theme-pop-stickers", "theme-doodle-tapestry", "theme-img-watercolor-frame", "theme-img-pop-stickers", "theme-img-doodle-tapestry", "theme-img-gold-hearts", "theme-img-love-letter", "theme-img-be-mine", "theme-img-sweet-couple", "theme-img-line-hearts", "theme-img-stitched-hearts", "theme-img-heart-podiums", "theme-img-paper-sunset", "theme-apology", "theme-anniversary", "theme-scrapbook", "theme-sakura", "theme-sunset", "theme-ruby", "theme-lavender", "theme-blue"];
+          document.body.classList.remove(...themeClasses);
+          Array.from(document.body.classList).filter(c => c.startsWith("theme-")).forEach(c => document.body.classList.remove(c));
+          document.body.classList.add(cleanTheme);
+          if (typeof particles !== "undefined" && particles && particles.updateSymbols) {
+            particles.updateSymbols();
+          }
+          if (typeof updateThemeBackdropDecorations === "function") {
+            updateThemeBackdropDecorations(cleanTheme);
+          }
+        };
+        applyTheme(data.themeId);
+
+        document.querySelectorAll(".partner-name-display").forEach(el => el.textContent = p2);
+        document.querySelectorAll(".recipient-name-preview").forEach(el => el.textContent = p2);
+        const envSender = document.getElementById("envelopePreviewSender");
+        if (envSender) envSender.textContent = `From ${p1} with Infinite Lof & Birthday Kisses 🎂💕`;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const isIframe = window.parent && window.parent !== window;
+        const isBuilderPreview = isIframe || urlParams.get("preview") === "builder" || urlParams.get("builder") === "1";
+        if (isBuilderPreview) {
+          document.body.classList.add("builder-mode", "in-builder-preview", "letter-unsealed");
+          const env = document.getElementById("envelopeScreen");
+          if (env) env.classList.add("opened");
+          const app = document.getElementById("modularGridContainer");
+          if (app) app.classList.add("app-revealed");
+
+          const bgAudioEl = document.getElementById("bgAudioPlayer");
+          if (bgAudioEl) {
+            bgAudioEl.addEventListener("play", () => {
+              window.parent.postMessage({ type: "MUSIC_STATE_CHANGED", playing: true }, "*");
+            });
+            bgAudioEl.addEventListener("pause", () => {
+              window.parent.postMessage({ type: "MUSIC_STATE_CHANGED", playing: false }, "*");
+            });
+          }
+        } else {
+          document.body.classList.remove("builder-mode", "in-builder-preview", "admin-mode", "admin-edit-on");
+          const badgeBar = document.getElementById("saasBadgeBar");
+          const editBtn = document.getElementById("btnViewerEditStudio");
+          if (badgeBar) badgeBar.style.display = "flex";
+          if (editBtn) editBtn.href = `/builder?slug=${encodeURIComponent(slug)}`;
+        }
+
+        if (typeof setupIntroSoundtrackSelector === "function") {
+          setupIntroSoundtrackSelector(data.sectionsData && data.sectionsData.hero);
+        }
+
+        window.openAddSectionModal = function(insertIndex) {
+          if (isIframe) {
+            window.parent.postMessage({ type: "OPEN_ADD_SECTION_MODAL", insertIndex }, "*");
+          } else {
+            window.location.href = `/builder?slug=${encodeURIComponent(slug)}&insert=${insertIndex}`;
+          }
+        };
+
+        const renderer = new DynamicRenderer("modularGridContainer");
+        renderer.render({
+          layoutOrder: data.layoutOrder,
+          sectionsData: data.sectionsData
+        });
+
+        if (data.sectionsData && data.sectionsData.mediaSettings) {
+          const ms = data.sectionsData.mediaSettings;
+          const bgAudio = document.getElementById("bgAudioPlayer");
+          if (bgAudio) {
+            if (ms.soundtrackLoop !== undefined) bgAudio.loop = !!ms.soundtrackLoop;
+            if (ms.soundtrackVolume !== undefined) {
+              const v = Math.max(0, Math.min(100, Number(ms.soundtrackVolume))) / 100;
+              bgAudio.volume = v;
+              const volSlider = document.getElementById("volumeSlider");
+              if (volSlider) volSlider.value = Math.round(v * 100);
+              const volVal = document.getElementById("volumeVal");
+              if (volVal) volVal.textContent = `${Math.round(v * 100)}%`;
+              localStorage.setItem("gf_volume", Math.round(v * 100));
+            }
+          }
+          const floatingControls = document.getElementById("floatingControls");
+          if (floatingControls && ms.floatingPlayer !== undefined) {
+            floatingControls.style.display = ms.floatingPlayer === false ? "none" : "";
+          }
+        }
+
+        if (isIframe) {
+          window.parent.postMessage({ type: "STUDIO_IFRAME_READY" }, "*");
+        }
+
+        // Listen for live update messages from Studio iframe parent
+        window.addEventListener("message", (e) => {
+          if (e.data && e.data.type === "SET_THEME" && e.data.themeId) {
+            applyTheme(e.data.themeId);
+          }
+          if (e.data && e.data.type === "STUDIO_LIVE_UPDATE" && e.data.config) {
+            if (e.data.config.themeId) {
+              applyTheme(e.data.config.themeId);
+            }
+            const liveHero = (e.data.config.sectionsData && e.data.config.sectionsData.hero) || {};
+            const liveP1 = liveHero.partner1 || data.partner1 || "Alex";
+            const liveP2 = liveHero.partner2 || data.partner2 || "Sam";
+            document.title = liveHero.pageTitle || `${liveP1} & ${liveP2} | Our Love Story ❤️`;
+            const curEnvSender = document.getElementById("envelopePreviewSender");
+            if (curEnvSender) curEnvSender.textContent = `From ${liveP1} with Infinite Lof & Birthday Kisses 🎂💕`;
+
+            if (e.data.config.sectionsData && e.data.config.sectionsData.mediaSettings) {
+              const ms = e.data.config.sectionsData.mediaSettings;
+              const bgAudio = document.getElementById("bgAudioPlayer");
+              if (bgAudio) {
+                if (ms.soundtrackLoop !== undefined) bgAudio.loop = !!ms.soundtrackLoop;
+                if (ms.soundtrackVolume !== undefined) {
+                  const v = Math.max(0, Math.min(100, Number(ms.soundtrackVolume))) / 100;
+                  bgAudio.volume = v;
+                  const volSlider = document.getElementById("volumeSlider");
+                  if (volSlider) volSlider.value = Math.round(v * 100);
+                  const volVal = document.getElementById("volumeVal");
+                  if (volVal) volVal.textContent = `${Math.round(v * 100)}%`;
+                  localStorage.setItem("gf_volume", Math.round(v * 100));
+                }
+              }
+              const floatingControls = document.getElementById("floatingControls");
+              if (floatingControls && ms.floatingPlayer !== undefined) {
+                floatingControls.style.display = ms.floatingPlayer === false ? "none" : "";
+              }
+            }
+
+            renderer.render(e.data.config);
+          }
+          if (e.data && e.data.type === "SPOTLIGHT_CITY" && typeof window.spotlightMapCity === "function") {
+            window.spotlightMapCity(e.data.cityKey);
+          }
+          if (e.data && e.data.type === "TOD_SPIN" && typeof window.todSpin === "function") {
+            window.todSpin();
+          }
+          if (e.data && e.data.type === "TOD_JUMP_ROUND" && typeof window.todJumpToRound === "function") {
+            window.todJumpToRound(e.data.round);
+          }
+          if (e.data && e.data.type === "TOD_RESET" && typeof window.todReset === "function") {
+            window.todReset();
+          }
+          if (e.data && e.data.type === "TOD_SET_RIG" && typeof window.todSetRig === "function") {
+            window.todSetRig(e.data.rigMode);
+          }
+          if (e.data && e.data.type === "TOD_SET_SKIN" && typeof window.todSetSkin === "function") {
+            window.todSetSkin(e.data.skin);
+          }
+          if (e.data && e.data.type === "SPINNER_SPIN" && typeof window.spinDate === "function") {
+            window.spinDate();
+          }
+          if (e.data && e.data.type === "SPINNER_LOCK" && typeof window.lockDate === "function") {
+            window.lockDate();
+          }
+          if (e.data && e.data.type === "LAUNCH_SLIDESHOW") {
+            const btn = document.getElementById("launchSlideshowBtn");
+            if (btn) btn.click();
+            else if (typeof openLightbox === "function" && window.state && window.state.memories && window.state.memories.length > 0) {
+              openLightbox(window.state.memories[0]);
+            }
+          }
+          if (e.data && e.data.type === "OPEN_ADD_MEMORY" && typeof openDirectMemoryEditor === "function") {
+            openDirectMemoryEditor(null);
+          }
+          if (e.data && e.data.type === "COUPONS_SCRATCH_ALL" && typeof window.scratchAllCoupons === "function") {
+            window.scratchAllCoupons();
+          }
+          if (e.data && e.data.type === "COUPONS_RESET" && typeof window.resetAllCoupons === "function") {
+            window.resetAllCoupons();
+          }
+          if (e.data && e.data.type === "BP_CLAIM_WISH" && typeof window.claimBoardingPassFlight === "function") {
+            window.claimBoardingPassFlight();
+          }
+          if (e.data && e.data.type === "BP_DOWNLOAD_TICKET" && typeof window.downloadBoardingPassTicket === "function") {
+            window.downloadBoardingPassTicket();
+          }
+          if (e.data && e.data.type === "BP_RESET_WISH" && typeof window.resetBoardingPassWish === "function") {
+            window.resetBoardingPassWish();
+          }
+          if (e.data && e.data.type === "QUIZ_JUMP_STEP" && typeof window.quizJumpToQuestion === "function") {
+            window.quizJumpToQuestion(e.data.step);
+          }
+          if (e.data && e.data.type === "QUIZ_RESET" && typeof window.quizReset === "function") {
+            window.quizReset();
+          }
+          if (e.data && e.data.type === "QUIZ_OPEN_CERT" && typeof window.quizOpenCertificate === "function") {
+            window.quizOpenCertificate();
+          }
+          if (e.data && e.data.type === "LETTER_OPEN" && typeof window.openLoveLetterEnvelope === "function") {
+            window.openLoveLetterEnvelope();
+          }
+          if (e.data && e.data.type === "LETTER_RESEAL" && typeof window.resealLoveLetter === "function") {
+            window.resealLoveLetter();
+          }
+          if (e.data && e.data.type === "LETTER_PLAY_TOGGLE" && typeof window.togglePlayLoveLetter === "function") {
+            window.togglePlayLoveLetter();
+          }
+          if (e.data && e.data.type === "HERO_VOICE_TOGGLE") {
+            const btn = document.getElementById("playVoiceBtn");
+            if (btn) btn.click();
+          }
+          if (e.data && e.data.type === "MUSIC_TOGGLE") {
+            const btn = document.getElementById("musicToggle");
+            if (btn) btn.click();
+          }
+          if (e.data && e.data.type === "SET_SONG" && typeof window.selectAndPlaySong === "function") {
+            window.selectAndPlaySong(e.data.song);
+          }
+          if (e.data && e.data.type === "SET_VOLUME" && e.data.volume !== undefined) {
+            const vol = Math.max(0, Math.min(1, Number(e.data.volume)));
+            const bgAudio = document.getElementById("bgAudioPlayer");
+            if (bgAudio) bgAudio.volume = vol;
+            const volSlider = document.getElementById("volumeSlider");
+            if (volSlider) volSlider.value = Math.round(vol * 100);
+            const volVal = document.getElementById("volumeVal");
+            if (volVal) volVal.textContent = `${Math.round(vol * 100)}%`;
+            localStorage.setItem("gf_volume", Math.round(vol * 100));
+          }
+          if (e.data && e.data.type === "MEDIA_SETTINGS_UPDATE" && e.data.mediaSettings) {
+            const ms = e.data.mediaSettings;
+            const bgAudio = document.getElementById("bgAudioPlayer");
+            if (bgAudio) {
+              if (ms.soundtrackLoop !== undefined) bgAudio.loop = !!ms.soundtrackLoop;
+              if (ms.soundtrackVolume !== undefined) {
+                const v = Math.max(0, Math.min(100, Number(ms.soundtrackVolume))) / 100;
+                bgAudio.volume = v;
+                const volSlider = document.getElementById("volumeSlider");
+                if (volSlider) volSlider.value = Math.round(v * 100);
+                const volVal = document.getElementById("volumeVal");
+                if (volVal) volVal.textContent = `${Math.round(v * 100)}%`;
+                localStorage.setItem("gf_volume", Math.round(v * 100));
+              }
+            }
+            const floatingControls = document.getElementById("floatingControls");
+            if (floatingControls && ms.floatingPlayer !== undefined) {
+              floatingControls.style.display = ms.floatingPlayer === false ? "none" : "";
+            }
+          }
+          if (e.data && e.data.type === "PLAYFUL_TRIGGER_YES" && typeof window.playfulTriggerYes === "function") {
+            window.playfulTriggerYes();
+          }
+          if (e.data && e.data.type === "PLAYFUL_TRIGGER_NO" && typeof window.playfulTriggerNoEvasion === "function") {
+            window.playfulTriggerNoEvasion();
+          }
+          if (e.data && e.data.type === "PLAYFUL_RESET" && typeof window.playfulReset === "function") {
+            window.playfulReset();
+          }
+          if (e.data && e.data.type === "SCROLL_TO_WIDGET" && e.data.widgetId) {
+            const target = document.getElementById("section-" + e.data.widgetId) || document.querySelector(`[data-widget-id="${e.data.widgetId}"]`);
+            if (target) {
+              target.scrollIntoView({ behavior: "smooth", block: "start" });
+              target.classList.add("widget-locate-highlight");
+              setTimeout(() => target.classList.remove("widget-locate-highlight"), 1800);
+            }
+          }
+        });
+
+      } catch (err) {
+        console.error("Failed to load tenant site:", err);
+      }
+    })();
+  </script>
+</body>
+</html>
