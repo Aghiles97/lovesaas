@@ -7,3 +7,6 @@ Multi-tenant couple website SaaS engine.
 - Live interactive builder
 - Media storage via Cloudflare R2
 - Automated deployment on push
+
+## Deployment Status
+- Auto-sync: Enabled (production cron poll)
