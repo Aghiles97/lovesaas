@@ -92,11 +92,17 @@
     function drawWaveform() {
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      if (rect.width > 0 && Math.round(rect.width * dpr) !== canvas.width) {
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round((rect.height || 52) * dpr);
+      }
       const { width, height } = canvas;
       ctx.clearRect(0, 0, width, height);
 
       const count = waveData.length;
-      const gap = 3;
+      const gap = Math.max(2, Math.round(2 * dpr));
       const barWidth = (width - (count - 1) * gap) / count;
       const progress = getProgress();
       const activeIdx = Math.floor(progress * count);
@@ -312,6 +318,9 @@
     window.addEventListener("message", (e) => {
       if (e.data && e.data.type === "CAPSULE_TOGGLE") togglePlay();
     });
+    window.addEventListener("resize", () => {
+      drawWaveform();
+    }, { passive: true });
 
     updateTrackMeta();
     drawWaveform();

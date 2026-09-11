@@ -1123,14 +1123,17 @@
         }
 
         if (isBuilderPreview) {
-          document.body.classList.add("builder-mode", "in-builder-preview", "letter-unsealed");
-          const env = document.getElementById("envelopeScreen");
-          if (env) {
-            env.classList.add("opened");
-            env.style.display = "none";
+          document.body.classList.add("builder-mode", "in-builder-preview");
+          if (urlParams.get("unsealed") === "1" || isLayoutEmpty) {
+            document.body.classList.add("letter-unsealed");
+            const env = document.getElementById("envelopeScreen");
+            if (env) {
+              env.classList.add("opened");
+              if (isLayoutEmpty) env.style.display = "none";
+            }
+            const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
+            if (app) app.classList.add("app-revealed");
           }
-          const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
-          if (app) app.classList.add("app-revealed");
 
           const bgAudioEl = document.getElementById("bgAudioPlayer");
           if (bgAudioEl) {

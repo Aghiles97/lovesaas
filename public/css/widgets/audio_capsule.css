@@ -1,7 +1,8 @@
 /* Audio Time Capsule Widget Styles */
 .audio-capsule-section {
-  padding: 70px 20px;
+  padding: 60px 0;
   position: relative;
+  width: 100%;
 }
 
 .audio-capsule-box {
@@ -396,7 +397,7 @@
 }
 
 @media (max-width: 768px) {
-  .audio-capsule-section { padding: 48px 16px; }
+  .audio-capsule-section { padding: 40px 0; }
   .capsule-player-deck { padding: 20px 18px; border-radius: 20px; }
   .capsule-memos-grid { grid-template-columns: 1fr; }
 }
@@ -418,29 +419,43 @@
 }
 
 @media (max-width: 480px) {
-  .audio-capsule-section { padding: 36px 12px; }
-  .capsule-player-deck { padding: 16px 14px; border-radius: 18px; margin-bottom: 24px; }
+  .audio-capsule-section { padding: 28px 0; }
+  .capsule-player-deck { padding: 16px 14px; border-radius: 18px; margin-bottom: 20px; }
   .capsule-reels-row { padding: 10px 12px; gap: 8px; border-radius: 14px; }
   .capsule-reel { width: 38px; height: 38px; }
   .capsule-reel-spokes { width: 16px; height: 16px; }
-  .capsule-now-title { font-size: 1rem; }
+  .capsule-now-title { font-size: clamp(0.92rem, 3.2vw, 1.05rem); }
   .capsule-speaker-glow { font-size: 0.68rem; }
   .capsule-now-date { font-size: 0.72rem; }
   .capsule-waveform-container { padding: 8px 10px; }
   .capsule-waveform-canvas { height: 52px; }
   .capsule-deck-controls {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
     align-items: center;
+    gap: 10px;
   }
-  .capsule-time-box { font-size: 0.76rem; min-width: 0; }
-  .capsule-btns-group { grid-column: 1 / -1; justify-content: center; gap: 8px; }
-  .btn-capsule-ctrl { width: 32px; height: 32px; font-size: 0.75rem; }
-  .btn-capsule-play-main { width: 44px; height: 44px; font-size: 1.05rem; }
-  .btn-capsule-speed { font-size: 0.7rem; padding: 4px 7px; }
-  .capsule-vol-wrap { grid-column: 2; justify-self: end; gap: 4px; }
-  .capsule-vol-slider { width: 65px; }
+  .capsule-btns-group {
+    order: 1;
+    width: 100%;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .btn-capsule-ctrl { width: 34px; height: 34px; font-size: 0.8rem; }
+  .btn-capsule-play-main { width: 46px; height: 46px; font-size: 1.1rem; }
+  .btn-capsule-speed { font-size: 0.72rem; padding: 4px 8px; min-height: 32px; }
+  .capsule-time-box {
+    order: 2;
+    font-size: 0.78rem;
+    min-width: 0;
+  }
+  .capsule-vol-wrap {
+    order: 3;
+    gap: 6px;
+  }
+  .capsule-vol-slider { width: 75px; }
   .capsule-filters-row {
     overflow-x: auto;
     flex-wrap: nowrap;
@@ -451,9 +466,19 @@
   }
   .capsule-filters-row::-webkit-scrollbar { display: none; }
   .capsule-filter-label { font-size: 0.75rem; white-space: nowrap; }
-  .capsule-filter-pill { font-size: 0.74rem; padding: 5px 12px; white-space: nowrap; flex-shrink: 0; }
+  .capsule-filter-pill { font-size: 0.74rem; padding: 6px 12px; min-height: 34px; white-space: nowrap; flex-shrink: 0; }
   .capsule-memo-card { padding: 12px 14px; border-radius: 14px; gap: 10px; }
   .capsule-memo-title { font-size: 0.88rem; margin-bottom: 6px; }
   .capsule-speaker-badge { font-size: 0.68rem; padding: 2px 6px; }
   .capsule-memo-date { font-size: 0.7rem; }
+}
+
+@media (max-width: 360px) {
+  .capsule-player-deck { padding: 12px 10px; }
+  .capsule-reels-row { padding: 8px 8px; gap: 6px; }
+  .capsule-reel { width: 32px; height: 32px; }
+  .capsule-reel-spokes { width: 14px; height: 14px; }
+  .btn-capsule-play-main { width: 42px; height: 42px; font-size: 1rem; }
+  .btn-capsule-ctrl { width: 30px; height: 30px; }
+  .capsule-vol-slider { width: 55px; }
 }

@@ -1,6 +1,7 @@
 .bucket-list-section {
-  padding: 70px 20px;
+  padding: 60px 0;
   position: relative;
+  width: 100%;
 }
 .bucket-list-box {
   max-width: 900px;
@@ -116,9 +117,15 @@
 .bucket-checkbox-label {
   display: flex;
   align-items: center;
+  justify-content: center;
   cursor: pointer;
   position: relative;
   user-select: none;
+  min-width: 36px;
+  min-height: 36px;
+  margin: -6px;
+  padding: 6px;
+  touch-action: manipulation;
 }
 .bucket-checkbox {
   position: absolute;
@@ -169,6 +176,8 @@
   font-weight: 700;
   color: #1e293b;
   transition: color 0.2s;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 .bucket-card.is-completed .bucket-title {
   text-decoration: line-through;
@@ -211,7 +220,7 @@
   display: block;
 }
 @media (max-width: 768px) {
-  .bucket-list-section { padding: 48px 16px; }
+  .bucket-list-section { padding: 40px 0; }
   .bucket-stats-panel { padding: 18px 20px; border-radius: 18px; }
   .bucket-card { padding: 14px 16px; gap: 12px; }
 }
@@ -221,8 +230,8 @@
 }
 
 @media (max-width: 480px) {
-  .bucket-list-section { padding: 36px 12px; }
-  .bucket-stats-panel { padding: 14px 14px; border-radius: 16px; margin-bottom: 18px; }
+  .bucket-list-section { padding: 28px 0; }
+  .bucket-stats-panel { padding: 14px 12px; border-radius: 16px; margin-bottom: 16px; }
   .bucket-stats-title { font-size: 0.84rem; }
   .bucket-stats-counter { font-size: 0.74rem; }
   .bucket-stats-pct { font-size: 1.45rem; }
@@ -231,16 +240,23 @@
     overflow-x: auto;
     flex-wrap: nowrap;
     padding-bottom: 6px;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
   .bucket-filter-tabs::-webkit-scrollbar { display: none; }
-  .bucket-tab { padding: 6px 12px; font-size: 0.75rem; white-space: nowrap; flex-shrink: 0; }
-  .bucket-card { padding: 12px 12px; gap: 10px; border-radius: 14px; }
+  .bucket-tab { padding: 6px 14px; min-height: 36px; font-size: 0.76rem; white-space: nowrap; flex-shrink: 0; }
+  .bucket-card { padding: 12px 10px; gap: 10px; border-radius: 14px; }
   .bucket-checkmark { width: 22px; height: 22px; border-radius: 6px; }
   .bucket-icon { font-size: 1.35rem; }
   .bucket-title { font-size: 0.88rem; line-height: 1.35; }
   .bucket-category-pill { font-size: 0.65rem; padding: 2px 7px; }
   .bucket-date { font-size: 0.72rem; }
+}
+
+@media (max-width: 360px) {
+  .bucket-stats-panel { padding: 12px 10px; }
+  .bucket-card { padding: 10px 8px; gap: 8px; }
+  .bucket-icon { font-size: 1.2rem; }
+  .bucket-title { font-size: 0.84rem; }
 }

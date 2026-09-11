@@ -97,6 +97,24 @@
         if (Math.abs(walk) > 5) hasDragged = true;
         container.scrollLeft = scrollLeft - walk;
       });
+
+      let touchStartX = 0;
+      let touchStartY = 0;
+      container.addEventListener("touchstart", (e) => {
+        if (e.touches && e.touches[0]) {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+          hasDragged = false;
+        }
+      }, { passive: true });
+
+      container.addEventListener("touchmove", (e) => {
+        if (e.touches && e.touches[0]) {
+          const dx = Math.abs(e.touches[0].clientX - touchStartX);
+          const dy = Math.abs(e.touches[0].clientY - touchStartY);
+          if (dx > 8 || dy > 8) hasDragged = true;
+        }
+      }, { passive: true });
     }
 
     // Open Modal Details
@@ -150,7 +168,11 @@
     });
 
     // Resize and images loading listeners
-    window.addEventListener("resize", updateSvgLine);
+    window.addEventListener("resize", updateSvgLine, { passive: true });
+    window.addEventListener("orientationchange", () => setTimeout(updateSvgLine, 150), { passive: true });
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => setTimeout(updateSvgLine, 50));
+    }
     section.querySelectorAll("img").forEach(img => {
       img.addEventListener("load", updateSvgLine);
     });

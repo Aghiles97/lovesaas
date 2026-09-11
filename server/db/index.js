@@ -1987,10 +1987,36 @@ async function linkTenantToUser(slug, userId) {
   }
 
   const store = loadLocalStore();
-  if (store.tenants[cleanSlug]) {
+  if (store.tenants && store.tenants[cleanSlug]) {
     store.tenants[cleanSlug].user_id = userId;
     saveLocalStore(store);
   }
+}
+
+async function deleteTenant(slug, userId = null, isAdmin = false) {
+  if (!slug || slug === "demo") {
+    throw new Error("Cannot delete demo template");
+  }
+  const cleanSlug = String(slug).toLowerCase().trim();
+  if (isPgConnected) {
+    let res;
+    if (isAdmin) {
+      res = await pool.query(`DELETE FROM tenants WHERE slug = $1 RETURNING id`, [cleanSlug]);
+    } else {
+      res = await pool.query(`DELETE FROM tenants WHERE slug = $1 AND user_id = $2 RETURNING id`, [cleanSlug, userId]);
+    }
+    return res.rowCount > 0;
+  }
+  const store = loadLocalStore();
+  const tenant = store.tenants[cleanSlug];
+  if (!tenant) return false;
+  if (!isAdmin && tenant.user_id !== userId && tenant.userId !== userId) {
+    return false;
+  }
+  delete store.tenants[cleanSlug];
+  delete store.site_configs[cleanSlug];
+  saveLocalStore(store);
+  return true;
 }
 
 module.exports = {
@@ -2014,5 +2040,6 @@ module.exports = {
   getUserOrders,
   getUserDesigns,
   linkTenantToUser,
+  deleteTenant,
   MASTER_ADMIN_TOKEN
 };

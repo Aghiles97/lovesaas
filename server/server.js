@@ -443,6 +443,26 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // DELETE /api/user/designs/:slug
+  const delUserDesignMatch = pathname.match(/^\/api\/user\/designs\/([^/]+)$/);
+  if (delUserDesignMatch && method === "DELETE") {
+    try {
+      const authUser = await getAuthenticatedUser(req, parsedUrl);
+      if (!authUser) return sendJson(res, 401, { error: "Authentication required" });
+
+      const slug = decodeURIComponent(delUserDesignMatch[1]);
+      if (slug === "demo") return sendJson(res, 400, { error: "Cannot delete demo template" });
+
+      const isAdmin = authUser.role === "admin";
+      const success = await db.deleteTenant(slug, authUser.id, isAdmin);
+      if (!success) return sendJson(res, 404, { error: "Website not found or unauthorized" });
+
+      return sendJson(res, 200, { success: true, message: "Website deleted" });
+    } catch (err) {
+      return sendJson(res, 500, { error: err.message });
+    }
+  }
+
   // GET /api/user/purchases
   if (pathname === "/api/user/purchases" && method === "GET") {
     try {
