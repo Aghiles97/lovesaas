@@ -434,6 +434,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ------------------------------------------------------------------
   const checkoutModal = document.getElementById("checkoutModal");
   const signInModal = document.getElementById("signInModal");
+  const userPortalModal = document.getElementById("userPortalModal");
   const demoPreviewModal = document.getElementById("demoPreviewModal");
   const demoIframe = document.getElementById("demoIframe");
 
@@ -500,7 +501,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const btnMobileSignIn = document.getElementById("btnMobileSignIn");
   if (btnMobileSignIn) {
-    btnMobileSignIn.addEventListener("click", () => openModal(signInModal));
+    btnMobileSignIn.addEventListener("click", () => {
+      if (typeof switchAuthTab === "function") switchAuthTab("login");
+      openModal(signInModal);
+    });
   }
 
   // ------------------------------------------------------------------
@@ -531,6 +535,10 @@ document.addEventListener("DOMContentLoaded", () => {
   function openCheckoutModal(preferredPlan = "vip") {
     checkoutState.step = 1;
     checkoutState.plan = preferredPlan;
+    if (currentUser && currentUser.email) {
+      const elEmail = document.getElementById("inputEmail");
+      if (elEmail && !elEmail.value) elEmail.value = currentUser.email;
+    }
     planChips.forEach(c => {
       if (c.dataset.plan === preferredPlan) c.classList.add("active");
       else c.classList.remove("active");
@@ -670,7 +678,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const res = await fetch("/api/checkout", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authHeaders() },
           body: JSON.stringify({
             partner1: checkoutState.partner1,
             partner2: checkoutState.partner2,
@@ -685,6 +693,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await res.json();
         if (!res.ok || !data.success) {
           throw new Error(data.error || "Failed to create couple website");
+        }
+
+        if (data.userToken) {
+          setUserToken(data.userToken);
+          await checkCurrentUser();
         }
 
         checkoutState.provisionedData = data;
@@ -719,42 +732,258 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ------------------------------------------------------------------
-  // 11. SIGN IN / RETURNING BUYER FLOW
+  // 11. USER AUTHENTICATION & PORTAL ENGINE
   // ------------------------------------------------------------------
-  const btnOpenSignInModal = document.getElementById("btnOpenSignInModal");
-  const footerSignInBtn = document.getElementById("footerSignInBtn");
-  if (btnOpenSignInModal) btnOpenSignInModal.addEventListener("click", () => openModal(signInModal));
-  if (footerSignInBtn) {
-    footerSignInBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      openModal(signInModal);
+  let currentUser = null;
+
+  function getUserToken() {
+    return localStorage.getItem("lovesaas_user_token");
+  }
+
+  function setUserToken(tok) {
+    if (tok) localStorage.setItem("lovesaas_user_token", tok);
+  }
+
+  function clearUserToken() {
+    localStorage.removeItem("lovesaas_user_token");
+  }
+
+  function authHeaders() {
+    const tok = getUserToken();
+    return tok ? { "Authorization": `Bearer ${tok}`, "X-User-Token": tok } : {};
+  }
+
+  const navAuthLoggedOut = document.getElementById("navAuthLoggedOut");
+  const navAuthLoggedIn = document.getElementById("navAuthLoggedIn");
+  const navUserName = document.getElementById("navUserName");
+  const navUserAvatar = document.getElementById("navUserAvatar");
+  const mobileAuthLoggedOut = document.getElementById("mobileAuthLoggedOut");
+  const mobileAuthLoggedIn = document.getElementById("mobileAuthLoggedIn");
+  const mobileUserName = document.getElementById("mobileUserName");
+
+  function renderUserState() {
+    const name = currentUser ? (currentUser.name || currentUser.email.split("@")[0]) : "";
+    const initial = name ? name[0].toUpperCase() : "👤";
+
+    if (currentUser) {
+      if (navAuthLoggedOut) navAuthLoggedOut.style.display = "none";
+      if (navAuthLoggedIn) navAuthLoggedIn.style.display = "flex";
+      if (navUserName) navUserName.textContent = name;
+      if (navUserAvatar) navUserAvatar.textContent = initial;
+
+      if (mobileAuthLoggedOut) mobileAuthLoggedOut.style.display = "none";
+      if (mobileAuthLoggedIn) mobileAuthLoggedIn.style.display = "flex";
+      if (mobileUserName) mobileUserName.textContent = name;
+
+      const portalAvatar = document.getElementById("portalAvatar");
+      const portalTitle = document.getElementById("userPortalModalTitle");
+      const portalEmail = document.getElementById("portalEmail");
+      const profileName = document.getElementById("profileName");
+      const profileEmail = document.getElementById("profileEmail");
+      if (portalAvatar) portalAvatar.textContent = initial;
+      if (portalTitle) portalTitle.textContent = name;
+      if (portalEmail) portalEmail.textContent = currentUser.email;
+      if (profileName) profileName.value = currentUser.name || "";
+      if (profileEmail) profileEmail.value = currentUser.email;
+    } else {
+      if (navAuthLoggedOut) navAuthLoggedOut.style.display = "flex";
+      if (navAuthLoggedIn) navAuthLoggedIn.style.display = "none";
+      if (mobileAuthLoggedOut) mobileAuthLoggedOut.style.display = "flex";
+      if (mobileAuthLoggedIn) mobileAuthLoggedIn.style.display = "none";
+    }
+  }
+
+  async function checkCurrentUser() {
+    const tok = getUserToken();
+    if (!tok) {
+      currentUser = null;
+      renderUserState();
+      return;
+    }
+    try {
+      const res = await fetch("/api/auth/user-me", { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        currentUser = data.user;
+      } else {
+        clearUserToken();
+        currentUser = null;
+      }
+    } catch {
+      currentUser = null;
+    }
+    renderUserState();
+  }
+
+  // Auth Modal Segmented Tabs & Switchers
+  const authTabs = document.querySelectorAll(".auth-tab-btn[data-auth-tab]");
+  const authPanes = {
+    login: document.getElementById("formAuthLogin"),
+    register: document.getElementById("formAuthRegister"),
+    pin: document.getElementById("formAuthPin")
+  };
+  const authAlertError = document.getElementById("authAlertError");
+  const authAlertSuccess = document.getElementById("authAlertSuccess");
+
+  function setAuthAlert(msg, isError = true) {
+    if (!authAlertError || !authAlertSuccess) return;
+    authAlertError.style.display = "none";
+    authAlertSuccess.style.display = "none";
+    if (!msg) return;
+    const target = isError ? authAlertError : authAlertSuccess;
+    target.textContent = msg;
+    target.style.display = "block";
+  }
+
+  function switchAuthTab(tabKey) {
+    setAuthAlert("");
+    authTabs.forEach(t => t.classList.toggle("active", t.dataset.authTab === tabKey));
+    Object.entries(authPanes).forEach(([k, pane]) => {
+      if (pane) pane.classList.toggle("active", k === tabKey);
     });
   }
 
-  const btnCloseSignInModal = document.getElementById("btnCloseSignInModal");
-  const btnCancelSignIn = document.getElementById("btnCancelSignIn");
-  if (btnCloseSignInModal) btnCloseSignInModal.addEventListener("click", () => closeModal(signInModal));
-  if (btnCancelSignIn) btnCancelSignIn.addEventListener("click", () => closeModal(signInModal));
+  authTabs.forEach(t => {
+    t.addEventListener("click", () => switchAuthTab(t.dataset.authTab));
+  });
 
+  const linkSwitchToRegister = document.getElementById("linkSwitchToRegister");
+  if (linkSwitchToRegister) {
+    linkSwitchToRegister.addEventListener("click", (e) => {
+      e.preventDefault();
+      switchAuthTab("register");
+    });
+  }
+
+  const linkSwitchToLogin = document.getElementById("linkSwitchToLogin");
+  if (linkSwitchToLogin) {
+    linkSwitchToLogin.addEventListener("click", (e) => {
+      e.preventDefault();
+      switchAuthTab("login");
+    });
+  }
+
+  // Open / Close Auth Modal Buttons
+  const btnOpenSignInModal = document.getElementById("btnOpenSignInModal");
+  const footerSignInBtn = document.getElementById("footerSignInBtn");
+  const btnCloseSignInModal = document.getElementById("btnCloseSignInModal");
+  if (btnOpenSignInModal) btnOpenSignInModal.addEventListener("click", () => {
+    switchAuthTab("login");
+    openModal(signInModal);
+  });
+  if (footerSignInBtn) {
+    footerSignInBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (currentUser) {
+        openUserPortal();
+      } else {
+        switchAuthTab("login");
+        openModal(signInModal);
+      }
+    });
+  }
+  if (btnCloseSignInModal) btnCloseSignInModal.addEventListener("click", () => closeModal(signInModal));
+
+  // Form Submissions:
+  // 1. Login
+  const formAuthLogin = document.getElementById("formAuthLogin");
+  const btnSubmitLogin = document.getElementById("btnSubmitLogin");
+  const loginEmail = document.getElementById("loginEmail");
+  const loginPassword = document.getElementById("loginPassword");
+
+  if (formAuthLogin) {
+    formAuthLogin.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = loginEmail ? loginEmail.value.trim() : "";
+      const password = loginPassword ? loginPassword.value : "";
+      if (!email || !password) return setAuthAlert("Please enter both email and password.");
+
+      btnSubmitLogin.disabled = true;
+      btnSubmitLogin.innerHTML = `<span>Signing In... ⏳</span>`;
+      setAuthAlert("");
+
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Invalid email or password");
+
+        setUserToken(data.token);
+        currentUser = data.user;
+        renderUserState();
+        closeModal(signInModal);
+        openUserPortal();
+      } catch (err) {
+        setAuthAlert(err.message);
+      } finally {
+        btnSubmitLogin.disabled = false;
+        btnSubmitLogin.innerHTML = `<span>🔑 Sign In</span>`;
+      }
+    });
+  }
+
+  // 2. Register
+  const formAuthRegister = document.getElementById("formAuthRegister");
+  const btnSubmitRegister = document.getElementById("btnSubmitRegister");
+  const regName = document.getElementById("regName");
+  const regEmail = document.getElementById("regEmail");
+  const regPassword = document.getElementById("regPassword");
+
+  if (formAuthRegister) {
+    formAuthRegister.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = regName ? regName.value.trim() : "";
+      const email = regEmail ? regEmail.value.trim() : "";
+      const password = regPassword ? regPassword.value : "";
+      if (!name || !email || !password) return setAuthAlert("Please fill in all fields.");
+      if (password.length < 4) return setAuthAlert("Password must be at least 4 characters.");
+
+      btnSubmitRegister.disabled = true;
+      btnSubmitRegister.innerHTML = `<span>Creating Account... ⏳</span>`;
+      setAuthAlert("");
+
+      try {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to register account");
+
+        setUserToken(data.token);
+        currentUser = data.user;
+        renderUserState();
+        closeModal(signInModal);
+        openUserPortal();
+      } catch (err) {
+        setAuthAlert(err.message);
+      } finally {
+        btnSubmitRegister.disabled = false;
+        btnSubmitRegister.innerHTML = `<span>✨ Create My Account</span>`;
+      }
+    });
+  }
+
+  // 3. Quick PIN Direct Studio Unlock
+  const formAuthPin = document.getElementById("formAuthPin");
   const btnSubmitSignIn = document.getElementById("btnSubmitSignIn");
   const signInSlug = document.getElementById("signInSlug");
   const signInPin = document.getElementById("signInPin");
-  const signInError = document.getElementById("signInError");
 
-  if (btnSubmitSignIn) {
-    btnSubmitSignIn.addEventListener("click", async () => {
-      const slug = signInSlug.value.trim().toLowerCase();
-      const pin = signInPin.value.trim();
-
-      if (!slug || !pin) {
-        signInError.textContent = "Please enter both your site slug and PIN.";
-        signInError.style.display = "block";
-        return;
-      }
+  if (formAuthPin) {
+    formAuthPin.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const slug = signInSlug ? signInSlug.value.trim().toLowerCase() : "";
+      const pin = signInPin ? signInPin.value.trim() : "";
+      if (!slug || !pin) return setAuthAlert("Please enter both site slug and PIN.");
 
       btnSubmitSignIn.disabled = true;
-      btnSubmitSignIn.textContent = "Verifying...";
-      signInError.style.display = "none";
+      btnSubmitSignIn.innerHTML = `<span>Verifying... ⏳</span>`;
+      setAuthAlert("");
 
       try {
         const res = await fetch("/api/auth/verify-access", {
@@ -762,11 +991,8 @@ document.addEventListener("DOMContentLoaded", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ slug, pin })
         });
-
         const data = await res.json();
-        if (!res.ok || !data.authorized) {
-          throw new Error(data.error || "Invalid slug or Admin PIN");
-        }
+        if (!res.ok || !data.authorized) throw new Error(data.error || "Invalid slug or Admin PIN");
 
         localStorage.setItem("lovesaas_auth", JSON.stringify({
           slug: data.slug,
@@ -774,24 +1000,347 @@ document.addEventListener("DOMContentLoaded", () => {
           adminPin: pin,
           plan: data.plan
         }));
-
         window.location.href = `/builder?slug=${encodeURIComponent(data.slug)}&token=${encodeURIComponent(data.authToken || "")}`;
       } catch (err) {
-        signInError.textContent = err.message;
-        signInError.style.display = "block";
+        setAuthAlert(err.message);
       } finally {
         btnSubmitSignIn.disabled = false;
-        btnSubmitSignIn.innerHTML = `<span>Unlock Studio</span> <span>🚀</span>`;
+        btnSubmitSignIn.innerHTML = `<span>🚀 Open Studio</span>`;
       }
     });
   }
 
+  // ------------------------------------------------------------------
+  // 12. USER PORTAL (Designs, Purchases, Profile, Logout)
+  // ------------------------------------------------------------------
+  const btnUserPortal = document.getElementById("btnUserPortal");
+  const btnMobileUserPortal = document.getElementById("btnMobileUserPortal");
+  const btnCloseUserPortalModal = document.getElementById("btnCloseUserPortalModal");
+  const btnPortalLogout = document.getElementById("btnPortalLogout");
+  const btnMobileLogout = document.getElementById("btnMobileLogout");
+  const btnPortalCreateNewSite = document.getElementById("btnPortalCreateNewSite");
+
+  const portalTabs = document.querySelectorAll(".portal-tab-btn[data-portal-tab]");
+  const portalPanes = {
+    designs: document.getElementById("panePortalDesigns"),
+    purchases: document.getElementById("panePortalPurchases"),
+    settings: document.getElementById("panePortalSettings")
+  };
+
+  function switchPortalTab(tabKey) {
+    portalTabs.forEach(t => t.classList.toggle("active", t.dataset.portalTab === tabKey));
+    Object.entries(portalPanes).forEach(([k, pane]) => {
+      if (pane) pane.classList.toggle("active", k === tabKey);
+    });
+  }
+
+  portalTabs.forEach(t => {
+    t.addEventListener("click", () => switchPortalTab(t.dataset.portalTab));
+  });
+
+  async function openUserPortal() {
+    if (!currentUser) {
+      await checkCurrentUser();
+      if (!currentUser) {
+        openModal(signInModal);
+        return;
+      }
+    }
+    renderUserState();
+    switchPortalTab("designs");
+    openModal(userPortalModal);
+    loadUserDesigns();
+    loadUserPurchases();
+  }
+
+  if (btnUserPortal) btnUserPortal.addEventListener("click", openUserPortal);
+  if (btnMobileUserPortal) btnMobileUserPortal.addEventListener("click", openUserPortal);
+  if (btnCloseUserPortalModal) btnCloseUserPortalModal.addEventListener("click", () => closeModal(userPortalModal));
+  if (btnPortalCreateNewSite) {
+    btnPortalCreateNewSite.addEventListener("click", () => {
+      closeModal(userPortalModal);
+      openCheckoutModal("vip");
+    });
+  }
+
+  // Logout handler
+  async function performLogout() {
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: authHeaders()
+      });
+    } catch {}
+    clearUserToken();
+    currentUser = null;
+    renderUserState();
+    closeModal(userPortalModal);
+  }
+
+  if (btnPortalLogout) btnPortalLogout.addEventListener("click", performLogout);
+  if (btnMobileLogout) btnMobileLogout.addEventListener("click", performLogout);
+
+  // Load User Designs
+  async function loadUserDesigns() {
+    const listEl = document.getElementById("portalDesignsList");
+    const countBadge = document.getElementById("badgeDesignsCount");
+    if (!listEl) return;
+
+    listEl.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--text-muted);">Loading your websites...</div>`;
+
+    try {
+      const res = await fetch("/api/user/designs", { headers: authHeaders() });
+      if (res.status === 401) {
+        clearUserToken();
+        currentUser = null;
+        renderUserState();
+        closeModal(userPortalModal);
+        openModal(signInModal);
+        return;
+      }
+      if (!res.ok) throw new Error("Could not load designs");
+      const data = await res.json();
+      const designs = data.designs || [];
+      if (countBadge) countBadge.textContent = designs.length;
+
+      if (designs.length === 0) {
+        listEl.innerHTML = `
+          <div class="portal-empty-state" style="grid-column: 1/-1;">
+            <div class="empty-icon">💍</div>
+            <h4>No couple sites found</h4>
+            <p>You haven't created any couple websites yet. Create one now to begin your romantic digital keepsake!</p>
+            <button type="button" class="btn btn-primary btn-sm" id="btnEmptyCreateSite" style="margin-top: 10px;">
+              <span>💖</span> Create Couple Site
+            </button>
+          </div>
+        `;
+        const btnEmpty = document.getElementById("btnEmptyCreateSite");
+        if (btnEmpty) btnEmpty.addEventListener("click", () => {
+          closeModal(userPortalModal);
+          openCheckoutModal("vip");
+        });
+        return;
+      }
+
+      listEl.innerHTML = designs.map(d => {
+        const studioUrl = `/builder?slug=${encodeURIComponent(d.slug)}&token=${encodeURIComponent(d.authToken || "")}`;
+        const liveUrl = `/sites/${encodeURIComponent(d.slug)}`;
+        const planName = d.plan === "starter" ? "Starter ($19)" : "Forever VIP ($39)";
+        const dateStr = d.createdAt ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(d.createdAt)) : "Active";
+        const pin = d.adminPin || "••••";
+
+        return `
+          <div class="portal-design-card" data-slug="${d.slug}">
+            <div class="portal-design-top">
+              <span class="portal-plan-tag ${d.plan === "starter" ? "plan-starter" : "plan-vip"}">${planName}</span>
+              <span style="font-size: 0.76rem; color: var(--text-muted);">${dateStr}</span>
+            </div>
+            <h4 class="portal-design-title">${escapeHtml(d.partner1)} & ${escapeHtml(d.partner2)}</h4>
+            <div class="portal-design-slug">
+              <a href="${liveUrl}" target="_blank" rel="noopener">/sites/${escapeHtml(d.slug)} ↗</a>
+            </div>
+            <div class="portal-design-pin-box">
+              <span style="font-size: 0.78rem; color: var(--text-muted);">Admin PIN:</span>
+              <span class="pin-code-mask" id="pinMask_${d.slug}">••••</span>
+              <span class="pin-code-text" id="pinVal_${d.slug}" style="display: none;">${escapeHtml(pin)}</span>
+              <button type="button" class="btn-pin-toggle" data-reveal-slug="${d.slug}" title="Toggle PIN visibility">👁️</button>
+            </div>
+            <div class="portal-design-actions">
+              <a href="${studioUrl}" class="btn btn-primary btn-sm portal-studio-launch-btn" data-slug="${escapeHtml(d.slug)}" data-token="${escapeHtml(d.authToken || "")}" data-pin="${escapeHtml(pin)}" data-plan="${escapeHtml(d.plan || "vip")}" style="flex: 1; justify-content: center; text-decoration: none;">
+                <span>🚀 Open Studio</span>
+              </a>
+              <a href="${liveUrl}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="text-decoration: none;" title="View public site">
+                <span>👁️</span>
+              </a>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      listEl.querySelectorAll(".portal-studio-launch-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          localStorage.setItem("lovesaas_auth", JSON.stringify({
+            slug: btn.dataset.slug,
+            authToken: btn.dataset.token,
+            adminPin: btn.dataset.pin,
+            plan: btn.dataset.plan,
+            role: "user"
+          }));
+        });
+      });
+
+      listEl.querySelectorAll(".btn-pin-toggle").forEach(b => {
+        b.addEventListener("click", () => {
+          const s = b.dataset.revealSlug;
+          const mask = document.getElementById(`pinMask_${s}`);
+          const val = document.getElementById(`pinVal_${s}`);
+          if (mask && val) {
+            const isHidden = val.style.display === "none";
+            val.style.display = isHidden ? "inline" : "none";
+            mask.style.display = isHidden ? "none" : "inline";
+            b.textContent = isHidden ? "🙈" : "👁️";
+          }
+        });
+      });
+    } catch (err) {
+      listEl.innerHTML = `<div style="text-align: center; padding: 20px; color: #ef4444;">${err.message}</div>`;
+    }
+  }
+
+  // Load User Purchases
+  async function loadUserPurchases() {
+    const listEl = document.getElementById("portalPurchasesList");
+    const countBadge = document.getElementById("badgePurchasesCount");
+    if (!listEl) return;
+
+    listEl.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--text-muted);">Loading receipts...</div>`;
+
+    try {
+      const res = await fetch("/api/user/purchases", { headers: authHeaders() });
+      if (res.status === 401) {
+        clearUserToken();
+        currentUser = null;
+        renderUserState();
+        closeModal(userPortalModal);
+        openModal(signInModal);
+        return;
+      }
+      if (!res.ok) throw new Error("Could not load purchases");
+      const data = await res.json();
+      const purchases = data.purchases || [];
+      if (countBadge) countBadge.textContent = purchases.length;
+
+      if (purchases.length === 0) {
+        listEl.innerHTML = `
+          <div class="portal-empty-state">
+            <div class="empty-icon">🧾</div>
+            <h4>No purchases recorded yet</h4>
+            <p>Receipts for lifetime couple website licenses will appear here.</p>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = purchases.map(p => {
+        const dateStr = p.createdAt ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(p.createdAt)) : "Recently";
+        const amt = Number(p.amount || 0).toFixed(2);
+        const orderShort = p.id ? String(p.id).slice(0, 8).toUpperCase() : "ORD";
+        const planTitle = p.plan === "starter" ? "Love Story Starter License" : "Forever VIP Suite License";
+
+        return `
+          <div class="purchase-receipt-card">
+            <div class="receipt-header">
+              <div>
+                <span class="receipt-order-id">#${orderShort}</span>
+                <span class="receipt-plan-name">${planTitle}</span>
+              </div>
+              <span class="receipt-badge-status">Lifetime Paid</span>
+            </div>
+            <div class="receipt-meta-grid">
+              <div><span class="meta-label">Amount:</span> <strong style="color: var(--primary);">$${amt} ${p.currency || "USD"}</strong></div>
+              <div><span class="meta-label">Date:</span> <span>${dateStr}</span></div>
+              <div><span class="meta-label">Site:</span> <a href="/sites/${escapeHtml(p.tenantSlug)}" target="_blank">/sites/${escapeHtml(p.tenantSlug)} ↗</a></div>
+              <div><span class="meta-label">License:</span> <span>Perpetual</span></div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    } catch (err) {
+      listEl.innerHTML = `<div style="text-align: center; padding: 20px; color: #ef4444;">${err.message}</div>`;
+    }
+  }
+
+  // Profile Update Form
+  const formPortalProfile = document.getElementById("formPortalUpdateProfile");
+  const btnSaveProfile = document.getElementById("btnSaveProfile");
+  const profileAlert = document.getElementById("profileAlert");
+
+  if (formPortalProfile) {
+    formPortalProfile.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("profileName").value.trim();
+      const password = document.getElementById("profileNewPassword").value;
+
+      if (btnSaveProfile) {
+        btnSaveProfile.disabled = true;
+        btnSaveProfile.innerHTML = `<span>Saving... ⏳</span>`;
+      }
+      if (profileAlert) profileAlert.style.display = "none";
+
+      try {
+        const payload = { name };
+        if (password) {
+          if (password.length < 4) throw new Error("New password must be at least 4 characters");
+          payload.password = password;
+        }
+
+        const res = await fetch("/api/user/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to update profile");
+
+        currentUser = data.user;
+        renderUserState();
+        if (profileAlert) {
+          profileAlert.className = "auth-alert-box success";
+          profileAlert.textContent = "Profile updated successfully! ✨";
+          profileAlert.style.display = "block";
+        }
+        document.getElementById("profileNewPassword").value = "";
+      } catch (err) {
+        if (profileAlert) {
+          profileAlert.className = "auth-alert-box error";
+          profileAlert.textContent = err.message;
+          profileAlert.style.display = "block";
+        }
+      } finally {
+        if (btnSaveProfile) {
+          btnSaveProfile.disabled = false;
+          btnSaveProfile.innerHTML = `<span>💾 Save Changes</span>`;
+        }
+      }
+    });
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  // Check auth state on page load
+  checkCurrentUser();
+
   // Global overlay click
-  [checkoutModal, signInModal, demoPreviewModal, widgetLightboxModal].forEach(m => {
+  const allModals = [checkoutModal, signInModal, userPortalModal, demoPreviewModal, widgetLightboxModal];
+  allModals.forEach(m => {
     if (m) {
       m.addEventListener("click", (e) => {
         if (e.target === m) closeModal(m);
       });
+    }
+  });
+
+  // Escape key closes open modals
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      allModals.forEach(m => {
+        if (m && m.classList.contains("active")) closeModal(m);
+      });
+    }
+  });
+
+  // Cross-tab session sync
+  window.addEventListener("storage", (e) => {
+    if (e.key === "lovesaas_user_token") {
+      checkCurrentUser();
     }
   });
 });

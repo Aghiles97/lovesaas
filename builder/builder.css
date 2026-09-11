@@ -3947,5 +3947,149 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
   border-top: 1px solid #f1f5f9;
 }
 
+/* ----------------------------------------------------
+   ROLE-BASED ACCESS CONTROL STYLES (Admin, User, Visitor)
+   ---------------------------------------------------- */
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  user-select: none;
+}
+.role-badge.role-admin {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+.role-badge.role-admin:hover {
+  background: rgba(16, 185, 129, 0.25);
+}
+.role-badge.role-user {
+  background: rgba(37, 99, 235, 0.15);
+  color: #2563eb;
+  border-color: rgba(37, 99, 235, 0.35);
+}
+.role-badge.role-user:hover {
+  background: rgba(37, 99, 235, 0.25);
+}
+.role-badge.role-visitor {
+  background: rgba(244, 63, 94, 0.15);
+  color: #e11d48;
+  border-color: rgba(244, 63, 94, 0.35);
+}
+.role-badge.role-visitor:hover {
+  background: rgba(244, 63, 94, 0.25);
+}
+
+/* Visitor CTA Save Button */
+.btn-save.btn-visitor-cta {
+  background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  animation: visitorPulse 2.5s infinite;
+}
+@keyframes visitorPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* Visitor Inspector Lock Banner */
+.visitor-locked-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: linear-gradient(135deg, rgba(254, 242, 242, 0.95) 0%, rgba(255, 228, 230, 0.95) 100%);
+  border: 1.5px solid #fecdd3;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  color: #9f1239;
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(244, 63, 94, 0.08);
+}
+.visitor-lock-btn {
+  background: #e11d48;
+  color: #ffffff;
+  border: none;
+  border-radius: 9999px;
+  padding: 5px 12px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.15s, background 0.15s;
+}
+.visitor-lock-btn:hover {
+  background: #be123c;
+  transform: translateY(-1px);
+}
+
+/* Visitor Locked Overlays */
+.visitor-overlay-lock {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(3px);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  border-radius: 12px;
+}
+.visitor-overlay-lock .lock-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+.visitor-overlay-lock .lock-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+.visitor-overlay-lock .lock-subtitle {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 12px;
+  max-width: 280px;
+}
+
+/* Disabled controls in visitor mode */
+body.role-visitor .visitor-disabled {
+  opacity: 0.55 !important;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+}
+body.role-visitor .visitor-locked-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fff1f2;
+  color: #e11d48;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  border: 1px solid #fecdd3;
+  margin-left: 6px;
+}
+
+
 
 

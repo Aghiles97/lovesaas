@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Couple Site Builder Studio</title>
   <link rel="stylesheet" href="/builder/builder.css?v=2.3.0">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 </head>
 <body>
 
@@ -21,6 +22,10 @@
         <span class="tenant-pill" id="currentTenantBadge">demo</span>
         <span class="tenant-chevron">▾</span>
       </button>
+      <button type="button" class="role-badge role-visitor" id="roleStatusBadge" title="Click to switch account or role">
+        <span id="roleStatusIcon">👀</span>
+        <span id="roleStatusText">Visitor (Demo)</span>
+      </button>
       <div class="auto-save-indicator" id="autoSaveIndicator">
         <span class="indicator-dot"></span>
         <span class="indicator-text">All changes saved</span>
@@ -33,19 +38,23 @@
       <a id="btnViewLive" href="/sites/demo" target="_blank" class="btn-secondary" title="Open live site in new tab">
         <span class="btn-icon">↗</span> View Live
       </a>
+      <a id="builderUserBadge" href="/welcome" class="btn-secondary" title="Account, Designs & Orders" style="display: none; align-items: center; gap: 6px; text-decoration: none; border-color: rgba(244,63,94,0.3); background: rgba(244,63,94,0.08);">
+        <span id="builderUserAvatar">👤</span>
+        <span id="builderUserName">My Account</span>
+      </a>
       <button type="button" class="btn-primary btn-save" id="btnSaveConfig" title="Save changes (Ctrl+S / Cmd+S)">
-        <span class="btn-save-icon">💾</span>
-        <span class="btn-save-text">Save & Publish</span>
-        <kbd class="kbd-shortcut">⌘S</kbd>
+        <span class="btn-save-icon" id="btnSaveIcon">💾</span>
+        <span class="btn-save-text" id="btnSaveText">Save & Publish</span>
+        <kbd class="kbd-shortcut" id="btnSaveKbd">⌘S</kbd>
       </button>
     </div>
   </header>
 
   <!-- DEMO MODE NOTIFICATION BANNER -->
-  <div class="demo-banner-bar" id="demoBannerBar" style="display: none; background: linear-gradient(90deg, #2563eb 0%, #db2777 100%); color: #fff; padding: 7px 16px; font-size: 0.85rem; font-weight: 600; text-align: center; justify-content: center; align-items: center; gap: 12px; z-index: 50;">
-    <span>🎨 Sandbox Demo Mode — You are previewing sample couple site 'demo'.</span>
-    <a href="/welcome#pricing" target="_blank" style="background: #ffffff; color: #111827; padding: 3px 12px; font-size: 0.78rem; font-weight: 700; border-radius: 9999px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
-      Buy Your Site ($19+) ↗
+  <div class="demo-banner-bar" id="demoBannerBar" style="display: none; background: linear-gradient(90deg, #1e293b 0%, #be123c 100%); color: #fff; padding: 7px 16px; font-size: 0.85rem; font-weight: 600; text-align: center; justify-content: center; align-items: center; gap: 12px; z-index: 50; border-bottom: 1px solid rgba(255,255,255,0.1);">
+    <span id="demoBannerText">🎨 Visitor Demo Mode — Previewing sample site. Controls are extremely limited.</span>
+    <a id="demoBannerCta" href="/welcome#pricing" target="_blank" style="background: #ffffff; color: #111827; padding: 3px 12px; font-size: 0.78rem; font-weight: 700; border-radius: 9999px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+      Purchase now to customize ↗
     </a>
   </div>
 
@@ -358,45 +367,86 @@
 
   <!-- BUILDER ACCESS GATE MODAL -->
   <div class="modal-backdrop hidden" id="builderAccessGateModal" style="z-index: 9999;">
-    <div class="modal-box" style="max-width: 440px; text-align: center; border: 1px solid rgba(244, 63, 94, 0.4); box-shadow: 0 25px 60px -15px rgba(0,0,0,0.8), 0 0 40px -10px rgba(244,63,94,0.3);">
-      <div style="font-size: 2.8rem; margin-bottom: 6px;">💍</div>
-      <h3 style="font-size: 1.4rem; margin-bottom: 6px; font-weight: 800;">Couple Studio Access</h3>
-      <p style="font-size: 0.88rem; color: #94a3b8; margin-bottom: 18px;">
-        Design your couple website with real-time live preview.
+    <div class="modal-box" style="max-width: 450px; text-align: center; border: 1px solid rgba(244, 63, 94, 0.4); box-shadow: 0 25px 60px -15px rgba(0,0,0,0.8), 0 0 40px -10px rgba(244,63,94,0.3);">
+      <div style="font-size: 2.6rem; margin-bottom: 4px;">💍</div>
+      <h3 style="font-size: 1.35rem; margin-bottom: 4px; font-weight: 800;">LoveSaas Studio Access</h3>
+      <p style="font-size: 0.84rem; color: #94a3b8; margin-bottom: 14px;">
+        Choose your role or unlock your couple website.
       </p>
 
-      <div style="background: rgba(244, 63, 94, 0.12); border: 1px solid rgba(244, 63, 94, 0.35); border-radius: 12px; padding: 14px; margin-bottom: 18px; text-align: center;">
-        <div style="font-weight: 700; color: #fff; font-size: 0.92rem; margin-bottom: 8px;">Want to test the studio first?</div>
-        <button type="button" class="btn-primary" id="btnGateDemo" style="width: 100%; justify-content: center; padding: 10px; font-weight: 700; font-size: 0.92rem;">
-          ✨ Try Demo Studio (1-Click Free Sandbox)
+      <!-- Gate Role Tabs -->
+      <div class="gate-role-tabs" style="display: flex; gap: 4px; background: rgba(15, 23, 42, 0.7); padding: 4px; border-radius: 10px; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.08);">
+        <button type="button" class="gate-role-tab active" data-gate-tab="user" id="tabGateUser" style="flex: 1; padding: 7px 8px; border: none; border-radius: 6px; font-size: 0.78rem; font-weight: 700; cursor: pointer; background: #2563eb; color: #fff;">
+          💑 User
+        </button>
+        <button type="button" class="gate-role-tab" data-gate-tab="admin" id="tabGateAdmin" style="flex: 1; padding: 7px 8px; border: none; border-radius: 6px; font-size: 0.78rem; font-weight: 700; cursor: pointer; background: transparent; color: #94a3b8;">
+          🛡️ Admin
+        </button>
+        <button type="button" class="gate-role-tab" data-gate-tab="visitor" id="tabGateVisitor" style="flex: 1; padding: 7px 8px; border: none; border-radius: 6px; font-size: 0.78rem; font-weight: 700; cursor: pointer; background: transparent; color: #94a3b8;">
+          👀 Visitor
         </button>
       </div>
 
-      <div style="position: relative; margin: 18px 0; text-align: center;">
-        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.12);">
-        <span style="position: absolute; top: -9px; left: 50%; transform: translateX(-50%); background: #111827; padding: 0 10px; color: #64748b; font-size: 0.76rem; font-weight: 700; letter-spacing: 0.5px;">OR UNLOCK YOUR SITE</span>
-      </div>
-
-      <div style="text-align: left;">
-        <div class="input-group" style="margin-bottom: 12px;">
+      <!-- PANE 1: USER LOGIN -->
+      <div class="gate-tab-pane active" id="paneGateUser" style="text-align: left;">
+        <div class="input-group" style="margin-bottom: 10px;">
           <label style="font-size: 0.82rem; font-weight: 600; color: #cbd5e1;">Couple Website Slug</label>
-          <input type="text" id="gateSlugInput" placeholder="e.g. demo or alex-and-sam">
+          <input type="text" id="gateSlugInput" placeholder="e.g. alex-and-sam">
         </div>
         <div class="input-group" style="margin-bottom: 8px;">
           <label style="font-size: 0.82rem; font-weight: 600; color: #cbd5e1;">Admin PIN (4 Digits)</label>
           <input type="password" id="gatePinInput" placeholder="1234" maxlength="8">
         </div>
-        <div id="gateErrorMsg" style="color: #ef4444; font-size: 0.82rem; margin-top: 4px; display: none;"></div>
+        <button type="button" class="btn-primary" id="btnGateUnlock" style="width: 100%; justify-content: center; padding: 10px; font-weight: 700; margin-top: 10px;">
+          <span>Open My Design</span> <span>🔑</span>
+        </button>
+        <div style="text-align: center; margin-top: 10px;">
+          <a href="/welcome#pricing" target="_blank" style="color: #fb7185; text-decoration: none; font-size: 0.8rem; font-weight: 600;">
+            Purchase now to customize ($19+) ↗
+          </a>
+        </div>
+        <div style="text-align: center; margin-top: 6px;">
+          <a href="/welcome" style="color: #94a3b8; text-decoration: underline; font-size: 0.76rem;">
+            Have an account? Sign in on Storefront ➔
+          </a>
+        </div>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px;">
-        <button type="button" class="btn-secondary" id="btnGateUnlock" style="width: 100%; justify-content: center; padding: 10px; font-weight: 700;">
-          <span>Unlock Studio</span> <span>🔑</span>
+      <!-- PANE 2: ADMIN LOGIN -->
+      <div class="gate-tab-pane" id="paneGateAdmin" style="display: none; text-align: left;">
+        <p style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 10px;">
+          🛡️ Master Admin has full rights across all sites with zero demo banners.
+        </p>
+        <div class="input-group" style="margin-bottom: 10px;">
+          <label style="font-size: 0.82rem; font-weight: 600; color: #cbd5e1;">Master Admin PIN</label>
+          <input type="password" id="gateAdminPinInput" placeholder="Enter admin PIN (default: admin1234)">
+        </div>
+        <div class="input-group" style="margin-bottom: 8px;">
+          <label style="font-size: 0.82rem; font-weight: 600; color: #cbd5e1;">Target Site Slug</label>
+          <input type="text" id="gateAdminSlugInput" placeholder="demo (or any couple slug)" value="demo">
+        </div>
+        <button type="button" class="btn-primary" id="btnGateAdminLogin" style="width: 100%; justify-content: center; padding: 10px; font-weight: 700; margin-top: 10px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+          <span>Login as Admin</span> <span>🛡️</span>
         </button>
-        <a href="/welcome#pricing" target="_blank" style="text-align: center; color: #fb7185; text-decoration: none; font-size: 0.82rem; font-weight: 600; padding: 6px;">
-          Don't have a site yet? Get Started ($19+) ↗
+      </div>
+
+      <!-- PANE 3: VISITOR DEMO -->
+      <div class="gate-tab-pane" id="paneGateVisitor" style="display: none; text-align: center;">
+        <div style="background: rgba(244, 63, 94, 0.12); border: 1px solid rgba(244, 63, 94, 0.35); border-radius: 12px; padding: 14px; margin-bottom: 14px;">
+          <div style="font-weight: 700; color: #fff; font-size: 0.92rem; margin-bottom: 6px;">Sandbox Demo Mode</div>
+          <p style="font-size: 0.8rem; color: #fecdd3; margin-bottom: 12px;">
+            Preview sample site with extremely limited controls. Purchase now to unlock full customizations.
+          </p>
+          <button type="button" class="btn-primary" id="btnGateDemo" style="width: 100%; justify-content: center; padding: 10px; font-weight: 700; font-size: 0.92rem;">
+            ✨ View Demo (Limited Preview)
+          </button>
+        </div>
+        <a href="/welcome#pricing" target="_blank" style="color: #fb7185; text-decoration: none; font-size: 0.82rem; font-weight: 700;">
+          Purchase now to customize ($19+) ↗
         </a>
       </div>
+
+      <div id="gateErrorMsg" style="color: #ef4444; font-size: 0.82rem; margin-top: 10px; display: none; text-align: center;"></div>
     </div>
   </div>
 
@@ -404,6 +454,10 @@
   <div class="modal-backdrop hidden" id="tenantModal">
     <div class="modal-box">
       <h3>Couple Account</h3>
+      <div id="userDesignsSection" style="display: none; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left;">
+        <label style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; display: block; margin-bottom: 6px;">Your Sites (1-Click Switch):</label>
+        <div id="userDesignsQuickList" style="display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto;"></div>
+      </div>
       <div class="input-group">
         <label>Couple URL Slug (e.g., 'john-and-emma')</label>
         <input type="text" id="modalSlug" placeholder="alex-sam">
@@ -430,7 +484,7 @@
   </div>
 
   <!-- Media Preview Lightbox Modal -->
-  <div class="tenant-modal-overlay hidden" id="mediaLightboxModal">
+  <div class="tenant-modal-overlay hidden" id="mediaLightboxModal" style="z-index: 10060;">
     <div class="tenant-modal-card media-lightbox-card">
       <div class="lightbox-header">
         <div class="lightbox-title-wrap">
@@ -453,7 +507,7 @@
   </div>
 
   <!-- Media Picker Modal -->
-  <div class="tenant-modal-overlay hidden" id="mediaPickerModal">
+  <div class="tenant-modal-overlay hidden" id="mediaPickerModal" style="z-index: 10050;">
     <div class="tenant-modal-card media-picker-modal-card">
       <div class="media-picker-header">
         <div class="media-picker-header-left">
@@ -511,6 +565,7 @@
         <button type="button" class="add-sec-filter-chip" data-cat="games">🎮 Games</button>
         <button type="button" class="add-sec-filter-chip" data-cat="gallery">📸 Gallery</button>
         <button type="button" class="add-sec-filter-chip" data-cat="letter">💌 Letter</button>
+        <button type="button" class="add-sec-filter-chip" data-cat="birthday">🎂 Birthday</button>
       </div>
 
       <div class="add-section-widgets-grid" id="addSectionWidgetsGrid"></div>
@@ -552,6 +607,92 @@
     </div>
   </div>
 
+  <!-- Add Custom Theme Modal (Admin Only) -->
+  <div class="tenant-modal-overlay hidden" id="addThemeModal" role="dialog" aria-modal="true" aria-labelledby="addThemeModalTitle" style="z-index: 10000;">
+    <div class="tenant-modal-card" style="max-width: 480px; max-height: 90vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+        <h3 id="addThemeModalTitle" style="margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 6px;">
+          <span>🎨</span> Add Custom Theme <span style="font-size: 10px; background: rgba(225,29,72,0.1); color: var(--primary); padding: 2px 6px; border-radius: 4px; font-weight: 700;">ADMIN</span>
+        </h3>
+        <button type="button" id="btnCloseAddThemeModal" class="btn-modal-close" title="Close">✕</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="input-group">
+          <label style="font-size: 12px; font-weight: 600;">Theme Name</label>
+          <input type="text" id="customThemeName" placeholder="e.g., Midnight Roses 🌹" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px;">
+        </div>
+
+        <div class="input-group">
+          <label style="font-size: 12px; font-weight: 600;">Description / Subtitle</label>
+          <input type="text" id="customThemeDesc" placeholder="e.g., Deep crimson rose petals & night sky" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px;">
+        </div>
+
+        <div class="input-group">
+          <label style="font-size: 12px; font-weight: 600;">Accent Primary Color</label>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="color" id="customThemeColor" value="#e11d48" style="width: 40px; height: 36px; border: none; border-radius: 6px; cursor: pointer; padding: 0;">
+            <input type="text" id="customThemeColorHex" value="#e11d48" style="flex: 1; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px; font-family: monospace;">
+          </div>
+        </div>
+
+        <!-- 16:9 Desktop Image -->
+        <div class="input-group" style="background: rgba(0,0,0,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="font-size: 12px; font-weight: 700;">Desktop Wallpaper (16:9 Landscape)</label>
+            <span style="font-size: 10px; color: var(--text-muted);">Required</span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="customThemeDesktopImg" placeholder="Image URL or upload..." style="flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px;">
+            <button type="button" id="btnCustomThemeDesktopLibrary" class="btn-sm btn-secondary" style="white-space: nowrap; padding: 6px 10px; font-size: 12px; cursor: pointer;">📁 Library</button>
+            <label class="file-upload-btn" style="cursor: pointer; display: inline-flex; align-items: center; padding: 6px 10px; background: var(--primary); color: #fff; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap;">
+              <span>⬆️ Upload</span>
+              <input type="file" id="uploadCustomThemeDesktop" accept="image/*" style="display: none;">
+            </label>
+          </div>
+          <div id="customThemeDesktopPreview" style="margin-top: 8px; width: 100%; height: 80px; border-radius: 6px; border: 1px dashed var(--border); display: flex; align-items: center; justify-content: center; background-size: cover; background-position: center; font-size: 11px; color: var(--text-muted);">
+            Desktop (16:9) Preview
+          </div>
+        </div>
+
+        <!-- 9:16 Mobile Image -->
+        <div class="input-group" style="background: rgba(0,0,0,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label style="font-size: 12px; font-weight: 700;">Mobile Wallpaper (9:16 Portrait)</label>
+            <span style="font-size: 10px; color: var(--text-muted);">Optional (defaults to 16:9)</span>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="text" id="customThemeMobileImg" placeholder="Image URL or upload..." style="flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px;">
+            <button type="button" id="btnCustomThemeMobileLibrary" class="btn-sm btn-secondary" style="white-space: nowrap; padding: 6px 10px; font-size: 12px; cursor: pointer;">📁 Library</button>
+            <label class="file-upload-btn" style="cursor: pointer; display: inline-flex; align-items: center; padding: 6px 10px; background: var(--primary); color: #fff; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap;">
+              <span>⬆️ Upload</span>
+              <input type="file" id="uploadCustomThemeMobile" accept="image/*" style="display: none;">
+            </label>
+          </div>
+          <div id="customThemeMobilePreview" style="margin-top: 8px; width: 70px; height: 100px; margin-left: auto; margin-right: auto; border-radius: 6px; border: 1px dashed var(--border); display: flex; align-items: center; justify-content: center; background-size: cover; background-position: center; font-size: 10px; color: var(--text-muted); text-align: center;">
+            Mobile (9:16)
+          </div>
+        </div>
+
+        <!-- Admin Passcode Field -->
+        <div class="input-group" style="background: rgba(225,29,72,0.04); border: 1px solid rgba(225,29,72,0.2); border-radius: 8px; padding: 12px;">
+          <label style="font-size: 12px; font-weight: 700; color: var(--primary);">Admin PIN Verification 🔒</label>
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Theme management requires couple administrator PIN.</div>
+          <input type="password" id="customThemeAdminPin" placeholder="Enter 4-digit Admin PIN" maxlength="8" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 13px;">
+        </div>
+
+        <div id="customThemeStatus" style="font-size: 12px; display: none;"></div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px;">
+        <button type="button" class="btn-secondary" id="btnCancelAddThemeModal">Cancel</button>
+        <button type="button" class="btn-primary" id="btnSaveCustomTheme">
+          <span>💾</span> Save & Apply Theme
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="/core/widget-registry.js"></script>
   <script src="/builder/widget-previews.js"></script>
   <!-- Modular Widget Templates -->
@@ -568,6 +709,12 @@
   <script src="/core/templates/quiz.template.js"></script>
   <script src="/core/templates/letter.template.js"></script>
   <script src="/core/templates/playful.template.js"></script>
+  <script src="/core/templates/candle_blowout.template.js"></script>
+  <script src="/core/templates/milestone_stats.template.js"></script>
+  <script src="/core/templates/gift_unboxer.template.js"></script>
+  <script src="/core/templates/roast_toast.template.js"></script>
+  <script src="/core/templates/guestbook.template.js"></script>
+  <script src="/core/templates/party_jukebox.template.js"></script>
   <script src="/core/widget-templates.js"></script>
 
   <!-- Modular Widget Inspectors -->
@@ -584,6 +731,12 @@
   <script src="/builder/inspectors/quiz.inspector.js"></script>
   <script src="/builder/inspectors/letter.inspector.js"></script>
   <script src="/builder/inspectors/playful.inspector.js"></script>
+  <script src="/builder/inspectors/candle_blowout.inspector.js"></script>
+  <script src="/builder/inspectors/milestone_stats.inspector.js"></script>
+  <script src="/builder/inspectors/gift_unboxer.inspector.js"></script>
+  <script src="/builder/inspectors/roast_toast.inspector.js"></script>
+  <script src="/builder/inspectors/guestbook.inspector.js"></script>
+  <script src="/builder/inspectors/party_jukebox.inspector.js"></script>
 
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 

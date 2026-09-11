@@ -22,6 +22,9 @@ if (typeof window !== "undefined") {
 let state = {
   slug: "demo",
   adminPin: "1234",
+  authToken: null,
+  userRole: "visitor", // "visitor" | "user" | "admin"
+  isPurchased: false,
   templatePreset: "storyteller",
   themeId: "theme-pink",
   layoutOrder: ["hero", "map", "timeline", "memories", "letter"],
@@ -106,6 +109,14 @@ let autoSaveTimeout = null;
 function debouncedAutoSaveLayout() {
   clearTimeout(autoSaveTimeout);
   const indicator = document.getElementById("autoSaveIndicator");
+  if (state.userRole === "visitor") {
+    if (indicator) {
+      indicator.className = "auto-save-indicator";
+      const textEl = indicator.querySelector(".indicator-text");
+      if (textEl) textEl.textContent = "Demo Sandbox (Preview Only)";
+    }
+    return;
+  }
   if (indicator) {
     indicator.className = "auto-save-indicator saving";
     const textEl = indicator.querySelector(".indicator-text");
@@ -169,7 +180,80 @@ function hideAccessGateModal() {
 
 function showDemoBanner(visible) {
   const banner = document.getElementById("demoBannerBar");
-  if (banner) banner.style.display = visible ? "flex" : "none";
+  if (!banner) return;
+  banner.style.display = visible ? "flex" : "none";
+}
+
+function updateRoleUI() {
+  const roleBadge = document.getElementById("roleStatusBadge");
+  const roleIcon = document.getElementById("roleStatusIcon");
+  const roleText = document.getElementById("roleStatusText");
+  const demoBanner = document.getElementById("demoBannerBar");
+  const btnSave = document.getElementById("btnSaveConfig");
+  const saveText = btnSave ? btnSave.querySelector(".btn-save-text") : null;
+  const saveIcon = btnSave ? btnSave.querySelector(".btn-save-icon") : null;
+  const saveKbd = btnSave ? btnSave.querySelector(".kbd-shortcut") : null;
+
+  document.body.classList.remove("role-admin", "role-user", "role-visitor");
+  document.body.classList.add(`role-${state.userRole}`);
+
+  if (state.userRole === "admin") {
+    // ADMIN: Full access, full rights, NO demo banner, NO purchase prompts
+    if (roleBadge) {
+      roleBadge.className = "role-badge role-admin";
+      if (roleIcon) roleIcon.textContent = "🛡️";
+      if (roleText) roleText.textContent = "Admin (Full Access)";
+      roleBadge.title = "Master Admin: Full access & rights across all sites. Click to switch.";
+    }
+    showDemoBanner(false);
+    if (btnSave) {
+      btnSave.classList.remove("btn-visitor-cta");
+      btnSave.title = "Save changes (Ctrl+S / Cmd+S)";
+      if (saveIcon) saveIcon.textContent = "💾";
+      if (saveText) saveText.textContent = "Save & Publish";
+      if (saveKbd) saveKbd.style.display = "inline-block";
+    }
+    document.querySelectorAll(".visitor-overlay-lock, .visitor-locked-banner").forEach(el => el.remove());
+  } else if (state.userRole === "user") {
+    // USER: Full access to own design if purchased, NO demo banner
+    if (roleBadge) {
+      roleBadge.className = "role-badge role-user";
+      if (roleIcon) roleIcon.textContent = "✨";
+      if (roleText) roleText.textContent = "User (Full Access)";
+      roleBadge.title = `Site Owner (${state.slug}): Full customization rights. Click to switch.`;
+    }
+    showDemoBanner(false);
+    if (btnSave) {
+      btnSave.classList.remove("btn-visitor-cta");
+      btnSave.title = "Save changes (Ctrl+S / Cmd+S)";
+      if (saveIcon) saveIcon.textContent = "💾";
+      if (saveText) saveText.textContent = "Save & Publish";
+      if (saveKbd) saveKbd.style.display = "inline-block";
+    }
+    document.querySelectorAll(".visitor-overlay-lock, .visitor-locked-banner").forEach(el => el.remove());
+  } else {
+    // VISITOR: Extremely limited controls, label 'purchase now to customize'
+    state.userRole = "visitor";
+    if (roleBadge) {
+      roleBadge.className = "role-badge role-visitor";
+      if (roleIcon) roleIcon.textContent = "👀";
+      if (roleText) roleText.textContent = "Visitor (Demo)";
+      roleBadge.title = "Visitor Demo: Limited controls. Click to unlock/purchase.";
+    }
+    showDemoBanner(true);
+    const demoBannerText = document.getElementById("demoBannerText");
+    if (demoBannerText) demoBannerText.textContent = "🎨 Visitor Demo Mode — Previewing sample site. Controls are extremely limited.";
+    const demoBannerCta = document.getElementById("demoBannerCta");
+    if (demoBannerCta) demoBannerCta.textContent = "Purchase now to customize ↗";
+
+    if (btnSave) {
+      btnSave.classList.add("btn-visitor-cta");
+      btnSave.title = "Purchase now to customize and save your couple site";
+      if (saveIcon) saveIcon.textContent = "🛍️";
+      if (saveText) saveText.textContent = "Purchase now to customize";
+      if (saveKbd) saveKbd.style.display = "none";
+    }
+  }
 }
 
 async function checkBuilderAccess() {
@@ -177,6 +261,7 @@ async function checkBuilderAccess() {
   const paramSlug = urlParams.get("slug");
   const paramToken = urlParams.get("token");
   const paramPin = urlParams.get("pin");
+  const paramRole = urlParams.get("role");
 
   let localAuth = null;
   try {
@@ -188,13 +273,39 @@ async function checkBuilderAccess() {
   if (!targetSlug && localAuth && localAuth.slug) {
     targetSlug = localAuth.slug;
   }
-
   if (!targetSlug) {
     targetSlug = "demo";
   }
 
-  const tokenToTest = paramToken || (localAuth && localAuth.slug === targetSlug ? localAuth.authToken : null);
-  const pinToTest = paramPin || (localAuth && localAuth.slug === targetSlug ? localAuth.adminPin : null);
+  const tokenToTest = paramToken || (localAuth && (localAuth.role === "admin" || localAuth.slug === targetSlug) ? localAuth.authToken : null);
+  const pinToTest = paramPin || (localAuth && (localAuth.role === "admin" || localAuth.slug === targetSlug) ? localAuth.adminPin : null);
+
+  if (paramRole === "admin" || (localAuth && localAuth.role === "admin") || pinToTest === "admin1234" || tokenToTest === "master-admin-token-lovesaas") {
+    try {
+      const res = await fetch("/api/auth/verify-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: targetSlug, token: tokenToTest, pin: pinToTest || "admin1234" })
+      });
+      const data = await res.json();
+      if (res.ok && data.authorized && data.isAdmin) {
+        state.slug = targetSlug;
+        state.userRole = "admin";
+        state.isPurchased = true;
+        state.adminPin = pinToTest || "admin1234";
+        state.authToken = data.authToken;
+        localStorage.setItem("lovesaas_auth", JSON.stringify({
+          slug: targetSlug,
+          role: "admin",
+          authToken: data.authToken,
+          adminPin: state.adminPin,
+          plan: data.plan
+        }));
+        updateRoleUI();
+        return true;
+      }
+    } catch (e) {}
+  }
 
   if (tokenToTest || pinToTest) {
     try {
@@ -206,14 +317,19 @@ async function checkBuilderAccess() {
       const data = await res.json();
       if (res.ok && data.authorized) {
         state.slug = targetSlug;
-        if (pinToTest) state.adminPin = pinToTest;
+        state.adminPin = pinToTest || "";
+        state.authToken = data.authToken;
+        state.isPurchased = data.isPurchased !== false;
+        state.userRole = data.role || (data.isAdmin ? "admin" : (state.isPurchased ? "user" : "visitor"));
+
         localStorage.setItem("lovesaas_auth", JSON.stringify({
           slug: targetSlug,
+          role: state.userRole,
           authToken: data.authToken,
           adminPin: pinToTest || "",
           plan: data.plan
         }));
-        showDemoBanner(data.isDemo === true);
+        updateRoleUI();
         return true;
       }
     } catch (e) {}
@@ -221,7 +337,9 @@ async function checkBuilderAccess() {
 
   if (targetSlug === "demo") {
     state.slug = "demo";
-    showDemoBanner(true);
+    state.userRole = "visitor";
+    state.isPurchased = false;
+    updateRoleUI();
     return true;
   }
 
@@ -234,7 +352,33 @@ document.addEventListener("DOMContentLoaded", async () => {
   populateInspectorSelect();
   renderPresetsUI();
 
-  // Gate Modal Listeners
+  // Role Badge click opens Gate Modal
+  const roleBadge = document.getElementById("roleStatusBadge");
+  if (roleBadge) {
+    roleBadge.onclick = () => showAccessGateModal(state.slug);
+  }
+
+  // Gate Modal Tab Switcher
+  const gateTabs = document.querySelectorAll(".gate-role-tab");
+  gateTabs.forEach(tab => {
+    tab.onclick = () => {
+      const targetTab = tab.dataset.gateTab;
+      gateTabs.forEach(t => {
+        t.classList.remove("active");
+        t.style.background = "transparent";
+        t.style.color = "#94a3b8";
+      });
+      tab.classList.add("active");
+      tab.style.background = targetTab === "admin" ? "#10b981" : "#2563eb";
+      tab.style.color = "#ffffff";
+
+      document.getElementById("paneGateUser").style.display = targetTab === "user" ? "block" : "none";
+      document.getElementById("paneGateAdmin").style.display = targetTab === "admin" ? "block" : "none";
+      document.getElementById("paneGateVisitor").style.display = targetTab === "visitor" ? "block" : "none";
+    };
+  });
+
+  // User Unlock Listener
   const btnGateUnlock = document.getElementById("btnGateUnlock");
   if (btnGateUnlock) {
     btnGateUnlock.addEventListener("click", async () => {
@@ -245,7 +389,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const pin = pinInput.value.trim();
 
       if (!slug || !pin) {
-        errorMsg.textContent = "Please provide both slug and Admin PIN.";
+        errorMsg.textContent = "Please provide both slug and PIN.";
         errorMsg.style.display = "block";
         return;
       }
@@ -262,39 +406,102 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
         const data = await res.json();
         if (!res.ok || !data.authorized) {
-          throw new Error(data.error || "Invalid slug or Admin PIN");
+          throw new Error(data.error || "Invalid slug or PIN");
         }
+
+        state.slug = data.slug;
+        state.adminPin = pin;
+        state.authToken = data.authToken;
+        state.isPurchased = data.isPurchased !== false;
+        state.userRole = data.role || (data.isAdmin ? "admin" : (state.isPurchased ? "user" : "visitor"));
 
         localStorage.setItem("lovesaas_auth", JSON.stringify({
           slug: data.slug,
+          role: state.userRole,
           authToken: data.authToken,
           adminPin: pin,
           plan: data.plan
         }));
 
-        state.slug = data.slug;
-        state.adminPin = pin;
         hideAccessGateModal();
-        showDemoBanner(false);
+        updateRoleUI();
         window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(data.slug)}`);
         await loadTenantData(state.slug);
+        showToast(`Welcome! Logged in as ${state.userRole}.`, "success");
       } catch (err) {
         errorMsg.textContent = err.message;
         errorMsg.style.display = "block";
       } finally {
         btnGateUnlock.disabled = false;
-        btnGateUnlock.innerHTML = `<span>Unlock My Studio</span> <span>🚀</span>`;
+        btnGateUnlock.innerHTML = `<span>Open My Design</span> <span>🔑</span>`;
       }
     });
   }
 
+  // Admin Login Listener
+  const btnGateAdminLogin = document.getElementById("btnGateAdminLogin");
+  if (btnGateAdminLogin) {
+    btnGateAdminLogin.addEventListener("click", async () => {
+      const pinInput = document.getElementById("gateAdminPinInput");
+      const slugInput = document.getElementById("gateAdminSlugInput");
+      const errorMsg = document.getElementById("gateErrorMsg");
+      const pin = pinInput.value.trim() || "admin1234";
+      const slug = slugInput.value.trim().toLowerCase() || "demo";
+
+      btnGateAdminLogin.disabled = true;
+      btnGateAdminLogin.textContent = "Verifying Admin...";
+      errorMsg.style.display = "none";
+
+      try {
+        const res = await fetch("/api/auth/verify-access", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug, pin })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.authorized || !data.isAdmin) {
+          throw new Error(data.error || "Invalid Admin credentials");
+        }
+
+        state.slug = data.slug || slug;
+        state.adminPin = pin;
+        state.authToken = data.authToken;
+        state.userRole = "admin";
+        state.isPurchased = true;
+
+        localStorage.setItem("lovesaas_auth", JSON.stringify({
+          slug: state.slug,
+          role: "admin",
+          authToken: data.authToken,
+          adminPin: pin,
+          plan: "vip"
+        }));
+
+        hideAccessGateModal();
+        updateRoleUI();
+        window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(state.slug)}`);
+        await loadTenantData(state.slug);
+        showToast("🛡️ Master Admin logged in with full rights!", "success");
+      } catch (err) {
+        errorMsg.textContent = err.message;
+        errorMsg.style.display = "block";
+      } finally {
+        btnGateAdminLogin.disabled = false;
+        btnGateAdminLogin.innerHTML = `<span>Login as Admin</span> <span>🛡️</span>`;
+      }
+    });
+  }
+
+  // Visitor Demo Listener
   const btnGateDemo = document.getElementById("btnGateDemo");
   if (btnGateDemo) {
     btnGateDemo.addEventListener("click", async () => {
       hideAccessGateModal();
       state.slug = "demo";
       state.adminPin = "1234";
-      showDemoBanner(true);
+      state.userRole = "visitor";
+      state.isPurchased = false;
+      updateRoleUI();
       window.history.replaceState({}, "", "/builder?slug=demo");
       await loadTenantData("demo");
     });
@@ -320,7 +527,12 @@ async function loadTenantData(slug) {
     const data = await res.json();
 
     state.slug = data.slug;
-    state.adminPin = data.adminPin || "1234";
+    if (state.userRole !== "admin" && data.adminPin && !state.adminPin) {
+      state.adminPin = data.adminPin;
+    }
+    if (data.isPurchased !== undefined && state.userRole !== "admin") {
+      state.isPurchased = data.isPurchased !== false;
+    }
     state.templatePreset = data.templatePreset || "storyteller";
     state.themeId = (data.themeId === "romantic-rose" || !data.themeId) ? "theme-pink" : data.themeId;
     state.layoutOrder = data.layoutOrder || PRESETS.storyteller.widgets;
@@ -335,6 +547,7 @@ async function loadTenantData(slug) {
     }
 
     updateNavbarUI();
+    updateRoleUI();
     renderPresetsUI();
     renderWidgetTray();
     if (state.activeInspectorWidget) {
@@ -390,6 +603,11 @@ function renderPresetsUI() {
 }
 
 function applyPreset(presetKey) {
+  if (state.userRole === "visitor") {
+    showToast("🔒 Purchase now to customize template presets!", "warning");
+    window.open("/welcome#pricing", "_blank");
+    return;
+  }
   const preset = PRESETS[presetKey];
   if (!preset) return;
   state.templatePreset = presetKey;
@@ -577,6 +795,11 @@ function moveWidgetByDelta(widgetId, delta) {
 }
 
 function moveWidgetToPosition(widgetId, targetIndex) {
+  if (state.userRole === "visitor") {
+    showToast("🔒 Purchase now to customize and reorder sections!", "warning");
+    window.open("/welcome#pricing", "_blank");
+    return;
+  }
   const currentIdx = state.layoutOrder.indexOf(widgetId);
   if (currentIdx === -1) return;
   state.layoutOrder.splice(currentIdx, 1);
@@ -590,6 +813,12 @@ function moveWidgetToPosition(widgetId, targetIndex) {
 }
 
 function toggleWidgetActive(widgetId, isEnabled) {
+  if (state.userRole === "visitor") {
+    showToast("🔒 Purchase now to customize sections on your website!", "warning");
+    window.open("/welcome#pricing", "_blank");
+    renderWidgetTray();
+    return;
+  }
   if (isEnabled) {
     if (!state.layoutOrder.includes(widgetId)) {
       state.layoutOrder.push(widgetId);
@@ -689,6 +918,11 @@ async function ensureDefaultWidgetData(widgetId) {
 }
 
 async function addWidgetAtPosition(widgetId, targetIndex) {
+  if (state.userRole === "visitor") {
+    showToast("🔒 Purchase now to customize and add new sections!", "warning");
+    window.open("/welcome#pricing", "_blank");
+    return;
+  }
   if (!WIDGET_REGISTRY[widgetId]) return;
 
   const validIndex = (typeof targetIndex === "number" && targetIndex >= 0 && targetIndex <= state.layoutOrder.length)
@@ -733,6 +967,11 @@ async function addWidgetAtPosition(widgetId, targetIndex) {
 }
 
 function removeWidgetFromLayout(widgetId) {
+  if (state.userRole === "visitor") {
+    showToast("🔒 Purchase now to customize and remove sections!", "warning");
+    window.open("/welcome#pricing", "_blank");
+    return;
+  }
   if (!state.layoutOrder.includes(widgetId)) return;
 
   state.layoutOrder = state.layoutOrder.filter(id => id !== widgetId);
@@ -982,7 +1221,14 @@ function initAddSectionModalControls() {
   }
 
   if (btnOpen) {
-    btnOpen.onclick = () => openAddSectionModal(state.layoutOrder.length);
+    btnOpen.onclick = () => {
+      if (state.userRole === "visitor") {
+        showToast("🔒 Purchase now to customize and add new sections!", "warning");
+        window.open("/welcome#pricing", "_blank");
+        return;
+      }
+      openAddSectionModal(state.layoutOrder.length);
+    };
   }
   if (btnClose) {
     btnClose.onclick = closeAddSectionModal;
@@ -1430,6 +1676,16 @@ function renderWidgetInspector(widgetId) {
   const descEl = document.getElementById("inspectorMetaDesc");
   if (descEl) descEl.textContent = meta.desc;
 
+  if (state.userRole === "visitor") {
+    const lockBanner = document.createElement("div");
+    lockBanner.className = "visitor-locked-banner";
+    lockBanner.innerHTML = `
+      <span>🔒 Purchase now to customize</span>
+      <a href="/welcome#pricing" target="_blank" class="visitor-lock-btn">Unlock All Controls ↗</a>
+    `;
+    inspectorFormContainer.appendChild(lockBanner);
+  }
+
   const formHolder = document.createElement("div");
   formHolder.className = "inspector-form-body";
   inspectorFormContainer.appendChild(formHolder);
@@ -1447,6 +1703,33 @@ function renderWidgetInspector(widgetId) {
       escapeHtml,
       safeVal
     });
+
+    if (state.userRole === "visitor") {
+      if (widgetId === "hero") {
+        formHolder.querySelectorAll("input:not([id*='partner']), select, button, textarea").forEach(el => {
+          el.disabled = true;
+          el.classList.add("visitor-disabled");
+        });
+      } else {
+        formHolder.querySelectorAll("input, select, button, textarea").forEach(el => {
+          el.disabled = true;
+          el.classList.add("visitor-disabled");
+        });
+        const overlay = document.createElement("div");
+        overlay.className = "visitor-overlay-lock";
+        overlay.innerHTML = `
+          <span class="lock-icon">🔒</span>
+          <div class="lock-title">Demo Preview Mode</div>
+          <div class="lock-subtitle">Controls are locked in Demo. Purchase now to customize all texts, photos, and music.</div>
+          <a href="/welcome#pricing" target="_blank" class="visitor-lock-btn" style="padding: 7px 18px; font-size: 0.8rem;">
+            Purchase now to customize ($19+) ↗
+          </a>
+        `;
+        formHolder.style.position = "relative";
+        formHolder.style.minHeight = "220px";
+        formHolder.appendChild(overlay);
+      }
+    }
   } else {
     formHolder.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted);">No custom inspector available for ${widgetId}.</p>`;
   }
@@ -1461,23 +1744,34 @@ function reloadPreview() {
 // 5. SAVE & PUBLISH API (POSTGRESQL PERSISTENCE)
 // ----------------------------------------------------
 async function saveConfig() {
+  if (state.userRole === "visitor") {
+    showToast("🛍️ Purchase now to customize and publish your couple site!", "info");
+    window.open("/welcome#pricing", "_blank");
+    return;
+  }
+
   btnSaveConfig.disabled = true;
   const saveText = btnSaveConfig.querySelector(".btn-save-text");
   if (saveText) saveText.textContent = "Publishing...";
   else btnSaveConfig.innerText = "Publishing...";
 
   try {
+    const headers = {
+      "Content-Type": "application/json",
+      "X-Admin-Pin": state.adminPin || ""
+    };
+    if (state.authToken) headers["X-Auth-Token"] = state.authToken;
+
     const res = await fetch(`/api/tenants/${encodeURIComponent(state.slug)}/config`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Admin-Pin": state.adminPin
-      },
+      headers,
       body: JSON.stringify({
         templatePreset: state.templatePreset,
         themeId: state.themeId,
         layoutOrder: state.layoutOrder,
-        sectionsData: state.sectionsData
+        sectionsData: state.sectionsData,
+        adminPin: state.adminPin,
+        authToken: state.authToken
       })
     });
 
@@ -1516,12 +1810,21 @@ async function saveConfig() {
 // 6. CLOUDFLARE R2 UPLOAD PIPELINE
 // ----------------------------------------------------
 async function uploadFileToR2(file) {
+  if (state.userRole === "visitor") {
+    showToast("🔒 Purchase now to customize and upload media files!", "warning");
+    window.open("/welcome#pricing", "_blank");
+    throw new Error("Purchase now to customize and upload media files.");
+  }
   if (file.size > 10 * 1024 * 1024) {
     throw new Error("File exceeds 10 Mo limit. Please choose a file under 10 Mo.");
   }
+  const headers = { "Content-Type": "application/json" };
+  if (state.adminPin) headers["X-Admin-Pin"] = state.adminPin;
+  if (state.authToken) headers["X-Auth-Token"] = state.authToken;
+
   const presignRes = await fetch(`/api/tenants/${encodeURIComponent(state.slug)}/upload-url`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ filename: file.name, contentType: file.type })
   });
   if (!presignRes.ok) throw new Error("Could not get upload destination");
@@ -1538,6 +1841,7 @@ async function uploadFileToR2(file) {
     } catch (err) {
       uploadRes = await fetch(`/api/upload/local?key=${encodeURIComponent(dest.key)}`, {
         method: "POST",
+        headers,
         body: file
       });
     }
@@ -1911,8 +2215,12 @@ async function renderMediaLibraryUI(refresh = false) {
       const key = btn.getAttribute("data-key");
       if (!confirm(`Delete "${key}" from storage?`)) return;
       try {
+        const headers = {};
+        if (state.adminPin) headers["X-Admin-Pin"] = state.adminPin;
+        if (state.authToken) headers["X-Auth-Token"] = state.authToken;
         const res = await fetch(`/api/tenants/${encodeURIComponent(state.slug)}/media/${encodeURIComponent(key)}`, {
-          method: "DELETE"
+          method: "DELETE",
+          headers
         });
         if (!res.ok) throw new Error("Delete failed");
         await renderMediaLibraryUI(true);
@@ -2125,7 +2433,14 @@ function initMediaTabControls() {
   const urlStatus = document.getElementById("mediaUrlImportStatus");
 
   if (btnToggleUrlImport && urlImportBox) {
-    btnToggleUrlImport.onclick = () => urlImportBox.classList.toggle("hidden");
+    btnToggleUrlImport.onclick = () => {
+      if (state.userRole === "visitor") {
+        showToast("🔒 Purchase now to customize and import media!", "warning");
+        window.open("/welcome#pricing", "_blank");
+        return;
+      }
+      urlImportBox.classList.toggle("hidden");
+    };
   }
   if (btnCloseUrlImport && urlImportBox) {
     btnCloseUrlImport.onclick = () => urlImportBox.classList.add("hidden");
@@ -2226,6 +2541,11 @@ function initMediaTabControls() {
   if (btnPickPhotos) {
     btnPickPhotos.onclick = (e) => {
       e.stopPropagation();
+      if (state.userRole === "visitor") {
+        showToast("🔒 Purchase now to customize and upload photos!", "warning");
+        window.open("/welcome#pricing", "_blank");
+        return;
+      }
       if (fileInput) {
         fileInput.accept = "image/*";
         fileInput.click();
@@ -2236,6 +2556,11 @@ function initMediaTabControls() {
   if (btnPickAudio) {
     btnPickAudio.onclick = (e) => {
       e.stopPropagation();
+      if (state.userRole === "visitor") {
+        showToast("🔒 Purchase now to customize and upload audio!", "warning");
+        window.open("/welcome#pricing", "_blank");
+        return;
+      }
       if (fileInput) {
         fileInput.accept = "audio/*";
         fileInput.click();
@@ -2261,6 +2586,11 @@ function initMediaTabControls() {
     });
 
     dropZone.addEventListener("drop", (e) => {
+      if (state.userRole === "visitor") {
+        showToast("🔒 Purchase now to customize and upload media files!", "warning");
+        window.open("/welcome#pricing", "_blank");
+        return;
+      }
       const files = e.dataTransfer?.files;
       if (files && files.length > 0) {
         uploadMediaFiles(Array.from(files));
@@ -2927,6 +3257,12 @@ function renderSiteSettingsUI() {
   const publicSiteUrl = `${window.location.origin}/sites/${encodeURIComponent(state.slug)}`;
 
   container.innerHTML = `
+    ${state.userRole === "visitor" ? `
+      <div class="visitor-locked-banner">
+        <span>🔒 Purchase now to customize themes, motto & identity</span>
+        <a href="/welcome#pricing" target="_blank" class="visitor-lock-btn">Unlock Themes ↗</a>
+      </div>
+    ` : ""}
     <!-- Live Website Share Card -->
     <div class="settings-group-card">
       <div class="settings-group-title"><span>🌐</span> Live Website Link</div>
@@ -3015,8 +3351,26 @@ function renderSiteSettingsUI() {
         ` : ''}
       </div>
 
-      <div style="font-size: 11px; font-weight: 600; color: var(--text-muted, #64748b); margin-bottom: 8px;">Wallpaper Presets (Click to apply):</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <span style="font-size: 11px; font-weight: 600; color: var(--text-muted, #64748b);">Wallpaper Presets & Custom Themes:</span>
+        <button type="button" id="btnOpenAddThemeModal" class="btn-sm btn-primary" style="padding: 3px 8px; font-size: 11px; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;"><span>+</span> Add Theme (Admin)</button>
+      </div>
       <div class="theme-chips-grid" style="grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;">
+        ${(state.sectionsData.customThemes || []).map(t => `
+          <div style="position: relative; width: 100%;">
+            <button type="button" class="theme-chip-btn ${(!state.customBgUrl && currentTheme === t.id) ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden; width: 100%; border: 1px solid rgba(225,29,72,0.35);">
+              <div style="width: 100%; height: 75px; background: url('${escapeHtml(t.desktopImg || t.mobileImg)}') center/cover no-repeat; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1); position: relative;">
+                <span style="position: absolute; top: 4px; left: 4px; background: rgba(225,29,72,0.85); color: #fff; font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: 700;">CUSTOM</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
+                <span class="theme-color-dot" style="background: ${t.color || '#e11d48'}"></span>
+                <span style="font-weight: 700; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(t.name)}</span>
+              </div>
+              <span style="font-size: 10px; color: var(--text-muted, #64748b); font-weight: normal; line-height: 1.2;">${escapeHtml(t.desc || 'Custom 16:9 & 9:16 theme')}</span>
+            </button>
+            <button type="button" class="btn-delete-custom-theme" data-theme-id="${escapeHtml(t.id)}" title="Delete theme (Admin only)" style="position: absolute; top: 6px; right: 6px; background: rgba(239,68,68,0.9); color: white; border: none; border-radius: 4px; padding: 3px 6px; font-size: 10px; cursor: pointer; z-index: 2;">🗑️</button>
+          </div>
+        `).join("")}
         ${imageBackgroundThemes.map(t => `
           <button type="button" class="theme-chip-btn ${(!state.customBgUrl && currentTheme === t.id) ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden;">
             <div style="width: 100%; height: 75px; background: url('${t.img}') center/cover no-repeat; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1);"></div>
@@ -3103,6 +3457,11 @@ function renderSiteSettingsUI() {
   const pinStatus = document.getElementById("site_pinStatus");
   if (btnUpdatePin && pinInput) {
     btnUpdatePin.onclick = async () => {
+      if (state.userRole === "visitor") {
+        showToast("🔒 Purchase now to customize and update admin PIN!", "warning");
+        window.open("/welcome#pricing", "_blank");
+        return;
+      }
       const newPin = pinInput.value.trim();
       if (!newPin || newPin.length < 4) {
         if (pinStatus) {
@@ -3158,6 +3517,11 @@ function renderSiteSettingsUI() {
   const btnPickBg = document.getElementById("btnPickBgFromLibrary");
   if (btnPickBg) {
     btnPickBg.onclick = () => {
+      if (state.userRole === "visitor") {
+        showToast("🔒 Purchase now to customize background wallpaper!", "warning");
+        window.open("/welcome#pricing", "_blank");
+        return;
+      }
       openMediaPicker({
         filter: "image",
         onSelect: (url) => {
@@ -3176,12 +3540,18 @@ function renderSiteSettingsUI() {
   const bgUploadInput = document.getElementById("uploadCustomBgFile");
   if (bgUploadInput) {
     bgUploadInput.onchange = async (e) => {
+      if (state.userRole === "visitor") {
+        showToast("🔒 Purchase now to upload background images!", "warning");
+        window.open("/welcome#pricing", "_blank");
+        return;
+      }
       const file = e.target.files[0];
       if (!file) return;
       try {
-        const uploaded = await uploadFileToR2(file, file.name);
-        if (uploaded && uploaded.url) {
-          state.customBgUrl = uploaded.url;
+        const uploaded = await uploadFileToR2(file);
+        const url = typeof uploaded === "string" ? uploaded : (uploaded?.url || uploaded?.publicUrl);
+        if (url) {
+          state.customBgUrl = url;
           if (previewIframe && previewIframe.contentWindow) {
             previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, "*");
           }
@@ -3190,7 +3560,7 @@ function renderSiteSettingsUI() {
           debouncedAutoSaveLayout();
         }
       } catch (err) {
-        alert("Failed to upload background image: " + err.message);
+        showToast("Failed to upload background image: " + err.message, "error");
       }
     };
   }
@@ -3198,6 +3568,11 @@ function renderSiteSettingsUI() {
   const btnClearBg = document.getElementById("btnClearCustomBg");
   if (btnClearBg) {
     btnClearBg.onclick = () => {
+      if (state.userRole === "visitor") {
+        showToast("🔒 Purchase now to customize background wallpaper!", "warning");
+        window.open("/welcome#pricing", "_blank");
+        return;
+      }
       state.customBgUrl = "";
       if (previewIframe && previewIframe.contentWindow) {
         previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: "" }, "*");
@@ -3211,6 +3586,11 @@ function renderSiteSettingsUI() {
   const inputCustomBg = document.getElementById("site_customBgUrl");
   if (inputCustomBg) {
     inputCustomBg.onchange = (e) => {
+      if (state.userRole === "visitor") {
+        showToast("🔒 Purchase now to customize background wallpaper!", "warning");
+        window.open("/welcome#pricing", "_blank");
+        return;
+      }
       state.customBgUrl = e.target.value.trim();
       if (previewIframe && previewIframe.contentWindow) {
         previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: state.customBgUrl }, "*");
@@ -3223,16 +3603,283 @@ function renderSiteSettingsUI() {
   // Bind theme clicks
   container.querySelectorAll(".theme-chip-btn").forEach(btn => {
     btn.onclick = () => {
+      if (state.userRole === "visitor") {
+        showToast("🔒 Purchase now to customize your website theme!", "warning");
+        window.open("/welcome#pricing", "_blank");
+        return;
+      }
       container.querySelectorAll(".theme-chip-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       state.themeId = btn.getAttribute("data-theme");
       state.customBgUrl = "";
       if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage({ type: "SET_THEME", themeId: state.themeId, customBgUrl: "" }, "*");
+        previewIframe.contentWindow.postMessage({
+          type: "SET_THEME",
+          themeId: state.themeId,
+          customBgUrl: "",
+          customThemes: (state.sectionsData && state.sectionsData.customThemes) || []
+        }, "*");
       }
       renderSiteSettingsUI();
       debouncedLiveUpdate(true);
       debouncedAutoSaveLayout();
+    };
+  });
+
+  // Bind custom theme modal & actions
+  const btnOpenAddTheme = document.getElementById("btnOpenAddThemeModal");
+  const modalAddTheme = document.getElementById("addThemeModal");
+  if (btnOpenAddTheme && modalAddTheme) {
+    btnOpenAddTheme.onclick = () => {
+      if (state.userRole === "visitor") {
+        showToast("🔒 Purchase now to customize and create themes!", "warning");
+        window.open("/welcome#pricing", "_blank");
+        return;
+      }
+      modalAddTheme.classList.remove("hidden");
+      const pinInput = document.getElementById("customThemeAdminPin");
+      if (pinInput && state.adminPin) pinInput.value = state.adminPin;
+      const statusEl = document.getElementById("customThemeStatus");
+      if (statusEl) { statusEl.style.display = "none"; statusEl.textContent = ""; }
+    };
+  }
+
+  const btnCloseThemeModal = document.getElementById("btnCloseAddThemeModal");
+  const btnCancelThemeModal = document.getElementById("btnCancelAddThemeModal");
+  [btnCloseThemeModal, btnCancelThemeModal].forEach(b => {
+    if (b && modalAddTheme) {
+      b.onclick = () => modalAddTheme.classList.add("hidden");
+    }
+  });
+  if (modalAddTheme) {
+    modalAddTheme.onclick = e => {
+      if (e.target === modalAddTheme) modalAddTheme.classList.add("hidden");
+    };
+  }
+
+  const themeColor = document.getElementById("customThemeColor");
+  const themeColorHex = document.getElementById("customThemeColorHex");
+  if (themeColor && themeColorHex) {
+    themeColor.oninput = e => { themeColorHex.value = e.target.value; };
+    themeColorHex.oninput = e => {
+      if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) themeColor.value = e.target.value;
+    };
+  }
+
+  const deskInput = document.getElementById("customThemeDesktopImg");
+  const deskPreview = document.getElementById("customThemeDesktopPreview");
+  const updateDeskPreview = url => {
+    if (deskPreview) {
+      deskPreview.style.backgroundImage = url ? `url('${url}')` : "";
+      deskPreview.textContent = url ? "" : "Desktop (16:9) Preview";
+    }
+  };
+  if (deskInput) deskInput.oninput = e => updateDeskPreview(e.target.value.trim());
+
+  const btnDeskLib = document.getElementById("btnCustomThemeDesktopLibrary");
+  if (btnDeskLib) {
+    btnDeskLib.onclick = () => {
+      openMediaPicker({
+        filter: "image",
+        onSelect: url => {
+          if (deskInput) deskInput.value = url;
+          updateDeskPreview(url);
+        }
+      });
+    };
+  }
+
+  const fileDesk = document.getElementById("uploadCustomThemeDesktop");
+  if (fileDesk) {
+    fileDesk.onchange = async e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      try {
+        const up = await uploadFileToR2(f);
+        const url = typeof up === "string" ? up : (up?.url || up?.publicUrl);
+        if (url) {
+          if (deskInput) deskInput.value = url;
+          updateDeskPreview(url);
+        }
+      } catch (err) {
+        showToast("Upload error: " + err.message, "error");
+      }
+    };
+  }
+
+  const mobInput = document.getElementById("customThemeMobileImg");
+  const mobPreview = document.getElementById("customThemeMobilePreview");
+  const updateMobPreview = url => {
+    if (mobPreview) {
+      mobPreview.style.backgroundImage = url ? `url('${url}')` : "";
+      mobPreview.textContent = url ? "" : "Mobile (9:16)";
+    }
+  };
+  if (mobInput) mobInput.oninput = e => updateMobPreview(e.target.value.trim());
+
+  const btnMobLib = document.getElementById("btnCustomThemeMobileLibrary");
+  if (btnMobLib) {
+    btnMobLib.onclick = () => {
+      openMediaPicker({
+        filter: "image",
+        onSelect: url => {
+          if (mobInput) mobInput.value = url;
+          updateMobPreview(url);
+        }
+      });
+    };
+  }
+
+  const fileMob = document.getElementById("uploadCustomThemeMobile");
+  if (fileMob) {
+    fileMob.onchange = async e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      try {
+        const up = await uploadFileToR2(f);
+        const url = typeof up === "string" ? up : (up?.url || up?.publicUrl);
+        if (url) {
+          if (mobInput) mobInput.value = url;
+          updateMobPreview(url);
+        }
+      } catch (err) {
+        showToast("Upload error: " + err.message, "error");
+      }
+    };
+  }
+
+  const btnSaveTheme = document.getElementById("btnSaveCustomTheme");
+  if (btnSaveTheme) {
+    btnSaveTheme.onclick = async () => {
+      const name = (document.getElementById("customThemeName")?.value || "").trim();
+      const desc = (document.getElementById("customThemeDesc")?.value || "").trim();
+      const color = (document.getElementById("customThemeColor")?.value || "#e11d48").trim();
+      const desktopImg = (document.getElementById("customThemeDesktopImg")?.value || "").trim();
+      const mobileImg = (document.getElementById("customThemeMobileImg")?.value || desktopImg).trim();
+      const pin = (document.getElementById("customThemeAdminPin")?.value || state.adminPin || "").trim();
+      const statusEl = document.getElementById("customThemeStatus");
+
+      if (!name) {
+        if (statusEl) { statusEl.style.display = "block"; statusEl.style.color = "#ef4444"; statusEl.textContent = "Theme Name is required."; }
+        return;
+      }
+      if (!desktopImg && !mobileImg) {
+        if (statusEl) { statusEl.style.display = "block"; statusEl.style.color = "#ef4444"; statusEl.textContent = "Desktop (16:9) or Mobile (9:16) image is required."; }
+        return;
+      }
+      if (!pin) {
+        if (statusEl) { statusEl.style.display = "block"; statusEl.style.color = "#ef4444"; statusEl.textContent = "Admin PIN is required."; }
+        return;
+      }
+
+      btnSaveTheme.disabled = true;
+      btnSaveTheme.textContent = "Saving...";
+
+      try {
+        const res = await fetch(`/api/tenants/${encodeURIComponent(state.slug)}/custom-themes`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Admin-Pin": pin
+          },
+          body: JSON.stringify({ name, desc: desc || "Custom responsive wallpaper", color, desktopImg: desktopImg || mobileImg, mobileImg: mobileImg || desktopImg })
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || "Failed to add theme");
+
+        if (!state.sectionsData) state.sectionsData = {};
+        state.sectionsData.customThemes = result.customThemes || [];
+        state.themeId = result.theme.id;
+        state.customBgUrl = "";
+        state.adminPin = pin;
+
+        // Reset form inputs for next time
+        const nameEl = document.getElementById("customThemeName");
+        const descEl = document.getElementById("customThemeDesc");
+        if (nameEl) nameEl.value = "";
+        if (descEl) descEl.value = "";
+        if (deskInput) deskInput.value = "";
+        if (mobInput) mobInput.value = "";
+        updateDeskPreview("");
+        updateMobPreview("");
+
+        if (modalAddTheme) modalAddTheme.classList.add("hidden");
+
+        if (previewIframe && previewIframe.contentWindow) {
+          previewIframe.contentWindow.postMessage({
+            type: "SET_THEME",
+            themeId: state.themeId,
+            customBgUrl: "",
+            customThemes: state.sectionsData.customThemes
+          }, "*");
+        }
+
+        renderSiteSettingsUI();
+        debouncedLiveUpdate(true);
+        debouncedAutoSaveLayout();
+        showToast("✨ Custom theme created & applied!", "success");
+      } catch (err) {
+        if (statusEl) {
+          statusEl.style.display = "block";
+          statusEl.style.color = "#ef4444";
+          statusEl.textContent = err.message;
+        }
+        showToast("Error: " + err.message, "error");
+      } finally {
+        btnSaveTheme.disabled = false;
+        btnSaveTheme.innerHTML = "<span>💾</span> Save & Apply Theme";
+      }
+    };
+  }
+
+  container.querySelectorAll(".btn-delete-custom-theme").forEach(btn => {
+    btn.onclick = async e => {
+      e.stopPropagation();
+      if (state.userRole === "visitor") {
+        showToast("🔒 Only site admins can delete custom themes!", "warning");
+        return;
+      }
+      const themeId = btn.getAttribute("data-theme-id");
+      if (!themeId) return;
+      let pin = state.adminPin;
+      if (!pin) {
+        pin = prompt("Enter Admin PIN to delete this theme:");
+        if (!pin) return;
+      }
+      if (!confirm("Are you sure you want to delete this custom theme?")) return;
+
+      try {
+        btn.disabled = true;
+        const res = await fetch(`/api/tenants/${encodeURIComponent(state.slug)}/custom-themes/${encodeURIComponent(themeId)}`, {
+          method: "DELETE",
+          headers: { "X-Admin-Pin": pin }
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || "Failed to delete theme");
+
+        if (!state.sectionsData) state.sectionsData = {};
+        state.sectionsData.customThemes = result.customThemes || [];
+        if (state.themeId === themeId) {
+          state.themeId = "theme-img-theme1";
+        }
+        state.adminPin = pin;
+
+        if (previewIframe && previewIframe.contentWindow) {
+          previewIframe.contentWindow.postMessage({
+            type: "SET_THEME",
+            themeId: state.themeId,
+            customBgUrl: "",
+            customThemes: state.sectionsData.customThemes
+          }, "*");
+        }
+
+        renderSiteSettingsUI();
+        debouncedLiveUpdate(true);
+        debouncedAutoSaveLayout();
+        showToast("Theme deleted.", "info");
+      } catch (err) {
+        alert("Delete failed: " + err.message);
+      }
     };
   });
 
@@ -3267,6 +3914,13 @@ function renderSiteSettingsUI() {
     if (!state.sectionsData.hero) state.sectionsData.hero = {};
     state.sectionsData.hero.pageTitle = v;
   });
+
+  if (state.userRole === "visitor") {
+    container.querySelectorAll("input:not([id='site_p1']):not([id='site_p2']), select, button:not(#btnCopySiteLink):not(.btn-open-link)").forEach(el => {
+      el.disabled = true;
+      el.classList.add("visitor-disabled");
+    });
+  }
 }
 
 // ----------------------------------------------------
@@ -3547,35 +4201,65 @@ function setupEventListeners() {
 
   // Tenant switch modal
   const modal = document.getElementById("tenantModal");
-  document.getElementById("btnSwitchTenant").onclick = () => modal.classList.remove("hidden");
+  document.getElementById("btnSwitchTenant").onclick = () => {
+    initBuilderUserSession();
+    modal.classList.remove("hidden");
+  };
   document.getElementById("btnModalCancel").onclick = () => modal.classList.add("hidden");
 
   document.getElementById("btnModalSubmit").onclick = async () => {
     const slug = document.getElementById("modalSlug").value.trim().toLowerCase();
-    const pin = document.getElementById("modalPin").value.trim();
+    let pin = document.getElementById("modalPin").value.trim();
     const p1 = document.getElementById("modalP1").value.trim();
     const p2 = document.getElementById("modalP2").value.trim();
+
+    if (state.userRole === "admin" && !pin) {
+      pin = state.adminPin || "admin1234";
+    }
 
     if (!slug || !pin) return showToast("Slug and PIN required", "error");
 
     try {
-      const check = await fetch(`/api/tenants/${encodeURIComponent(slug)}`);
-      if (check.ok) {
+      const authRes = await fetch("/api/auth/verify-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, pin, token: state.authToken })
+      });
+      const authData = await authRes.json();
+      if (authRes.ok && authData.authorized) {
         state.slug = slug;
         state.adminPin = pin;
+        state.authToken = authData.authToken;
+        state.isPurchased = authData.isPurchased !== false;
+        state.userRole = authData.role || (authData.isAdmin ? "admin" : (state.isPurchased ? "user" : "visitor"));
+        localStorage.setItem("lovesaas_auth", JSON.stringify({
+          slug,
+          role: state.userRole,
+          authToken: state.authToken,
+          adminPin: pin
+        }));
         modal.classList.add("hidden");
+        updateRoleUI();
+        window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(slug)}`);
         await loadTenantData(slug);
-        showToast(`Loaded site "${slug}"`, "success");
+        showToast(`Loaded site "${slug}" (${state.userRole})`, "success");
       } else {
+        const createHeaders = { "Content-Type": "application/json" };
+        if (state.adminPin) createHeaders["X-Admin-Pin"] = state.adminPin;
+        if (state.authToken) createHeaders["X-Auth-Token"] = state.authToken;
         const create = await fetch("/api/tenants", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: createHeaders,
           body: JSON.stringify({ slug, adminPin: pin, partner1: p1 || "Partner 1", partner2: p2 || "Partner 2" })
         });
-        if (!create.ok) throw new Error("Could not create site");
+        if (!create.ok) throw new Error("Could not load or create site");
         state.slug = slug;
         state.adminPin = pin;
+        state.userRole = state.userRole === "admin" ? "admin" : "user";
+        state.isPurchased = true;
         modal.classList.add("hidden");
+        updateRoleUI();
+        window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(slug)}`);
         await loadTenantData(slug);
         showToast(`Created new site "${slug}"!`, "success");
       }
@@ -3583,4 +4267,71 @@ function setupEventListeners() {
       showToast(e.message, "error");
     }
   };
+
+  // User authentication & designs awareness in builder
+  async function initBuilderUserSession() {
+    const userToken = localStorage.getItem("lovesaas_user_token");
+    const badgeEl = document.getElementById("builderUserBadge");
+    const nameEl = document.getElementById("builderUserName");
+    const avatarEl = document.getElementById("builderUserAvatar");
+    const designsSec = document.getElementById("userDesignsSection");
+    const designsList = document.getElementById("userDesignsQuickList");
+
+    if (!userToken) return;
+
+    try {
+      const res = await fetch("/api/auth/user-me", {
+        headers: { "Authorization": `Bearer ${userToken}`, "X-User-Token": userToken }
+      });
+      if (!res.ok) return;
+      const { user } = await res.json();
+      if (!user) return;
+
+      const displayName = user.name || user.email.split("@")[0];
+      if (nameEl) nameEl.textContent = displayName;
+      if (avatarEl) avatarEl.textContent = displayName ? displayName[0].toUpperCase() : "👤";
+      if (badgeEl) badgeEl.style.display = "inline-flex";
+
+      const desRes = await fetch("/api/user/designs", {
+        headers: { "Authorization": `Bearer ${userToken}`, "X-User-Token": userToken }
+      });
+      if (!desRes.ok) return;
+      const { designs } = await desRes.json();
+      if (designs && designs.length > 0 && designsSec && designsList) {
+        designsSec.style.display = "block";
+        designsList.innerHTML = designs.map(d => `
+          <button type="button" class="btn-quick-switch" data-switch-slug="${d.slug}" data-switch-token="${d.authToken || ""}" data-switch-pin="${d.adminPin || ""}" style="display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; color: #fff; cursor: pointer; text-align: left; font-size: 0.8rem; width: 100%;">
+            <span>💖 <strong>${d.partner1} & ${d.partner2}</strong> <span style="opacity: 0.7; font-size: 0.74rem;">(/sites/${d.slug})</span></span>
+            <span style="font-size: 0.74rem; color: #fda4af; font-weight: 700;">Switch ➔</span>
+          </button>
+        `).join("");
+
+        designsList.querySelectorAll(".btn-quick-switch").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const targetSlug = btn.dataset.switchSlug;
+            const targetToken = btn.dataset.switchToken;
+            const targetPin = btn.dataset.switchPin;
+
+            modal.classList.add("hidden");
+            state.slug = targetSlug;
+            state.authToken = targetToken;
+            state.adminPin = targetPin;
+            state.userRole = "user";
+            state.isPurchased = true;
+            localStorage.setItem("lovesaas_auth", JSON.stringify({
+              slug: targetSlug,
+              role: "user",
+              authToken: targetToken,
+              adminPin: targetPin
+            }));
+            updateRoleUI();
+            window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(targetSlug)}&token=${encodeURIComponent(targetToken)}`);
+            await loadTenantData(targetSlug);
+            showToast(`Switched to "${targetSlug}"`, "success");
+          });
+        });
+      }
+    } catch {}
+  }
+  initBuilderUserSession();
 }

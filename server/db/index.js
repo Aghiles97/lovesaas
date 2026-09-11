@@ -15,6 +15,8 @@ if (fs.existsSync(envPath)) {
   });
 }
 
+const auth = require("../auth");
+
 const DATABASE_URL = process.env.DATABASE_URL || "postgresql://dza@localhost:5432/couple_saas";
 const DATA_DIR = path.join(__dirname, "..", "..", "data");
 const DATA_FILE = path.join(DATA_DIR, "couple_saas.json");
@@ -23,12 +25,18 @@ let isPgConnected = false;
 
 function loadLocalStore() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  let data = { tenants: {}, site_configs: {}, users: {}, user_sessions: {}, orders: {} };
   if (fs.existsSync(DATA_FILE)) {
     try {
-      return JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
+      data = JSON.parse(fs.readFileSync(DATA_FILE, "utf8"));
     } catch (e) {}
   }
-  return { tenants: {}, site_configs: {} };
+  data.tenants = data.tenants || {};
+  data.site_configs = data.site_configs || {};
+  data.users = data.users || {};
+  data.user_sessions = data.user_sessions || {};
+  data.orders = data.orders || {};
+  return data;
 }
 
 function saveLocalStore(store) {
@@ -50,6 +58,16 @@ pool.on("error", (err) => {
 });
 
 const DEFAULT_PRESETS = {
+  birthday: [
+    "hero",
+    "candle_blowout",
+    "milestone_stats",
+    "gift_unboxer",
+    "roast_toast",
+    "guestbook",
+    "party_jukebox",
+    "letter"
+  ],
   storyteller: ["hero", "timeline", "map", "memories", "boarding_pass", "letter"],
   playful: ["hero", "love_meter", "reasons", "truth_dare", "spinner", "coupons", "quiz", "playful"],
   complete: [
@@ -914,6 +932,83 @@ const DEFAULT_SECTIONS_DATA = {
     celebrationTitle: "I Knew It!",
     celebrationBody: "You're stuck with your Algerian boy forever and ever! Sending you a million kiss kiss and hug hug right now! 💋🤗",
     celebrationBtnText: "Yaaay! Lof Lof! 🥰"
+  },
+  candle_blowout: {
+    tag: "Make a Birthday Wish 🎂",
+    title: "Blow Out the Birthday Candles, Ella! ✨",
+    desc: "Make a secret wish in your heart, then tap to blow or blow directly into your microphone!",
+    candleCount: 5,
+    wishBadge: "🌟 Secret Wish Unlocked",
+    wishTitle: "Your Birthday Wish is Coming True!",
+    wishText: "May this year bring you boundless happiness, thrilling adventures, and all the love in the universe! 💖",
+    clickBtnText: "💨 Blow Candles (Click)",
+    micBtnText: "🎙️ Blow via Mic",
+    relightBtnText: "🔥 Relight Candles"
+  },
+  milestone_stats: {
+    tag: "Milestone Life Counter ⏳",
+    title: "Every Single Second Alive, Ella ❤️",
+    desc: "A live ticking celebration of the seconds, heartbeats, and memories you bring into this universe.",
+    birthDate: "2000-01-01T00:00",
+    metrics: [
+      { id: "heartbeats", icon: "💓", title: "Heartbeats", desc: "Beating with love & vitality (~103k/day)", factor: 103680 },
+      { id: "coffee", icon: "☕", title: "Cups of Coffee & Tea", desc: "Fueling sweet mornings & late smiles", factor: 1.6 },
+      { id: "solar", icon: "🌍", title: "Trips Around the Sun", desc: "Completed solar orbits celebrating your life", factor: 0.00273785 },
+      { id: "dreams", icon: "💤", title: "Hours of Sweet Dreams", desc: "Restful sleep & imagining bright futures", factor: 8 },
+      { id: "laughs", icon: "😂", title: "Laughs & Giggles", desc: "Shared moments of pure unadulterated joy", factor: 14 },
+      { id: "distance", icon: "✈️", title: "Kilometers Traveled", desc: "Journeying across this planet with wonder", factor: 11 }
+    ]
+  },
+  gift_unboxer: {
+    tag: "Birthday Unwrapping 🎁",
+    title: "A Surprise Gift For You, Ella!",
+    desc: "Untie the golden ribbon and lift the lid to reveal what is waiting inside for you.",
+    surpriseType: "coupon",
+    surpriseBadge: "🎉 Special Birthday Surprise",
+    surpriseTitle: "VIP Birthday Pass: All-Expenses Date & Dinner 🥂",
+    surpriseDesc: "Valid anytime, anywhere! Pack your favorite outfit for a five-star dining celebration & shopping spree.",
+    mediaUrl: "",
+    claimBtnText: "Claim My Birthday Gift 🎟️",
+    claimUrl: ""
+  },
+  roast_toast: {
+    tag: "Roast or Toast 🎲",
+    title: "The Roast & Toast Birthday Spinner 🥂🔥",
+    desc: "Spin the wheel! Will you get a playful roast or a heartfelt sentimental toast?",
+    spinBtnText: "Spin the Wheel! 🎯",
+    roasts: [
+      "🔥 Takes 45 minutes to get ready, then claims you are the one running late!",
+      "🔥 Always 'just resting their eyes' 5 minutes into a movie you picked.",
+      "🔥 Said 'I am not hungry' but finished half of your french fries!",
+      "🔥 Has 87 open browser tabs and refuses to close a single one."
+    ],
+    toasts: [
+      "🥂 The kindest, most radiant soul in every single room you enter.",
+      "🥂 Cheers to the person who makes the ordinary moments feel like magic.",
+      "🥂 Aging like the finest champagne—more breathtaking with every year.",
+      "🥂 To your boundless generosity, infectious laugh, and golden heart."
+    ]
+  },
+  guestbook: {
+    tag: "Birthday Guestbook 💌",
+    title: "Warm Wishes Wall for Ella 📌",
+    desc: "Leave a heartfelt sticky note, post your photo, or share your sweetest memory!",
+    addBtnText: "✍️ Pin a Birthday Wish",
+    notes: [
+      { id: "note-1", author: "Aghiles", relation: "Partner ❤️", note: "Happy Birthday my sweetest princess! You illuminate my whole life with your laugh and love.", color: "pink", sticker: "💖" },
+      { id: "note-2", author: "Maya", relation: "Best Friend 🌸", note: "Happy 24th birthday bff! May all your wildest dreams come true this year!", color: "yellow", sticker: "🎉" },
+      { id: "note-3", author: "Leo", relation: "Family 🌟", note: "Wishing you radiant health, peace, and endless joy. So proud of everything you do!", color: "blue", sticker: "🎂" }
+    ]
+  },
+  party_jukebox: {
+    tag: "Birthday Soundtrack 🎵",
+    title: "Party Jukebox & Playlist 📻",
+    desc: "Spin the retro vinyl disc, pump up the volume, and groove to our birthday playlist!",
+    tracks: [
+      { title: "Celebration Jam", artist: "Kool & The Gang", url: "audio/taylor-swift-fate-of-ophelia.m4r", duration: "3:42" },
+      { title: "Birthday Anthem", artist: "Sweet Melody", url: "audio/lady-gaga-always-remember-us-this-way.m4r", duration: "3:30" },
+      { title: "Dancing Queen Vibes", artist: "Party Beats", url: "audio/imagine-dragons-i-follow-you.m4r", duration: "3:51" }
+    ]
   }
 };
 
@@ -951,10 +1046,42 @@ async function initDb() {
 
       CREATE INDEX IF NOT EXISTS idx_tenants_slug ON tenants(slug);
 
+      CREATE TABLE IF NOT EXISTS users (
+        id UUID PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        name VARCHAR(128),
+        password_hash VARCHAR(256) NOT NULL,
+        salt VARCHAR(64) NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS user_sessions (
+        token VARCHAR(64) PRIMARY KEY,
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        expires_at TIMESTAMPTZ
+      );
+
+      CREATE TABLE IF NOT EXISTS orders (
+        id UUID PRIMARY KEY,
+        user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+        tenant_slug VARCHAR(64) NOT NULL,
+        plan VARCHAR(32) DEFAULT 'vip',
+        amount NUMERIC(10,2) NOT NULL,
+        currency VARCHAR(8) DEFAULT 'USD',
+        status VARCHAR(32) DEFAULT 'completed',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+      CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
+      CREATE INDEX IF NOT EXISTS idx_sessions_token ON user_sessions(token);
+
       ALTER TABLE tenants ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255);
       ALTER TABLE tenants ADD COLUMN IF NOT EXISTS is_purchased BOOLEAN DEFAULT true;
       ALTER TABLE tenants ADD COLUMN IF NOT EXISTS plan VARCHAR(32) DEFAULT 'vip';
       ALTER TABLE tenants ADD COLUMN IF NOT EXISTS auth_token VARCHAR(64);
+      ALTER TABLE tenants ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE SET NULL;
     `);
   } catch (err) {
     isPgConnected = false;
@@ -975,9 +1102,20 @@ async function initDb() {
     });
     console.log("✓ Seeded default tenant: 'demo' (PIN: 1234)");
   }
+
+  // Seed default admin user: admin@admin.com
+  const existingAdmin = await findUserByEmail("admin@admin.com");
+  if (!existingAdmin) {
+    await createUser({
+      email: "admin@admin.com",
+      password: process.env.ADMIN_PIN || "admin1234",
+      name: "Master Admin"
+    });
+    console.log("✓ Seeded default admin user: 'admin@admin.com' (Password: admin1234)");
+  }
 }
 
-async function createTenant({ slug, partner1, partner2, adminPin, preset = "complete", customerEmail = null, plan = "vip", isPurchased = true }) {
+async function createTenant({ slug, partner1, partner2, adminPin, preset = "complete", customerEmail = null, plan = "vip", isPurchased = true, userId = null }) {
   const id = crypto.randomUUID();
   const cleanSlug = slug.toLowerCase().trim();
   const layout = DEFAULT_PRESETS[preset] || DEFAULT_PRESETS.complete;
@@ -994,9 +1132,9 @@ async function createTenant({ slug, partner1, partner2, adminPin, preset = "comp
     try {
       await client.query("BEGIN");
       await client.query(
-        `INSERT INTO tenants (id, slug, partner1_name, partner2_name, admin_pin, customer_email, is_purchased, plan, auth_token)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-        [id, cleanSlug, partner1, partner2, adminPin, customerEmail, isPurchased, plan, authToken]
+        `INSERT INTO tenants (id, slug, partner1_name, partner2_name, admin_pin, customer_email, is_purchased, plan, auth_token, user_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [id, cleanSlug, partner1, partner2, adminPin, customerEmail, isPurchased, plan, authToken, userId]
       );
 
       await client.query(
@@ -1023,6 +1161,7 @@ async function createTenant({ slug, partner1, partner2, adminPin, preset = "comp
       is_purchased: isPurchased,
       plan,
       auth_token: authToken,
+      user_id: userId,
       created_at: new Date().toISOString()
     };
     store.site_configs[cleanSlug] = {
@@ -1075,7 +1214,7 @@ async function getTenantBySlug(slug) {
   if (isPgConnected) {
     const query = `
       SELECT t.id, t.slug, t.partner1_name, t.partner2_name, t.admin_pin, t.created_at,
-             t.customer_email, t.is_purchased, t.plan, t.auth_token,
+             t.customer_email, t.is_purchased, t.plan, t.auth_token, t.user_id,
              c.template_preset, c.theme_id, c.layout_order, c.sections_data, c.updated_at
       FROM tenants t
       JOIN site_configs c ON t.id = c.tenant_id
@@ -1096,6 +1235,7 @@ async function getTenantBySlug(slug) {
       isPurchased: row.is_purchased !== false,
       plan: row.plan || "vip",
       authToken: row.auth_token,
+      userId: row.user_id,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       templatePreset: row.template_preset,
@@ -1120,6 +1260,7 @@ async function getTenantBySlug(slug) {
     isPurchased: t.is_purchased !== false,
     plan: t.plan || "vip",
     authToken: t.auth_token,
+    userId: t.user_id,
     createdAt: t.created_at,
     updatedAt: c.updated_at,
     templatePreset: c.template_preset,
@@ -1129,30 +1270,76 @@ async function getTenantBySlug(slug) {
   };
 }
 
+const MASTER_ADMIN_PIN = process.env.ADMIN_PIN || "admin1234";
+const MASTER_ADMIN_TOKEN = process.env.ADMIN_TOKEN || "master-admin-token-lovesaas";
+
 async function verifyTenantAccess({ slug, pin, token }) {
+  const cleanPin = pin ? String(pin).trim() : "";
+  const cleanToken = token ? String(token).trim() : "";
+
+  if (cleanPin === MASTER_ADMIN_PIN || cleanToken === MASTER_ADMIN_TOKEN || (slug === "admin" && cleanPin === MASTER_ADMIN_PIN)) {
+    const targetSlug = (slug && slug !== "admin") ? slug : "demo";
+    const targetTenant = await getTenantBySlug(targetSlug);
+    return {
+      authorized: true,
+      role: "admin",
+      isAdmin: true,
+      isPurchased: true,
+      isDemo: false,
+      tenant: targetTenant || { slug: targetSlug, partner1: "Admin", partner2: "Master", isPurchased: true, plan: "vip", authToken: MASTER_ADMIN_TOKEN },
+      authToken: MASTER_ADMIN_TOKEN
+    };
+  }
+
   if (!slug) return { authorized: false, error: "Missing slug" };
   const tenant = await getTenantBySlug(slug);
-  const pinMatches = pin && String(tenant.adminPin).trim() === String(pin).trim();
-  const tokenMatches = token && tenant.authToken && String(tenant.authToken).trim() === String(token).trim();
+  if (!tenant) return { authorized: false, error: "Site not found" };
+
+  const pinMatches = cleanPin && String(tenant.adminPin).trim() === cleanPin;
+  const tokenMatches = cleanToken && tenant.authToken && String(tenant.authToken).trim() === cleanToken;
 
   if (slug === "demo") {
     if (pinMatches || tokenMatches) {
-      return { authorized: true, tenant, isDemo: false };
+      return { authorized: true, role: "user", isPurchased: true, tenant, isDemo: true };
     }
-    return { authorized: true, tenant, isDemo: true };
+    return { authorized: true, role: "visitor", isPurchased: false, tenant, isDemo: true };
   }
 
   if (pinMatches || tokenMatches) {
-    return { authorized: true, tenant };
+    const isPurchased = tenant.isPurchased !== false;
+    return {
+      authorized: true,
+      role: isPurchased ? "user" : "visitor",
+      isPurchased,
+      isDemo: false,
+      tenant
+    };
   }
   return { authorized: false, error: "Invalid PIN or token" };
 }
 
-async function updateSiteConfig(slug, { templatePreset, themeId, layoutOrder, sectionsData, adminPin, newAdminPin }) {
+async function updateSiteConfig(slug, { templatePreset, themeId, layoutOrder, sectionsData, adminPin, newAdminPin, authToken }) {
   const cleanSlug = slug.toLowerCase().trim();
   const tenant = await getTenantBySlug(cleanSlug);
   if (!tenant) throw new Error("Tenant not found");
-  if (adminPin && tenant.adminPin !== adminPin) throw new Error("Unauthorized PIN");
+
+  const cleanPin = adminPin ? String(adminPin).trim() : "";
+  const cleanToken = authToken ? String(authToken).trim() : "";
+  const isMasterAdmin = cleanPin === MASTER_ADMIN_PIN || cleanToken === MASTER_ADMIN_TOKEN;
+
+  if (!isMasterAdmin) {
+    if (cleanSlug === "demo") {
+      throw new Error("Purchase now to customize and publish changes");
+    }
+    const pinValid = cleanPin && String(tenant.adminPin).trim() === cleanPin;
+    const tokenValid = cleanToken && tenant.authToken && String(tenant.authToken).trim() === cleanToken;
+    if (!pinValid && !tokenValid) {
+      throw new Error("Unauthorized PIN");
+    }
+    if (tenant.isPurchased === false) {
+      throw new Error("Purchase now to customize and publish changes");
+    }
+  }
 
   const nextPreset = templatePreset || tenant.templatePreset;
   const nextTheme = themeId || tenant.themeId;
@@ -1223,6 +1410,365 @@ async function listTenants() {
   }));
 }
 
+// ----------------------------------------------------
+// USER AUTHENTICATION & MANAGEMENT
+// ----------------------------------------------------
+
+async function createUser({ email, password, name = "" }) {
+  const cleanEmail = String(email).toLowerCase().trim();
+  const id = crypto.randomUUID();
+  const { hash, salt } = auth.hashPassword(password);
+  const now = new Date().toISOString();
+
+  if (isPgConnected) {
+    const res = await pool.query(
+      `INSERT INTO users (id, email, name, password_hash, salt, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, email, name, created_at`,
+      [id, cleanEmail, name || cleanEmail.split("@")[0], hash, salt, now]
+    );
+    // Link existing couple sites with this customer_email
+    await pool.query(
+      `UPDATE tenants SET user_id = $1 WHERE LOWER(customer_email) = $2 AND user_id IS NULL`,
+      [id, cleanEmail]
+    );
+    // Link existing unlinked orders for these sites
+    await pool.query(
+      `UPDATE orders SET user_id = $1 WHERE tenant_slug IN (SELECT slug FROM tenants WHERE user_id = $1) AND user_id IS NULL`,
+      [id]
+    );
+    return res.rows[0];
+  }
+
+  const store = loadLocalStore();
+  const user = {
+    id,
+    email: cleanEmail,
+    name: name || cleanEmail.split("@")[0],
+    password_hash: hash,
+    salt,
+    created_at: now
+  };
+  store.users[id] = user;
+
+  // Link existing local tenants & orders
+  for (const t of Object.values(store.tenants)) {
+    if (t.customer_email && t.customer_email.toLowerCase() === cleanEmail && !t.user_id) {
+      t.user_id = id;
+    }
+  }
+  for (const ord of Object.values(store.orders)) {
+    if (!ord.user_id && store.tenants[ord.tenant_slug] && store.tenants[ord.tenant_slug].user_id === id) {
+      ord.user_id = id;
+    }
+  }
+  saveLocalStore(store);
+
+  return { id: user.id, email: user.email, name: user.name, created_at: user.created_at };
+}
+
+async function findUserByEmail(email) {
+  if (!email) return null;
+  const cleanEmail = String(email).toLowerCase().trim();
+
+  if (isPgConnected) {
+    const res = await pool.query(`SELECT * FROM users WHERE LOWER(email) = $1 LIMIT 1`, [cleanEmail]);
+    return res.rows[0] || null;
+  }
+
+  const store = loadLocalStore();
+  return Object.values(store.users).find(u => u.email.toLowerCase() === cleanEmail) || null;
+}
+
+async function findUserById(userId) {
+  if (!userId) return null;
+
+  if (isPgConnected) {
+    const res = await pool.query(
+      `SELECT id, email, name, created_at FROM users WHERE id = $1 LIMIT 1`,
+      [userId]
+    );
+    return res.rows[0] || null;
+  }
+
+  const store = loadLocalStore();
+  const u = store.users[userId];
+  if (!u) return null;
+  return { id: u.id, email: u.email, name: u.name, created_at: u.created_at };
+}
+
+async function updateUserProfile(userId, { name, password }) {
+  if (!userId) throw new Error("User ID required");
+
+  if (isPgConnected) {
+    if (password) {
+      const { hash, salt } = auth.hashPassword(password);
+      const res = await pool.query(
+        `UPDATE users SET name = COALESCE($1, name), password_hash = $2, salt = $3 WHERE id = $4 RETURNING id, email, name, created_at`,
+        [name || null, hash, salt, userId]
+      );
+      return res.rows[0];
+    } else {
+      const res = await pool.query(
+        `UPDATE users SET name = COALESCE($1, name) WHERE id = $2 RETURNING id, email, name, created_at`,
+        [name || null, userId]
+      );
+      return res.rows[0];
+    }
+  }
+
+  const store = loadLocalStore();
+  const u = store.users[userId];
+  if (!u) throw new Error("User not found");
+  if (name) u.name = name;
+  if (password) {
+    const { hash, salt } = auth.hashPassword(password);
+    u.password_hash = hash;
+    u.salt = salt;
+  }
+  saveLocalStore(store);
+  return { id: u.id, email: u.email, name: u.name, created_at: u.created_at };
+}
+
+// ----------------------------------------------------
+// SESSION MANAGEMENT
+// ----------------------------------------------------
+
+async function createSession(userId) {
+  const token = auth.generateSessionToken();
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  if (isPgConnected) {
+    await pool.query(
+      `INSERT INTO user_sessions (token, user_id, created_at, expires_at)
+       VALUES ($1, $2, $3, $4)`,
+      [token, userId, now.toISOString(), expiresAt.toISOString()]
+    );
+    return token;
+  }
+
+  const store = loadLocalStore();
+  store.user_sessions[token] = {
+    token,
+    user_id: userId,
+    created_at: now.toISOString(),
+    expires_at: expiresAt.toISOString()
+  };
+  saveLocalStore(store);
+  return token;
+}
+
+async function validateSession(token) {
+  if (!token) return null;
+
+  if (isPgConnected) {
+    const res = await pool.query(
+      `SELECT s.token, u.id, u.email, u.name, u.created_at
+       FROM user_sessions s
+       JOIN users u ON s.user_id = u.id
+       WHERE s.token = $1 AND (s.expires_at IS NULL OR s.expires_at > NOW())
+       LIMIT 1`,
+      [token]
+    );
+    if (!res.rows.length) return null;
+    const row = res.rows[0];
+    return {
+      token: row.token,
+      user: { id: row.id, email: row.email, name: row.name, createdAt: row.created_at }
+    };
+  }
+
+  const store = loadLocalStore();
+  const session = store.user_sessions[token];
+  if (!session) return null;
+  if (session.expires_at && new Date(session.expires_at) < new Date()) {
+    delete store.user_sessions[token];
+    saveLocalStore(store);
+    return null;
+  }
+  const user = store.users[session.user_id];
+  if (!user) return null;
+  return {
+    token,
+    user: { id: user.id, email: user.email, name: user.name, createdAt: user.created_at }
+  };
+}
+
+async function deleteSession(token) {
+  if (!token) return;
+  if (isPgConnected) {
+    await pool.query(`DELETE FROM user_sessions WHERE token = $1`, [token]);
+    return;
+  }
+  const store = loadLocalStore();
+  delete store.user_sessions[token];
+  saveLocalStore(store);
+}
+
+// ----------------------------------------------------
+// ORDERS & PURCHASES
+// ----------------------------------------------------
+
+async function createOrder({ userId, tenantSlug, plan = "vip", amount, currency = "USD", status = "completed" }) {
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+  const numericAmount = parseFloat(amount) || (plan === "starter" ? 19.00 : 39.00);
+
+  if (isPgConnected) {
+    const res = await pool.query(
+      `INSERT INTO orders (id, user_id, tenant_slug, plan, amount, currency, status, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [id, userId || null, tenantSlug, plan, numericAmount, currency, status, now]
+    );
+    return res.rows[0];
+  }
+
+  const store = loadLocalStore();
+  const order = {
+    id,
+    user_id: userId || null,
+    tenant_slug: tenantSlug,
+    plan,
+    amount: numericAmount,
+    currency,
+    status,
+    created_at: now
+  };
+  store.orders[id] = order;
+  saveLocalStore(store);
+  return order;
+}
+
+async function getUserOrders(userId) {
+  if (!userId) return [];
+
+  if (isPgConnected) {
+    const res = await pool.query(
+      `SELECT o.*, t.partner1_name, t.partner2_name
+       FROM orders o
+       LEFT JOIN tenants t ON o.tenant_slug = t.slug
+       WHERE o.user_id = $1 OR o.tenant_slug IN (SELECT slug FROM tenants WHERE user_id = $1)
+       ORDER BY o.created_at DESC`,
+      [userId]
+    );
+    return res.rows.map(r => ({
+      id: r.id,
+      plan: r.plan,
+      amount: parseFloat(r.amount),
+      currency: r.currency,
+      status: r.status,
+      tenantSlug: r.tenant_slug,
+      partner1: r.partner1_name || "Partner 1",
+      partner2: r.partner2_name || "Partner 2",
+      createdAt: r.created_at
+    }));
+  }
+
+  const store = loadLocalStore();
+  const userSiteSlugs = Object.values(store.tenants)
+    .filter(t => t.user_id === userId)
+    .map(t => t.slug);
+
+  return Object.values(store.orders)
+    .filter(o => o.user_id === userId || userSiteSlugs.includes(o.tenant_slug))
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .map(o => {
+      const t = store.tenants[o.tenant_slug] || {};
+      return {
+        id: o.id,
+        plan: o.plan,
+        amount: o.amount,
+        currency: o.currency,
+        status: o.status,
+        tenantSlug: o.tenant_slug,
+        partner1: t.partner1_name || "Partner 1",
+        partner2: t.partner2_name || "Partner 2",
+        createdAt: o.created_at
+      };
+    });
+}
+
+// ----------------------------------------------------
+// USER DESIGNS (COUPLE SITES)
+// ----------------------------------------------------
+
+async function getUserDesigns(userId, customerEmail = null) {
+  if (!userId && !customerEmail) return [];
+  const cleanEmail = customerEmail ? String(customerEmail).toLowerCase().trim() : "";
+
+  if (isPgConnected) {
+    const query = `
+      SELECT t.id, t.slug, t.partner1_name, t.partner2_name, t.admin_pin, t.plan,
+             t.auth_token, t.is_purchased, t.created_at,
+             c.theme_id, c.template_preset, c.updated_at
+      FROM tenants t
+      LEFT JOIN site_configs c ON t.id = c.tenant_id
+      WHERE t.user_id = $1 ${cleanEmail ? "OR (t.customer_email IS NOT NULL AND LOWER(t.customer_email) = $2)" : ""}
+      ORDER BY t.created_at DESC
+    `;
+    const params = cleanEmail ? [userId, cleanEmail] : [userId];
+    const res = await pool.query(query, params);
+    return res.rows.map(r => ({
+      id: r.id,
+      slug: r.slug,
+      partner1: r.partner1_name,
+      partner2: r.partner2_name,
+      plan: r.plan,
+      themeId: r.theme_id || "romantic-rose",
+      preset: r.template_preset || "complete",
+      adminPin: r.admin_pin,
+      authToken: r.auth_token,
+      isPurchased: r.is_purchased !== false,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+      siteUrl: `/sites/${encodeURIComponent(r.slug)}`,
+      studioUrl: `/builder?slug=${encodeURIComponent(r.slug)}&token=${encodeURIComponent(r.auth_token || "")}`
+    }));
+  }
+
+  const store = loadLocalStore();
+  return Object.values(store.tenants)
+    .filter(t => (userId && t.user_id === userId) || (cleanEmail && t.customer_email && t.customer_email.toLowerCase() === cleanEmail))
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .map(t => {
+      const cfg = store.site_configs[t.slug] || {};
+      return {
+        id: t.id,
+        slug: t.slug,
+        partner1: t.partner1_name,
+        partner2: t.partner2_name,
+        plan: t.plan,
+        themeId: cfg.theme_id || "romantic-rose",
+        preset: cfg.template_preset || "complete",
+        adminPin: t.admin_pin,
+        authToken: t.auth_token,
+        isPurchased: t.is_purchased !== false,
+        createdAt: t.created_at,
+        updatedAt: cfg.updated_at,
+        siteUrl: `/sites/${encodeURIComponent(t.slug)}`,
+        studioUrl: `/builder?slug=${encodeURIComponent(t.slug)}&token=${encodeURIComponent(t.auth_token || "")}`
+      };
+    });
+}
+
+async function linkTenantToUser(slug, userId) {
+  if (!slug || !userId) return;
+  const cleanSlug = String(slug).toLowerCase().trim();
+
+  if (isPgConnected) {
+    await pool.query(`UPDATE tenants SET user_id = $1 WHERE slug = $2`, [userId, cleanSlug]);
+    return;
+  }
+
+  const store = loadLocalStore();
+  if (store.tenants[cleanSlug]) {
+    store.tenants[cleanSlug].user_id = userId;
+    saveLocalStore(store);
+  }
+}
+
 module.exports = {
   pool,
   initDb,
@@ -1232,5 +1778,18 @@ module.exports = {
   getTenantBySlug,
   updateSiteConfig,
   listTenants,
-  verifyTenantAccess
+  verifyTenantAccess,
+  createUser,
+  findUserByEmail,
+  findUserById,
+  updateUserProfile,
+  createSession,
+  validateSession,
+  deleteSession,
+  createOrder,
+  getUserOrders,
+  getUserDesigns,
+  linkTenantToUser,
+  MASTER_ADMIN_PIN,
+  MASTER_ADMIN_TOKEN
 };

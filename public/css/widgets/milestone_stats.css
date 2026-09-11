@@ -1,0 +1,101 @@
+/* Milestone Stats Widget */
+.milestone-stats-section {
+  padding: 70px 20px;
+  position: relative;
+}
+.milestone-stats-box {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.alive-ticker-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 240, 245, 0.75));
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 105, 135, 0.3);
+  border-radius: 24px;
+  padding: 28px 20px;
+  text-align: center;
+  box-shadow: 0 12px 35px rgba(255, 67, 101, 0.12);
+  margin-bottom: 30px;
+}
+.alive-ticker-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-top: 18px;
+}
+@media (max-width: 640px) {
+  .alive-ticker-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+.ticker-slot {
+  background: #ffffff;
+  padding: 16px 10px;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+.ticker-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #ff4365;
+  line-height: 1.1;
+  display: block;
+}
+.ticker-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+  display: block;
+}
+.quirky-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+.quirky-metric-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 22px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.quirky-metric-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(255, 67, 101, 0.15);
+}
+.quirky-metric-icon {
+  font-size: 2.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.quirky-metric-content {
+  flex: 1;
+}
+.quirky-metric-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 2px;
+}
+.quirky-metric-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #334155;
+  margin-bottom: 4px;
+}
+.quirky-metric-desc {
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.4;
+}

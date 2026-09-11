@@ -386,6 +386,246 @@
     </svg>
   `);
 
+  
+  // 14. CANDLE BLOWOUT
+  PREVIEWS.candle_blowout = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <rect width="800" height="480" fill="#fff5f7"/>
+      <text x="400" y="60" fill="#ff4365" font-family="Georgia, serif" font-size="28" font-weight="700" text-anchor="middle">🎂 Candle Blow-Out &amp; Wish Reveal</text>
+      <text x="400" y="88" fill="#64748b" font-family="-apple-system, sans-serif" font-size="14" text-anchor="middle">Mic/Click Trigger • Animated Flames • Secret Wish Card</text>
+      <!-- Cake Stand -->
+      <rect x="250" y="340" width="300" height="14" rx="7" fill="#cbd5e1"/>
+      <rect x="370" y="354" width="60" height="24" rx="4" fill="#94a3b8"/>
+      <!-- Cake Bottom Tier -->
+      <rect x="280" y="240" width="240" height="100" rx="14" fill="#ff4365"/>
+      <rect x="280" y="240" width="240" height="20" rx="10" fill="#ffffff"/>
+      <!-- Cake Top Tier -->
+      <rect x="320" y="160" width="160" height="80" rx="12" fill="#ff758c"/>
+      <rect x="320" y="160" width="160" height="16" rx="8" fill="#ffffff"/>
+      <!-- Candles -->
+      <g transform="translate(345, 110)">
+        <rect x="0" y="15" width="8" height="35" rx="3" fill="#ffd166"/>
+        <ellipse cx="4" cy="5" rx="7" ry="12" fill="#ff9e00"/>
+        <ellipse cx="4" cy="6" rx="4" ry="7" fill="#ffff3f"/>
+      </g>
+      <g transform="translate(395, 100)">
+        <rect x="0" y="15" width="8" height="45" rx="3" fill="#ffd166"/>
+        <ellipse cx="4" cy="5" rx="8" ry="14" fill="#ff9e00"/>
+        <ellipse cx="4" cy="6" rx="5" ry="8" fill="#ffff3f"/>
+      </g>
+      <g transform="translate(445, 110)">
+        <rect x="0" y="15" width="8" height="35" rx="3" fill="#ffd166"/>
+        <ellipse cx="4" cy="5" rx="7" ry="12" fill="#ff9e00"/>
+        <ellipse cx="4" cy="6" rx="4" ry="7" fill="#ffff3f"/>
+      </g>
+      <!-- Controls -->
+      <rect x="260" y="395" width="130" height="40" rx="20" fill="#ff4365"/>
+      <text x="325" y="420" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" text-anchor="middle">💨 Blow Candles</text>
+      <rect x="410" y="395" width="130" height="40" rx="20" fill="#ffffff" stroke="#ff4365" stroke-width="2"/>
+      <text x="475" y="420" fill="#ff4365" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" text-anchor="middle">🎙️ Mic Trigger</text>
+    </svg>
+  `);
+
+  // 15. MILESTONE STATS
+  PREVIEWS.milestone_stats = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <rect width="800" height="480" fill="#f8fafc"/>
+      <text x="400" y="60" fill="#1e293b" font-family="Georgia, serif" font-size="28" font-weight="700" text-anchor="middle">⏳ Milestone Life Stats</text>
+      <text x="400" y="88" fill="#64748b" font-family="-apple-system, sans-serif" font-size="14" text-anchor="middle">Total Alive Seconds Ticker + Quirky Life Metrics</text>
+      <!-- Alive Ticker Card -->
+      <rect x="120" y="115" width="560" height="120" rx="18" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+      <text x="400" y="145" fill="#64748b" font-family="-apple-system, sans-serif" font-size="12" font-weight="800" text-anchor="middle">TOTAL TIME ALIVE</text>
+      <!-- Slots -->
+      <rect x="140" y="160" width="115" height="55" rx="10" fill="#fff1f2"/>
+      <text x="197" y="195" fill="#ff4365" font-family="-apple-system, sans-serif" font-size="24" font-weight="800" text-anchor="middle">8,760</text>
+      <text x="197" y="210" fill="#64748b" font-size="10" text-anchor="middle">DAYS</text>
+
+      <rect x="270" y="160" width="115" height="55" rx="10" fill="#fff1f2"/>
+      <text x="327" y="195" fill="#ff4365" font-family="-apple-system, sans-serif" font-size="24" font-weight="800" text-anchor="middle">14</text>
+      <text x="327" y="210" fill="#64748b" font-size="10" text-anchor="middle">HOURS</text>
+
+      <rect x="400" y="160" width="115" height="55" rx="10" fill="#fff1f2"/>
+      <text x="457" y="195" fill="#ff4365" font-family="-apple-system, sans-serif" font-size="24" font-weight="800" text-anchor="middle">38</text>
+      <text x="457" y="210" fill="#64748b" font-size="10" text-anchor="middle">MINUTES</text>
+
+      <rect x="530" y="160" width="115" height="55" rx="10" fill="#fff1f2"/>
+      <text x="587" y="195" fill="#ff4365" font-family="-apple-system, sans-serif" font-size="24" font-weight="800" text-anchor="middle">42</text>
+      <text x="587" y="210" fill="#64748b" font-size="10" text-anchor="middle">SECONDS</text>
+
+      <!-- Quirky Grid -->
+      <rect x="120" y="255" width="265" height="85" rx="14" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="145" y="305" font-size="28">💓</text>
+      <text x="190" y="290" fill="#1e293b" font-family="-apple-system, sans-serif" font-size="18" font-weight="800">908,236,800</text>
+      <text x="190" y="315" fill="#64748b" font-size="12">Estimated Heartbeats</text>
+
+      <rect x="415" y="255" width="265" height="85" rx="14" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="440" y="305" font-size="28">☕</text>
+      <text x="485" y="290" fill="#1e293b" font-family="-apple-system, sans-serif" font-size="18" font-weight="800">14,016 Cups</text>
+      <text x="485" y="315" fill="#64748b" font-size="12">Coffee &amp; Morning Tea</text>
+
+      <rect x="120" y="355" width="265" height="85" rx="14" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="145" y="405" font-size="28">🌍</text>
+      <text x="190" y="390" fill="#1e293b" font-family="-apple-system, sans-serif" font-size="18" font-weight="800">24.00 Orbits</text>
+      <text x="190" y="415" fill="#64748b" font-size="12">Trips Around the Sun</text>
+
+      <rect x="415" y="355" width="265" height="85" rx="14" fill="#ffffff" stroke="#e2e8f0"/>
+      <text x="440" y="405" font-size="28">💤</text>
+      <text x="485" y="390" fill="#1e293b" font-family="-apple-system, sans-serif" font-size="18" font-weight="800">70,080 Hours</text>
+      <text x="485" y="415" fill="#64748b" font-size="12">Hours of Sweet Dreams</text>
+    </svg>
+  `);
+
+  // 16. GIFT UNBOXER
+  PREVIEWS.gift_unboxer = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <rect width="800" height="480" fill="#fef2f2"/>
+      <text x="400" y="60" fill="#e11d48" font-family="Georgia, serif" font-size="28" font-weight="700" text-anchor="middle">🎁 3D Surprise Gift Unboxer</text>
+      <text x="400" y="88" fill="#64748b" font-family="-apple-system, sans-serif" font-size="14" text-anchor="middle">Untie Ribbon ➔ Lift Lid ➔ Surprise Reveal</text>
+      <!-- 3D Gift Box -->
+      <g transform="translate(320, 140)">
+        <rect x="0" y="50" width="160" height="130" rx="12" fill="#ff4365"/>
+        <rect x="65" y="50" width="30" height="130" fill="#ffd166"/>
+        <rect x="0" y="100" width="160" height="30" fill="#ffd166"/>
+        <!-- Lid flying off -->
+        <g transform="translate(-20, -30) rotate(-18)">
+          <rect x="0" y="20" width="180" height="40" rx="8" fill="#ff5d82"/>
+          <rect x="75" y="20" width="30" height="40" fill="#ffd166"/>
+          <text x="90" y="15" font-size="36" text-anchor="middle">🎀</text>
+        </g>
+      </g>
+      <!-- Surprise Card Pop Out -->
+      <rect x="220" y="310" width="360" height="130" rx="16" fill="#ffffff" stroke="#fbbf24" stroke-width="2"/>
+      <rect x="330" y="325" width="140" height="24" rx="12" fill="#fef3c7"/>
+      <text x="400" y="341" fill="#b45309" font-family="-apple-system, sans-serif" font-size="11" font-weight="800" text-anchor="middle">🎟️ SPECIAL BIRTHDAY PASS</text>
+      <text x="400" y="380" fill="#1e293b" font-family="Georgia, serif" font-size="18" font-weight="700" text-anchor="middle">VIP Shopping &amp; Romantic Dinner</text>
+      <text x="400" y="405" fill="#64748b" font-size="12" text-anchor="middle">All-expenses covered • Valid anytime anywhere! ✨</text>
+      <rect x="310" y="415" width="180" height="18" rx="9" fill="#ff4365"/>
+      <text x="400" y="428" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle">Claim Birthday Gift</text>
+    </svg>
+  `);
+
+  // 17. ROAST & TOAST
+  PREVIEWS.roast_toast = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <rect width="800" height="480" fill="#fffbeb"/>
+      <text x="400" y="60" fill="#b45309" font-family="Georgia, serif" font-size="28" font-weight="700" text-anchor="middle">🥂 Roast &amp; Toast Birthday Wheel 🔥</text>
+      <text x="400" y="88" fill="#64748b" font-family="-apple-system, sans-serif" font-size="14" text-anchor="middle">Spin the Wheel • Alternates Funny Roasts &amp; Sweet Toasts</text>
+      <!-- Wheel -->
+      <g transform="translate(400, 240)">
+        <circle cx="0" cy="0" r="130" fill="#ffffff" stroke="#cbd5e1" stroke-width="6"/>
+        <!-- Slices -->
+        <path d="M 0 0 L 130 0 A 130 130 0 0 1 91.9 91.9 Z" fill="#ef4444"/>
+        <path d="M 0 0 L 91.9 91.9 A 130 130 0 0 1 0 130 Z" fill="#f59e0b"/>
+        <path d="M 0 0 L 0 130 A 130 130 0 0 1 -91.9 91.9 Z" fill="#ef4444"/>
+        <path d="M 0 0 L -91.9 91.9 A 130 130 0 0 1 -130 0 Z" fill="#f59e0b"/>
+        <path d="M 0 0 L -130 0 A 130 130 0 0 1 -91.9 -91.9 Z" fill="#ef4444"/>
+        <path d="M 0 0 L -91.9 -91.9 A 130 130 0 0 1 0 -130 Z" fill="#f59e0b"/>
+        <path d="M 0 0 L 0 -130 A 130 130 0 0 1 91.9 -91.9 Z" fill="#ef4444"/>
+        <path d="M 0 0 L 91.9 -91.9 A 130 130 0 0 1 130 0 Z" fill="#f59e0b"/>
+        <circle cx="0" cy="0" r="28" fill="#ffffff" stroke="#cbd5e1" stroke-width="3"/>
+        <text x="0" y="8" font-size="20" text-anchor="middle">🎲</text>
+      </g>
+      <!-- Pointer -->
+      <polygon points="400,105 388,85 412,85" fill="#ef4444"/>
+      <!-- Button -->
+      <rect x="320" y="395" width="160" height="46" rx="23" fill="#ff4365"/>
+      <text x="400" y="424" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="15" font-weight="800" text-anchor="middle">Spin the Wheel! 🎯</text>
+    </svg>
+  `);
+
+  // 18. GUESTBOOK WISH WALL
+  PREVIEWS.guestbook = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <rect width="800" height="480" fill="#f8fafc"/>
+      <text x="400" y="55" fill="#1e293b" font-family="Georgia, serif" font-size="28" font-weight="700" text-anchor="middle">📌 Guestbook Wish Wall</text>
+      <text x="400" y="82" fill="#64748b" font-family="-apple-system, sans-serif" font-size="14" text-anchor="middle">Visitor Message Submissions &amp; Photo Pins</text>
+      <!-- Corkboard -->
+      <rect x="80" y="105" width="640" height="345" rx="16" fill="#fbf7ee" stroke="#d4a373" stroke-width="8"/>
+      <!-- Sticky Note 1 -->
+      <g transform="translate(120, 150) rotate(-3)">
+        <rect width="160" height="170" rx="3" fill="#fef08a" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))"/>
+        <circle cx="80" cy="0" r="6" fill="#ef4444"/>
+        <text x="18" y="45" font-family="Georgia, serif" font-size="14" fill="#713f12">Happy 24th bff! 🎂</text>
+        <text x="18" y="70" font-family="Georgia, serif" font-size="12" fill="#854d0e">May all your sweetest</text>
+        <text x="18" y="90" font-family="Georgia, serif" font-size="12" fill="#854d0e">dreams come true!</text>
+        <text x="18" y="145" font-size="11" font-weight="700" fill="#713f12">— Maya (Bestie)</text>
+      </g>
+      <!-- Sticky Note 2 -->
+      <g transform="translate(320, 145) rotate(2)">
+        <rect width="160" height="170" rx="3" fill="#fbcfe8" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))"/>
+        <circle cx="80" cy="0" r="6" fill="#ef4444"/>
+        <text x="18" y="45" font-family="Georgia, serif" font-size="14" fill="#831843">Princess Ella ❤️</text>
+        <text x="18" y="70" font-family="Georgia, serif" font-size="12" fill="#9d174d">You illuminate my whole</text>
+        <text x="18" y="90" font-family="Georgia, serif" font-size="12" fill="#9d174d">world with endless lof.</text>
+        <text x="18" y="145" font-size="11" font-weight="700" fill="#831843">— Aghiles 💍</text>
+      </g>
+      <!-- Sticky Note 3 -->
+      <g transform="translate(520, 155) rotate(-2)">
+        <rect width="160" height="170" rx="3" fill="#bae6fd" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))"/>
+        <circle cx="80" cy="0" r="6" fill="#ef4444"/>
+        <text x="18" y="45" font-family="Georgia, serif" font-size="14" fill="#0c4a6e">To health &amp; joy! 🥂</text>
+        <text x="18" y="70" font-family="Georgia, serif" font-size="12" fill="#0369a1">So proud of everything</text>
+        <text x="18" y="90" font-family="Georgia, serif" font-size="12" fill="#0369a1">you achieve each year!</text>
+        <text x="18" y="145" font-size="11" font-weight="700" fill="#0c4a6e">— Leo (Family)</text>
+      </g>
+      <!-- Add Button -->
+      <rect x="310" y="375" width="180" height="42" rx="21" fill="#ff4365"/>
+      <text x="400" y="401" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" text-anchor="middle">✍️ Pin a Birthday Wish</text>
+    </svg>
+  `);
+
+  // 19. PARTY JUKEBOX
+  PREVIEWS.party_jukebox = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <rect width="800" height="480" fill="#0f172a"/>
+      <text x="400" y="55" fill="#f8fafc" font-family="Georgia, serif" font-size="28" font-weight="700" text-anchor="middle">📻 Party Jukebox &amp; Playlist</text>
+      <text x="400" y="82" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="14" text-anchor="middle">Vinyl Turntable • Animated Audio Equalizer • Birthday Bops</text>
+      <!-- Jukebox Player Deck -->
+      <rect x="80" y="110" width="640" height="335" rx="24" fill="#1e293b" stroke="#334155" stroke-width="2"/>
+      <!-- Vinyl Turntable -->
+      <g transform="translate(220, 270)">
+        <circle cx="0" cy="0" r="105" fill="#000000" stroke="#334155" stroke-width="4"/>
+        <circle cx="0" cy="0" r="70" fill="#09090b" stroke="#18181b" stroke-width="2"/>
+        <circle cx="0" cy="0" r="35" fill="#ff4365"/>
+        <text x="0" y="8" font-size="22" text-anchor="middle">🎂</text>
+        <!-- Tone arm -->
+        <g transform="translate(80, -90) rotate(20)">
+          <circle cx="0" cy="0" r="10" fill="#94a3b8"/>
+          <rect x="-2" y="0" width="4" height="110" fill="#cbd5e1"/>
+          <rect x="-6" y="100" width="12" height="18" fill="#f59e0b"/>
+        </g>
+      </g>
+      <!-- Player Controls & Equalizer -->
+      <g transform="translate(380, 160)">
+        <text x="0" y="24" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="22" font-weight="800">Celebration Jam 🎵</text>
+        <text x="0" y="50" fill="#94a3b8" font-family="-apple-system, sans-serif" font-size="14">Kool &amp; The Gang • Birthday Track 01</text>
+        <!-- Equalizer Bars -->
+        <g transform="translate(0, 75)">
+          <rect x="0" y="10" width="8" height="25" rx="4" fill="#ff4365"/>
+          <rect x="14" y="0" width="8" height="35" rx="4" fill="#fbbf24"/>
+          <rect x="28" y="18" width="8" height="17" rx="4" fill="#ff4365"/>
+          <rect x="42" y="5" width="8" height="30" rx="4" fill="#fbbf24"/>
+          <rect x="56" y="12" width="8" height="23" rx="4" fill="#ff4365"/>
+          <rect x="70" y="0" width="8" height="35" rx="4" fill="#fbbf24"/>
+          <rect x="84" y="8" width="8" height="27" rx="4" fill="#ff4365"/>
+        </g>
+        <!-- Controls -->
+        <g transform="translate(0, 135)">
+          <rect x="0" y="0" width="45" height="40" rx="10" fill="#334155"/>
+          <text x="22" y="25" fill="#ffffff" font-size="15" text-anchor="middle">⏮️</text>
+          <rect x="55" y="0" width="90" height="40" rx="20" fill="#ff4365"/>
+          <text x="100" y="25" fill="#ffffff" font-size="14" font-weight="800" text-anchor="middle">▶️ Play</text>
+          <rect x="155" y="0" width="45" height="40" rx="10" fill="#334155"/>
+          <text x="177" y="25" fill="#ffffff" font-size="15" text-anchor="middle">⏭️</text>
+        </g>
+        <!-- Mini Playlist -->
+        <rect x="0" y="195" width="300" height="65" rx="10" fill="#0f172a" opacity="0.6"/>
+        <text x="15" y="222" fill="#ff758c" font-size="12" font-weight="700">1. Celebration Jam (Playing)</text>
+        <text x="15" y="244" fill="#64748b" font-size="12">2. Birthday Anthem • Sweet Melody</text>
+      </g>
+    </svg>
+  `);
+
   window.WIDGET_PREVIEWS = PREVIEWS;
   window.getWidgetPreviewImage = function(widgetId) {
     return PREVIEWS[widgetId] || null;

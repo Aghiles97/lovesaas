@@ -417,6 +417,36 @@ class DynamicRenderer {
       if (typeof setupPlayfulGame === "function") try { setupPlayfulGame(); } catch (e) {}
     }
 
+    // 14. Candle Blow-Out
+    if (layoutOrder.includes("candle_blowout")) {
+      if (typeof setupCandleBlowout === "function") try { setupCandleBlowout(sectionsData.candle_blowout); } catch (e) {}
+    }
+
+    // 15. Milestone Life Stats
+    if (layoutOrder.includes("milestone_stats")) {
+      if (typeof setupMilestoneStats === "function") try { setupMilestoneStats(sectionsData.milestone_stats, sectionsData.hero); } catch (e) {}
+    }
+
+    // 16. 3D Surprise Gift Unboxer
+    if (layoutOrder.includes("gift_unboxer")) {
+      if (typeof setupGiftUnboxer === "function") try { setupGiftUnboxer(sectionsData.gift_unboxer); } catch (e) {}
+    }
+
+    // 17. Roast & Toast Wheel
+    if (layoutOrder.includes("roast_toast")) {
+      if (typeof setupRoastToast === "function") try { setupRoastToast(sectionsData.roast_toast); } catch (e) {}
+    }
+
+    // 18. Guestbook Wish Wall
+    if (layoutOrder.includes("guestbook")) {
+      if (typeof setupGuestbook === "function") try { setupGuestbook(sectionsData.guestbook); } catch (e) {}
+    }
+
+    // 19. Party Jukebox
+    if (layoutOrder.includes("party_jukebox")) {
+      if (typeof setupPartyJukebox === "function") try { setupPartyJukebox(sectionsData.party_jukebox); } catch (e) {}
+    }
+
     // 14. Audio, Vinyl Disc, & Equalizer
     if (typeof setupAudioVisualizerAndVolume === "function") {
       try { setupAudioVisualizerAndVolume(); } catch (e) {}

@@ -53,7 +53,19 @@ if (typeof module !== "undefined" && module.exports) {
     boarding_pass: require("./templates/boarding_pass.template.js"),
     quiz: require("./templates/quiz.template.js"),
     letter: require("./templates/letter.template.js"),
-    playful: require("./templates/playful.template.js")
+    playful: require("./templates/playful.template.js"),
+    candle_blowout: require("./templates/candle_blowout.template.js"),
+    milestone_stats: require("./templates/milestone_stats.template.js"),
+    gift_unboxer: require("./templates/gift_unboxer.template.js"),
+    roast_toast: require("./templates/roast_toast.template.js"),
+    guestbook: require("./templates/guestbook.template.js"),
+    party_jukebox: require("./templates/party_jukebox.template.js"),
+    tenure_ticker: require("./templates/tenure_ticker.template.js"),
+    star_map: require("./templates/star_map.template.js"),
+    then_now_slider: require("./templates/then_now_slider.template.js"),
+    bucket_list: require("./templates/bucket_list.template.js"),
+    audio_capsule: require("./templates/audio_capsule.template.js"),
+    milestone_odyssey: require("./templates/milestone_odyssey.template.js")
   };
   module.exports = { WIDGET_TEMPLATES };
 }

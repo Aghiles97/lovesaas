@@ -4,6 +4,7 @@ const path = require("node:path");
 const url = require("node:url");
 
 const db = require("./db");
+const auth = require("./auth");
 const r2 = require("./r2");
 const { WIDGET_REGISTRY, PRESETS } = require("../core/widget-registry");
 
@@ -105,7 +106,7 @@ function sendJson(res, statusCode, data) {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Pin, X-Tenant-Slug"
+    "Access-Control-Allow-Headers": "Content-Type, X-Admin-Pin, X-Auth-Token, X-User-Token, Authorization, X-Tenant-Slug"
   });
   res.end(JSON.stringify(data));
 }
@@ -132,9 +133,16 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(204, {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, X-Admin-Pin"
+      "Access-Control-Allow-Headers": "Content-Type, X-Admin-Pin, X-Auth-Token, X-User-Token, Authorization"
     });
     return res.end();
+  }
+
+  async function getAuthenticatedUser(req, parsedUrl) {
+    const token = auth.extractToken(req, parsedUrl);
+    if (!token) return null;
+    const session = await db.validateSession(token);
+    return session ? session.user : null;
   }
 
   // ----------------------------------------------------
@@ -164,7 +172,13 @@ const server = http.createServer(async (req, res) => {
       if (!payload.slug || !payload.partner1 || !payload.partner2 || !payload.adminPin) {
         return sendJson(res, 400, { error: "Missing required fields: slug, partner1, partner2, adminPin" });
       }
-      const created = await db.createTenant(payload);
+      const adminPinHeader = req.headers["x-admin-pin"] || payload.masterAdminPin;
+      const authTokenHeader = req.headers["x-auth-token"] || payload.masterAuthToken;
+      const isMasterAdmin = adminPinHeader === (process.env.ADMIN_PIN || "admin1234") || authTokenHeader === (process.env.ADMIN_TOKEN || "master-admin-token-lovesaas");
+      const created = await db.createTenant({
+        ...payload,
+        isPurchased: isMasterAdmin ? true : (payload.isPurchased === true)
+      });
       return sendJson(res, 201, created);
     } catch (err) {
       return sendJson(res, 400, { error: err.message });
@@ -198,6 +212,31 @@ const server = http.createServer(async (req, res) => {
       if (existing) {
         return sendJson(res, 409, { error: `Site '${cleanSlug}' already exists. Please choose a different URL slug.` });
       }
+
+      // Associate with user account
+      const currentUser = await getAuthenticatedUser(req, parsedUrl);
+      let userId = currentUser ? currentUser.id : null;
+      let sessionToken = currentUser ? auth.extractToken(req, parsedUrl) : null;
+
+      if (!userId && customerEmail) {
+        const cleanEmail = String(customerEmail).trim().toLowerCase();
+        let user = await db.findUserByEmail(cleanEmail);
+        if (!user && payload.password) {
+          user = await db.createUser({
+            email: cleanEmail,
+            password: payload.password,
+            name: String(partner1).trim()
+          });
+          userId = user.id;
+          sessionToken = await db.createSession(userId);
+        } else if (user) {
+          userId = user.id;
+          if (payload.password && auth.verifyPassword(payload.password, user.password_hash, user.salt)) {
+            sessionToken = await db.createSession(userId);
+          }
+        }
+      }
+
       const created = await db.createTenant({
         slug: cleanSlug,
         partner1: String(partner1).trim(),
@@ -206,8 +245,21 @@ const server = http.createServer(async (req, res) => {
         customerEmail: customerEmail ? String(customerEmail).trim() : null,
         plan,
         preset: preset || (plan === "starter" ? "storyteller" : "complete"),
-        isPurchased: true
+        isPurchased: true,
+        userId
       });
+
+      // Record Order / Purchase
+      const amount = plan === "starter" ? 19.00 : 39.00;
+      await db.createOrder({
+        userId,
+        tenantSlug: cleanSlug,
+        plan,
+        amount,
+        currency: "USD",
+        status: "completed"
+      });
+
       return sendJson(res, 201, {
         success: true,
         message: "Couple site provisioned successfully!",
@@ -218,11 +270,143 @@ const server = http.createServer(async (req, res) => {
           plan: created.plan,
           authToken: created.authToken
         },
+        userToken: sessionToken || null,
         builderUrl: `/builder?slug=${encodeURIComponent(created.slug)}&token=${encodeURIComponent(created.authToken)}`,
         siteUrl: `/sites/${encodeURIComponent(created.slug)}`
       });
     } catch (err) {
       return sendJson(res, 400, { error: err.message });
+    }
+  }
+
+  // ----------------------------------------------------
+  // USER AUTH & PORTAL API ROUTES
+  // ----------------------------------------------------
+
+  // POST /api/auth/register
+  if (pathname === "/api/auth/register" && method === "POST") {
+    try {
+      const { email, password, name } = await parseJsonBody(req);
+      if (!email || !password) {
+        return sendJson(res, 400, { error: "Email and password are required." });
+      }
+      if (password.length < 4) {
+        return sendJson(res, 400, { error: "Password must be at least 4 characters." });
+      }
+      const existing = await db.findUserByEmail(email);
+      if (existing) {
+        return sendJson(res, 409, { error: "An account with this email already exists. Please sign in." });
+      }
+      const user = await db.createUser({ email, password, name });
+      const token = await db.createSession(user.id);
+      return sendJson(res, 201, {
+        success: true,
+        token,
+        user: { id: user.id, email: user.email, name: user.name, createdAt: user.created_at }
+      });
+    } catch (err) {
+      return sendJson(res, 500, { error: err.message });
+    }
+  }
+
+  // POST /api/auth/login
+  if (pathname === "/api/auth/login" && method === "POST") {
+    try {
+      const { email, password } = await parseJsonBody(req);
+      if (!email || !password) {
+        return sendJson(res, 400, { error: "Email and password are required." });
+      }
+      const user = await db.findUserByEmail(email);
+      if (!user || !auth.verifyPassword(password, user.password_hash, user.salt)) {
+        return sendJson(res, 401, { error: "Invalid email or password." });
+      }
+      const token = await db.createSession(user.id);
+      return sendJson(res, 200, {
+        success: true,
+        token,
+        user: { id: user.id, email: user.email, name: user.name, createdAt: user.created_at }
+      });
+    } catch (err) {
+      return sendJson(res, 500, { error: err.message });
+    }
+  }
+
+  // POST /api/auth/logout
+  if (pathname === "/api/auth/logout" && method === "POST") {
+    try {
+      const token = auth.extractToken(req, parsedUrl);
+      if (token) {
+        await db.deleteSession(token);
+      }
+      return sendJson(res, 200, { success: true, message: "Logged out successfully" });
+    } catch (err) {
+      return sendJson(res, 500, { error: err.message });
+    }
+  }
+
+  // GET /api/auth/user-me
+  if (pathname === "/api/auth/user-me" && method === "GET") {
+    try {
+      const token = auth.extractToken(req, parsedUrl);
+      if (!token) {
+        return sendJson(res, 401, { authenticated: false });
+      }
+      const session = await db.validateSession(token);
+      if (!session) {
+        return sendJson(res, 401, { authenticated: false, error: "Session expired or invalid" });
+      }
+      return sendJson(res, 200, { authenticated: true, user: session.user });
+    } catch (err) {
+      return sendJson(res, 500, { error: err.message });
+    }
+  }
+
+  // GET /api/user/designs
+  if (pathname === "/api/user/designs" && method === "GET") {
+    try {
+      const token = auth.extractToken(req, parsedUrl);
+      if (!token) return sendJson(res, 401, { error: "Authentication required" });
+      const session = await db.validateSession(token);
+      if (!session) return sendJson(res, 401, { error: "Session expired" });
+
+      const designs = await db.getUserDesigns(session.user.id, session.user.email);
+      return sendJson(res, 200, { success: true, designs });
+    } catch (err) {
+      return sendJson(res, 500, { error: err.message });
+    }
+  }
+
+  // GET /api/user/purchases
+  if (pathname === "/api/user/purchases" && method === "GET") {
+    try {
+      const token = auth.extractToken(req, parsedUrl);
+      if (!token) return sendJson(res, 401, { error: "Authentication required" });
+      const session = await db.validateSession(token);
+      if (!session) return sendJson(res, 401, { error: "Session expired" });
+
+      const purchases = await db.getUserOrders(session.user.id);
+      return sendJson(res, 200, { success: true, purchases });
+    } catch (err) {
+      return sendJson(res, 500, { error: err.message });
+    }
+  }
+
+  // PUT /api/user/profile
+  if (pathname === "/api/user/profile" && method === "PUT") {
+    try {
+      const token = auth.extractToken(req, parsedUrl);
+      if (!token) return sendJson(res, 401, { error: "Authentication required" });
+      const session = await db.validateSession(token);
+      if (!session) return sendJson(res, 401, { error: "Session expired" });
+
+      const { name, password } = await parseJsonBody(req);
+      if (password && password.length < 4) {
+        return sendJson(res, 400, { error: "New password must be at least 4 characters." });
+      }
+      const updated = await db.updateUserProfile(session.user.id, { name, password });
+      return sendJson(res, 200, { success: true, user: updated });
+    } catch (err) {
+      return sendJson(res, 500, { error: err.message });
     }
   }
 
@@ -236,6 +420,9 @@ const server = http.createServer(async (req, res) => {
       }
       return sendJson(res, 200, {
         authorized: true,
+        role: result.role,
+        isAdmin: result.isAdmin === true,
+        isPurchased: result.isPurchased !== false,
         slug: result.tenant.slug,
         partner1: result.tenant.partner1,
         partner2: result.tenant.partner2,
@@ -243,6 +430,19 @@ const server = http.createServer(async (req, res) => {
         authToken: result.tenant.authToken,
         isDemo: result.isDemo || false
       });
+    } catch (err) {
+      return sendJson(res, 400, { error: err.message });
+    }
+  }
+
+  // GET /api/auth/me
+  if (pathname === "/api/auth/me" && method === "GET") {
+    try {
+      const slug = resolveTenantSlug(req, parsedUrl);
+      const pin = req.headers["x-admin-pin"] || parsedUrl.query.pin;
+      const token = req.headers["x-auth-token"] || parsedUrl.query.token;
+      const result = await db.verifyTenantAccess({ slug, pin, token });
+      return sendJson(res, 200, result);
     } catch (err) {
       return sendJson(res, 400, { error: err.message });
     }
@@ -258,6 +458,24 @@ const server = http.createServer(async (req, res) => {
     if (subRoute === "" && method === "GET") {
       const tenant = await db.getTenantBySlug(slug);
       if (!tenant) return sendJson(res, 404, { error: "Tenant not found" });
+
+      const pin = req.headers["x-admin-pin"] || parsedUrl.query.pin;
+      const token = req.headers["x-auth-token"] || parsedUrl.query.token;
+      const authUser = await getAuthenticatedUser(req, parsedUrl);
+
+      const isAuthorized = (pin && String(tenant.adminPin).trim() === String(pin).trim()) ||
+                           (token && String(tenant.authToken).trim() === String(token).trim()) ||
+                           (pin === (process.env.ADMIN_PIN || "admin1234") || token === "master-admin-token-lovesaas") ||
+                           (authUser && (authUser.id === tenant.userId || (tenant.customerEmail && authUser.email && tenant.customerEmail.toLowerCase() === authUser.email.toLowerCase())));
+
+      if (!isAuthorized) {
+        const publicTenant = { ...tenant };
+        delete publicTenant.adminPin;
+        delete publicTenant.authToken;
+        delete publicTenant.customerEmail;
+        return sendJson(res, 200, publicTenant);
+      }
+
       return sendJson(res, 200, tenant);
     }
 
@@ -265,24 +483,132 @@ const server = http.createServer(async (req, res) => {
     if (subRoute === "/config" && method === "PUT") {
       try {
         const body = await parseJsonBody(req);
+        const tenant = await db.getTenantBySlug(slug);
+        if (!tenant) return sendJson(res, 404, { error: "Tenant not found" });
+
+        const authUser = await getAuthenticatedUser(req, parsedUrl);
+        const isOwner = authUser && (authUser.id === tenant.userId || (tenant.customerEmail && authUser.email && tenant.customerEmail.toLowerCase() === authUser.email.toLowerCase()));
+
         const adminPin = req.headers["x-admin-pin"] || body.adminPin;
+        const authToken = isOwner ? tenant.authToken : (req.headers["x-auth-token"] || body.authToken);
+
         const updated = await db.updateSiteConfig(slug, {
           templatePreset: body.templatePreset,
           themeId: body.themeId,
           layoutOrder: body.layoutOrder,
           sectionsData: body.sectionsData,
           adminPin,
+          authToken,
           newAdminPin: body.newAdminPin
         });
         return sendJson(res, 200, updated);
       } catch (err) {
-        return sendJson(res, 400, { error: err.message });
+        const status = err.message.includes("Purchase now") ? 403 : 400;
+        return sendJson(res, status, { error: err.message });
+      }
+    }
+
+    // POST /api/tenants/:slug/custom-themes (Admin only)
+    if (subRoute === "/custom-themes" && method === "POST") {
+      try {
+        const body = await parseJsonBody(req);
+        const adminPin = req.headers["x-admin-pin"] || body.adminPin || (parsedUrl.query && parsedUrl.query.pin);
+        const authToken = req.headers["x-auth-token"] || body.authToken || (parsedUrl.query && parsedUrl.query.token);
+        const access = await db.verifyTenantAccess({ slug, pin: adminPin, token: authToken });
+        if (!access.authorized || access.role === "visitor") {
+          return sendJson(res, 403, { error: "Unauthorized: Admin PIN required to add themes." });
+        }
+        const rawName = (body.name || "").trim();
+        if (!rawName) {
+          return sendJson(res, 400, { error: "Theme name is required." });
+        }
+        const deskImg = (body.desktopImg || body.mobileImg || "").trim();
+        const mobImg = (body.mobileImg || body.desktopImg || "").trim();
+        if (!deskImg && !mobImg) {
+          return sendJson(res, 400, { error: "Desktop or Mobile background image is required." });
+        }
+        let color = (body.color || "#e11d48").trim();
+        if (!/^#[0-9a-fA-F]{3,8}$/.test(color)) color = "#e11d48";
+
+        const cleanCustomId = (body.id || "").trim().replace(/[^a-zA-Z0-9_-]/g, "");
+        const themeId = (cleanCustomId && cleanCustomId.startsWith("theme-img-")) ? cleanCustomId : `theme-img-custom-${Date.now()}`;
+
+        const tenant = access.tenant || await db.getTenantBySlug(slug);
+        const sectionsData = tenant.sectionsData || {};
+        if (!Array.isArray(sectionsData.customThemes)) {
+          sectionsData.customThemes = [];
+        }
+
+        const newTheme = {
+          id: themeId,
+          name: rawName,
+          desc: (body.desc || "Custom responsive wallpaper").trim(),
+          color,
+          desktopImg: deskImg,
+          mobileImg: mobImg,
+          createdAt: new Date().toISOString()
+        };
+        const existingIdx = sectionsData.customThemes.findIndex(t => t.id === themeId);
+        if (existingIdx >= 0) {
+          sectionsData.customThemes[existingIdx] = newTheme;
+        } else {
+          sectionsData.customThemes.unshift(newTheme);
+        }
+
+        const shouldApply = body.apply !== false;
+        await db.updateSiteConfig(slug, {
+          themeId: shouldApply ? themeId : tenant.themeId,
+          sectionsData,
+          adminPin,
+          authToken
+        });
+        return sendJson(res, 201, { ok: true, theme: newTheme, customThemes: sectionsData.customThemes });
+      } catch (err) {
+        return sendJson(res, 500, { error: err.message });
+      }
+    }
+
+    // DELETE /api/tenants/:slug/custom-themes/:themeId (Admin only)
+    const delThemeMatch = subRoute.match(/^\/custom-themes\/(.+)$/);
+    if (delThemeMatch && method === "DELETE") {
+      try {
+        const themeId = decodeURIComponent(delThemeMatch[1]);
+        const adminPin = req.headers["x-admin-pin"] || (parsedUrl.query && parsedUrl.query.pin);
+        const authToken = req.headers["x-auth-token"] || (parsedUrl.query && parsedUrl.query.token);
+        const access = await db.verifyTenantAccess({ slug, pin: adminPin, token: authToken });
+        if (!access.authorized || access.role === "visitor") {
+          return sendJson(res, 403, { error: "Unauthorized: Admin PIN required to delete themes." });
+        }
+        const tenant = access.tenant || await db.getTenantBySlug(slug);
+        const sectionsData = tenant.sectionsData || {};
+        if (Array.isArray(sectionsData.customThemes)) {
+          sectionsData.customThemes = sectionsData.customThemes.filter(t => t.id !== themeId);
+        }
+        let newThemeId = tenant.themeId;
+        if (tenant.themeId === themeId) {
+          newThemeId = "theme-img-theme1";
+        }
+        await db.updateSiteConfig(slug, {
+          themeId: newThemeId,
+          sectionsData,
+          adminPin,
+          authToken
+        });
+        return sendJson(res, 200, { ok: true, deleted: themeId, customThemes: sectionsData.customThemes || [] });
+      } catch (err) {
+        return sendJson(res, 500, { error: err.message });
       }
     }
 
     // POST /api/tenants/:slug/upload-url (Cloudflare R2 or local fallback destination)
     if (subRoute === "/upload-url" && method === "POST") {
       try {
+        const adminPin = req.headers["x-admin-pin"];
+        const authToken = req.headers["x-auth-token"];
+        const access = await db.verifyTenantAccess({ slug, pin: adminPin, token: authToken });
+        if (!access.authorized || access.role === "visitor") {
+          return sendJson(res, 403, { error: "Purchase now to customize and upload media files." });
+        }
         const body = await parseJsonBody(req);
         const dest = await r2.getUploadDestination(slug, body.filename || "upload.jpg", body.contentType);
         return sendJson(res, 200, dest);
@@ -305,6 +631,12 @@ const server = http.createServer(async (req, res) => {
     const delMediaMatch = subRoute.match(/^\/media\/(.+)$/);
     if (delMediaMatch && method === "DELETE") {
       try {
+        const adminPin = req.headers["x-admin-pin"];
+        const authToken = req.headers["x-auth-token"];
+        const access = await db.verifyTenantAccess({ slug, pin: adminPin, token: authToken });
+        if (!access.authorized || access.role === "visitor") {
+          return sendJson(res, 403, { error: "Purchase now to customize and delete media files." });
+        }
         const deleted = await r2.deleteTenantUpload(slug, decodeURIComponent(delMediaMatch[1]));
         return sendJson(res, 200, { ok: true, deleted });
       } catch (err) {
@@ -354,17 +686,22 @@ const server = http.createServer(async (req, res) => {
     try {
       const slug = resolveTenantSlug(req, parsedUrl);
       const body = await parseJsonBody(req);
+      const adminPin = req.headers["x-admin-pin"] || body.adminPin;
+      const authToken = req.headers["x-auth-token"] || body.authToken;
       const tenant = await db.getTenantBySlug(slug);
       if (!tenant) return sendJson(res, 404, { error: "Tenant not found" });
       await db.updateSiteConfig(slug, {
         templatePreset: tenant.templatePreset,
         themeId: tenant.themeId,
         layoutOrder: tenant.layoutOrder,
-        sectionsData: { ...tenant.sectionsData, ...body }
+        sectionsData: { ...tenant.sectionsData, ...body },
+        adminPin,
+        authToken
       });
       return sendJson(res, 200, { status: "ok", success: true });
     } catch (err) {
-      return sendJson(res, 500, { error: err.message });
+      const status = err.message.includes("Purchase now") ? 403 : (err.message.includes("Unauthorized") ? 401 : 500);
+      return sendJson(res, status, { error: err.message });
     }
   }
 
@@ -379,6 +716,14 @@ const server = http.createServer(async (req, res) => {
 
   if (isSaveImage) {
     const slug = resolveTenantSlug(req, parsedUrl);
+    const headerPin = req.headers["x-admin-pin"] || parsedUrl.query.pin;
+    const headerToken = req.headers["x-auth-token"] || parsedUrl.query.token;
+    if (headerPin || headerToken) {
+      const access = await db.verifyTenantAccess({ slug, pin: headerPin, token: headerToken });
+      if (!access.authorized || access.role === "visitor") {
+        return sendJson(res, 403, { error: "Purchase now to customize and upload media files." });
+      }
+    }
     const MAX_UPLOAD_SIZE = 10 * 1024 * 1024;
     let size = 0;
     let destroyed = false;
@@ -404,10 +749,12 @@ const server = http.createServer(async (req, res) => {
         let imageBuf = null;
         let mime = "image/jpeg";
 
+        let parts = null;
+        let body = {};
         if (ctHeader.includes("multipart/form-data")) {
           const boundaryMatch = ctHeader.match(/boundary=([^;]+)/i);
           if (boundaryMatch) {
-            const parts = parseMultipart(fullBuf, boundaryMatch[1].trim());
+            parts = parseMultipart(fullBuf, boundaryMatch[1].trim());
             if (parts.filename && typeof parts.filename === "string") {
               filename = parts.filename;
             }
@@ -419,7 +766,6 @@ const server = http.createServer(async (req, res) => {
           }
         } else {
           const bodyStr = fullBuf.toString("utf8");
-          let body = {};
           try { body = JSON.parse(bodyStr); } catch (e) {}
           if (body.filename) filename = body.filename;
           const dataUrl = body.dataUrl || body.image || "";
@@ -432,6 +778,15 @@ const server = http.createServer(async (req, res) => {
           } else if (fullBuf.length > 0 && !bodyStr.startsWith("{")) {
             imageBuf = fullBuf;
             mime = ctHeader || "image/jpeg";
+          }
+        }
+
+        if (!headerPin && !headerToken) {
+          const bodyPin = (parts && parts.adminPin) || body.adminPin;
+          const bodyToken = (parts && parts.authToken) || body.authToken;
+          const access = await db.verifyTenantAccess({ slug, pin: bodyPin, token: bodyToken });
+          if (!access.authorized || access.role === "visitor") {
+            return sendJson(res, 403, { error: "Purchase now to customize and upload media files." });
           }
         }
 
@@ -517,6 +872,12 @@ const server = http.createServer(async (req, res) => {
       const filename = body.filename || body.key || "";
       if (!filename) return sendJson(res, 400, { error: "Missing filename" });
       const slug = body.slug || resolveTenantSlug(req, parsedUrl);
+      const adminPin = req.headers["x-admin-pin"] || body.adminPin;
+      const authToken = req.headers["x-auth-token"] || body.authToken;
+      const access = await db.verifyTenantAccess({ slug, pin: adminPin, token: authToken });
+      if (!access.authorized || access.role === "visitor") {
+        return sendJson(res, 403, { error: "Purchase now to customize and delete media files." });
+      }
       const safeFilename = path.basename(filename);
 
       const deleted = await r2.deleteR2Object(`images/${safeFilename}`) || await r2.deleteTenantUpload(slug, safeFilename);
@@ -536,6 +897,13 @@ const server = http.createServer(async (req, res) => {
   if (isSaveAudio) {
     try {
       const body = await parseJsonBody(req);
+      const slug = body.slug || resolveTenantSlug(req, parsedUrl);
+      const adminPin = req.headers["x-admin-pin"] || body.adminPin;
+      const authToken = req.headers["x-auth-token"] || body.authToken;
+      const access = await db.verifyTenantAccess({ slug, pin: adminPin, token: authToken });
+      if (!access.authorized || access.role === "visitor") {
+        return sendJson(res, 403, { error: "Purchase now to customize and upload audio files." });
+      }
       const filename = path.basename(body.filename || "audio.webm");
       const dataUrl = body.dataUrl || "";
       if (!dataUrl) return sendJson(res, 400, { error: "Missing audio data" });
@@ -552,6 +920,13 @@ const server = http.createServer(async (req, res) => {
 
   // POST /api/upload/local (Local upload helper fallback with 10MB limit)
   if (pathname === "/api/upload/local" && method === "POST") {
+    const slug = resolveTenantSlug(req, parsedUrl);
+    const adminPin = req.headers["x-admin-pin"] || parsedUrl.query.pin;
+    const authToken = req.headers["x-auth-token"] || parsedUrl.query.token;
+    const access = await db.verifyTenantAccess({ slug, pin: adminPin, token: authToken });
+    if (!access.authorized || access.role === "visitor") {
+      return sendJson(res, 403, { error: "Purchase now to upload files." });
+    }
     const key = parsedUrl.query.key;
     if (!key) return sendJson(res, 400, { error: "Missing key param" });
 

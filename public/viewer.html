@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="/public/css/style.css?v=2.1.0">
   <link rel="stylesheet" href="/public/css/widgets/letter.css?v=2.1.0">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <style>
     /* SaaS Viewer Top Floating Bar */
@@ -901,6 +902,12 @@
   <script src="/core/templates/quiz.template.js"></script>
   <script src="/core/templates/letter.template.js"></script>
   <script src="/core/templates/playful.template.js"></script>
+  <script src="/core/templates/candle_blowout.template.js"></script>
+  <script src="/core/templates/milestone_stats.template.js"></script>
+  <script src="/core/templates/gift_unboxer.template.js"></script>
+  <script src="/core/templates/roast_toast.template.js"></script>
+  <script src="/core/templates/guestbook.template.js"></script>
+  <script src="/core/templates/party_jukebox.template.js"></script>
   <script src="/core/widget-templates.js"></script>
   <script src="/public/js/data.js"></script>
   <script src="/public/js/storage.js"></script>
@@ -922,6 +929,12 @@
   <script src="/public/js/widgets/playful-game.runtime.js"></script>
   <script src="/public/js/widgets/ambient-soundtrack.runtime.js"></script>
   <script src="/public/js/widgets/love-letter.runtime.js"></script>
+  <script src="/public/js/widgets/candle-blowout.runtime.js"></script>
+  <script src="/public/js/widgets/milestone-stats.runtime.js"></script>
+  <script src="/public/js/widgets/gift-unboxer.runtime.js"></script>
+  <script src="/public/js/widgets/roast-toast.runtime.js"></script>
+  <script src="/public/js/widgets/guestbook.runtime.js"></script>
+  <script src="/public/js/widgets/party-jukebox.runtime.js"></script>
   <script src="/public/js/games-widgets.js"></script>
   <script src="/public/js/main.js"></script>
   <script src="/core/dynamic-renderer.js"></script>
@@ -985,6 +998,58 @@
             document.body.style.removeProperty("--bg-gradient");
           }
         };
+
+        const registerCustomThemesCSS = (customThemesList) => {
+          let styleEl = document.getElementById("dynamicCustomThemesStyle");
+          if (!Array.isArray(customThemesList) || !customThemesList.length) {
+            if (styleEl) styleEl.textContent = "";
+            return;
+          }
+          if (!styleEl) {
+            styleEl = document.createElement("style");
+            styleEl.id = "dynamicCustomThemesStyle";
+            document.head.appendChild(styleEl);
+          }
+          let css = "";
+          customThemesList.forEach(t => {
+            if (!t || !t.id) return;
+            const cleanId = String(t.id).replace(/[^a-zA-Z0-9_-]/g, "");
+            const bareId = cleanId.replace(/^theme-/, "");
+            const primary = String(t.color || "#e11d48").replace(/[^#0-9a-zA-Z]/g, "");
+            const desk = String(t.desktopImg || t.mobileImg || "").replace(/['"\\()]/g, "").trim();
+            const mob = String(t.mobileImg || t.desktopImg || "").replace(/['"\\()]/g, "").trim();
+            css += `
+              [data-theme="${cleanId}"],
+              [data-theme="${bareId}"],
+              body[data-theme="${cleanId}"],
+              body[data-theme="${bareId}"],
+              body.${cleanId} {
+                --primary: ${primary};
+                --bg-pattern: url('${desk}');
+                --bg-pattern-size: cover;
+                --bg-pattern-position: center center;
+                --bg-pattern-repeat: no-repeat;
+                --bg-gradient: none;
+              }
+              @media (max-width: 768px), (orientation: portrait) {
+                [data-theme="${cleanId}"],
+                [data-theme="${bareId}"],
+                body[data-theme="${cleanId}"],
+                body[data-theme="${bareId}"],
+                body.${cleanId} {
+                  --bg-pattern: url('${mob}');
+                }
+              }
+            `;
+          });
+          styleEl.textContent = css;
+        };
+        window.registerCustomThemesCSS = registerCustomThemesCSS;
+
+        if (data.sectionsData && data.sectionsData.customThemes) {
+          registerCustomThemesCSS(data.sectionsData.customThemes);
+        }
+
         applyTheme(data.themeId, data.customBgUrl);
 
         document.querySelectorAll(".partner-name-display").forEach(el => el.textContent = p2);
@@ -1068,9 +1133,13 @@
         // Listen for live update messages from Studio iframe parent
         window.addEventListener("message", (e) => {
           if (e.data && e.data.type === "SET_THEME") {
+            if (e.data.customThemes) registerCustomThemesCSS(e.data.customThemes);
             applyTheme(e.data.themeId, e.data.customBgUrl);
           }
           if (e.data && e.data.type === "STUDIO_LIVE_UPDATE" && e.data.config) {
+            if (e.data.config.sectionsData && e.data.config.sectionsData.customThemes) {
+              registerCustomThemesCSS(e.data.config.sectionsData.customThemes);
+            }
             if (e.data.config.themeId !== undefined || e.data.config.customBgUrl !== undefined) {
               applyTheme(e.data.config.themeId || data.themeId, e.data.config.customBgUrl);
             }
@@ -1143,6 +1212,24 @@
           }
           if (e.data && e.data.type === "COUPONS_RESET" && typeof window.resetAllCoupons === "function") {
             window.resetAllCoupons();
+          }
+          if (e.data && e.data.type === "CANDLE_BLOW_ALL" && typeof window.candleBlowoutBlowAll === "function") {
+            window.candleBlowoutBlowAll();
+          }
+          if (e.data && e.data.type === "CANDLE_RELIGHT" && typeof window.candleBlowoutRelight === "function") {
+            window.candleBlowoutRelight();
+          }
+          if (e.data && e.data.type === "UNBOX_STEP" && typeof window.unboxGiftStep === "function") {
+            window.unboxGiftStep();
+          }
+          if (e.data && e.data.type === "UNBOX_RESET" && typeof window.unboxGiftReset === "function") {
+            window.unboxGiftReset();
+          }
+          if (e.data && e.data.type === "ROAST_TOAST_SPIN" && typeof window.roastToastSpin === "function") {
+            window.roastToastSpin();
+          }
+          if (e.data && e.data.type === "JUKEBOX_TOGGLE" && typeof window.jukeboxToggle === "function") {
+            window.jukeboxToggle();
           }
           if (e.data && e.data.type === "BP_CLAIM_WISH" && typeof window.claimBoardingPassFlight === "function") {
             window.claimBoardingPassFlight();

@@ -172,10 +172,194 @@ const WIDGET_REGISTRY = {
     inspector: "/builder/inspectors/playful.inspector.js",
     runtime: "/public/js/widgets/playful-game.runtime.js",
     initFn: "setupPlayfulGame"
+  },
+  candle_blowout: {
+    id: "candle_blowout",
+    title: "Candle Blow-Out & Wish Reveal",
+    icon: "🎂",
+    desc: "Mic or click trigger to blow SVG candles with flame smoke, confetti eruption & secret wish.",
+    category: "birthday",
+    defaultEnabled: true,
+    css: "/public/css/widgets/candle_blowout.css",
+    template: "/core/templates/candle_blowout.template.js",
+    inspector: "/builder/inspectors/candle_blowout.inspector.js",
+    runtime: "/public/js/widgets/candle-blowout.runtime.js",
+    initFn: "setupCandleBlowout"
+  },
+  milestone_stats: {
+    id: "milestone_stats",
+    title: "Milestone Life Stats",
+    icon: "⏳",
+    desc: "Live seconds alive ticker + quirky metrics (heartbeats, coffee, solar trips, sweet dreams).",
+    category: "birthday",
+    defaultEnabled: true,
+    css: "/public/css/widgets/milestone_stats.css",
+    template: "/core/templates/milestone_stats.template.js",
+    inspector: "/builder/inspectors/milestone_stats.inspector.js",
+    runtime: "/public/js/widgets/milestone-stats.runtime.js",
+    initFn: "setupMilestoneStats"
+  },
+  gift_unboxer: {
+    id: "gift_unboxer",
+    title: "3D Surprise Gift Unboxer",
+    icon: "🎁",
+    desc: "Multi-stage 3D box unwrapping anim (untie ribbon, lift lid, tissue glow) to reveal hidden gift.",
+    category: "birthday",
+    defaultEnabled: true,
+    css: "/public/css/widgets/gift_unboxer.css",
+    template: "/core/templates/gift_unboxer.template.js",
+    inspector: "/builder/inspectors/gift_unboxer.inspector.js",
+    runtime: "/public/js/widgets/gift-unboxer.runtime.js",
+    initFn: "setupGiftUnboxer"
+  },
+  roast_toast: {
+    id: "roast_toast",
+    title: "Roast & Toast Birthday Spinner",
+    icon: "🥂",
+    desc: "Decelerating wheel spinner alternating between playful funny roasts and heartfelt sweet toasts.",
+    category: "birthday",
+    defaultEnabled: true,
+    css: "/public/css/widgets/roast_toast.css",
+    template: "/core/templates/roast_toast.template.js",
+    inspector: "/builder/inspectors/roast_toast.inspector.js",
+    runtime: "/public/js/widgets/roast-toast.runtime.js",
+    initFn: "setupRoastToast"
+  },
+  guestbook: {
+    id: "guestbook",
+    title: "Guestbook Wish Wall",
+    icon: "📌",
+    desc: "Corkboard sticky-notes grid with visitor message submissions, pins, and photo attachments.",
+    category: "birthday",
+    defaultEnabled: true,
+    css: "/public/css/widgets/guestbook.css",
+    template: "/core/templates/guestbook.template.js",
+    inspector: "/builder/inspectors/guestbook.inspector.js",
+    runtime: "/public/js/widgets/guestbook.runtime.js",
+    initFn: "setupGuestbook"
+  },
+  party_jukebox: {
+    id: "party_jukebox",
+    title: "Party Jukebox & Playlist",
+    icon: "📻",
+    desc: "Vinyl turntable audio player with spinning platter, tone arm, and animated audio visualizer.",
+    category: "birthday",
+    defaultEnabled: true,
+    css: "/public/css/widgets/party_jukebox.css",
+    template: "/core/templates/party_jukebox.template.js",
+    inspector: "/builder/inspectors/party_jukebox.inspector.js",
+    runtime: "/public/js/widgets/party-jukebox.runtime.js",
+    initFn: "setupPartyJukebox"
+  },
+  tenure_ticker: {
+    id: "tenure_ticker",
+    title: "Tenure Ticker",
+    icon: "⏳",
+    desc: "Precision counter (Y/M/D/S elapsed) + next milestone countdown.",
+    category: "anniversary",
+    defaultEnabled: true,
+    css: "/public/css/widgets/tenure_ticker.css",
+    template: "/core/templates/tenure_ticker.template.js",
+    inspector: "/builder/inspectors/tenure_ticker.inspector.js",
+    runtime: "/public/js/widgets/tenure-ticker.runtime.js",
+    initFn: "setupTenureTicker"
+  },
+  star_map: {
+    id: "star_map",
+    title: "Night Sky Star Map",
+    icon: "✨",
+    desc: "Canvas render → constellation alignment on exact date & coordinates.",
+    category: "anniversary",
+    defaultEnabled: true,
+    css: "/public/css/widgets/star_map.css",
+    template: "/core/templates/star_map.template.js",
+    inspector: "/builder/inspectors/star_map.inspector.js",
+    runtime: "/public/js/widgets/star-map.runtime.js",
+    initFn: "setupStarMap"
+  },
+  then_now_slider: {
+    id: "then_now_slider",
+    title: "Then vs. Now Slider",
+    icon: "🌗",
+    desc: "Split-screen draggable comparison of first vs recent photo.",
+    category: "anniversary",
+    defaultEnabled: true,
+    css: "/public/css/widgets/then_now_slider.css",
+    template: "/core/templates/then_now_slider.template.js",
+    inspector: "/builder/inspectors/then_now_slider.inspector.js",
+    runtime: "/public/js/widgets/then-now-slider.runtime.js",
+    initFn: "setupThenNowSlider"
+  },
+  bucket_list: {
+    id: "bucket_list",
+    title: "Couple Bucket List",
+    icon: "🎯",
+    desc: "Shared checklist → completed vs future goals + progress bar.",
+    category: "anniversary",
+    defaultEnabled: true,
+    css: "/public/css/widgets/bucket_list.css",
+    template: "/core/templates/bucket_list.template.js",
+    inspector: "/builder/inspectors/bucket_list.inspector.js",
+    runtime: "/public/js/widgets/bucket-list.runtime.js",
+    initFn: "setupBucketList"
+  },
+  audio_capsule: {
+    id: "audio_capsule",
+    title: "Audio Time Capsule",
+    icon: "🎙️",
+    desc: "Waveform audio player → archived voice memos & messages across years.",
+    category: "anniversary",
+    defaultEnabled: true,
+    css: "/public/css/widgets/audio_capsule.css",
+    template: "/core/templates/audio_capsule.template.js",
+    inspector: "/builder/inspectors/audio_capsule.inspector.js",
+    runtime: "/public/js/widgets/audio-capsule.runtime.js",
+    initFn: "setupAudioCapsule"
+  },
+  milestone_odyssey: {
+    id: "milestone_odyssey",
+    title: "Milestone Odyssey",
+    icon: "🚀",
+    desc: "Horizontal line map connecting major relationship milestones.",
+    category: "anniversary",
+    defaultEnabled: true,
+    css: "/public/css/widgets/milestone_odyssey.css",
+    template: "/core/templates/milestone_odyssey.template.js",
+    inspector: "/builder/inspectors/milestone_odyssey.inspector.js",
+    runtime: "/public/js/widgets/milestone-odyssey.runtime.js",
+    initFn: "setupMilestoneOdyssey"
   }
 };
 
 const PRESETS = {
+  anniversary: {
+    name: "Anniversary Odyssey",
+    desc: "Celebrate your love journey: Hero → Tenure Ticker → Star Map → Then vs. Now → Milestone Odyssey → Bucket List → Audio Time Capsule → Letter.",
+    widgets: [
+      "hero",
+      "tenure_ticker",
+      "star_map",
+      "then_now_slider",
+      "milestone_odyssey",
+      "bucket_list",
+      "audio_capsule",
+      "letter"
+    ]
+  },
+  birthday: {
+    name: "Birthday Celebration",
+    desc: "The ultimate birthday bash: Hero → Candle Blow-Out → Milestone Stats → Gift Unboxer → Roast & Toast → Guestbook → Party Jukebox → Letter.",
+    widgets: [
+      "hero",
+      "candle_blowout",
+      "milestone_stats",
+      "gift_unboxer",
+      "roast_toast",
+      "guestbook",
+      "party_jukebox",
+      "letter"
+    ]
+  },
   storyteller: {
     name: "Romantic Storyteller",
     desc: "Focus on your deep narrative: Hero → Map → Chapters → Polaroids → Boarding Pass → Love Letter.",
