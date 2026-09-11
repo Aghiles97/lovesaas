@@ -259,7 +259,7 @@ const server = http.createServer(async (req, res) => {
         adminPin: cleanPin,
         customerEmail: customerEmail ? String(customerEmail).trim() : null,
         plan: assignedPlan,
-        preset: preset || (assignedPlan === "starter" ? "storyteller" : "complete"),
+        preset: preset || "blank",
         isPurchased: true,
         userId,
         anniversaryDate: anniversaryDate || null,

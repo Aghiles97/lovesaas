@@ -270,6 +270,16 @@ function updateRoleUI() {
   }
 }
 
+function showBuilderAuthModal() {
+  document.getElementById("builderAuthModal")?.classList.remove("hidden");
+}
+
+function showBuilderForbiddenModal(slug) {
+  const msg = document.getElementById("builderForbiddenMsg");
+  if (msg) msg.textContent = `Access Denied: You do not have permission to access or edit /sites/${slug}. This design belongs to another account.`;
+  document.getElementById("builderForbiddenModal")?.classList.remove("hidden");
+}
+
 async function checkBuilderAccess() {
   const urlParams = new URLSearchParams(window.location.search);
   const paramSlug = urlParams.get("slug");
@@ -281,142 +291,132 @@ async function checkBuilderAccess() {
   const localAuth = JSON.parse(localStorage.getItem("lovesaas_auth") || "null");
   const userToken = localStorage.getItem("lovesaas_user_token");
 
-  // 1. Authenticated User Session
-  if (userToken) {
-    try {
-      const uRes = await fetch("/api/auth/user-me", {
-        headers: { "Authorization": `Bearer ${userToken}`, "X-User-Token": userToken }
-      });
-      if (uRes.ok) {
-        const uData = await uRes.json();
-        if (uData.user) {
-          state.currentUser = uData.user;
-          const isAdmin = uData.user.role === "admin";
+  // Master Admin bypass check
+  const isDirectMasterAdmin = paramRole === "admin" || (localAuth && localAuth.role === "admin") || paramPin === "admin1234" || paramToken === "master-admin-token-lovesaas";
 
-          // Header account pill
-          const userBadge = document.getElementById("builderUserBadge");
-          const userNameEl = document.getElementById("builderUserName");
-          const userAvatarEl = document.getElementById("builderUserAvatar");
-          const displayName = uData.user.name || uData.user.email.split("@")[0];
-          if (userNameEl) userNameEl.textContent = displayName;
-          if (userAvatarEl) userAvatarEl.textContent = displayName ? displayName[0].toUpperCase() : "👤";
-          if (userBadge) userBadge.style.display = "inline-flex";
-
-          // Fetch user's sites
-          let userDesigns = [];
-          try {
-            const desRes = await fetch("/api/user/designs", {
-              headers: { "Authorization": `Bearer ${userToken}`, "X-User-Token": userToken }
-            });
-            if (desRes.ok) {
-              const desData = await desRes.json();
-              userDesigns = desData.designs || [];
-            }
-          } catch (e) {}
-          state.userDesigns = userDesigns;
-
-          // Case A: Explicit creation requested or zero projects -> prompt onboarding modal
-          if (userDesigns.length === 0 || paramCreate === "1") {
-            state.slug = (paramSlug && paramSlug !== "demo") ? paramSlug : "demo";
-            state.userRole = isAdmin ? "admin" : (userDesigns.length === 0 ? "visitor" : "user");
-            state.isPurchased = isAdmin || userDesigns.length > 0;
-            if (isAdmin) {
-              state.adminPin = "admin1234";
-              state.authToken = "master-admin-token-lovesaas";
-              state.userRole = "admin";
-            }
-            updateRoleUI();
-            setTimeout(() => {
-              if (typeof window.openNewProjectModal === "function") {
-                window.openNewProjectModal(userDesigns.length === 0);
-              }
-            }, 300);
-            return true;
-          }
-
-          // Case B: User has projects -> load target or first design
-          let targetProject = null;
-          if (paramSlug && paramSlug !== "demo") {
-            targetProject = userDesigns.find(d => d.slug === paramSlug);
-          }
-          if (!targetProject) {
-            targetProject = userDesigns[0];
-          }
-
-          state.slug = targetProject.slug;
-          state.userRole = isAdmin ? "admin" : "user";
-          state.isPurchased = true;
-          state.adminPin = targetProject.adminPin || (isAdmin ? "admin1234" : "1234");
-          state.authToken = targetProject.authToken || (isAdmin ? "master-admin-token-lovesaas" : "");
-          localStorage.setItem("lovesaas_auth", JSON.stringify({
-            slug: targetProject.slug,
-            role: state.userRole,
-            authToken: state.authToken,
-            adminPin: state.adminPin,
-            plan: targetProject.plan || "vip"
-          }));
-          window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(targetProject.slug)}&token=${encodeURIComponent(state.authToken || "")}`);
-          updateRoleUI();
-          return true;
-        }
-      } else {
-        localStorage.removeItem("lovesaas_user_token");
-      }
-    } catch (e) {}
+  if (isDirectMasterAdmin) {
+    state.slug = paramSlug || "demo";
+    state.userRole = "admin";
+    state.isPurchased = true;
+    state.adminPin = "admin1234";
+    state.authToken = "master-admin-token-lovesaas";
+    updateRoleUI();
+    return true;
   }
 
-  // 2. Admin URL parameters or local admin auth
-  let targetSlug = paramSlug || (localAuth && localAuth.slug) || "demo";
-  const tokenToTest = paramToken || (localAuth && (localAuth.role === "admin" || localAuth.slug === targetSlug) ? localAuth.authToken : null);
-  const pinToTest = paramPin || (localAuth && (localAuth.role === "admin" || localAuth.slug === targetSlug) ? localAuth.adminPin : null);
-
-  if (paramRole === "admin" || (localAuth && localAuth.role === "admin") || pinToTest === "admin1234" || tokenToTest === "master-admin-token-lovesaas") {
-    try {
-      const res = await fetch("/api/auth/verify-access", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: targetSlug, token: tokenToTest, pin: pinToTest || "admin1234" })
-      });
-      const data = await res.json();
-      if (res.ok && data.authorized) {
-        state.slug = targetSlug;
-        state.authToken = data.authToken || tokenToTest || "master-admin-token-lovesaas";
-        state.adminPin = pinToTest || "admin1234";
-        state.userRole = "admin";
-        state.isPurchased = true;
-        updateRoleUI();
-        return true;
-      }
-    } catch (e) {}
+  // Require user authentication
+  if (!userToken) {
+    showBuilderAuthModal();
+    return false;
   }
 
-  // 3. Pin/token for specific couple site
-  if (targetSlug !== "demo" && (tokenToTest || pinToTest)) {
-    try {
-      const res = await fetch("/api/auth/verify-access", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: targetSlug, token: tokenToTest, pin: pinToTest })
-      });
-      const data = await res.json();
-      if (res.ok && data.authorized) {
-        state.slug = targetSlug;
-        state.authToken = data.authToken || tokenToTest || "";
-        state.adminPin = pinToTest || "";
-        state.userRole = data.role || (data.isAdmin ? "admin" : "user");
-        state.isPurchased = data.isPurchased !== false;
-        updateRoleUI();
-        return true;
-      }
-    } catch (e) {}
+  let user = null;
+  try {
+    const uRes = await fetch("/api/auth/user-me", {
+      headers: { "Authorization": `Bearer ${userToken}`, "X-User-Token": userToken }
+    });
+    if (!uRes.ok) throw new Error("Auth failed");
+    const uData = await uRes.json();
+    if (!uData.user) throw new Error("No user");
+    user = uData.user;
+  } catch (e) {
+    localStorage.removeItem("lovesaas_user_token");
+    showBuilderAuthModal();
+    return false;
   }
 
-  // 4. Fallback: visitor demo preview
+  state.currentUser = user;
+  document.getElementById("builderAuthModal")?.classList.add("hidden");
+  document.getElementById("builderForbiddenModal")?.classList.add("hidden");
+
+  // Account badge in header
+  const userBadge = document.getElementById("builderUserBadge");
+  const userNameEl = document.getElementById("builderUserName");
+  const userAvatarEl = document.getElementById("builderUserAvatar");
+  const displayName = user.name || user.email.split("@")[0];
+  if (userNameEl) userNameEl.textContent = displayName;
+  if (userAvatarEl) userAvatarEl.textContent = displayName ? displayName[0].toUpperCase() : "👤";
+  if (userBadge) userBadge.style.display = "inline-flex";
+
+  const isAdmin = user.role === "admin";
+
+  // Admin has access to all sites
+  if (isAdmin) {
+    state.slug = paramSlug || "demo";
+    state.userRole = "admin";
+    state.isPurchased = true;
+    state.adminPin = "admin1234";
+    state.authToken = "master-admin-token-lovesaas";
+    updateRoleUI();
+    return true;
+  }
+
+  // Non-admin user: fetch user's sites
+  let userDesigns = [];
+  try {
+    const desRes = await fetch("/api/user/designs", {
+      headers: { "Authorization": `Bearer ${userToken}`, "X-User-Token": userToken }
+    });
+    if (desRes.ok) {
+      const desData = await desRes.json();
+      userDesigns = desData.designs || [];
+    }
+  } catch (e) {}
+  state.userDesigns = userDesigns;
+
+  // If specific slug requested, ensure user owns it
+  if (paramSlug && paramSlug !== "demo") {
+    const target = userDesigns.find(d => d.slug.toLowerCase() === paramSlug.toLowerCase());
+    if (!target) {
+      showBuilderForbiddenModal(paramSlug);
+      return false;
+    }
+    state.slug = target.slug;
+    state.userRole = "user";
+    state.isPurchased = true;
+    state.adminPin = target.adminPin || "1234";
+    state.authToken = target.authToken || "";
+    localStorage.setItem("lovesaas_auth", JSON.stringify({
+      slug: target.slug,
+      role: "user",
+      authToken: state.authToken,
+      adminPin: state.adminPin,
+      plan: target.plan || "vip"
+    }));
+    updateRoleUI();
+    return true;
+  }
+
+  // If user has existing sites, load primary site
+  if (userDesigns.length > 0) {
+    const primary = userDesigns[0];
+    state.slug = primary.slug;
+    state.userRole = "user";
+    state.isPurchased = true;
+    state.adminPin = primary.adminPin || "1234";
+    state.authToken = primary.authToken || "";
+    localStorage.setItem("lovesaas_auth", JSON.stringify({
+      slug: primary.slug,
+      role: "user",
+      authToken: state.authToken,
+      adminPin: state.adminPin,
+      plan: primary.plan || "vip"
+    }));
+    window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(primary.slug)}&token=${encodeURIComponent(state.authToken || "")}`);
+    updateRoleUI();
+    return true;
+  }
+
+  // Zero projects: prompt new blank project modal
   state.slug = "demo";
   state.userRole = "visitor";
   state.isPurchased = false;
-  state.adminPin = "1234";
   updateRoleUI();
+  setTimeout(() => {
+    if (typeof window.openNewProjectModal === "function") {
+      window.openNewProjectModal(true);
+    }
+  }, 300);
   return true;
 }
 
@@ -4313,181 +4313,116 @@ function setupEventListeners() {
   // Media tab controls, dropzone & lightbox
   initMediaTabControls();
 
-  // Tenant switch modal
-  const tenantModal = document.getElementById("tenantModal");
-  const btnSwitch = document.getElementById("btnSwitchTenant");
-  if (btnSwitch && tenantModal) {
-    btnSwitch.onclick = () => {
-      initBuilderUserSession();
-      tenantModal.classList.remove("hidden");
-    };
-  }
-  const btnModalCancel = document.getElementById("btnModalCancel");
-  if (btnModalCancel && tenantModal) {
-    btnModalCancel.onclick = () => tenantModal.classList.add("hidden");
-  }
+  // Builder Auth & Gate Modals
+  function setupBuilderAuthModals() {
+    const authModal = document.getElementById("builderAuthModal");
+    const authForm = document.getElementById("builderAuthForm");
+    const toggleBtn = document.getElementById("btnBuilderAuthToggleMode");
+    const toggleText = document.getElementById("builderAuthToggleText");
+    const titleEl = document.getElementById("builderAuthTitle");
+    const nameGroup = document.getElementById("builderAuthNameGroup");
+    const submitBtn = document.getElementById("btnBuilderAuthSubmit");
+    const errEl = document.getElementById("builderAuthError");
+    const btnLogout = document.getElementById("btnBuilderLogout");
 
-  const btnModalSubmit = document.getElementById("btnModalSubmit");
-  if (btnModalSubmit && tenantModal) {
-    btnModalSubmit.onclick = async () => {
-      const slug = document.getElementById("modalSlug")?.value.trim().toLowerCase();
-      let pin = document.getElementById("modalPin")?.value.trim();
-      const p1 = document.getElementById("modalP1")?.value.trim();
-      const p2 = document.getElementById("modalP2")?.value.trim();
+    let isRegisterMode = false;
 
-      if (state.userRole === "admin" && !pin) {
-        pin = state.adminPin || "admin1234";
-      }
-
-      if (!slug || !pin) return showToast("Slug and PIN required", "error");
-
-      try {
-        const authRes = await fetch("/api/auth/verify-access", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ slug, pin, token: state.authToken })
-        });
-        const authData = await authRes.json();
-        if (authRes.ok && authData.authorized) {
-          state.slug = slug;
-          state.adminPin = pin;
-          state.authToken = authData.authToken;
-          state.isPurchased = authData.isPurchased !== false;
-          state.userRole = authData.role || (authData.isAdmin ? "admin" : (state.isPurchased ? "user" : "visitor"));
-          localStorage.setItem("lovesaas_auth", JSON.stringify({
-            slug,
-            role: state.userRole,
-            authToken: state.authToken,
-            adminPin: pin
-          }));
-          tenantModal.classList.add("hidden");
-          updateRoleUI();
-          window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(slug)}`);
-          await loadTenantData(slug);
-          showToast(`Loaded site "${slug}" (${state.userRole})`, "success");
+    if (toggleBtn) {
+      toggleBtn.onclick = () => {
+        isRegisterMode = !isRegisterMode;
+        if (errEl) errEl.style.display = "none";
+        if (isRegisterMode) {
+          titleEl.textContent = "Create an Account";
+          nameGroup.style.display = "block";
+          submitBtn.textContent = "Register & Open Studio";
+          toggleText.textContent = "Already have an account?";
+          toggleBtn.textContent = "Sign in";
         } else {
-          const createHeaders = { "Content-Type": "application/json" };
-          if (state.adminPin) createHeaders["X-Admin-Pin"] = state.adminPin;
-          if (state.authToken) createHeaders["X-Auth-Token"] = state.authToken;
-          const create = await fetch("/api/tenants", {
-            method: "POST",
-            headers: createHeaders,
-            body: JSON.stringify({ slug, adminPin: pin, partner1: p1 || "Partner 1", partner2: p2 || "Partner 2" })
-          });
-          if (!create.ok) throw new Error("Could not load or create site");
-          state.slug = slug;
-          state.adminPin = pin;
-          state.userRole = state.userRole === "admin" ? "admin" : "user";
-          state.isPurchased = true;
-          tenantModal.classList.add("hidden");
-          updateRoleUI();
-          window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(slug)}`);
-          await loadTenantData(slug);
-          showToast(`Created new site "${slug}"!`, "success");
+          titleEl.textContent = "Sign in to Studio";
+          nameGroup.style.display = "none";
+          submitBtn.textContent = "Sign In";
+          toggleText.textContent = "Don't have an account?";
+          toggleBtn.textContent = "Create one";
         }
-      } catch (e) {
-        showToast(e.message, "error");
-      }
-    };
-  }
+      };
+    }
 
-  // Builder Logout handler
-  const btnLogout = document.getElementById("btnBuilderLogout");
-  if (btnLogout) {
-    btnLogout.onclick = async () => {
-      try {
-        const token = localStorage.getItem("lovesaas_user_token");
-        if (token) {
-          await fetch("/api/auth/logout", {
+    if (authForm) {
+      authForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("builderAuthEmail")?.value.trim();
+        const password = document.getElementById("builderAuthPassword")?.value;
+        const name = document.getElementById("builderAuthName")?.value.trim();
+
+        if (!email || !password) return;
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Authenticating...";
+        if (errEl) errEl.style.display = "none";
+
+        try {
+          const endpoint = isRegisterMode ? "/api/auth/register" : "/api/auth/login";
+          const body = isRegisterMode ? { email, password, name } : { email, password };
+          const res = await fetch(endpoint, {
             method: "POST",
-            headers: { "Authorization": `Bearer ${token}`, "X-User-Token": token }
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
           });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Authentication failed");
+
+          localStorage.setItem("lovesaas_user_token", data.token);
+          authModal?.classList.add("hidden");
+          showToast(isRegisterMode ? "Account created!" : "Signed in successfully!", "success");
+          window.location.reload();
+        } catch (err) {
+          if (errEl) {
+            errEl.textContent = err.message;
+            errEl.style.display = "block";
+          }
+          submitBtn.disabled = false;
+          submitBtn.textContent = isRegisterMode ? "Register & Open Studio" : "Sign In";
         }
-      } catch (e) {}
-      localStorage.removeItem("lovesaas_user_token");
-      localStorage.removeItem("lovesaas_auth");
-      state.currentUser = null;
-      state.userDesigns = [];
-      state.userRole = "visitor";
-      state.isPurchased = false;
-      const userBadge = document.getElementById("builderUserBadge");
-      if (userBadge) userBadge.style.display = "none";
-      const btnHeaderNew = document.getElementById("btnHeaderNewProject");
-      if (btnHeaderNew) btnHeaderNew.style.display = "none";
-      updateRoleUI();
-      showToast("Signed out successfully", "info");
-      window.location.href = "/welcome";
-    };
+      };
+    }
+
+    if (btnLogout) {
+      btnLogout.onclick = async () => {
+        try {
+          const token = localStorage.getItem("lovesaas_user_token");
+          if (token) {
+            await fetch("/api/auth/logout", {
+              method: "POST",
+              headers: { "Authorization": `Bearer ${token}`, "X-User-Token": token }
+            });
+          }
+        } catch (e) {}
+        localStorage.removeItem("lovesaas_user_token");
+        localStorage.removeItem("lovesaas_auth");
+        window.location.href = "/welcome";
+      };
+    }
+
+    const btnForbiddenDesigns = document.getElementById("btnForbiddenMyDesigns");
+    if (btnForbiddenDesigns) {
+      btnForbiddenDesigns.onclick = () => {
+        if (state.userDesigns && state.userDesigns.length > 0) {
+          window.location.href = `/builder?slug=${encodeURIComponent(state.userDesigns[0].slug)}`;
+        } else {
+          window.location.href = "/builder";
+        }
+      };
+    }
+
+    const btnForbiddenSwitch = document.getElementById("btnForbiddenSwitchAccount");
+    if (btnForbiddenSwitch) {
+      btnForbiddenSwitch.onclick = () => {
+        localStorage.removeItem("lovesaas_user_token");
+        localStorage.removeItem("lovesaas_auth");
+        window.location.reload();
+      };
+    }
   }
-
-  async function initBuilderUserSession() {
-    const userToken = localStorage.getItem("lovesaas_user_token");
-    const badgeEl = document.getElementById("builderUserBadge");
-    const nameEl = document.getElementById("builderUserName");
-    const avatarEl = document.getElementById("builderUserAvatar");
-    const designsSec = document.getElementById("userDesignsSection");
-    const designsList = document.getElementById("userDesignsQuickList");
-
-    if (!userToken) return;
-
-    try {
-      const res = await fetch("/api/auth/user-me", {
-        headers: { "Authorization": `Bearer ${userToken}`, "X-User-Token": userToken }
-      });
-      if (!res.ok) return;
-      const { user } = await res.json();
-      if (!user) return;
-
-      const displayName = user.name || user.email.split("@")[0];
-      if (nameEl) nameEl.textContent = displayName;
-      if (avatarEl) avatarEl.textContent = displayName ? displayName[0].toUpperCase() : "👤";
-      if (badgeEl) badgeEl.style.display = "inline-flex";
-
-      const btnHeaderNew = document.getElementById("btnHeaderNewProject");
-      if (btnHeaderNew) btnHeaderNew.style.display = "inline-flex";
-
-      const desRes = await fetch("/api/user/designs", {
-        headers: { "Authorization": `Bearer ${userToken}`, "X-User-Token": userToken }
-      });
-      if (!desRes.ok) return;
-      const { designs } = await desRes.json();
-      if (designs && designs.length > 0 && designsSec && designsList) {
-        designsSec.style.display = "block";
-        designsList.innerHTML = designs.map(d => `
-          <button type="button" class="btn-quick-switch" data-switch-slug="${d.slug}" data-switch-token="${d.authToken || ""}" data-switch-pin="${d.adminPin || ""}" style="display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; color: #fff; cursor: pointer; text-align: left; font-size: 0.8rem; width: 100%;">
-            <span>💖 <strong>${d.partner1} & ${d.partner2}</strong> <span style="opacity: 0.7; font-size: 0.74rem;">(/sites/${d.slug})</span></span>
-            <span style="font-size: 0.74rem; color: #fda4af; font-weight: 700;">Switch ➔</span>
-          </button>
-        `).join("");
-
-        designsList.querySelectorAll(".btn-quick-switch").forEach(btn => {
-          btn.addEventListener("click", async () => {
-            const targetSlug = btn.dataset.switchSlug;
-            const targetToken = btn.dataset.switchToken;
-            const targetPin = btn.dataset.switchPin;
-
-            if (tenantModal) tenantModal.classList.add("hidden");
-            state.slug = targetSlug;
-            state.authToken = targetToken;
-            state.adminPin = targetPin;
-            state.userRole = "user";
-            state.isPurchased = true;
-            localStorage.setItem("lovesaas_auth", JSON.stringify({
-              slug: targetSlug,
-              role: "user",
-              authToken: targetToken,
-              adminPin: targetPin
-            }));
-            updateRoleUI();
-            window.history.replaceState({}, "", `/builder?slug=${encodeURIComponent(targetSlug)}&token=${encodeURIComponent(targetToken)}`);
-            await loadTenantData(targetSlug);
-            showToast(`Switched to "${targetSlug}"`, "success");
-          });
-        });
-      }
-    } catch {}
-  }
-  initBuilderUserSession();
+  setupBuilderAuthModals();
 }
 
 function setupNewProjectModal() {
@@ -4511,8 +4446,8 @@ function setupNewProjectModal() {
 
   if (!modal) return;
 
-  let selectedMode = "template";
-  let selectedPreset = "storyteller";
+  let selectedMode = "scratch";
+  let selectedPreset = "blank";
   let slugUserEdited = false;
   let slugCheckTimeout = null;
 
@@ -4629,12 +4564,7 @@ function setupNewProjectModal() {
     });
   }
 
-  if (btnTenantCreate) {
-    btnTenantCreate.addEventListener("click", () => {
-      document.getElementById("tenantModal")?.classList.add("hidden");
-      window.openNewProjectModal(false);
-    });
-  }
+
 
   window.openNewProjectModal = function(isFirstTime = false) {
     if (btnClose) {
@@ -4690,7 +4620,7 @@ function setupNewProjectModal() {
       const userToken = localStorage.getItem("lovesaas_user_token");
       const isAdmin = state.userRole === "admin" || (state.currentUser && state.currentUser.role === "admin");
       const customerEmail = (state.currentUser && state.currentUser.email) || "";
-      const chosenPreset = selectedMode === "scratch" ? "minimal_gallery" : selectedPreset;
+      const chosenPreset = selectedMode === "scratch" ? "blank" : (selectedPreset || "blank");
 
       btnSubmit.disabled = true;
       btnSubmit.innerHTML = `<span>Creating your website...</span> <span>⏳</span>`;

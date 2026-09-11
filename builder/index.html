@@ -476,23 +476,26 @@
       <!-- 1. Start Option -->
       <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #cbd5e1; margin-bottom: 8px;">1. Choose Setup Style</label>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
-        <div class="project-mode-card active" id="modeCardTemplate" style="cursor: pointer; padding: 12px; border-radius: 8px; border: 2px solid var(--primary, #f43f5e); background: rgba(244, 63, 94, 0.12); transition: all 0.2s;">
+        <div class="project-mode-card active" id="modeCardScratch" style="cursor: pointer; padding: 12px; border-radius: 8px; border: 2px solid var(--primary, #f43f5e); background: rgba(244, 63, 94, 0.12); transition: all 0.2s;">
+          <div style="font-size: 1.2rem; margin-bottom: 4px;">✨</div>
+          <div style="font-weight: 700; font-size: 0.88rem; color: #fff; margin-bottom: 2px;">Blank Canvas</div>
+          <div style="font-size: 0.74rem; color: #fda4af;">Clean slate (0 widgets, no music). Add sections exactly as you want.</div>
+        </div>
+        <div class="project-mode-card" id="modeCardTemplate" style="cursor: pointer; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.03); transition: all 0.2s;">
           <div style="font-size: 1.2rem; margin-bottom: 4px;">🎨</div>
           <div style="font-weight: 700; font-size: 0.88rem; color: #fff; margin-bottom: 2px;">Use Templates</div>
-          <div style="font-size: 0.74rem; color: #fda4af;">Pre-built romantic layouts with timeline, audio letter & games.</div>
-        </div>
-        <div class="project-mode-card" id="modeCardScratch" style="cursor: pointer; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.03); transition: all 0.2s;">
-          <div style="font-size: 1.2rem; margin-bottom: 4px;">✨</div>
-          <div style="font-weight: 700; font-size: 0.88rem; color: #fff; margin-bottom: 2px;">From Scratch</div>
-          <div style="font-size: 0.74rem; color: #94a3b8;">Clean minimal canvas (Hero + Letter). Add sections you love later.</div>
+          <div style="font-size: 0.74rem; color: #94a3b8;">Pre-built romantic layouts with timeline, audio letter & games.</div>
         </div>
       </div>
 
       <!-- 1b. Preset Selection for Template Mode -->
-      <div id="newProjectPresetPickerWrap" style="margin-bottom: 14px;">
+      <div id="newProjectPresetPickerWrap" style="margin-bottom: 14px; display: none;">
         <label style="display: block; font-size: 0.78rem; font-weight: 600; color: #94a3b8; margin-bottom: 6px;">Select Starting Template:</label>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;" id="npPresetChips">
-          <button type="button" class="np-preset-chip active" data-preset="storyteller" style="padding: 7px 10px; border-radius: 6px; border: 1px solid #f43f5e; background: rgba(244, 63, 94, 0.15); color: #fff; font-size: 0.78rem; font-weight: 600; text-align: left; cursor: pointer;">
+          <button type="button" class="np-preset-chip active" data-preset="blank" style="padding: 7px 10px; border-radius: 6px; border: 1px solid #f43f5e; background: rgba(244, 63, 94, 0.15); color: #fff; font-size: 0.78rem; font-weight: 600; text-align: left; cursor: pointer;">
+            ✨ Blank (0 Widgets)
+          </button>
+          <button type="button" class="np-preset-chip" data-preset="storyteller" style="padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: #cbd5e1; font-size: 0.78rem; text-align: left; cursor: pointer;">
             📖 Storyteller (Travels)
           </button>
           <button type="button" class="np-preset-chip" data-preset="playful" style="padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: #cbd5e1; font-size: 0.78rem; text-align: left; cursor: pointer;">
@@ -500,9 +503,6 @@
           </button>
           <button type="button" class="np-preset-chip" data-preset="complete" style="padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: #cbd5e1; font-size: 0.78rem; text-align: left; cursor: pointer;">
             💖 Complete VIP (All 13)
-          </button>
-          <button type="button" class="np-preset-chip" data-preset="anniversary" style="padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.05); color: #cbd5e1; font-size: 0.78rem; text-align: left; cursor: pointer;">
-            💍 Anniversary Edition
           </button>
         </div>
       </div>
@@ -545,38 +545,46 @@
     </div>
   </div>
 
-  <!-- TENANT CREATE / SWITCH MODAL -->
-  <div class="modal-backdrop hidden" id="tenantModal">
-    <div class="modal-box">
-      <h3>Couple Account</h3>
-      <div id="userDesignsSection" style="display: none; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <label style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; display: block; margin: 0;">Your Sites (1-Click Switch):</label>
-          <button type="button" id="btnTenantModalCreateNew" style="background: rgba(244,63,94,0.15); border: 1px solid #f43f5e; color: #fda4af; font-size: 0.72rem; padding: 2px 8px; border-radius: 4px; cursor: pointer;">+ New Site</button>
-        </div>
-        <div id="userDesignsQuickList" style="display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto;"></div>
+  <!-- BUILDER AUTH LOGIN / REGISTER MODAL -->
+  <div class="modal-backdrop hidden" id="builderAuthModal" style="z-index: 10090; backdrop-filter: blur(8px); background: rgba(15, 23, 42, 0.85);">
+    <div class="modal-box" style="max-width: 400px; width: 90%; background: #1e293b; border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 26px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); color: #fff;">
+      <div style="text-align: center; margin-bottom: 18px;">
+        <span style="font-size: 2rem; display: block; margin-bottom: 4px;">💍</span>
+        <h3 id="builderAuthTitle" style="margin: 0 0 6px 0; font-size: 1.25rem; font-weight: 700; color: #fff;">Sign in to Studio</h3>
+        <p id="builderAuthSubtitle" style="margin: 0; font-size: 0.8rem; color: #94a3b8;">Enter your LoveSaas credentials to customize your site.</p>
       </div>
-      <div class="input-group">
-        <label>Couple URL Slug (e.g., 'john-and-emma')</label>
-        <input type="text" id="modalSlug" placeholder="alex-sam">
-      </div>
-      <div class="input-group">
-        <label>Admin PIN (4 digits)</label>
-        <input type="password" id="modalPin" placeholder="1234" maxlength="8">
-      </div>
-      <div id="newCoupleFields">
-        <div class="input-group">
-          <label>Partner 1</label>
-          <input type="text" id="modalP1" placeholder="Alex">
+      <div id="builderAuthError" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; font-size: 0.8rem; padding: 8px 12px; border-radius: 8px; margin-bottom: 14px;"></div>
+      <form id="builderAuthForm" onsubmit="return false;" style="display: flex; flex-direction: column; gap: 12px;">
+        <div id="builderAuthNameGroup" class="input-group" style="display: none;">
+          <label style="font-size: 0.76rem; font-weight: 600; color: #cbd5e1; margin-bottom: 4px; display: block;">Your Name</label>
+          <input type="text" id="builderAuthName" placeholder="Alex" style="width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: #fff; font-size: 0.88rem;">
         </div>
         <div class="input-group">
-          <label>Partner 2</label>
-          <input type="text" id="modalP2" placeholder="Sam">
+          <label style="font-size: 0.76rem; font-weight: 600; color: #cbd5e1; margin-bottom: 4px; display: block;">Email Address</label>
+          <input type="email" id="builderAuthEmail" placeholder="you@example.com" required style="width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: #fff; font-size: 0.88rem;">
         </div>
+        <div class="input-group">
+          <label style="font-size: 0.76rem; font-weight: 600; color: #cbd5e1; margin-bottom: 4px; display: block;">Password</label>
+          <input type="password" id="builderAuthPassword" placeholder="••••••••" required style="width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); color: #fff; font-size: 0.88rem;">
+        </div>
+        <button type="submit" id="btnBuilderAuthSubmit" class="btn-primary" style="width: 100%; padding: 11px; font-weight: 700; font-size: 0.92rem; justify-content: center; margin-top: 4px; border-radius: 8px; background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);">Sign In</button>
+      </form>
+      <div style="margin-top: 16px; text-align: center; font-size: 0.8rem; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
+        <span id="builderAuthToggleText">Don't have an account?</span>
+        <button type="button" id="btnBuilderAuthToggleMode" style="background: none; border: none; color: #f43f5e; font-weight: 700; cursor: pointer; padding: 0 4px; font-size: 0.8rem;">Create one</button>
       </div>
-      <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px;">
-        <button class="btn-secondary" id="btnModalCancel">Cancel</button>
-        <button class="btn-primary" id="btnModalSubmit">Load / Create Site</button>
+    </div>
+  </div>
+
+  <!-- BUILDER FORBIDDEN / ACCESS DENIED MODAL -->
+  <div class="modal-backdrop hidden" id="builderForbiddenModal" style="z-index: 10090; backdrop-filter: blur(8px); background: rgba(15, 23, 42, 0.85);">
+    <div class="modal-box" style="max-width: 420px; width: 90%; background: #1e293b; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 16px; padding: 26px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); color: #fff; text-align: center;">
+      <span style="font-size: 2.4rem; display: block; margin-bottom: 8px;">🔒</span>
+      <h3 style="margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 700; color: #fca5a5;">Access Denied</h3>
+      <p id="builderForbiddenMsg" style="margin: 0 0 18px 0; font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">Access Denied: You do not have permission to access or edit this design.</p>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button type="button" id="btnForbiddenMyDesigns" class="btn-primary" style="width: 100%; padding: 11px; font-weight: 700; font-size: 0.9rem; justify-content: center; background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);">📂 Go to My Sites / Designs</button>
+        <button type="button" id="btnForbiddenSwitchAccount" class="btn-secondary" style="width: 100%; padding: 11px; font-weight: 600; font-size: 0.85rem; justify-content: center; border-color: rgba(255,255,255,0.15);">🔄 Switch Account</button>
       </div>
     </div>
   </div>
