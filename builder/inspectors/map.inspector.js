@@ -65,6 +65,13 @@
   let newCityEmoji = "📍";
 
   window.WIDGET_INSPECTORS["map"] = function(inspectorFormContainer, state, ctx) {
+    let shouldFocusCity = false;
+    if (state && state.targetCityKey) {
+      selectedCityKey = state.targetCityKey;
+      activeTab = "stories";
+      shouldFocusCity = true;
+    }
+
     const {
       debouncedLiveUpdate = () => {},
       debouncedAutoSaveLayout = () => {},
@@ -100,23 +107,28 @@
       });
     }
 
-    let currentDest = mapData.destinations.find(d => d.key === selectedCityKey);
-    if (!currentDest) {
-      currentDest = mapData.destinations[0];
-      selectedCityKey = currentDest ? currentDest.key : "guangzhou";
+    let curIdx = mapData.destinations.findIndex(d => d.key === selectedCityKey);
+    if (curIdx < 0) {
+      curIdx = 0;
+      selectedCityKey = mapData.destinations[0] ? mapData.destinations[0].key : "guangzhou";
     }
+    let currentDest = mapData.destinations[curIdx];
 
-    const currentStory = mapData.stories[selectedCityKey] || DEFAULT_STORIES[selectedCityKey] || {
-      icon: currentDest ? currentDest.flag : "📍",
-      symbol: "✨",
-      tag: "Journey Stop",
-      title: currentDest ? currentDest.label : selectedCityKey,
-      desc: "",
-      defaultCaption: "",
-      colorA: "#ff416c",
-      colorB: "#8a2387",
-      vehicle: currentDest ? (currentDest.vehicle || "airplane") : "airplane"
-    };
+    // Ensure current story object is instantiated directly in mapData.stories
+    if (!mapData.stories[selectedCityKey]) {
+      mapData.stories[selectedCityKey] = JSON.parse(JSON.stringify(DEFAULT_STORIES[selectedCityKey] || {
+        icon: currentDest ? currentDest.flag : "📍",
+        symbol: "✨",
+        tag: "Journey Stop",
+        title: currentDest ? currentDest.label : selectedCityKey,
+        desc: "",
+        defaultCaption: "",
+        colorA: "#ff416c",
+        colorB: "#8a2387",
+        vehicle: currentDest ? (currentDest.vehicle || "airplane") : "airplane"
+      }));
+    }
+    const currentStory = mapData.stories[selectedCityKey];
 
     const shortcutsHtml = mapData.destinations.map(d => `
       <button type="button" class="btn btn-sm btn-outline map-spotlight-btn" data-city="${d.key}" style="padding: 4px 8px; font-size: 0.78rem;">
@@ -151,6 +163,19 @@
 
     const curVeh = currentStory.vehicle || (currentDest ? currentDest.vehicle : "airplane") || "airplane";
 
+    const triggerUpdateAndSave = () => {
+      debouncedLiveUpdate(false, 'map');
+      debouncedAutoSaveLayout();
+    };
+
+    const switchToCity = (cityKey, spotlight = true) => {
+      selectedCityKey = cityKey;
+      if (spotlight && previewIframe && previewIframe.contentWindow) {
+        previewIframe.contentWindow.postMessage({ type: "SPOTLIGHT_CITY", cityKey, openStory: true }, window.location.origin);
+      }
+      window.WIDGET_INSPECTORS["map"](inspectorFormContainer, state, ctx);
+    };
+
     inspectorFormContainer.innerHTML = `
       <!-- Subtabs bar -->
       <div class="hero-subtabs-bar" style="margin-bottom: 14px;">
@@ -164,16 +189,17 @@
 
       <!-- Tab 1: Destination Stories Editor -->
       <div id="mapStoriesPane" style="${activeTab === 'stories' ? '' : 'display: none;'}">
-        <!-- Destination Manager & Selector Bar -->
+        <!-- Destination Switcher & Toolbar Bar -->
         <div class="item-editor-card" style="margin-bottom: 12px; background: rgba(244, 63, 94, 0.04); border-color: rgba(244, 63, 94, 0.25);">
           <div style="display: flex; flex-direction: column; gap: 8px;">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
               <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Current Journey Stop</label>
-              <div style="display: flex; gap: 4px;">
-                <button type="button" class="btn btn-sm btn-outline" id="btnMoveCityUp" title="Move stop earlier in route" style="padding: 2px 7px;">▲</button>
-                <button type="button" class="btn btn-sm btn-outline" id="btnMoveCityDown" title="Move stop later in route" style="padding: 2px 7px;">▼</button>
-                <button type="button" class="btn btn-sm btn-outline" id="btnDeleteCity" title="Delete this stop" style="padding: 2px 7px; color: #e11d48;">🗑️</button>
-                <button type="button" class="btn btn-sm btn-primary" id="btnToggleAddCity" style="padding: 2px 9px; font-size: 0.76rem;">
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <button type="button" class="btn btn-sm btn-outline" id="btnPrevCity" title="Switch to Previous Location" style="padding: 2px 8px; font-weight: 700;">◀</button>
+                <span id="cityIndexBadge" style="font-size: 0.76rem; font-weight: 700; color: var(--text-muted); min-width: 50px; text-align: center;">${curIdx + 1} / ${mapData.destinations.length}</span>
+                <button type="button" class="btn btn-sm btn-outline" id="btnNextCity" title="Switch to Next Location" style="padding: 2px 8px; font-weight: 700;">▶</button>
+                <button type="button" class="btn btn-sm btn-outline" id="btnDeleteCity" title="Delete this stop" style="padding: 2px 7px; color: #e11d48; margin-left: 4px;">🗑️</button>
+                <button type="button" class="btn btn-sm btn-primary" id="btnToggleAddCity" style="padding: 2px 9px; font-size: 0.76rem; margin-left: 2px;">
                   ${isAddingCity ? '✕ Close' : '➕ Add Stop'}
                 </button>
               </div>
@@ -182,9 +208,16 @@
               <select id="mapCitySelector" style="font-weight: 600; font-size: 0.88rem; flex-grow: 1;">
                 ${renderDestinationOptions()}
               </select>
-              <button type="button" class="btn btn-sm btn-outline" id="btnSpotlightCurrentCity" title="Spotlight stop on live map" style="padding: 5px 8px; white-space: nowrap;">
+              <button type="button" class="btn btn-sm btn-outline" id="btnSpotlightCurrentCity" title="View &amp; Spotlight stop on live map" style="padding: 5px 8px; white-space: nowrap;">
                 📍 View
               </button>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.74rem; color: var(--text-muted); border-top: 1px dashed rgba(244, 63, 94, 0.2); padding-top: 6px; margin-top: 2px;">
+              <span>Route Order: <strong>#${curIdx + 1}</strong> of ${mapData.destinations.length}</span>
+              <div style="display: flex; gap: 4px;">
+                <button type="button" class="btn btn-sm btn-outline" id="btnMoveCityUp" title="Move earlier in route order" style="padding: 1px 7px; font-size: 0.72rem;">▲ Earlier</button>
+                <button type="button" class="btn btn-sm btn-outline" id="btnMoveCityDown" title="Move later in route order" style="padding: 1px 7px; font-size: 0.72rem;">▼ Later</button>
+              </div>
             </div>
           </div>
         </div>
@@ -328,24 +361,24 @@
             <input type="text" id="story_caption" value="${currentStory.defaultCaption || ''}" placeholder="Caption displayed beneath photo...">
           </div>
 
-          <div class="chap-section-subheading" style="margin-top: 14px;">🎨 City Theme Gradient Colors</div>
+          <div class="chap-section-subheading" style="margin-top: 14px;">🎨 City Theme Gradient Colors (Postcard &amp; Pin Glow)</div>
           <div class="grid-2" style="margin-top: 6px;">
             <div class="input-group">
-              <label>Color A (Primary)</label>
+              <label>Color A (Primary Glow &amp; Border)</label>
               <div style="display: flex; gap: 6px; align-items: center;">
-                <input type="color" id="story_colorA_picker" value="${currentStory.colorA || '#1a1c2e'}" style="width: 36px; height: 34px; padding: 2px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border);">
-                <input type="text" id="story_colorA" value="${currentStory.colorA || '#1a1c2e'}" style="flex-grow: 1;">
+                <input type="color" id="story_colorA_picker" value="${currentStory.colorA || '#ff4365'}" style="width: 36px; height: 34px; padding: 2px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border);">
+                <input type="text" id="story_colorA" value="${currentStory.colorA || '#ff4365'}" style="flex-grow: 1;">
               </div>
             </div>
             <div class="input-group">
-              <label>Color B (Secondary)</label>
+              <label>Color B (Secondary Accent)</label>
               <div style="display: flex; gap: 6px; align-items: center;">
-                <input type="color" id="story_colorB_picker" value="${currentStory.colorB || '#7b1fa2'}" style="width: 36px; height: 34px; padding: 2px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border);">
-                <input type="text" id="story_colorB" value="${currentStory.colorB || '#7b1fa2'}" style="flex-grow: 1;">
+                <input type="color" id="story_colorB_picker" value="${currentStory.colorB || '#8a2387'}" style="width: 36px; height: 34px; padding: 2px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border);">
+                <input type="text" id="story_colorB" value="${currentStory.colorB || '#8a2387'}" style="flex-grow: 1;">
               </div>
             </div>
           </div>
-          <div id="storyGradientPreview" style="height: 14px; border-radius: 6px; margin-top: 10px; background: linear-gradient(135deg, ${currentStory.colorA || '#1a1c2e'}, ${currentStory.colorB || '#7b1fa2'}); border: 1px solid var(--border);"></div>
+          <div id="storyGradientPreview" style="height: 14px; border-radius: 6px; margin-top: 10px; background: linear-gradient(135deg, ${currentStory.colorA || '#ff4365'}, ${currentStory.colorB || '#8a2387'}); border: 1px solid var(--border);"></div>
         </div>
       </div>
 
@@ -434,8 +467,23 @@
     const citySelector = document.getElementById("mapCitySelector");
     if (citySelector) {
       citySelector.onchange = (e) => {
-        selectedCityKey = e.target.value;
-        window.WIDGET_INSPECTORS["map"](inspectorFormContainer, state, ctx);
+        switchToCity(e.target.value);
+      };
+    }
+
+    // Prev / Next Destination Switcher buttons
+    const btnPrevCity = document.getElementById("btnPrevCity");
+    const btnNextCity = document.getElementById("btnNextCity");
+    if (btnPrevCity) {
+      btnPrevCity.onclick = () => {
+        const newIdx = (curIdx <= 0) ? mapData.destinations.length - 1 : curIdx - 1;
+        switchToCity(mapData.destinations[newIdx].key);
+      };
+    }
+    if (btnNextCity) {
+      btnNextCity.onclick = () => {
+        const newIdx = (curIdx >= mapData.destinations.length - 1) ? 0 : curIdx + 1;
+        switchToCity(mapData.destinations[newIdx].key);
       };
     }
 
@@ -443,7 +491,6 @@
     const btnMoveUp = document.getElementById("btnMoveCityUp");
     const btnMoveDown = document.getElementById("btnMoveCityDown");
     const btnDelete = document.getElementById("btnDeleteCity");
-    const curIdx = mapData.destinations.findIndex(d => d.key === selectedCityKey);
 
     if (btnMoveUp) {
       btnMoveUp.onclick = () => {
@@ -451,8 +498,7 @@
           const temp = mapData.destinations[curIdx];
           mapData.destinations[curIdx] = mapData.destinations[curIdx - 1];
           mapData.destinations[curIdx - 1] = temp;
-          debouncedLiveUpdate();
-          debouncedAutoSaveLayout();
+          triggerUpdateAndSave();
           window.WIDGET_INSPECTORS["map"](inspectorFormContainer, state, ctx);
         }
       };
@@ -464,8 +510,7 @@
           const temp = mapData.destinations[curIdx];
           mapData.destinations[curIdx] = mapData.destinations[curIdx + 1];
           mapData.destinations[curIdx + 1] = temp;
-          debouncedLiveUpdate();
-          debouncedAutoSaveLayout();
+          triggerUpdateAndSave();
           window.WIDGET_INSPECTORS["map"](inspectorFormContainer, state, ctx);
         }
       };
@@ -481,8 +526,7 @@
         if (confirm(`Remove "${name}" from map?`)) {
           mapData.destinations = mapData.destinations.filter(d => d.key !== selectedCityKey);
           selectedCityKey = mapData.destinations[0].key;
-          debouncedLiveUpdate();
-          debouncedAutoSaveLayout();
+          triggerUpdateAndSave();
           window.WIDGET_INSPECTORS["map"](inspectorFormContainer, state, ctx);
         }
       };
@@ -580,9 +624,8 @@
         selectedCityKey = key;
         isAddingCity = false;
 
-        debouncedLiveUpdate();
-        debouncedAutoSaveLayout();
-        window.WIDGET_INSPECTORS["map"](inspectorFormContainer, state, ctx);
+        triggerUpdateAndSave();
+        switchToCity(key, true);
       };
     }
 
@@ -592,8 +635,7 @@
         const veh = btn.getAttribute("data-veh");
         if (currentDest) currentDest.vehicle = veh;
         currentStory.vehicle = veh;
-        debouncedLiveUpdate();
-        debouncedAutoSaveLayout();
+        triggerUpdateAndSave();
         window.WIDGET_INSPECTORS["map"](inspectorFormContainer, state, ctx);
       };
     });
@@ -602,9 +644,7 @@
     const btnSpotCurrent = document.getElementById("btnSpotlightCurrentCity");
     if (btnSpotCurrent) {
       btnSpotCurrent.onclick = () => {
-        if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "SPOTLIGHT_CITY", cityKey: selectedCityKey }, window.location.origin);
-        }
+        switchToCity(selectedCityKey, true);
       };
     }
 
@@ -638,57 +678,50 @@
         currentStory.icon = em;
         if (currentDest) currentDest.flag = em;
         if (sIcon) sIcon.value = em;
-        debouncedLiveUpdate();
-        debouncedAutoSaveLayout();
+        triggerUpdateAndSave();
       };
     });
 
     const updateGradPreview = () => {
       if (sGradPreview) {
-        sGradPreview.style.background = `linear-gradient(135deg, ${currentStory.colorA || '#1a1c2e'}, ${currentStory.colorB || '#7b1fa2'})`;
+        sGradPreview.style.background = `linear-gradient(135deg, ${currentStory.colorA || '#ff4365'}, ${currentStory.colorB || '#8a2387'})`;
       }
     };
 
     if (sIcon) sIcon.oninput = (e) => {
       currentStory.icon = e.target.value;
       if (currentDest) currentDest.flag = e.target.value;
-      debouncedLiveUpdate();
+      triggerUpdateAndSave();
     };
-    if (sSymbol) sSymbol.oninput = (e) => { currentStory.symbol = e.target.value; debouncedLiveUpdate(); };
-    if (sTag) sTag.oninput = (e) => { currentStory.tag = e.target.value; debouncedLiveUpdate(); };
-    if (sTitle) sTitle.oninput = (e) => { currentStory.title = e.target.value; debouncedLiveUpdate(); };
-    if (sDesc) sDesc.oninput = (e) => { currentStory.desc = e.target.value; debouncedLiveUpdate(); };
-    if (sCaption) sCaption.oninput = (e) => { currentStory.defaultCaption = e.target.value; debouncedLiveUpdate(); };
+    if (sSymbol) sSymbol.oninput = (e) => { currentStory.symbol = e.target.value; triggerUpdateAndSave(); };
+    if (sTag) sTag.oninput = (e) => { currentStory.tag = e.target.value; triggerUpdateAndSave(); };
+    if (sTitle) sTitle.oninput = (e) => {
+      currentStory.title = e.target.value;
+      if (currentDest) currentDest.label = e.target.value;
+      triggerUpdateAndSave();
+    };
+    if (sDesc) sDesc.oninput = (e) => { currentStory.desc = e.target.value; triggerUpdateAndSave(); };
+    if (sCaption) sCaption.oninput = (e) => { currentStory.defaultCaption = e.target.value; triggerUpdateAndSave(); };
 
-    if (sColA && sColAPicker) {
-      sColA.oninput = (e) => {
-        currentStory.colorA = e.target.value;
-        sColAPicker.value = e.target.value;
-        updateGradPreview();
-        debouncedLiveUpdate();
-      };
-      sColAPicker.oninput = (e) => {
-        currentStory.colorA = e.target.value;
-        sColA.value = e.target.value;
-        updateGradPreview();
-        debouncedLiveUpdate();
-      };
-    }
+    const handleColA = (val) => {
+      currentStory.colorA = val;
+      if (sColA) sColA.value = val;
+      if (sColAPicker) sColAPicker.value = val;
+      updateGradPreview();
+      triggerUpdateAndSave();
+    };
+    if (sColA) sColA.oninput = (e) => handleColA(e.target.value);
+    if (sColAPicker) sColAPicker.oninput = (e) => handleColA(e.target.value);
 
-    if (sColB && sColBPicker) {
-      sColB.oninput = (e) => {
-        currentStory.colorB = e.target.value;
-        sColBPicker.value = e.target.value;
-        updateGradPreview();
-        debouncedLiveUpdate();
-      };
-      sColBPicker.oninput = (e) => {
-        currentStory.colorB = e.target.value;
-        sColB.value = e.target.value;
-        updateGradPreview();
-        debouncedLiveUpdate();
-      };
-    }
+    const handleColB = (val) => {
+      currentStory.colorB = val;
+      if (sColB) sColB.value = val;
+      if (sColBPicker) sColBPicker.value = val;
+      updateGradPreview();
+      triggerUpdateAndSave();
+    };
+    if (sColB) sColB.oninput = (e) => handleColB(e.target.value);
+    if (sColBPicker) sColBPicker.oninput = (e) => handleColB(e.target.value);
 
     // Stats and general headings inputs
     const tagIn = document.getElementById("map_tag");
@@ -699,21 +732,36 @@
     const citiesIn = document.getElementById("map_totalCities");
     const lapsIn = document.getElementById("map_earthLaps");
 
-    if (tagIn) tagIn.oninput = (e) => { mapData.tag = e.target.value; debouncedLiveUpdate(); };
-    if (titleIn) titleIn.oninput = (e) => { mapData.title = e.target.value; debouncedLiveUpdate(); };
-    if (descIn) descIn.oninput = (e) => { mapData.desc = e.target.value; debouncedLiveUpdate(); };
-    if (kmIn) kmIn.oninput = (e) => { mapData.totalKm = e.target.value; debouncedLiveUpdate(); };
-    if (countriesIn) countriesIn.oninput = (e) => { mapData.totalCountries = e.target.value; debouncedLiveUpdate(); };
-    if (citiesIn) citiesIn.oninput = (e) => { mapData.totalCities = e.target.value; debouncedLiveUpdate(); };
-    if (lapsIn) lapsIn.oninput = (e) => { mapData.earthLaps = e.target.value; debouncedLiveUpdate(); };
+    if (tagIn) tagIn.oninput = (e) => { mapData.tag = e.target.value; triggerUpdateAndSave(); };
+    if (titleIn) titleIn.oninput = (e) => { mapData.title = e.target.value; triggerUpdateAndSave(); };
+    if (descIn) descIn.oninput = (e) => { mapData.desc = e.target.value; triggerUpdateAndSave(); };
+    if (kmIn) kmIn.oninput = (e) => { mapData.totalKm = e.target.value; triggerUpdateAndSave(); };
+    if (countriesIn) countriesIn.oninput = (e) => { mapData.totalCountries = e.target.value; triggerUpdateAndSave(); };
+    if (citiesIn) citiesIn.oninput = (e) => { mapData.totalCities = e.target.value; triggerUpdateAndSave(); };
+    if (lapsIn) lapsIn.oninput = (e) => { mapData.earthLaps = e.target.value; triggerUpdateAndSave(); };
 
     document.querySelectorAll(".map-spotlight-btn").forEach(btn => {
       btn.onclick = () => {
         const cityKey = btn.dataset.city;
-        if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage({ type: "SPOTLIGHT_CITY", cityKey }, window.location.origin);
-        }
+        switchToCity(cityKey, true);
       };
     });
+
+    if (shouldFocusCity) {
+      setTimeout(() => {
+        const card = document.getElementById("mapStoryCard");
+        if (card) {
+          card.scrollIntoView({ behavior: "smooth", block: "start" });
+          card.classList.add("highlight-pulse");
+          setTimeout(() => card.classList.remove("highlight-pulse"), 2200);
+        }
+        const sTitle = document.getElementById("story_title");
+        if (sTitle) {
+          sTitle.focus();
+          sTitle.select();
+        }
+        if (state) delete state.targetCityKey;
+      }, 60);
+    }
   };
 })();

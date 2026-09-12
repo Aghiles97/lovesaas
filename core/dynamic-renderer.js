@@ -315,6 +315,52 @@ class DynamicRenderer {
             if (descEl && m.desc) descEl.textContent = m.desc;
           }
           if (typeof renderPolaroids === "function") try { renderPolaroids(); } catch (e) {}
+        } else if (activeId === "map") {
+          const mapSec = document.getElementById("section-map") || document.getElementById("ldrMapSection") || document.querySelector(".map-section");
+          if (mapSec && sectionsData.map) {
+            const m = sectionsData.map;
+            const tagEl = mapSec.querySelector(".section-tag");
+            const titleEl = mapSec.querySelector(".section-title");
+            const descEl = mapSec.querySelector(".section-desc");
+            if (tagEl && m.tag) tagEl.textContent = m.tag;
+            if (titleEl && m.title) titleEl.textContent = m.title;
+            if (descEl && m.desc) descEl.textContent = m.desc;
+
+            if (m.totalKm) {
+              mapSec.querySelectorAll("#globalFlightKmPill strong, #globalKmOverlayBadge .badge-num").forEach(el => el.textContent = m.totalKm);
+            }
+            if (m.totalCountries) {
+              mapSec.querySelectorAll(".love-stat-pill").forEach(p => {
+                if (p.textContent.includes("Hand-in-Hand") && !p.id) {
+                  const s = p.querySelector("strong");
+                  if (s) s.textContent = m.totalCountries;
+                }
+              });
+            }
+            if (m.totalCities) {
+              const cp = mapSec.querySelector(".global-cities-counter-pill strong");
+              if (cp) cp.textContent = m.totalCities;
+            }
+            if (m.earthLaps) {
+              mapSec.querySelectorAll(".love-stat-pill").forEach(p => {
+                if (p.textContent.includes("For Love") && !p.id) {
+                  const s = p.querySelector("strong");
+                  if (s) s.textContent = m.earthLaps;
+                }
+              });
+            }
+
+            if (m.stories) {
+              window.CITY_STORIES = { ...(window.CITY_STORIES || {}), ...m.stories };
+            }
+            if (Array.isArray(m.destinations)) {
+              window.MAP_DESTINATIONS = m.destinations;
+            }
+
+            if (typeof window.updateLiveMapStory === "function") {
+              try { window.updateLiveMapStory(); } catch (e) {}
+            }
+          }
         } else {
           this.replaceWidgetElement(activeId, sectionsData, isBuilder, isIframe);
         }
@@ -327,7 +373,7 @@ class DynamicRenderer {
         if (typeof renderTimeline === "function") try { renderTimeline(); } catch (e) {}
         if (typeof renderPolaroids === "function") try { renderPolaroids(); } catch (e) {}
         layoutOrder.forEach((wid) => {
-          if (!["timeline", "memories", "hero"].includes(wid)) {
+          if (!["timeline", "memories", "hero", "map"].includes(wid)) {
             this.replaceWidgetElement(wid, sectionsData, isBuilder, isIframe);
           }
         });
@@ -668,7 +714,8 @@ class DynamicRenderer {
     if (editCityDirectBtn) {
       editCityDirectBtn.addEventListener("click", () => {
         if (isIframe) {
-          window.parent.postMessage({ type: "SELECT_WIDGET", widgetId: "map" }, "*");
+          const cityKey = (typeof currentActiveMemoryKey !== "undefined" && currentActiveMemoryKey) ? currentActiveMemoryKey : null;
+          window.parent.postMessage({ type: "SELECT_WIDGET", widgetId: "map", cityKey }, "*");
         }
       });
     }

@@ -18,6 +18,9 @@
         }
         const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
         if (app) app.classList.add("app-revealed");
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: "PREVIEW_SCREEN_CHANGED", screen: "website" }, window.location.origin);
+        }
       },
       reseal() {
         this.isSealed = true;
@@ -27,8 +30,13 @@
           env.classList.remove("opened");
           env.style.display = "";
         }
+        const card = document.getElementById("mainEnvelopeCard");
+        if (card) card.classList.remove("envelope-opening-active");
         const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
         if (app) app.classList.remove("app-revealed");
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: "PREVIEW_SCREEN_CHANGED", screen: "intro" }, window.location.origin);
+        }
       }
     };
   </script>
@@ -1138,14 +1146,111 @@
           }
         } catch (e) {}
 
+        const applyIntroData = (intro, sender, recipient) => {
+          if (!intro || typeof intro !== "object") intro = {};
+          const curP1 = intro.senderName || sender || "Alex";
+          const curP2 = intro.recipientName || recipient || "Sam";
+
+          const titleEl = document.querySelector(".intro-main-title");
+          if (titleEl) {
+            if (intro.title) {
+              titleEl.innerHTML = intro.title;
+            } else {
+              titleEl.innerHTML = `Happy Birthday <span class="partner-name-display">${curP2}</span> 🎂❤️`;
+            }
+          }
+
+          const subEl = document.querySelector(".intro-sub-prompt");
+          if (subEl && intro.subtitle !== undefined) {
+            subEl.textContent = intro.subtitle;
+          }
+
+          document.querySelectorAll(".recipient-name-preview").forEach(el => {
+            el.textContent = intro.recipientName || curP2;
+          });
+
+          const prevSubEl = document.querySelector(".preview-sub");
+          if (prevSubEl && intro.recipientSubtext !== undefined) {
+            prevSubEl.textContent = intro.recipientSubtext;
+          }
+
+          const envSenderEl = document.getElementById("envelopePreviewSender");
+          if (envSenderEl) {
+            if (intro.senderClosing) {
+              envSenderEl.textContent = intro.senderClosing;
+            } else {
+              envSenderEl.innerHTML = `From <span class="sender-name-display">${curP1}</span> with Infinite Lof & Birthday Kisses 🎂💕`;
+            }
+          }
+
+          const openBtn = document.getElementById("openEnvelopeBtn");
+          if (openBtn) {
+            const sealTextEl = openBtn.querySelector(".seal-text");
+            if (sealTextEl) sealTextEl.textContent = intro.sealText || "OPEN";
+
+            const sealHeartEl = openBtn.querySelector(".seal-heart");
+            if (sealHeartEl) sealHeartEl.textContent = intro.sealEmoji || "❤️";
+
+            if (intro.sealColor) {
+              openBtn.style.setProperty("--seal-color", intro.sealColor);
+              openBtn.style.setProperty("--seal-custom-color", intro.sealColor);
+              openBtn.style.setProperty("--seal-glow", intro.sealColor + "66");
+            } else {
+              openBtn.style.removeProperty("--seal-color");
+              openBtn.style.removeProperty("--seal-custom-color");
+              openBtn.style.removeProperty("--seal-glow");
+            }
+          }
+
+          if (intro.flowerStyle) {
+            const flowerGrid = document.getElementById("flowerStyleGrid");
+            if (flowerGrid) {
+              flowerGrid.querySelectorAll(".flower-chip").forEach(chip => {
+                chip.classList.toggle("selected", chip.getAttribute("data-style") === intro.flowerStyle);
+              });
+            }
+            window.ACTIVE_FLOWER_THEME = intro.flowerStyle;
+          }
+
+          const flowerBar = document.getElementById("flowerSelectorBar");
+          if (flowerBar) {
+            flowerBar.style.display = intro.showFlowerSelector === false ? "none" : "";
+          }
+
+          const soundtrackBar = document.querySelector(".soundtrack-selector-bar");
+          if (soundtrackBar) {
+            soundtrackBar.style.display = intro.showSoundtrackSelector === false ? "none" : "";
+          }
+
+          const hintEl = document.getElementById("envelopeHint");
+          if (hintEl && intro.envelopeHint !== undefined) {
+            hintEl.textContent = intro.envelopeHint;
+          }
+
+          if (intro.floatingEmojis) {
+            const floatWrap = document.querySelector(".intro-floating-emojis");
+            if (floatWrap) {
+              const emojis = (typeof intro.floatingEmojis === "string" ? intro.floatingEmojis.split(",") : intro.floatingEmojis)
+                .map(s => String(s).trim())
+                .filter(Boolean);
+              if (emojis.length > 0) {
+                floatWrap.innerHTML = emojis.map((em, idx) => `<span class="float-item f${(idx % 6) + 1}">${em}</span>`).join("");
+              }
+            }
+          }
+        };
+
+        const introData = (data.sectionsData && data.sectionsData.intro) || {};
+        applyIntroData(introData, p1, p2);
+
         const urlParams = new URLSearchParams(window.location.search);
         const isIframe = window.parent && window.parent !== window;
         const isBuilderPreview = urlParams.get("preview") === "builder" || urlParams.get("builder") === "1" || isIframe;
         const isLayoutEmpty = Array.isArray(data.layoutOrder) && data.layoutOrder.length === 0;
 
-        // Envelope state: ONLY unseal if layout is empty or unsealed=1 is explicitly requested
-        if (isLayoutEmpty || urlParams.get("unsealed") === "1") {
-          window.IntroEnvelope.unseal({ instant: isLayoutEmpty });
+        // Envelope state: ONLY unseal if layout is empty, unsealed=1 is explicitly requested, or intro disabled outside preview
+        if (isLayoutEmpty || urlParams.get("unsealed") === "1" || (introData.enabled === false && !isBuilderPreview)) {
+          window.IntroEnvelope.unseal({ instant: true });
           if (isLayoutEmpty) {
             const bgAudio = document.getElementById("bgAudioPlayer");
             if (bgAudio) {
@@ -1259,6 +1364,9 @@
             const curEnvSender = document.getElementById("envelopePreviewSender");
             if (curEnvSender) curEnvSender.textContent = `From ${liveP1} with Infinite Lof & Birthday Kisses 🎂💕`;
 
+            const liveIntro = (e.data.config.sectionsData && e.data.config.sectionsData.intro) || {};
+            applyIntroData(liveIntro, liveP1, liveP2);
+
             if (e.data.config.sectionsData && e.data.config.sectionsData.mediaSettings) {
               const ms = e.data.config.sectionsData.mediaSettings;
               const bgAudio = document.getElementById("bgAudioPlayer");
@@ -1282,8 +1390,11 @@
 
             renderer.render(e.data.config);
           }
-          if (e.data && e.data.type === "SPOTLIGHT_CITY" && typeof window.spotlightMapCity === "function") {
-            window.spotlightMapCity(e.data.cityKey);
+          if (e.data && e.data.type === "SPOTLIGHT_CITY") {
+            if (typeof window.spotlightMapCity === "function") window.spotlightMapCity(e.data.cityKey);
+            if (e.data.openStory !== false && typeof window.showMapCityStory === "function") {
+              window.showMapCityStory(e.data.cityKey);
+            }
           }
           if (e.data && e.data.type === "TOD_SPIN" && typeof window.todSpin === "function") {
             window.todSpin();
@@ -1417,11 +1528,28 @@
           if (e.data && e.data.type === "PLAYFUL_RESET" && typeof window.playfulReset === "function") {
             window.playfulReset();
           }
+          if (e.data && e.data.type === "SET_PREVIEW_SCREEN") {
+            if (e.data.screen === "intro") {
+              window.IntroEnvelope.reseal();
+            } else if (e.data.screen === "website") {
+              window.IntroEnvelope.unseal({ instant: true });
+            }
+          }
           if (e.data && e.data.type === "INTRO_ENVELOPE_UNSEAL") {
             window.IntroEnvelope.unseal();
           }
           if (e.data && e.data.type === "INTRO_ENVELOPE_RESEAL") {
             window.IntroEnvelope.reseal();
+          }
+          if (e.data && e.data.type === "INTRO_ENVELOPE_TRIGGER_OPEN") {
+            const openBtn = document.getElementById("openEnvelopeBtn");
+            if (openBtn) {
+              openBtn.click();
+            } else if (typeof window.triggerOpen === "function") {
+              window.triggerOpen();
+            } else {
+              window.IntroEnvelope.unseal();
+            }
           }
           if (e.data && (e.data.type === "SCROLL_TO_CHAPTER" || (e.data.type === "SCROLL_TO_WIDGET" && e.data.chapterId))) {
             if (window.IntroEnvelope.isSealed) window.IntroEnvelope.unseal();
@@ -1448,6 +1576,10 @@
             }
           }
           if (e.data && e.data.type === "SCROLL_TO_WIDGET" && e.data.widgetId && !e.data.chapterId) {
+            if (e.data.widgetId === "intro") {
+              window.IntroEnvelope.reseal();
+              return;
+            }
             if (window.IntroEnvelope.isSealed) window.IntroEnvelope.unseal();
             const target = document.getElementById("section-" + e.data.widgetId) || document.querySelector(`[data-widget-id="${e.data.widgetId}"]`);
             if (target) {

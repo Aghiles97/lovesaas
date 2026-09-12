@@ -85,6 +85,19 @@ body {
   font-size: 1.25rem;
   filter: drop-shadow(0 2px 4px rgba(244, 63, 94, 0.25));
 }
+.brand-logo-img {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex-shrink: 0;
+}
+.brand-logo-link:hover .brand-logo-img {
+  transform: scale(1.08) rotate(-2deg);
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.55);
+}
 .brand-title {
   font-weight: 800;
   font-size: 1.05rem;
@@ -1286,48 +1299,7 @@ body.is-resizing-sidebar .builder-sidebar,
   margin: 4px 0;
 }
 
-/* Slim Meta Bar */
-.inspector-meta-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 6px;
-  padding-top: 6px;
-  border-top: 1px solid #f8f9fa;
-  font-size: 0.72rem;
-  color: var(--text-muted);
-}
-.inspector-meta-left {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.inspector-meta-category {
-  font-weight: 600;
-  color: var(--primary);
-  background: #fff0f3;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 0.65rem;
-  flex-shrink: 0;
-}
-.inspector-meta-desc {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 0.72rem;
-}
-.inspector-meta-sync {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: #10b981;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
+
 
 .media-picker-modal-card {
   max-width: 640px !important;
@@ -3768,7 +3740,8 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
   opacity: 1;
   color: var(--primary);
 }
-.chap-card-accordion.highlight-pulse {
+.chap-card-accordion.highlight-pulse,
+.item-editor-card.highlight-pulse {
   border-color: #f43f5e !important;
   box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.35), 0 8px 24px rgba(244, 63, 94, 0.2) !important;
   animation: chapPulseAnim 1.8s ease-in-out;
@@ -6182,4 +6155,179 @@ html.builder-gate-active #builderDesignPickerModal:not(.hidden) {
   .media-library-grid {
     grid-template-columns: minmax(0, 1fr) !important;
   }
+}
+
+/* ========================================================
+   POLISHED SCREEN 1 PINNED CARD & INTRO INSPECTOR
+   ======================================================== */
+.screen1-pinned-card {
+  background: linear-gradient(135deg, #ffffff 0%, #fff1f2 100%) !important;
+  border: 1.5px solid rgba(244, 63, 94, 0.4) !important;
+  border-radius: 10px !important;
+  padding: 11px 13px !important;
+  margin-bottom: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 2px 7px rgba(244, 63, 94, 0.08) !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.screen1-pinned-card:hover {
+  border-color: #f43f5e !important;
+  background: linear-gradient(135deg, #ffffff 0%, #ffe4e6 100%) !important;
+  box-shadow: 0 4px 16px rgba(244, 63, 94, 0.16) !important;
+  transform: translateY(-1px) !important;
+}
+
+.screen1-pinned-card.selected-for-edit {
+  border-color: #f43f5e !important;
+  background: #fff1f2 !important;
+  box-shadow: 0 0 0 2.5px rgba(244, 63, 94, 0.3), 0 4px 14px rgba(244, 63, 94, 0.15) !important;
+}
+
+.screen1-pinned-card .screen1-lead {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+.screen1-pinned-card .screen1-icon {
+  font-size: 1.45rem !important;
+  line-height: 1 !important;
+  flex-shrink: 0 !important;
+  filter: drop-shadow(0 2px 4px rgba(244, 63, 94, 0.2));
+}
+
+.screen1-pinned-card .screen1-info {
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+  flex: 1 1 auto !important;
+}
+
+.screen1-pinned-card .screen1-title-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  flex-wrap: nowrap !important;
+}
+
+.screen1-pinned-card .screen1-title {
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important; /* Always high-contrast crisp dark text */
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.screen1-pinned-card .screen1-badge {
+  font-size: 0.62rem !important;
+  font-weight: 800 !important;
+  padding: 2px 7px !important;
+  border-radius: 9999px !important;
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
+  color: #ffffff !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  flex-shrink: 0 !important;
+  line-height: 1.2 !important;
+  box-shadow: 0 1px 3px rgba(244, 63, 94, 0.35) !important;
+}
+
+.screen1-pinned-card .screen1-desc {
+  font-size: 0.74rem !important;
+  font-weight: 500 !important;
+  color: #475569 !important; /* Clear high-contrast slate text */
+  line-height: 1.25 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.screen1-pinned-card .screen1-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  flex-shrink: 0 !important;
+}
+
+.screen1-pinned-card .btn-customize-intro {
+  padding: 6px 12px !important;
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  border-radius: 7px !important;
+  border: 1px solid rgba(244, 63, 94, 0.35) !important;
+  background: #ffffff !important;
+  color: #e11d48 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-shadow: 0 1px 3px rgba(244, 63, 94, 0.1) !important;
+}
+
+.screen1-pinned-card .btn-customize-intro:hover {
+  background: #f43f5e !important;
+  color: #ffffff !important;
+  border-color: #f43f5e !important;
+  box-shadow: 0 3px 10px rgba(244, 63, 94, 0.35) !important;
+  transform: translateY(-1px) !important;
+}
+
+.screen1-pinned-card .screen1-chevron {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: #cbd5e1 !important;
+  transition: transform 0.15s ease, color 0.15s ease !important;
+  line-height: 1 !important;
+}
+
+.screen1-pinned-card:hover .screen1-chevron {
+  color: #f43f5e !important;
+  transform: translateX(2px) !important;
+}
+
+/* Responsive collapse on narrow sidebars */
+@media (max-width: 440px) {
+  .screen1-pinned-card {
+    padding: 8px 10px !important;
+    gap: 6px !important;
+  }
+  .screen1-pinned-card .screen1-desc {
+    font-size: 0.68rem !important;
+  }
+  .screen1-pinned-card .btn-customize-intro {
+    padding: 5px 8px !important;
+    font-size: 0.72rem !important;
+  }
+}
+
+/* Intro Inspector Styles */
+.intro-action-row {
+  display: flex !important;
+  gap: 8px !important;
+  margin-bottom: 16px !important;
+  padding: 10px !important;
+  background: rgba(244, 63, 94, 0.08) !important;
+  border: 1px solid rgba(244, 63, 94, 0.25) !important;
+  border-radius: 8px !important;
+  flex-wrap: wrap !important;
+}
+.intro-action-row button {
+  flex: 1 1 130px !important;
+  min-height: 36px !important;
+  font-weight: 600 !important;
 }

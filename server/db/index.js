@@ -125,6 +125,23 @@ const DEFAULT_PRESETS = {
 };
 
 const DEFAULT_SECTIONS_DATA = {
+  intro: {
+    enabled: true,
+    title: "Happy Birthday Ella 🎂❤️",
+    subtitle: "I created a special magical world for your birthday! Please pick our romantic song below 🎵, then tap the wax seal to enter your magical birthday world! 🎂✨",
+    recipientName: "Ella",
+    recipientSubtext: "A Magical Birthday World For",
+    senderName: "Aghiles",
+    senderClosing: "From Aghiles with Infinite Lof & Birthday Kisses 🎂💕",
+    sealText: "OPEN",
+    sealEmoji: "❤️",
+    sealColor: "#c0392b",
+    flowerStyle: "royal-blend",
+    showFlowerSelector: true,
+    showSoundtrackSelector: true,
+    envelopeHint: "🎵 Choose our soundtrack above to enter your magical birthday world ✨",
+    floatingEmojis: "💖, 🎂, ✨, 💌, 🎁, 🎉"
+  },
   hero: {
     partner1: "Alex",
     partner2: "Sam",
@@ -1272,6 +1289,16 @@ async function createTenant({ slug, partner1, partner2, preset = "blank", custom
     initialSections.quiz.certSender = partner1;
     initialSections.quiz.certAwardee = `This prestigious lifelong honor is officially presented to ${partner2}`;
   }
+  if (initialSections.intro) {
+    if (partner1) {
+      initialSections.intro.senderName = partner1;
+      initialSections.intro.senderClosing = `From ${partner1} with Infinite Lof & Birthday Kisses 🎂💕`;
+    }
+    if (partner2) {
+      initialSections.intro.recipientName = partner2;
+      initialSections.intro.title = `Happy Birthday ${partner2} 🎂❤️`;
+    }
+  }
 
   if (isPgConnected) {
     const client = await pool.connect();
@@ -1329,6 +1356,10 @@ function enrichSectionsData(rawSections, partner1, partner2) {
     if (merged.hero) merged.hero.partner1 = partner1;
     if (merged.letter) merged.letter.sender = `${partner1} ❤️`;
     if (merged.quiz) merged.quiz.certSender = partner1;
+    if (merged.intro) {
+      merged.intro.senderName = partner1;
+      merged.intro.senderClosing = `From ${partner1} with Infinite Lof & Birthday Kisses 🎂💕`;
+    }
   }
   if (partner2) {
     if (merged.hero) merged.hero.partner2 = partner2;
@@ -1337,6 +1368,10 @@ function enrichSectionsData(rawSections, partner1, partner2) {
       merged.letter.envelopeBadge = `👑 For My Love ${partner2}`;
     }
     if (merged.quiz) merged.quiz.certAwardee = `This prestigious lifelong honor is officially presented to ${partner2}`;
+    if (merged.intro) {
+      merged.intro.recipientName = partner2;
+      merged.intro.title = `Happy Birthday ${partner2} 🎂❤️`;
+    }
   }
   if (!rawSections || typeof rawSections !== "object") return merged;
 
@@ -1384,6 +1419,28 @@ function enrichSectionsData(rawSections, partner1, partner2) {
   }
   if (merged.quiz && merged.quiz.certAwardee) {
     merged.quiz.certAwardee = merged.quiz.certAwardee.replaceAll("ddEllaa", "Ella").replaceAll("lllElla", "Ella").replaceAll("tetstete", "Ella");
+  }
+  if (merged.intro) {
+    const defaultClosing = "From Aghiles with Infinite Lof & Birthday Kisses 🎂💕";
+    const defaultTitle = "Happy Birthday Ella 🎂❤️";
+
+    if (partner1) {
+      if (!rawSections?.intro?.senderName || merged.intro.senderName === "Aghiles" || merged.intro.senderName === "Alex" || merged.intro.senderName === "tette" || merged.intro.senderName === "tet") {
+        merged.intro.senderName = cleanP1 || partner1;
+      }
+      if (!rawSections?.intro?.senderClosing || merged.intro.senderClosing === defaultClosing || merged.intro.senderClosing.includes("Aghiles") || merged.intro.senderClosing.includes("Alex")) {
+        merged.intro.senderClosing = `From ${cleanP1 || partner1} with Infinite Lof & Birthday Kisses 🎂💕`;
+      }
+    }
+
+    if (partner2) {
+      if (!rawSections?.intro?.recipientName || merged.intro.recipientName === "Ella" || merged.intro.recipientName === "Sam" || merged.intro.recipientName === "ddEllaa" || merged.intro.recipientName === "lllElla" || merged.intro.recipientName === "tetstete") {
+        merged.intro.recipientName = cleanP2 || partner2;
+      }
+      if (!rawSections?.intro?.title || merged.intro.title === defaultTitle || merged.intro.title.includes("Ella") || merged.intro.title.includes("Sam")) {
+        merged.intro.title = `Happy Birthday ${cleanP2 || partner2} 🎂❤️`;
+      }
+    }
   }
 
   return merged;

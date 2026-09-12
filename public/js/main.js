@@ -547,6 +547,7 @@ function initEvents() {
     }, 2100);
   };
 
+  window.triggerOpen = triggerOpen;
   if (openBtn) {
     openBtn.addEventListener("click", triggerOpen);
     openBtn.addEventListener("keydown", (e) => {

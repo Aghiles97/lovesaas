@@ -19,6 +19,18 @@ if (typeof window !== 'undefined') {
   window.safeVal = safeVal;
 }
 
+if (typeof WIDGET_REGISTRY !== 'undefined' && !WIDGET_REGISTRY.intro) {
+  WIDGET_REGISTRY.intro = {
+    id: "intro",
+    title: "First Screen (Wax Seal)",
+    icon: "✉️",
+    desc: "Wax sealed letter opening screen, flower burst physics & soundtrack picker.",
+    category: "special",
+    required: false,
+    inspector: "/builder/inspectors/intro.inspector.js"
+  };
+}
+
 let state = {
   slug: '',
   authToken: null,
@@ -58,6 +70,20 @@ const inspectorFormContainer = document.getElementById(
   'inspectorFormContainer',
 );
 
+function updateLiveSyncPill(status = 'live') {
+  const syncPill = document.getElementById('inspectorLiveSyncPill');
+  if (!syncPill) return;
+  if (status === 'saving') {
+    syncPill.textContent = 'Saving';
+    syncPill.className = 'inspector-meta-sync saving';
+    syncPill.style.color = '#ef4444';
+  } else {
+    syncPill.textContent = 'Live';
+    syncPill.className = 'inspector-meta-sync live';
+    syncPill.style.color = '#10b981';
+  }
+}
+
 // Live Sync Debouncer & Real-time Iframe Communication
 let liveSyncTimeout = null;
 function debouncedLiveUpdate(immediate = false, modifiedWidgetId = null) {
@@ -79,16 +105,8 @@ function debouncedLiveUpdate(immediate = false, modifiedWidgetId = null) {
       );
     }
     const syncPill = document.getElementById('inspectorLiveSyncPill');
-    if (syncPill) {
-      syncPill.textContent = '⚡ Live Synced';
-      syncPill.style.borderColor = '#20c997';
-      syncPill.style.color = '#0ca678';
-      setTimeout(() => {
-        if (syncPill) {
-          syncPill.style.borderColor = '';
-          syncPill.style.color = '';
-        }
-      }, 600);
+    if (syncPill && !syncPill.classList.contains('saving')) {
+      updateLiveSyncPill('live');
     }
   };
   if (immediate) {
@@ -131,6 +149,7 @@ let _lastSavedConfigPayload = null;
 
 function debouncedAutoSaveLayout() {
   clearTimeout(autoSaveTimeout);
+  updateLiveSyncPill('saving');
   const indicator = document.getElementById('autoSaveIndicator');
   if (state.userRole === 'visitor') {
     if (indicator) {
@@ -138,6 +157,7 @@ function debouncedAutoSaveLayout() {
       const textEl = indicator.querySelector('.indicator-text');
       if (textEl) textEl.textContent = 'Preview Mode';
     }
+    updateLiveSyncPill('live');
     return;
   }
   if (indicator) {
@@ -160,6 +180,7 @@ function debouncedAutoSaveLayout() {
           const textEl = indicator.querySelector('.indicator-text');
           if (textEl) textEl.textContent = 'All changes saved';
         }
+        updateLiveSyncPill('live');
         return;
       }
       _lastSavedConfigPayload = payloadStr;
@@ -177,6 +198,7 @@ function debouncedAutoSaveLayout() {
         const textEl = indicator.querySelector('.indicator-text');
         if (textEl) textEl.textContent = 'All changes saved';
       }
+      updateLiveSyncPill('live');
     } catch (err) {
       console.warn('Auto-save layout error:', err);
       if (indicator) {
@@ -184,6 +206,7 @@ function debouncedAutoSaveLayout() {
         const textEl = indicator.querySelector('.indicator-text');
         if (textEl) textEl.textContent = 'Unsaved changes';
       }
+      updateLiveSyncPill('live');
     }
   }, 800);
 }
@@ -862,8 +885,50 @@ function renderWidgetTray() {
   widgetTray.innerHTML = '';
 
   const activeSet = new Set(state.layoutOrder);
-  const inactiveWidgets = state.allWidgetIds.filter((id) => !activeSet.has(id));
-  const fullList = [...state.layoutOrder, ...inactiveWidgets];
+  const inactiveWidgets = state.allWidgetIds.filter((id) => !activeSet.has(id) && id !== 'intro');
+  const fullList = [...state.layoutOrder.filter(id => id !== 'intro'), ...inactiveWidgets];
+
+  const query = (currentWidgetSearchQuery || '').toLowerCase().trim();
+  const showIntroCard = !query || 'first screen wax sealed letter intro gate flower burst soundtrack'.includes(query);
+
+  if (showIntroCard && currentWidgetFilter !== 'inactive') {
+    const screen1Card = document.createElement('div');
+    screen1Card.className = `tray-item screen1-pinned-card active-widget ${state.activeInspectorWidget === 'intro' ? 'selected-for-edit' : ''}`;
+    screen1Card.dataset.widgetId = 'intro';
+    screen1Card.title = 'Customize First Screen: Wax Sealed Letter';
+    screen1Card.style.cursor = 'pointer';
+    screen1Card.style.marginBottom = '12px';
+    screen1Card.innerHTML = `
+      <div class="screen1-lead">
+        <span class="screen1-icon">✉️</span>
+        <div class="screen1-info">
+          <div class="screen1-title-row">
+            <span class="screen1-title">First Screen: Wax Sealed Letter</span>
+            <span class="screen1-badge">Screen 1</span>
+          </div>
+          <div class="screen1-desc">Opening Gate • Flower Burst &amp; Soundtrack</div>
+        </div>
+      </div>
+      <div class="screen1-actions">
+        <button type="button" class="btn-customize-intro" title="Customize First Screen">
+          <span>Customize</span>
+        </button>
+        <span class="screen1-chevron">›</span>
+      </div>
+    `;
+
+    const openIntroCustomize = (e) => {
+      if (e) e.stopPropagation();
+      selectWidgetForInspector('intro');
+      if (typeof switchToTab === 'function') switchToTab('tab-inspector', true);
+    };
+
+    screen1Card.onclick = openIntroCustomize;
+    const btnCust = screen1Card.querySelector('.btn-customize-intro');
+    if (btnCust) btnCust.onclick = openIntroCustomize;
+
+    widgetTray.appendChild(screen1Card);
+  }
 
   const countEl = document.getElementById('activeWidgetsCount');
   if (countEl)
@@ -879,7 +944,6 @@ function renderWidgetTray() {
   if (tabBadge)
     tabBadge.textContent = `${state.layoutOrder.length}/${state.allWidgetIds.length}`;
 
-  const query = (currentWidgetSearchQuery || '').toLowerCase().trim();
   const filteredList = fullList.filter((id) => {
     const meta = WIDGET_REGISTRY[id];
     if (!meta) return false;
@@ -904,14 +968,15 @@ function renderWidgetTray() {
   });
 
   if (filteredList.length === 0) {
-    widgetTray.innerHTML = `
-      <div class="widget-empty-state">
-        <span class="empty-icon">🔍</span>
-        <div class="empty-title">No sections found</div>
-        <p class="empty-text">No section matching "<strong>${escapeHtml(currentWidgetSearchQuery)}</strong>"</p>
-        <button type="button" class="btn-clear-search-pill" id="btnEmptyClearSearch">Reset Filter</button>
-      </div>
+    const emptyState = document.createElement('div');
+    emptyState.className = 'widget-empty-state';
+    emptyState.innerHTML = `
+      <span class="empty-icon">🔍</span>
+      <div class="empty-title">No sections found</div>
+      <p class="empty-text">No section matching "<strong>${escapeHtml(currentWidgetSearchQuery)}</strong>"</p>
+      <button type="button" class="btn-clear-search-pill" id="btnEmptyClearSearch">Reset Filter</button>
     `;
+    widgetTray.appendChild(emptyState);
     const btnReset = document.getElementById('btnEmptyClearSearch');
     if (btnReset) {
       btnReset.onclick = () => {
@@ -1045,6 +1110,13 @@ function toggleWidgetActive(widgetId, isEnabled) {
     renderWidgetTray();
     return;
   }
+  if (widgetId === 'intro') {
+    if (!state.sectionsData.intro) state.sectionsData.intro = {};
+    state.sectionsData.intro.enabled = isEnabled;
+    debouncedLiveUpdate(true);
+    debouncedAutoSaveLayout();
+    return;
+  }
   if (isEnabled) {
     if (!state.layoutOrder.includes(widgetId)) {
       state.layoutOrder.push(widgetId);
@@ -1124,7 +1196,7 @@ function initWidgetTrayControls() {
       state.templatePreset = 'custom';
       if (!state.layoutOrder.length) {
         renderInspectorEmptyState();
-      } else if (!state.layoutOrder.includes(state.activeInspectorWidget)) {
+      } else if (state.activeInspectorWidget !== 'intro' && !state.layoutOrder.includes(state.activeInspectorWidget)) {
         selectWidgetForInspector(state.layoutOrder[0]);
       }
       renderPresetsUI();
@@ -1224,7 +1296,7 @@ function removeWidgetFromLayout(widgetId) {
 
   if (
     state.activeInspectorWidget === widgetId ||
-    !state.layoutOrder.includes(state.activeInspectorWidget)
+    (state.activeInspectorWidget !== 'intro' && !state.layoutOrder.includes(state.activeInspectorWidget))
   ) {
     if (state.layoutOrder.length > 0) {
       selectWidgetForInspector(state.layoutOrder[0]);
@@ -1813,12 +1885,12 @@ function populateInspectorSelect() {
     const orderPos = state.layoutOrder.indexOf(id);
     const opt = document.createElement('option');
     opt.value = id;
-    opt.textContent = `${meta.icon} ${meta.title} (${orderPos >= 0 ? '#' + (orderPos + 1) : 'Off'})`;
+    opt.textContent = `${meta.icon} ${meta.title} (${orderPos >= 0 ? '#' + (orderPos + 1) : (id === 'intro' ? 'Screen 1' : 'Off')})`;
     inspectorWidgetSelect.appendChild(opt);
   });
   inspectorWidgetSelect.onchange = (e) => {
     selectWidgetForInspector(e.target.value);
-    if (previewIframe && previewIframe.contentWindow) {
+    if (e.target.value !== 'intro' && previewIframe && previewIframe.contentWindow) {
       previewIframe.contentWindow.postMessage(
         { type: 'SCROLL_TO_WIDGET', widgetId: e.target.value },
         window.location.origin,
@@ -1867,6 +1939,19 @@ function selectWidgetForInspector(widgetId) {
     return;
   }
 
+  if (widgetId === 'intro') {
+    if (previewIframe && previewIframe.contentWindow) {
+      previewIframe.contentWindow.postMessage(
+        { type: 'SET_PREVIEW_SCREEN', screen: 'intro' },
+        '*',
+      );
+    }
+    const btnIntro = document.getElementById('btnPreviewScreenIntro');
+    const btnCore = document.getElementById('btnPreviewScreenCore');
+    if (btnIntro) btnIntro.classList.add('active');
+    if (btnCore) btnCore.classList.remove('active');
+  }
+
   const stickyHeader = document.querySelector('.inspector-sticky-header');
   if (stickyHeader) stickyHeader.classList.remove('hidden');
 
@@ -1877,7 +1962,7 @@ function selectWidgetForInspector(widgetId) {
       const id = opt.value;
       const meta = WIDGET_REGISTRY[id];
       const orderPos = state.layoutOrder.indexOf(id);
-      opt.textContent = `${meta?.icon || '🧩'} ${meta?.title || id} (${orderPos >= 0 ? '#' + (orderPos + 1) : 'Off'})`;
+      opt.textContent = `${meta?.icon || '🧩'} ${meta?.title || id} (${orderPos >= 0 ? '#' + (orderPos + 1) : (id === 'intro' ? 'Screen 1' : 'Off')})`;
     });
   }
 
@@ -1888,11 +1973,11 @@ function selectWidgetForInspector(widgetId) {
     pill.style.display = '';
   }
 
-  const isActive = state.layoutOrder.includes(widgetId);
+  const isActive = widgetId === 'intro' ? (state.sectionsData.intro?.enabled !== false) : state.layoutOrder.includes(widgetId);
   const orderPos = state.layoutOrder.indexOf(widgetId);
   const orderBadge = document.getElementById('inspectorOrderBadge');
   if (orderBadge) {
-    orderBadge.textContent = orderPos >= 0 ? `#${orderPos + 1}` : 'Off';
+    orderBadge.textContent = widgetId === 'intro' ? 'Screen 1' : (orderPos >= 0 ? `#${orderPos + 1}` : 'Off');
   }
 
   const moreMenu = document.getElementById('inspectorMoreMenu');
@@ -1905,7 +1990,7 @@ function selectWidgetForInspector(widgetId) {
   const btnMoveUp = document.getElementById('btnInspectorMoveUp');
   const btnMoveDown = document.getElementById('btnInspectorMoveDown');
   if (btnMoveUp) {
-    btnMoveUp.disabled = orderPos <= 0;
+    btnMoveUp.disabled = widgetId === 'intro' || orderPos <= 0;
     btnMoveUp.onclick = () => {
       if (orderPos > 0) {
         moveWidgetByStep(widgetId, -1);
@@ -1916,7 +2001,7 @@ function selectWidgetForInspector(widgetId) {
   }
   if (btnMoveDown) {
     btnMoveDown.disabled =
-      orderPos < 0 || orderPos >= state.layoutOrder.length - 1;
+      widgetId === 'intro' || orderPos < 0 || orderPos >= state.layoutOrder.length - 1;
     btnMoveDown.onclick = () => {
       if (orderPos >= 0 && orderPos < state.layoutOrder.length - 1) {
         moveWidgetByStep(widgetId, 1);
@@ -1928,6 +2013,7 @@ function selectWidgetForInspector(widgetId) {
 
   const btnRemoveCur = document.getElementById('btnRemoveCurrentWidget');
   if (btnRemoveCur) {
+    btnRemoveCur.disabled = widgetId === 'intro';
     btnRemoveCur.onclick = () => {
       closeMore();
       removeWidgetFromLayout(widgetId);
@@ -1966,10 +2052,17 @@ function selectWidgetForInspector(widgetId) {
     btnLocate.onclick = () => {
       closeMore();
       if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage(
-          { type: 'SCROLL_TO_WIDGET', widgetId },
-          window.location.origin,
-        );
+        if (widgetId === 'intro') {
+          previewIframe.contentWindow.postMessage(
+            { type: 'SET_PREVIEW_SCREEN', screen: 'intro' },
+            window.location.origin,
+          );
+        } else {
+          previewIframe.contentWindow.postMessage(
+            { type: 'SCROLL_TO_WIDGET', widgetId },
+            window.location.origin,
+          );
+        }
       }
     };
   }
@@ -2028,7 +2121,7 @@ function renderWidgetInspector(widgetId, forceScrollTop = false) {
   if (catEl) catEl.textContent = category;
 
   const descEl = document.getElementById('inspectorMetaDesc');
-  if (descEl) descEl.textContent = meta.desc;
+  if (descEl) descEl.textContent = '';
 
   if (state.userRole === 'visitor') {
     const lockBanner = document.createElement('div');
@@ -2100,7 +2193,8 @@ function renderWidgetInspector(widgetId, forceScrollTop = false) {
     tabPane.style.minHeight = '';
     const hasTargetScroll =
       (widgetId === 'timeline' && Boolean(state.targetChapterId || state.targetCityKey)) ||
-      (widgetId === 'memories' && Boolean(state.targetMemoryId));
+      (widgetId === 'memories' && Boolean(state.targetMemoryId)) ||
+      (widgetId === 'map' && Boolean(state.targetCityKey));
 
     if (savedScrollTop > 0 && !hasTargetScroll) {
       tabPane.scrollTop = savedScrollTop;
@@ -2164,6 +2258,7 @@ async function saveConfig() {
     const textEl = indicator.querySelector('.indicator-text');
     if (textEl) textEl.textContent = 'Saving...';
   }
+  updateLiveSyncPill('saving');
 
   try {
     const headers = getAuthHeaders({ 'Content-Type': 'application/json' });
@@ -2199,6 +2294,7 @@ async function saveConfig() {
       const textEl = indicator.querySelector('.indicator-text');
       if (textEl) textEl.textContent = 'All changes saved';
     }
+    updateLiveSyncPill('live');
 
     setTimeout(() => {
       if (btnSaveConfig) {
@@ -2214,6 +2310,7 @@ async function saveConfig() {
     reloadPreview();
   } catch (err) {
     showToast('Save Error: ' + err.message, 'error');
+    updateLiveSyncPill('live');
     if (btnSaveConfig) {
       btnSaveConfig.disabled = false;
       const saveText = btnSaveConfig.querySelector('.btn-save-text');
@@ -3646,7 +3743,9 @@ function initSidebarTabs() {
 
 function switchToTab(tabId, skipWidgetSelect = false) {
   if (tabId === 'tab-inspector' && !skipWidgetSelect) {
-    if (!state.layoutOrder || !state.layoutOrder.length) {
+    if (state.activeInspectorWidget === 'intro') {
+      selectWidgetForInspector('intro');
+    } else if (!state.layoutOrder || !state.layoutOrder.length) {
       renderInspectorEmptyState();
     } else if (
       !state.activeInspectorWidget ||
@@ -4648,6 +4747,36 @@ function initDeviceSwitcher() {
   }
 }
 
+function initScreenSwitcher() {
+  const btnIntro = document.getElementById('btnPreviewScreenIntro');
+  const btnCore = document.getElementById('btnPreviewScreenCore');
+
+  const setPreviewScreen = (screen) => {
+    if (screen === 'intro') {
+      btnIntro?.classList.add('active');
+      btnCore?.classList.remove('active');
+      if (previewIframe && previewIframe.contentWindow) {
+        previewIframe.contentWindow.postMessage(
+          { type: 'SET_PREVIEW_SCREEN', screen: 'intro' },
+          '*',
+        );
+      }
+    } else {
+      btnCore?.classList.add('active');
+      btnIntro?.classList.remove('active');
+      if (previewIframe && previewIframe.contentWindow) {
+        previewIframe.contentWindow.postMessage(
+          { type: 'SET_PREVIEW_SCREEN', screen: 'website' },
+          '*',
+        );
+      }
+    }
+  };
+
+  if (btnIntro) btnIntro.onclick = () => setPreviewScreen('intro');
+  if (btnCore) btnCore.onclick = () => setPreviewScreen('website');
+}
+
 function initMobileWorkspaceToggle() {
   const btnEditor = document.getElementById('btnMobileShowEditor');
   const btnPreview = document.getElementById('btnMobileShowPreview');
@@ -5094,6 +5223,7 @@ function setupEventListeners() {
   initAddSectionModalControls();
   initSidebarResizer();
   initDeviceSwitcher();
+  initScreenSwitcher();
   initMobileWorkspaceToggle();
   initMobileMenu();
   initProjectSwitcher();
@@ -5107,6 +5237,17 @@ function setupEventListeners() {
 
   window.addEventListener('message', (e) => {
     if (!e.data) return;
+    if (e.data.type === 'PREVIEW_SCREEN_CHANGED') {
+      const btnIntro = document.getElementById('btnPreviewScreenIntro');
+      const btnCore = document.getElementById('btnPreviewScreenCore');
+      if (e.data.screen === 'intro') {
+        btnIntro?.classList.add('active');
+        btnCore?.classList.remove('active');
+      } else {
+        btnCore?.classList.add('active');
+        btnIntro?.classList.remove('active');
+      }
+    }
     if (e.data.type === 'BUILDER_IFRAME_READY') {
       debouncedLiveUpdate(true);
       if (previewIframe && previewIframe.contentWindow) {
@@ -5171,6 +5312,8 @@ function setupEventListeners() {
             { type: 'SCROLL_TO_MEMORY', memoryId: e.data.memoryId },
             window.location.origin,
           );
+        } else if (e.data.widgetId === 'map' && e.data.cityKey) {
+          // Keep preview map state uninterrupted
         } else {
           previewIframe.contentWindow.postMessage(
             { type: 'SCROLL_TO_WIDGET', widgetId: e.data.widgetId },

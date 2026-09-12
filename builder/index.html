@@ -4,7 +4,61 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Couple Project Builder</title>
+  <link rel="icon" type="image/png" href="/assets/logo.png">
   <link rel="stylesheet" href="/builder/builder.css?v=3.0.0">
+  <style>
+    .preview-screen-switcher {
+      display: flex;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px;
+      border-radius: var(--radius-sm, 6px);
+      gap: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .screen-btn {
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .screen-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .screen-btn.active {
+      background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+      color: #ffffff;
+      box-shadow: 0 1px 4px rgba(244, 63, 94, 0.4);
+    }
+    .screen-btn-icon {
+      font-size: 0.85rem;
+      line-height: 1;
+    }
+    @media (max-width: 768px) {
+      .preview-screen-switcher {
+        padding: 1px;
+        gap: 1px;
+      }
+      .screen-btn {
+        padding: 4px 6px;
+        font-size: 0.7rem;
+      }
+    }
+    @media (max-width: 480px) {
+      .screen-btn-text {
+        display: none;
+      }
+    }
+  </style>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
     (function() {
@@ -23,7 +77,7 @@
   <header class="builder-nav">
     <div class="brand-box">
       <a href="/welcome" class="brand-logo-link" title="Return to Dashboard">
-        <span class="brand-icon">💍</span>
+        <img src="/assets/logo.png" alt="LoveSaas" class="brand-logo-img" width="30" height="30">
         <span class="brand-title">LoveSaas <span class="brand-badge">Builder</span></span>
       </a>
 
@@ -124,7 +178,7 @@
     <div class="mobile-menu-sheet" id="builderMobileMenuSheet" role="dialog" aria-modal="true" aria-label="Mobile Navigation Menu">
       <div class="mobile-menu-header">
         <div class="mobile-menu-site-info">
-          <span class="brand-icon" style="font-size: 1.3rem;">💍</span>
+          <img src="/assets/logo.png" alt="LoveSaas" class="brand-logo-img" width="28" height="28">
           <div>
             <div class="mobile-menu-site-name">LoveSaas <span class="brand-badge" style="font-size: 0.65rem; padding: 1px 5px; background: rgba(244,63,94,0.1); color: var(--primary); border-radius: 4px;">Builder</span></div>
             <div class="mobile-menu-site-slug"><span class="tenant-label">Project:</span> <strong id="mobileMenuTenantBadge">demo</strong></div>
@@ -301,14 +355,7 @@
               </div>
             </div>
           </div>
-          <!-- Slim Meta Bar -->
-          <div class="inspector-meta-bar" id="inspectorMetaBar">
-            <div class="inspector-meta-left">
-              <span class="inspector-meta-category" id="inspectorMetaCat">Modular</span>
-              <span class="inspector-meta-desc" id="inspectorMetaDesc">Widget settings</span>
-            </div>
-            <span class="inspector-meta-sync" id="inspectorLiveSyncPill">⚡ Live Synced</span>
-          </div>
+
         </div>
         <div id="inspectorFormContainer" class="inspector-form-pane"></div>
       </div>
@@ -447,6 +494,14 @@
         <div class="preview-address-bar" title="Simulated Live URL">
           <span class="preview-ssl-icon">🔒</span>
           <span class="preview-url-text" id="previewUrlText">lovesaas.site/sites/demo</span>
+        </div>
+        <div class="preview-screen-switcher" id="previewScreenSwitcher" role="group" aria-label="Screen Switcher">
+          <button type="button" class="screen-btn active" id="btnPreviewScreenIntro" title="View First Screen (Wax Sealed Letter)">
+            <span class="screen-btn-icon">✉️</span> <span class="screen-btn-text">Screen 1</span>
+          </button>
+          <button type="button" class="screen-btn" id="btnPreviewScreenCore" title="View Core Website (Widgets)">
+            <span class="screen-btn-icon">🌐</span> <span class="screen-btn-text">Screen 2</span>
+          </button>
         </div>
         <div class="device-toggles" role="group" aria-label="Viewport Switcher">
           <button type="button" class="device-btn active" id="btnDeviceDesktop" title="Desktop view (100%)">
@@ -985,6 +1040,7 @@
   <script src="/builder/inspectors/audio_capsule.inspector.js"></script>
   <script src="/builder/inspectors/milestone_odyssey.inspector.js"></script>
   <script src="/builder/inspectors/valentine_scratch.inspector.js"></script>
+  <script src="/builder/inspectors/intro.inspector.js"></script>
 
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 

@@ -3,6 +3,15 @@
  * Registers all 13 decomposed production modules from port 3000.
  */
 const WIDGET_REGISTRY = {
+  intro: {
+    id: "intro",
+    title: "First Screen (Wax Seal)",
+    icon: "✉️",
+    desc: "Wax sealed letter opening screen, flower burst physics & soundtrack picker.",
+    category: "special",
+    required: false,
+    inspector: "/builder/inspectors/intro.inspector.js"
+  },
   hero: {
     id: "hero",
     title: "Hero Header & LDR Clocks",

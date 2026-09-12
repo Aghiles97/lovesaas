@@ -82,6 +82,38 @@ function setupInteractiveMap() {
   const indonesiaTourList = ["bali", "jakarta"];
   const indonesiaTourChapters = ["chap-bali", "chap-jakarta"];
 
+  const CITY_TO_CHAPTER_MAP = {
+    "guangzhou": "chap-guangzhou-start",
+    "china-base": "chap-guangzhou-start",
+    "algeria": "chap-ldr",
+    "vietnam": "chap-vietnam",
+    "indonesia": "chap-bali",
+    "bali": "chap-bali",
+    "jakarta": "chap-jakarta",
+    "nansha": "chap-nansha",
+    "wuhan": "chap-wuhan",
+    "nanjing": "chap-nanjing",
+    "dagu": "chap-dagu",
+    "bipenggou": "chap-bipenggou",
+    "huanglong": "chap-huanglong",
+    "jiuzhaigou": "chap-jiuzhaigou",
+    "chengdu": "chap-chengdu",
+    "chongqing": "chap-chongqing",
+    "shanghai": "chap-shanghai",
+    "shenzhen": "chap-shenzhen"
+  };
+
+  const getCityChapterId = (cityKey, stopIdx) => {
+    const allChapters = (typeof getActiveMapChapters === "function") ? getActiveMapChapters() : [];
+    if (cityKey === "guangzhou" && stopIdx !== undefined && chinaTourChapters[stopIdx]) {
+      const candidate = allChapters.find(c => c.id === chinaTourChapters[stopIdx]);
+      if (candidate && candidate.cityKey === "guangzhou") return candidate.id;
+    }
+    if (CITY_TO_CHAPTER_MAP[cityKey]) return CITY_TO_CHAPTER_MAP[cityKey];
+    const match = allChapters.find(c => c.cityKey === cityKey);
+    return match ? match.id : "chap-guangzhou-start";
+  };
+
   const getActiveTourList = () => {
     const isChina = tabChina && tabChina.classList.contains("active");
     const isIndo = tabIndonesia && tabIndonesia.classList.contains("active");
@@ -401,6 +433,9 @@ function setupInteractiveMap() {
       const y = originRect ? originRect.top + originRect.height / 2 : window.innerHeight / 2;
       particles.burst(x, y, 30);
       showComplimentToast(x, y, "🚄 Switched to China Journey! 🇨🇳");
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: "SELECT_WIDGET", widgetId: "map", cityKey: key }, "*");
+      }
       return;
     }
 
@@ -416,11 +451,18 @@ function setupInteractiveMap() {
       const y = originRect ? originRect.top + originRect.height / 2 : window.innerHeight / 2;
       particles.burst(x, y, 30);
       showComplimentToast(x, y, "🌴 Switched to Indonesia Journey! 🇮🇩");
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: "SELECT_WIDGET", widgetId: "map", cityKey: key }, "*");
+      }
       return;
     }
 
     currentActiveMemoryKey = key;
-    const story = CITY_STORIES[key] || CITY_STORIES["guangzhou"];
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: "SELECT_WIDGET", widgetId: "map", cityKey: key }, "*");
+    }
+    const stories = (typeof window !== "undefined" && window.CITY_STORIES) || (typeof CITY_STORIES !== "undefined" && CITY_STORIES) || {};
+    const story = stories[key] || stories["guangzhou"];
     if (!story || !modal) return;
 
     if (key === "bali" || key === "jakarta") {
@@ -435,9 +477,9 @@ function setupInteractiveMap() {
     const isIndo = tabIndonesia && tabIndonesia.classList.contains("active");
     const activeTour = getActiveTourList();
 
-    if (tourIdx !== undefined && tourIdx >= 0 && tourIdx < activeTour.length) {
+    if (tourIdx !== undefined && tourIdx >= 0 && tourIdx < activeTour.length && activeTour[tourIdx] === key) {
       currentTourIndex = tourIdx;
-    } else if (activeTour[currentTourIndex] !== key) {
+    } else {
       const found = activeTour.indexOf(key);
       currentTourIndex = found >= 0 ? found : 0;
     }
@@ -453,7 +495,7 @@ function setupInteractiveMap() {
       const matchCity = btn.getAttribute("data-city") === key;
       const stopAttr = btn.getAttribute("data-stop");
       const matchStop = stopAttr ? (parseInt(stopAttr, 10) === currentTourIndex + 1) : matchCity;
-      const isActive = (isChina || isIndo) ? (matchCity && matchStop) : matchCity;
+      const isActive = matchCity && ((isChina || isIndo) ? matchStop : true);
       btn.classList.toggle("active", isActive);
       if (isActive) {
         btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
@@ -469,8 +511,7 @@ function setupInteractiveMap() {
       activeCanvas.scrollTo({ left: Math.max(0, targetLeft), behavior: "smooth" });
     }
 
-    const tourChapters = isChina ? chinaTourChapters : (isIndo ? indonesiaTourChapters : globalTourChapters);
-    const currentChapterId = tourChapters[currentTourIndex] || CITY_TO_CHAPTER_MAP[key] || "chap-guangzhou-start";
+    const currentChapterId = getCityChapterId(key, currentTourIndex);
     const photoData = getCityPhotoData(currentChapterId, key);
 
     const formatTeaserDesc = (text, limit = 110) => {
@@ -482,7 +523,7 @@ function setupInteractiveMap() {
       return (lastSpace > 50 ? cut.substring(0, lastSpace) : cut) + "...";
     };
 
-    const currentChapter = tourChapters[currentTourIndex] ? getActiveMapChapters().find(c => c.id === tourChapters[currentTourIndex]) : null;
+    const currentChapter = (typeof getActiveMapChapters === "function" ? getActiveMapChapters() : []).find(c => c.id === currentChapterId) || null;
     popupIcon.textContent = story.icon;
     popupTag.textContent = story.tag;
     popupTitle.textContent = story.title;
@@ -517,6 +558,33 @@ function setupInteractiveMap() {
         else vMode = "airplane";
       }
       popupVehicle.textContent = VEHICLE_LABELS[vMode] || (vMode.includes(" ") ? vMode : `✈️ ${vMode}`);
+    }
+
+    // Apply Destination Theme Colors to Postcard Modal
+    const colorA = story.colorA || "#ff4365";
+    const colorB = story.colorB || "#8a2387";
+    const postcardEl = document.querySelector(".map-story-postcard");
+    if (postcardEl) {
+      postcardEl.style.borderColor = colorA;
+      postcardEl.style.boxShadow = `0 25px 60px rgba(0, 0, 0, 0.35), 0 0 25px ${colorA}44`;
+      postcardEl.style.background = `linear-gradient(180deg, ${colorA}15 0%, #ffffff 32%)`;
+    }
+    if (popupVehicle) {
+      popupVehicle.style.borderColor = colorA;
+      popupVehicle.style.color = colorA;
+      popupVehicle.style.background = `${colorA}18`;
+    }
+    const stampEl = document.querySelector(".postcard-stamp-mark");
+    if (stampEl) {
+      stampEl.style.borderColor = colorB;
+      stampEl.style.color = colorB;
+    }
+    if (activePin) {
+      const pinCircles = activePin.querySelectorAll("circle");
+      if (pinCircles && pinCircles.length >= 2) {
+        pinCircles[0].setAttribute("fill", `${colorA}55`);
+        pinCircles[1].setAttribute("fill", colorA);
+      }
     }
 
     const rawChapterDesc = (photoData.desc && photoData.desc.trim()) ? photoData.desc : ((currentChapter && currentChapter.desc) ? currentChapter.desc : story.desc);
@@ -766,6 +834,89 @@ function setupInteractiveMap() {
 
   window.spotlightMapCity = spotlightMapCity;
 
+  const updateLiveMapStory = (targetKey) => {
+    const key = targetKey || currentActiveMemoryKey;
+    const stories = (typeof window !== "undefined" && window.CITY_STORIES) || (typeof CITY_STORIES !== "undefined" && CITY_STORIES) || {};
+    const story = stories[key];
+    if (!story) return;
+
+    const modal = document.getElementById("mapStoryModal");
+    const isModalOpen = modal && !modal.classList.contains("hidden");
+
+    if (isModalOpen && (!targetKey || currentActiveMemoryKey === key)) {
+      if (popupIcon) popupIcon.textContent = story.icon || "📍";
+      if (popupTag) popupTag.textContent = story.tag || "";
+      if (popupTitle) popupTitle.textContent = story.title || "";
+      if (popupDesc) popupDesc.textContent = story.desc || "";
+
+      const storyCaption = document.getElementById("mapStoryCaption");
+      if (storyCaption && story.defaultCaption) storyCaption.textContent = story.defaultCaption;
+
+      const popupVehicle = document.getElementById("mapPopupVehicle");
+      if (popupVehicle) {
+        const VEHICLE_LABELS = {
+          airplane: "✈️ Flight Route",
+          flight: "✈️ Flight Route",
+          car: "🚗 Road Trip",
+          train: "🚆 High-Speed Rail",
+          bike: "🚲 Bike Ride",
+          boat: "🚢 Cruise / Boat",
+          walk: "🥾 Walking / Hike",
+          hike: "🥾 Mountain Hike"
+        };
+        const vMode = story.vehicle || "airplane";
+        popupVehicle.textContent = VEHICLE_LABELS[vMode] || `✈️ ${vMode}`;
+      }
+
+      // Live Theme Colors
+      const colorA = story.colorA || "#ff4365";
+      const colorB = story.colorB || "#8a2387";
+      const postcard = document.querySelector(".map-story-postcard");
+      if (postcard) {
+        postcard.style.borderColor = colorA;
+        postcard.style.boxShadow = `0 25px 60px rgba(0, 0, 0, 0.35), 0 0 25px ${colorA}44`;
+        postcard.style.background = `linear-gradient(180deg, ${colorA}15 0%, #ffffff 32%)`;
+      }
+      if (popupVehicle) {
+        popupVehicle.style.borderColor = colorA;
+        popupVehicle.style.color = colorA;
+        popupVehicle.style.background = `${colorA}18`;
+      }
+      const stamp = document.querySelector(".postcard-stamp-mark");
+      if (stamp) {
+        stamp.style.borderColor = colorB;
+        stamp.style.color = colorB;
+      }
+    }
+
+    // Live update quick chip
+    const chip = document.querySelector(`.map-chip-btn[data-city="${key}"]`);
+    if (chip) {
+      const vIcons = { airplane: "✈️", flight: "✈️", car: "🚗", train: "🚆", bike: "🚲", boat: "🚢", walk: "🥾" };
+      const vIcon = vIcons[story.vehicle] || "✈️";
+      const tagSpan = chip.querySelector(".chip-vehicle-tag");
+      if (tagSpan) tagSpan.textContent = vIcon;
+      chip.setAttribute("data-vehicle", story.vehicle || "airplane");
+    }
+
+    // Live update pin on map
+    const pin = document.querySelector(`[data-city="${key}"]`);
+    if (pin) {
+      const colorA = story.colorA || "#ff4365";
+      const pinTexts = pin.querySelectorAll("text");
+      if (pinTexts && pinTexts.length > 0) {
+        pinTexts[0].textContent = story.icon || "📍";
+      }
+      const circles = pin.querySelectorAll("circle");
+      if (circles && circles.length >= 2) {
+        circles[0].setAttribute("fill", `${colorA}55`);
+        circles[1].setAttribute("fill", colorA);
+      }
+    }
+  };
+
+  window.updateLiveMapStory = updateLiveMapStory;
+
   // Prev / Next Destination Navigation in Modal
   const prevCityBtn = document.getElementById("prevCityBtn");
   const nextCityBtn = document.getElementById("nextCityBtn");
@@ -960,36 +1111,20 @@ function setupInteractiveMap() {
   if (editCityBtn) {
     editCityBtn.addEventListener("click", (e) => {
       e.stopPropagation();
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: "SELECT_WIDGET",
+          widgetId: "map",
+          cityKey: currentActiveMemoryKey
+        }, "*");
+        return;
+      }
       const activeSlide = currentActiveSlides && currentActiveSlides[currentActiveSlideIdx];
-      const isChina = tabChina && tabChina.classList.contains("active");
-      const isIndo = tabIndonesia && tabIndonesia.classList.contains("active");
-      const tourChapters = isChina ? chinaTourChapters : (isIndo ? indonesiaTourChapters : globalTourChapters);
-      const targetChapterId = activeSlide ? activeSlide.chapterId : (tourChapters[currentTourIndex] || CITY_TO_CHAPTER_MAP[currentActiveMemoryKey] || "chap-guangzhou-start");
+      const targetChapterId = activeSlide ? activeSlide.chapterId : getCityChapterId(currentActiveMemoryKey, currentTourIndex);
       const targetCityKey = activeSlide ? activeSlide.cityKey : currentActiveMemoryKey;
       openDirectChapterEditor(targetChapterId, targetCityKey);
     });
   }
-
-  const CITY_TO_CHAPTER_MAP = {
-    "guangzhou": "chap-guangzhou-start",
-    "china-base": "chap-guangzhou-start",
-    "algeria": "chap-ldr",
-    "vietnam": "chap-vietnam",
-    "indonesia": "chap-bali",
-    "bali": "chap-bali",
-    "jakarta": "chap-jakarta",
-    "nansha": "chap-nansha",
-    "wuhan": "chap-wuhan",
-    "nanjing": "chap-nanjing",
-    "dagu": "chap-dagu",
-    "bipenggou": "chap-bipenggou",
-    "huanglong": "chap-huanglong",
-    "jiuzhaigou": "chap-jiuzhaigou",
-    "chengdu": "chap-chengdu",
-    "chongqing": "chap-chongqing",
-    "shanghai": "chap-shanghai",
-    "shenzhen": "chap-shenzhen"
-  };
 
   // Story Chapter Detail Modal Engine (Full Detailed Story Window)
   const detailModal = document.getElementById("storyChapterDetailModal");
@@ -1300,10 +1435,7 @@ function setupInteractiveMap() {
     jumpBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       const activeSlide = currentActiveSlides && currentActiveSlides[currentActiveSlideIdx];
-      const isChina = tabChina && tabChina.classList.contains("active");
-      const isIndo = tabIndonesia && tabIndonesia.classList.contains("active");
-      const tourChapters = isChina ? chinaTourChapters : (isIndo ? indonesiaTourChapters : globalTourChapters);
-      const targetChapterId = activeSlide ? activeSlide.chapterId : (tourChapters[currentTourIndex] || CITY_TO_CHAPTER_MAP[currentActiveMemoryKey] || "chap-guangzhou-start");
+      const targetChapterId = activeSlide ? activeSlide.chapterId : getCityChapterId(currentActiveMemoryKey, currentTourIndex);
       closePopup();
       openStoryChapterDetailModal(targetChapterId, currentActiveMemoryKey);
     });

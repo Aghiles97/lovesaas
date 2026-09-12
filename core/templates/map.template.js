@@ -74,13 +74,16 @@
 
     let chipsHtml = "";
     if (Array.isArray(data.destinations) && data.destinations.length > 0) {
+      const regionCounters = {};
       chipsHtml = data.destinations.map((d, i) => {
         const vIcon = VEHICLE_MAP[d.vehicle] || d.vehicle || "✈️";
         const journey = d.region || "china";
         const isGlobal = journey === "global";
         const hiddenClass = isGlobal ? "" : "hidden-chip";
         const activeClass = (isGlobal && i === 0) ? "active" : "";
-        return `<button type="button" class="map-chip-btn ${hiddenClass} ${activeClass}" data-city="${escapeHtml(d.key)}" data-journey="${escapeHtml(journey)}" data-stop="${i + 1}" data-vehicle="${escapeHtml(d.vehicle || 'airplane')}"><span class="chip-vehicle-tag">${vIcon}</span> ${escapeHtml(d.flag || '📍')} ${escapeHtml(d.label)}</button>`;
+        regionCounters[journey] = (regionCounters[journey] || 0) + 1;
+        const stopNum = regionCounters[journey];
+        return `<button type="button" class="map-chip-btn ${hiddenClass} ${activeClass}" data-city="${escapeHtml(d.key)}" data-journey="${escapeHtml(journey)}" data-stop="${stopNum}" data-vehicle="${escapeHtml(d.vehicle || 'airplane')}"><span class="chip-vehicle-tag">${vIcon}</span> ${escapeHtml(d.flag || '📍')} ${escapeHtml(d.label)}</button>`;
       }).join("\n              ");
     } else {
       chipsHtml = `
