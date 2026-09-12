@@ -1948,7 +1948,7 @@ async function getUserDesigns(userId, customerEmail = null, isAdmin = false) {
       createdAt: r.created_at,
       updatedAt: r.updated_at,
       siteUrl: `/sites/${encodeURIComponent(r.slug)}`,
-      studioUrl: `/builder?slug=${encodeURIComponent(r.slug)}&token=${encodeURIComponent(r.auth_token || "")}`
+      builderUrl: `/builder?slug=${encodeURIComponent(r.slug)}&token=${encodeURIComponent(r.auth_token || "")}`
     }));
   }
 
@@ -1972,7 +1972,7 @@ async function getUserDesigns(userId, customerEmail = null, isAdmin = false) {
         createdAt: t.created_at,
         updatedAt: cfg.updated_at,
         siteUrl: `/sites/${encodeURIComponent(t.slug)}`,
-        studioUrl: `/builder?slug=${encodeURIComponent(t.slug)}&token=${encodeURIComponent(t.auth_token || "")}`
+        builderUrl: `/builder?slug=${encodeURIComponent(t.slug)}&token=${encodeURIComponent(t.auth_token || "")}`
       };
     });
 }

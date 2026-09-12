@@ -66,7 +66,7 @@ function debouncedLiveUpdate(immediate = false, modifiedWidgetId = null) {
     if (previewIframe && previewIframe.contentWindow) {
       previewIframe.contentWindow.postMessage(
         {
-          type: 'STUDIO_LIVE_UPDATE',
+          type: 'BUILDER_LIVE_UPDATE',
           config: {
             themeId: state.themeId,
             customBgUrl: state.customBgUrl || "",
@@ -5107,7 +5107,7 @@ function setupEventListeners() {
 
   window.addEventListener('message', (e) => {
     if (!e.data) return;
-    if (e.data.type === 'STUDIO_IFRAME_READY') {
+    if (e.data.type === 'BUILDER_IFRAME_READY') {
       debouncedLiveUpdate(true);
       if (previewIframe && previewIframe.contentWindow) {
         previewIframe.contentWindow.postMessage(

@@ -10,3 +10,7 @@ Multi-tenant couple website SaaS engine.
 
 ## Deployment Status
 - Auto-sync: Enabled (production cron poll)
+
+## Workspace Terminology
+- **Builder Editor**: Left panel (`#builderSidebar`) containing section reordering, widget customizers, theme settings, and media vault.
+- **Builder Preview**: Right panel (`#builderPreviewPane`) rendering the real-time live preview iframe.

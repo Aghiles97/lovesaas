@@ -85,7 +85,7 @@
     <a href="/welcome" class="btn-edit-link" style="background: rgba(17, 24, 39, 0.85); border: 1px solid rgba(255,255,255,0.2); font-size: 0.82rem;">
       💍 Made with LoveSaas
     </a>
-    <a href="/builder?slug=demo" id="btnViewerEditStudio" class="btn-edit-link" style="font-size: 0.82rem;">
+    <a href="/builder?slug=demo" id="btnViewerEditBuilder" class="btn-edit-link" style="font-size: 0.82rem;">
       ✏️ Builder
     </a>
   </div>
@@ -1170,7 +1170,7 @@
         } else {
           document.body.classList.remove("builder-mode", "in-builder-preview", "admin-mode", "admin-edit-on");
           const badgeBar = document.getElementById("saasBadgeBar");
-          const editBtn = document.getElementById("btnViewerEditStudio");
+          const editBtn = document.getElementById("btnViewerEditBuilder");
           if (badgeBar) badgeBar.style.display = isIframe ? "none" : "flex";
           if (editBtn) editBtn.style.display = "none";
         }
@@ -1215,10 +1215,10 @@
         }
 
         if (isIframe) {
-          window.parent.postMessage({ type: "STUDIO_IFRAME_READY" }, window.location.origin);
+          window.parent.postMessage({ type: "BUILDER_IFRAME_READY" }, window.location.origin);
         }
 
-        // Listen for live update messages from Studio iframe parent
+        // Listen for live update messages from Builder iframe parent
         window.addEventListener("message", (e) => {
           if (e.origin !== window.location.origin) return;
           if (e.data && e.data.type === "SET_DEVICE_MODE") {
@@ -1237,7 +1237,7 @@
             data.customBgUrl = e.data.customBgUrl || "";
             applyTheme(data.themeId, data.customBgUrl);
           }
-          if (e.data && e.data.type === "STUDIO_LIVE_UPDATE" && e.data.config) {
+          if (e.data && e.data.type === "BUILDER_LIVE_UPDATE" && e.data.config) {
             if (e.data.config.sectionsData && e.data.config.sectionsData.customThemes) {
               registerCustomThemesCSS(e.data.config.sectionsData.customThemes);
             }

@@ -1,5 +1,5 @@
 /* ===================================================================
-   LoveSaas — Ultra-Luxury SaaS Storefront & Studio Stylesheet
+   LoveSaas — Ultra-Luxury SaaS Storefront & Builder Stylesheet
    Exaggerated Apple/Framer Grade Aesthetics, Aurora Beams & 3D Glassmorphism
    =================================================================== */
 
@@ -1003,28 +1003,28 @@ body {
   color: var(--text-secondary);
 }
 
-/* Studio Experience Showcase */
-.studio-section {
+/* Builder Experience Showcase */
+.builder-showcase-section {
   padding: 60px 0 70px;
   background: radial-gradient(circle at 80% 20%, rgba(244, 63, 94, 0.08) 0%, transparent 50%),
               radial-gradient(circle at 10% 80%, rgba(99, 102, 241, 0.08) 0%, transparent 50%);
   border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-.studio-showcase-layout {
+.builder-showcase-layout {
   display: grid;
   grid-template-columns: 1fr 1.18fr;
   gap: 32px;
   align-items: center;
 }
 
-.studio-features-col {
+.builder-features-col {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.studio-card {
+.builder-card {
   display: flex;
   align-items: flex-start;
   gap: 14px;
@@ -1036,13 +1036,13 @@ body {
   backdrop-filter: blur(14px);
 }
 
-.studio-card:hover {
+.builder-card:hover {
   border-color: rgba(244, 63, 94, 0.4);
   background: rgba(255, 255, 255, 0.05);
   transform: translateX(4px);
 }
 
-.studio-card-icon {
+.builder-card-icon {
   font-size: 1.35rem;
   width: 40px;
   height: 40px;
@@ -1055,26 +1055,26 @@ body {
   flex-shrink: 0;
 }
 
-.studio-card-content {
+.builder-card-content {
   flex: 1;
 }
 
-.studio-card-title {
+.builder-card-title {
   font-size: 0.98rem;
   font-weight: 700;
   color: #ffffff;
   margin-bottom: 4px;
 }
 
-.studio-card-desc {
+.builder-card-desc {
   font-size: 0.83rem;
   color: var(--text-secondary);
   line-height: 1.45;
   margin: 0;
 }
 
-/* Studio Workspace Mockup Window */
-.studio-workspace-mockup {
+/* Builder Workspace Mockup Window */
+.builder-workspace-mockup {
   background: rgba(13, 19, 36, 0.9);
   border: 1px solid rgba(244, 63, 94, 0.4);
   border-radius: var(--radius-lg);
@@ -1083,7 +1083,7 @@ body {
   backdrop-filter: blur(20px);
 }
 
-.studio-workspace-header {
+.builder-workspace-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1092,7 +1092,7 @@ body {
   border-bottom: 1px solid var(--border-glass);
 }
 
-.studio-workspace-body.mini-builder-body {
+.builder-workspace-body.mini-builder-body {
   display: grid;
   grid-template-columns: 210px 1fr;
   min-height: 380px;
@@ -1221,7 +1221,7 @@ body {
   transition: all 0.3s ease;
 }
 
-.studio-preview-browser-bar {
+.builder-preview-browser-bar {
   background: rgba(0, 0, 0, 0.5);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-full);
@@ -3360,8 +3360,8 @@ body {
 
 @media (max-width: 900px) {
   .hero-title { font-size: clamp(1.65rem, 5vw, 2.2rem); }
-  .studio-showcase-layout { grid-template-columns: 1fr; gap: 24px; }
-  .studio-workspace-body.mini-builder-body { grid-template-columns: 1fr; max-height: none; }
+  .builder-showcase-layout { grid-template-columns: 1fr; gap: 24px; }
+  .builder-workspace-body.mini-builder-body { grid-template-columns: 1fr; max-height: none; }
   .mini-builder-controls { border-right: none; border-bottom: 1px solid var(--border-glass); }
   .mini-builder-preview-stage { min-height: 300px; max-height: 380px; }
   .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; }
@@ -3749,7 +3749,7 @@ body {
 }
 
 @media (max-width: 768px) {
-  #btnNavTryStudio,
+  #btnNavTryBuilder,
   #btnOpenSignInModal,
   #btnNavGetStarted,
   #btnNavGoToBuilder {

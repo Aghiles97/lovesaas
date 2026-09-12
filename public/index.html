@@ -12,7 +12,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💍</text></svg>">
   <script>
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-    if (!window.location.hash || window.location.hash === '#' || window.location.hash === '#pricing' || window.location.hash === '#studio') {
+    if (!window.location.hash || window.location.hash === '#' || window.location.hash === '#pricing' || window.location.hash === '#builder') {
       window.scrollTo(0, 0);
     }
   </script>
@@ -43,7 +43,7 @@
 
       <nav class="desktop-nav-links" aria-label="Main Navigation">
         <a href="#demo-preview" class="nav-link">Website Demo</a>
-        <a href="#studio" class="nav-link">Builder</a>
+        <a href="#builder" class="nav-link">Builder</a>
         <a href="#features" class="nav-link">16 Widgets</a>
         <a href="#presets" class="nav-link">Styles</a>
         <a href="#pricing" class="nav-link">Pricing</a>
@@ -172,7 +172,7 @@
             <span class="nav-link-text">Website Demo</span>
             <span class="nav-link-chevron">›</span>
           </a>
-          <a href="#studio" class="nav-link">
+          <a href="#builder" class="nav-link">
             <span class="nav-link-icon">🛠️</span>
             <span class="nav-link-text">Builder</span>
             <span class="nav-link-chevron">›</span>
@@ -231,7 +231,7 @@
         <button type="button" class="btn btn-primary btn-lg" id="btnHeroBuy">
           <span>💖</span> Create Keepsake — $19
         </button>
-        <a href="/builder?slug=demo" class="btn btn-secondary btn-lg" id="btnHeroTryStudio">
+        <a href="/builder?slug=demo" class="btn btn-secondary btn-lg" id="btnHeroTryBuilder">
           <span>🎨</span> Builder Demo
         </a>
         <button type="button" class="btn btn-ghost btn-lg" id="btnHeroDemo">
@@ -432,8 +432,8 @@
     </div>
   </section>
 
-  <!-- Builder Studio Showcase Section -->
-  <section class="section studio-section" id="studio">
+  <!-- Builder Showcase Section -->
+  <section class="section builder-showcase-section" id="builder">
     <div class="container">
       <div class="section-header">
         <span class="badge-luxury" style="margin-bottom: 12px;">🛠️ The Builder Experience</span>
@@ -441,45 +441,45 @@
         <p>A real-time split-screen builder. No code, no stress — just pure romantic creativity.</p>
       </div>
 
-      <div class="studio-showcase-layout">
+      <div class="builder-showcase-layout">
         <!-- Left: 4 Crisp Feature Cards -->
-        <div class="studio-features-col">
-          <div class="studio-card">
-            <div class="studio-card-icon">⚡</div>
-            <div class="studio-card-content">
-              <h3 class="studio-card-title">Live Split-Screen Builder</h3>
-              <p class="studio-card-desc">Edit text and settings on the left, watch your couple website update instantly on the right.</p>
+        <div class="builder-features-col">
+          <div class="builder-card">
+            <div class="builder-card-icon">⚡</div>
+            <div class="builder-card-content">
+              <h3 class="builder-card-title">Live Split-Screen Builder</h3>
+              <p class="builder-card-desc">Edit text and settings on the left, watch your couple website update instantly on the right.</p>
             </div>
           </div>
 
-          <div class="studio-card">
-            <div class="studio-card-icon">🧩</div>
-            <div class="studio-card-content">
-              <h3 class="studio-card-title">26 Drag-and-Drop Widgets</h3>
-              <p class="studio-card-desc">Toggle clocks, wax letters, quizzes, maps, and countdowns in 1 click. Reorder with ease.</p>
+          <div class="builder-card">
+            <div class="builder-card-icon">🧩</div>
+            <div class="builder-card-content">
+              <h3 class="builder-card-title">26 Drag-and-Drop Widgets</h3>
+              <p class="builder-card-desc">Toggle clocks, wax letters, quizzes, maps, and countdowns in 1 click. Reorder with ease.</p>
             </div>
           </div>
 
-          <div class="studio-card">
-            <div class="studio-card-icon">☁️</div>
-            <div class="studio-card-content">
-              <h3 class="studio-card-title">Cloud Media &amp; Voice Vault</h3>
-              <p class="studio-card-desc">Drag &amp; drop high-res polaroids, upload romantic background songs, and record voice notes.</p>
+          <div class="builder-card">
+            <div class="builder-card-icon">☁️</div>
+            <div class="builder-card-content">
+              <h3 class="builder-card-title">Cloud Media &amp; Voice Vault</h3>
+              <p class="builder-card-desc">Drag &amp; drop high-res polaroids, upload romantic background songs, and record voice notes.</p>
             </div>
           </div>
 
-          <div class="studio-card">
-            <div class="studio-card-icon">🔒</div>
-            <div class="studio-card-content">
-              <h3 class="studio-card-title">Private Password &amp; Auto-Save</h3>
-              <p class="studio-card-desc">Changes auto-save continuously (⌘S). Protected with your private password and custom link.</p>
+          <div class="builder-card">
+            <div class="builder-card-icon">🔒</div>
+            <div class="builder-card-content">
+              <h3 class="builder-card-title">Private Password &amp; Auto-Save</h3>
+              <p class="builder-card-desc">Changes auto-save continuously (⌘S). Protected with your private password and custom link.</p>
             </div>
           </div>
         </div>
 
         <!-- Right: Interactive Mini Demo of the Builder -->
-        <div class="studio-workspace-mockup mini-builder-demo" id="miniBuilderDemo">
-          <div class="studio-workspace-header">
+        <div class="builder-workspace-mockup mini-builder-demo" id="miniBuilderDemo">
+          <div class="builder-workspace-header">
             <div class="browser-dots" style="margin-right: 8px;">
               <span class="browser-dot dot-red"></span>
               <span class="browser-dot dot-yellow"></span>
@@ -495,7 +495,7 @@
             </a>
           </div>
 
-          <div class="studio-workspace-body mini-builder-body">
+          <div class="builder-workspace-body mini-builder-body">
             <!-- Left Panel: Controls (Themes & Widgets) -->
             <div class="mini-builder-controls">
               <!-- 1. Theme Picker -->
@@ -568,7 +568,7 @@
 
             <!-- Right Panel: Live Preview Canvas -->
             <div class="mini-builder-preview-stage" id="miniPreviewStage">
-              <div class="studio-preview-browser-bar">
+              <div class="builder-preview-browser-bar">
                 <span>🔒</span> lovesaas.com/alex-and-sam
               </div>
 
@@ -1164,7 +1164,7 @@
               <button type="button" class="btn btn-primary" id="btnChoosePreset">
                 <span>🚀</span> Start With This Layout
               </button>
-              <a href="/builder?slug=demo" class="btn btn-secondary" id="btnTryThemeInStudio">
+              <a href="/builder?slug=demo" class="btn btn-secondary" id="btnTryThemeInBuilder">
                 <span>🎨</span> Test in Builder →
               </a>
             </div>
@@ -1512,7 +1512,7 @@
             <li><a href="#features">All 26 Modular Widgets</a></li>
             <li><a href="#presets">Real Themes &amp; Art</a></li>
             <li><a href="#demo-preview">Website Demo</a></li>
-            <li><a href="#studio">Split-Screen Builder</a></li>
+            <li><a href="#builder">Split-Screen Builder</a></li>
             <li><a href="#pricing">Lifetime Pricing</a></li>
           </ul>
         </div>
@@ -1658,7 +1658,7 @@
           </div>
 
           <div class="success-actions">
-            <a href="#" class="btn btn-primary btn-lg" id="btnLaunchBuilderStudio">
+            <a href="#" class="btn btn-primary btn-lg" id="btnLaunchBuilder">
               <span>🚀</span> Launch Builder Now
             </a>
             <a href="#" class="btn btn-secondary" id="btnViewLiveSite" target="_blank">

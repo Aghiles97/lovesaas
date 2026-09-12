@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   })();
 
   if (isDirectOrReload) {
-    if (window.location.hash && ["#pricing", "#studio", "#features", "#presets", "#demo-preview"].includes(window.location.hash)) {
+    if (window.location.hash && ["#pricing", "#builder", "#features", "#presets", "#demo-preview"].includes(window.location.hash)) {
       history.replaceState(null, null, window.location.pathname);
     }
     window.scrollTo(0, 0);
@@ -495,7 +495,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ------------------------------------------------------------------
-  // 5B. INTERACTIVE MINI BUILDER DEMO IN STUDIO EXPERIENCE
+  // 5B. INTERACTIVE MINI BUILDER DEMO IN BUILDER EXPERIENCE
   // ------------------------------------------------------------------
   const MINI_THEMES = {
     pink: {
@@ -1120,7 +1120,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ? "Forever VIP Suite (Admin Bypass $0)"
           : (data.tenant.plan === "starter" ? "Love Story Starter ($19)" : "Forever VIP Suite ($39)");
         
-        const btnLaunch = document.getElementById("btnLaunchBuilderStudio");
+        const btnLaunch = document.getElementById("btnLaunchBuilder");
         btnLaunch.href = data.builderUrl;
         
         const btnLive = document.getElementById("btnViewLiveSite");
@@ -1686,7 +1686,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       listEl.innerHTML = designs.map(d => {
-        const studioUrl = `/builder?slug=${encodeURIComponent(d.slug)}&token=${encodeURIComponent(d.authToken || "")}`;
+        const builderUrl = `/builder?slug=${encodeURIComponent(d.slug)}&token=${encodeURIComponent(d.authToken || "")}`;
         const liveUrl = `/sites/${encodeURIComponent(d.slug)}`;
         const title = (d.partner1 && d.partner2) ? `${escapeHtml(d.partner1)} &amp; ${escapeHtml(d.partner2)}` : escapeHtml(d.slug);
         const modDate = d.updatedAt || d.createdAt;
@@ -1711,7 +1711,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
             </div>
             <div class="portal-simple-actions">
-              <a href="${studioUrl}" class="btn-icon-action btn-edit-icon" title="Edit in Builder" data-slug="${escapeHtml(d.slug)}" data-token="${escapeHtml(d.authToken || "")}" data-plan="${escapeHtml(d.plan || "vip")}">
+              <a href="${builderUrl}" class="btn-icon-action btn-edit-icon" title="Edit in Builder" data-slug="${escapeHtml(d.slug)}" data-token="${escapeHtml(d.authToken || "")}" data-plan="${escapeHtml(d.plan || "vip")}">
                 ✏️
               </a>
               ${d.slug === "demo" ? "" : `
@@ -1724,7 +1724,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
       }).join("");
 
-      const launchStudio = (slug, token, plan) => {
+      const launchBuilder = (slug, token, plan) => {
         localStorage.setItem("lovesaas_auth", JSON.stringify({
           slug: slug,
           authToken: token,
@@ -1735,7 +1735,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       listEl.querySelectorAll(".btn-edit-icon").forEach(btn => {
         btn.addEventListener("click", (e) => {
-          launchStudio(btn.dataset.slug, btn.dataset.token, btn.dataset.plan);
+          launchBuilder(btn.dataset.slug, btn.dataset.token, btn.dataset.plan);
         });
       });
 
