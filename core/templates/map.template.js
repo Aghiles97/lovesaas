@@ -46,6 +46,73 @@
     const totalCountries = data.totalCountries || "3 Countries";
     const totalCities = data.totalCities || "15 Global Cities Visited";
     const earthLaps = data.earthLaps || "2× Around Earth";
+    const VEHICLE_MAP = {
+      airplane: "✈️",
+      flight: "✈️",
+      car: "🚗",
+      train: "🚆",
+      bike: "🚲",
+      boat: "🚢",
+      walk: "🥾",
+      hike: "🥾"
+    };
+
+    const renderCustomPins = (region) => {
+      if (!Array.isArray(data.destinations)) return "";
+      return data.destinations
+        .filter(d => d.isCustom && d.region === region && typeof d.x === "number" && typeof d.y === "number")
+        .map(d => `
+          <g class="map-pin-group custom-map-pin" data-city="${escapeHtml(d.key)}" transform="translate(${d.x}, ${d.y})" cursor="pointer">
+            <rect x="-40" y="-40" width="80" height="80" fill="transparent" pointer-events="all"/>
+            <circle r="22" fill="rgba(255, 67, 101, 0.35)" class="pin-pulse-ring" pointer-events="none"/>
+            <circle r="12" fill="#ff4365" stroke="#ffffff" stroke-width="3" pointer-events="none"/>
+            <text y="4" text-anchor="middle" font-size="12" pointer-events="none">${escapeHtml(d.flag || '📍')}</text>
+            <text y="24" text-anchor="middle" font-family="'Outfit', sans-serif" font-size="11" font-weight="bold" fill="#222222" pointer-events="none">${escapeHtml(d.label)}</text>
+          </g>
+        `).join("");
+    };
+
+    let chipsHtml = "";
+    if (Array.isArray(data.destinations) && data.destinations.length > 0) {
+      chipsHtml = data.destinations.map((d, i) => {
+        const vIcon = VEHICLE_MAP[d.vehicle] || d.vehicle || "✈️";
+        const journey = d.region || "china";
+        const isGlobal = journey === "global";
+        const hiddenClass = isGlobal ? "" : "hidden-chip";
+        const activeClass = (isGlobal && i === 0) ? "active" : "";
+        return `<button type="button" class="map-chip-btn ${hiddenClass} ${activeClass}" data-city="${escapeHtml(d.key)}" data-journey="${escapeHtml(journey)}" data-stop="${i + 1}" data-vehicle="${escapeHtml(d.vehicle || 'airplane')}"><span class="chip-vehicle-tag">${vIcon}</span> ${escapeHtml(d.flag || '📍')} ${escapeHtml(d.label)}</button>`;
+      }).join("\n              ");
+    } else {
+      chipsHtml = `
+              <!-- Global Stops -->
+              <button type="button" class="map-chip-btn active" data-city="algeria" data-journey="global" data-stop="1" data-vehicle="airplane"><span class="chip-vehicle-tag">✈️</span> 🇩🇿 Algeria</button>
+              <button type="button" class="map-chip-btn" data-city="china-base" data-journey="global" data-stop="2" data-vehicle="airplane"><span class="chip-vehicle-tag">✈️</span> 🇨🇳 1. China</button>
+              <button type="button" class="map-chip-btn" data-city="vietnam" data-journey="global" data-stop="3" data-vehicle="airplane"><span class="chip-vehicle-tag">✈️</span> 🇻🇳 2. Vietnam</button>
+              <button type="button" class="map-chip-btn" data-city="indonesia" data-journey="global" data-stop="4" data-vehicle="airplane"><span class="chip-vehicle-tag">✈️</span> 🇮🇩 3. Indonesia</button>
+              <!-- China Stops (Exact 19-Stop Itinerary Order) -->
+              <button type="button" class="map-chip-btn" data-city="guangzhou" data-journey="china" data-stop="1" data-vehicle="airplane"><span class="chip-vehicle-tag">✈️</span> ⭐ 1. Guangzhou</button>
+              <button type="button" class="map-chip-btn" data-city="guangzhou" data-journey="china" data-stop="2" data-vehicle="car"><span class="chip-vehicle-tag">🚗</span> 🎁 2. Guangzhou</button>
+              <button type="button" class="map-chip-btn" data-city="shenzhen" data-journey="china" data-stop="3" data-vehicle="train"><span class="chip-vehicle-tag">🚆</span> 🌆 3. Shenzhen</button>
+              <button type="button" class="map-chip-btn" data-city="chongqing" data-journey="china" data-stop="4" data-vehicle="train"><span class="chip-vehicle-tag">🚆</span> 🌶️ 4. Chongqing</button>
+              <button type="button" class="map-chip-btn" data-city="chengdu" data-journey="china" data-stop="5" data-vehicle="train"><span class="chip-vehicle-tag">🚆</span> 🐼 5. Chengdu</button>
+              <button type="button" class="map-chip-btn" data-city="bipenggou" data-journey="china" data-stop="6" data-vehicle="car"><span class="chip-vehicle-tag">🚗</span> ❄️ 6. Bipenggou</button>
+              <button type="button" class="map-chip-btn" data-city="dagu" data-journey="china" data-stop="7" data-vehicle="car"><span class="chip-vehicle-tag">🚗</span> ❄️ 7. Dagu Glacier</button>
+              <button type="button" class="map-chip-btn" data-city="jiuzhaigou" data-journey="china" data-stop="8" data-vehicle="car"><span class="chip-vehicle-tag">🚗</span> 🏔️ 8. Jiuzhaigou</button>
+              <button type="button" class="map-chip-btn" data-city="huanglong" data-journey="china" data-stop="9" data-vehicle="walk"><span class="chip-vehicle-tag">🥾</span> 🏞️ 9. Huanglong</button>
+              <button type="button" class="map-chip-btn" data-city="chengdu" data-journey="china" data-stop="10" data-vehicle="car"><span class="chip-vehicle-tag">🚗</span> 🚗 10. Chengdu</button>
+              <button type="button" class="map-chip-btn" data-city="guangzhou" data-journey="china" data-stop="11" data-vehicle="airplane"><span class="chip-vehicle-tag">✈️</span> ⭐ 11. Guangzhou</button>
+              <button type="button" class="map-chip-btn" data-city="guangzhou" data-journey="china" data-stop="12" data-vehicle="car"><span class="chip-vehicle-tag">🚗</span> ☕ 12. Guangzhou</button>
+              <button type="button" class="map-chip-btn" data-city="guangzhou" data-journey="china" data-stop="13" data-vehicle="bike"><span class="chip-vehicle-tag">🚲</span> 💍 13. Canton Tower</button>
+              <button type="button" class="map-chip-btn" data-city="nansha" data-journey="china" data-stop="14" data-vehicle="car"><span class="chip-vehicle-tag">🚗</span> 🚗 14. Nansha Port</button>
+              <button type="button" class="map-chip-btn" data-city="guangzhou" data-journey="china" data-stop="15" data-vehicle="walk"><span class="chip-vehicle-tag">🥾</span> 🌸 15. Baiyun Mountain</button>
+              <button type="button" class="map-chip-btn" data-city="wuhan" data-journey="china" data-stop="16" data-vehicle="bike"><span class="chip-vehicle-tag">🚲</span> 🌸 16. Wuhan</button>
+              <button type="button" class="map-chip-btn" data-city="nanjing" data-journey="china" data-stop="17" data-vehicle="train"><span class="chip-vehicle-tag">🚆</span> 🛕 17. Nanjing</button>
+              <button type="button" class="map-chip-btn" data-city="shanghai" data-journey="china" data-stop="18" data-vehicle="train"><span class="chip-vehicle-tag">🚆</span> 🌃 18. Shanghai</button>
+              <button type="button" class="map-chip-btn" data-city="guangzhou" data-journey="china" data-stop="19" data-vehicle="airplane" title="Guangzhou (Farewell & Flight Back to Algeria 🇩🇿)"><span class="chip-vehicle-tag">✈️</span> ⭐ 19. Guangzhou (Algeria 🇩🇿)</button>
+              <!-- Indonesia Stops -->
+              <button type="button" class="map-chip-btn hidden-chip" data-city="bali" data-journey="indonesia" data-stop="1" data-vehicle="airplane"><span class="chip-vehicle-tag">✈️</span> 🌴 1. Bali</button>
+              <button type="button" class="map-chip-btn hidden-chip" data-city="jakarta" data-journey="indonesia" data-stop="2" data-vehicle="airplane"><span class="chip-vehicle-tag">✈️</span> 🏡 2. Jakarta</button>`;
+    }
 
     return `
     <section class="section map-section" id="ldrMapSection">
@@ -92,34 +159,7 @@
           <!-- Destination Quick-Selection Bar -->
           <div class="map-dest-quick-bar" id="mapQuickBar">
             <div class="quick-chips-scroll" id="quickChipsScroll">
-              <!-- Global Stops -->
-              <button type="button" class="map-chip-btn active" data-city="algeria" data-journey="global" data-stop="1">🇩🇿 Algeria</button>
-              <button type="button" class="map-chip-btn" data-city="china-base" data-journey="global" data-stop="2">🇨🇳 1. China</button>
-              <button type="button" class="map-chip-btn" data-city="vietnam" data-journey="global" data-stop="3">🇻🇳 2. Vietnam</button>
-              <button type="button" class="map-chip-btn" data-city="indonesia" data-journey="global" data-stop="4">🇮🇩 3. Indonesia</button>
-              <!-- China Stops (Exact 19-Stop Itinerary Order) -->
-              <button type="button" class="map-chip-btn" data-city="guangzhou" data-journey="china" data-stop="1">⭐ 1. Guangzhou</button>
-              <button type="button" class="map-chip-btn" data-city="guangzhou" data-journey="china" data-stop="2">🎁 2. Guangzhou</button>
-              <button type="button" class="map-chip-btn" data-city="shenzhen" data-journey="china" data-stop="3">🌆 3. Shenzhen</button>
-              <button type="button" class="map-chip-btn" data-city="chongqing" data-journey="china" data-stop="4">🌶️ 4. Chongqing</button>
-              <button type="button" class="map-chip-btn" data-city="chengdu" data-journey="china" data-stop="5">🐼 5. Chengdu</button>
-              <button type="button" class="map-chip-btn" data-city="bipenggou" data-journey="china" data-stop="6">❄️ 6. Bipenggou</button>
-              <button type="button" class="map-chip-btn" data-city="dagu" data-journey="china" data-stop="7">❄️ 7. Dagu Glacier</button>
-              <button type="button" class="map-chip-btn" data-city="jiuzhaigou" data-journey="china" data-stop="8">🏔️ 8. Jiuzhaigou</button>
-              <button type="button" class="map-chip-btn" data-city="huanglong" data-journey="china" data-stop="9">🏞️ 9. Huanglong</button>
-              <button type="button" class="map-chip-btn" data-city="chengdu" data-journey="china" data-stop="10">🚗 10. Chengdu</button>
-              <button type="button" class="map-chip-btn" data-city="guangzhou" data-journey="china" data-stop="11">⭐ 11. Guangzhou</button>
-              <button type="button" class="map-chip-btn" data-city="guangzhou" data-journey="china" data-stop="12">☕ 12. Guangzhou</button>
-              <button type="button" class="map-chip-btn" data-city="guangzhou" data-journey="china" data-stop="13">💍 13. Canton Tower</button>
-              <button type="button" class="map-chip-btn" data-city="nansha" data-journey="china" data-stop="14">🚗 14. Nansha Port</button>
-              <button type="button" class="map-chip-btn" data-city="guangzhou" data-journey="china" data-stop="15">🌸 15. Baiyun Mountain</button>
-              <button type="button" class="map-chip-btn" data-city="wuhan" data-journey="china" data-stop="16">🌸 16. Wuhan</button>
-              <button type="button" class="map-chip-btn" data-city="nanjing" data-journey="china" data-stop="17">🛕 17. Nanjing</button>
-              <button type="button" class="map-chip-btn" data-city="shanghai" data-journey="china" data-stop="18">🌃 18. Shanghai</button>
-              <button type="button" class="map-chip-btn" data-city="guangzhou" data-journey="china" data-stop="19" title="Guangzhou (Farewell & Flight Back to Algeria 🇩🇿)">⭐ 19. Guangzhou (Algeria 🇩🇿)</button>
-              <!-- Indonesia Stops -->
-              <button type="button" class="map-chip-btn hidden-chip" data-city="bali" data-journey="indonesia" data-stop="1">🌴 1. Bali</button>
-              <button type="button" class="map-chip-btn hidden-chip" data-city="jakarta" data-journey="indonesia" data-stop="2">🏡 2. Jakarta</button>
+              ${chipsHtml}
             </div>
           </div>
 
@@ -250,6 +290,7 @@
                     <text y="28" text-anchor="middle" font-family="'Outfit', sans-serif" font-size="12.5" font-weight="bold" fill="#222222" pointer-events="none">Indonesia</text>
                     <text y="42" text-anchor="middle" font-family="'Outfit', sans-serif" font-size="10" font-weight="700" fill="#e11d48" pointer-events="none">Girl's Origin</text>
                   </g>
+                  ${renderCustomPins('global')}
                 </svg>
               </div>
             </div>
@@ -581,6 +622,7 @@
                     <text y="5" text-anchor="middle" font-size="13" pointer-events="none">❄️</text>
                     <text x="18" y="-3" text-anchor="start" font-family="'Outfit', sans-serif" font-size="11" font-weight="bold" fill="#0077b6" pointer-events="none">Jiuzhaigou</text>
                   </g>
+                  ${renderCustomPins('china')}
                 </svg>
               </div>
             </div>
@@ -742,6 +784,7 @@
                     <text y="32" text-anchor="middle" font-family="'Outfit', sans-serif" font-size="13" font-weight="bold" fill="#1b5e20" pointer-events="none">Bali Island</text>
                     <text y="45" text-anchor="middle" font-family="'Outfit', sans-serif" font-size="10" font-weight="600" fill="#555555" pointer-events="none">Villa • Muddy ATV & Waterbom</text>
                   </g>
+                  ${renderCustomPins('indonesia')}
                 </svg>
               </div>
             </div>

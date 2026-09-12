@@ -355,7 +355,13 @@ function setupReasonsDeck() {
   const editCurrentBtn = document.getElementById("editCurrentReasonBtn");
   const editDrawerBtn = document.getElementById("editAllFromDrawerBtn");
 
-  if (editHeaderBtn) editHeaderBtn.addEventListener("click", () => openEditAllReasonsModal());
+  if (editHeaderBtn) {
+    editHeaderBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openEditAllReasonsModal();
+    });
+  }
   if (browseHeaderBtn) {
     browseHeaderBtn.addEventListener("click", () => {
       renderAllNotesDrawer();
@@ -364,7 +370,9 @@ function setupReasonsDeck() {
     });
   }
   if (editCurrentBtn) {
-    editCurrentBtn.addEventListener("click", () => {
+    editCurrentBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       const list = getFilteredReasons();
       const current = list[currentReasonIndex];
       const idx = current?.originalIndex !== undefined ? current.originalIndex : currentReasonIndex;
@@ -372,7 +380,9 @@ function setupReasonsDeck() {
     });
   }
   if (editDrawerBtn) {
-    editDrawerBtn.addEventListener("click", () => {
+    editDrawerBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       const allDrawer = document.getElementById("allNotesDrawer");
       if (allDrawer) allDrawer.classList.add("hidden");
       openEditAllReasonsModal();
@@ -494,6 +504,10 @@ function renderEditAllReasonsList(focusIndex = null) {
 }
 
 function openEditAllReasonsModal(focusIndex = null) {
+  if (typeof window !== "undefined" && window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: "SELECT_WIDGET", widgetId: "reasons" }, "*");
+    return;
+  }
   if (typeof isAdminEditAllowed === "function" && !isAdminEditAllowed()) return;
   populateEditAllReasonsDraft();
   const searchInput = document.getElementById("editAllSearchInput");

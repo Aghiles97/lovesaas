@@ -114,7 +114,8 @@ class SoundEngine {
     const icon = document.getElementById("musicPlayIcon");
     const label = document.getElementById("musicPlayLabel");
 
-    if (state.musicPlaying) {
+    const isPlaying = bgAudio ? (!bgAudio.paused && !bgAudio.ended) : state.musicPlaying;
+    if (isPlaying) {
       if (bgAudio) bgAudio.pause();
       clearInterval(this.musicInterval);
       state.musicPlaying = false;

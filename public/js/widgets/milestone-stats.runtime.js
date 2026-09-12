@@ -104,8 +104,7 @@
           prevSeconds = secStr;
           elSeconds.textContent = secStr;
           elSeconds.classList.remove("digit-rolling");
-          void elSeconds.offsetWidth;
-          elSeconds.classList.add("digit-rolling");
+          requestAnimationFrame(() => elSeconds.classList.add("digit-rolling"));
         }
       }
 
@@ -166,11 +165,41 @@
       });
     });
 
-    updateCounters();
-    if (timerInterval) clearInterval(timerInterval);
-    timerInterval = setInterval(updateCounters, 1000);
-    window._milestoneStatsInterval = timerInterval;
+    let isVisible = !document.hidden;
+    let isIntersecting = true;
 
+    function startTimer() {
+      if (!timerInterval && isVisible && isIntersecting) {
+        updateCounters();
+        timerInterval = setInterval(updateCounters, 1000);
+        window._milestoneStatsInterval = timerInterval;
+      }
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        window._milestoneStatsInterval = null;
+      }
+    }
+
+    if ("IntersectionObserver" in window) {
+      const obs = new IntersectionObserver(entries => {
+        isIntersecting = entries[0].isIntersecting;
+        if (isIntersecting) startTimer();
+        else stopTimer();
+      }, { threshold: 0.05 });
+      obs.observe(section);
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      isVisible = !document.hidden;
+      if (isVisible) startTimer();
+      else stopTimer();
+    });
+
+    startTimer();
     window.updateMilestoneCounters = updateCounters;
   };
 })();

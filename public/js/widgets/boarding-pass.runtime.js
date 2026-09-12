@@ -185,7 +185,10 @@ function setupGiftBox() {
   const downloadTicketBtn = document.getElementById("downloadTicketBtn");
   if (downloadTicketBtn) {
     downloadTicketBtn.addEventListener("click", () => {
-      const partnerName = state.partnerName || localStorage.getItem("gf_name") || "Ella";
+      const partnerName = (typeof window !== "undefined" && window.state && window.state.partnerName) ||
+                          document.querySelector(".partner-name-display")?.textContent ||
+                          (typeof state !== "undefined" && state.partnerName) ||
+                          "Ella";
       const seatNumber = localStorage.getItem("gf_seat_number") || "1A (Beside Me Forever)";
       const flightNumber = localStorage.getItem("gf_flight_number") || "LOF-999";
       const isStamped = confirmedNotice && !confirmedNotice.classList.contains("hidden");

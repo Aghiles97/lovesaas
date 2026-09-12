@@ -1,5 +1,5 @@
 /**
- * Couple Site Builder Studio JS
+ * Couple Project Builder JS
  * 100% Customizable Widget Content Inspector, Modular Layout Reordering, & R2 Media Pipeline
  */
 function escapeHtml(str) {
@@ -246,7 +246,7 @@ function updateRoleUI() {
       if (roleIcon) roleIcon.textContent = '🛡️';
       if (roleText) roleText.textContent = 'Admin (Full Access)';
       roleBadge.title =
-        'Master Admin: Full access & rights across all sites. Click to switch.';
+        'Master Admin: Full access & rights across all projects. Click to switch.';
     }
     showDemoBanner(false);
     if (btnSave) {
@@ -267,7 +267,7 @@ function updateRoleUI() {
       roleBadge.className = 'role-badge role-user';
       if (roleIcon) roleIcon.textContent = '✨';
       if (roleText) roleText.textContent = 'User (Full Access)';
-      roleBadge.title = `Site Owner (${state.slug}): Full customization rights. Click to switch.`;
+      roleBadge.title = `Project Owner (${state.slug}): Full customization rights. Click to switch.`;
     }
     showDemoBanner(false);
     if (btnSave) {
@@ -296,14 +296,14 @@ function updateRoleUI() {
     const demoBannerText = document.getElementById('demoBannerText');
     if (demoBannerText)
       demoBannerText.textContent =
-        '🎨 Visitor Demo Mode — Previewing sample site. Controls are extremely limited.';
+        '🎨 Visitor Demo Mode — Previewing sample project. Controls are extremely limited.';
     const demoBannerCta = document.getElementById('demoBannerCta');
     if (demoBannerCta)
       demoBannerCta.textContent = 'Purchase now to customize ↗';
 
     if (btnSave) {
       btnSave.classList.add('btn-visitor-cta');
-      btnSave.title = 'Purchase now to customize and save your couple site';
+      btnSave.title = 'Purchase now to customize and save your couple project';
       if (saveIcon) saveIcon.textContent = '🛍️';
       if (saveText) saveText.textContent = 'Purchase now to customize';
       if (saveKbd) saveKbd.style.display = 'none';
@@ -539,7 +539,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const slug = slugInput.value.trim().toLowerCase();
 
       if (!slug) {
-        errorMsg.textContent = 'Please provide site slug.';
+        errorMsg.textContent = 'Please provide project slug.';
         errorMsg.style.display = 'block';
         return;
       }
@@ -695,7 +695,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadTenantData(slug) {
   try {
     const res = await fetch(`/api/tenants/${encodeURIComponent(slug)}`);
-    if (!res.ok) throw new Error('Could not load tenant site config');
+    if (!res.ok) throw new Error('Could not load tenant project config');
     const data = await res.json();
 
     state.slug = data.slug;
@@ -765,7 +765,7 @@ async function loadTenantData(slug) {
       ?.classList.add('hidden');
     reloadPreview();
   } catch (err) {
-    showToast('Error loading site: ' + err.message, 'error');
+    showToast('Error loading project: ' + err.message, 'error');
   }
 }
 
@@ -1336,7 +1336,7 @@ function renderAddSectionModal() {
       </div>
       <div class="add-widget-card-bottom">
         <span class="add-widget-status ${isActive ? 'active' : ''}">
-          ${isActive ? `✓ On site (#${activePos + 1})` : '✨ Available'}
+          ${isActive ? `✓ On project (#${activePos + 1})` : '✨ Available'}
         </span>
         <div style="display: flex; gap: 6px;">
           <button type="button" class="btn-add-widget-action preview-btn" data-preview-id="${id}" title="Preview full widget">
@@ -2135,7 +2135,7 @@ async function saveConfig() {
   ) {
     if (state.currentUser) {
       showToast(
-        '💡 Demo preview cannot be overwritten. Create your site to publish!',
+        '💡 Demo preview cannot be overwritten. Create your project to publish!',
         'info',
       );
       if (typeof window.openNewProjectModal === 'function') {
@@ -2143,7 +2143,7 @@ async function saveConfig() {
       }
     } else {
       showToast(
-        '🛍️ Purchase now to customize and publish your couple site!',
+        '🛍️ Purchase now to customize and publish your couple project!',
         'info',
       );
       window.open('/welcome#pricing', '_blank');
@@ -3170,7 +3170,7 @@ function renderMediaSettingsHTML(prefix = 'ms_') {
       <div class="media-toggle-row">
         <div>
           <span class="media-toggle-label">Floating Vinyl Player</span>
-          <span class="media-toggle-desc">Show rotating vinyl disc and player bar on live site</span>
+          <span class="media-toggle-desc">Show rotating vinyl disc and player bar on live project</span>
         </div>
         <label class="toggle-switch">
           <input type="checkbox" id="${prefix}toggle_floating" ${ms.floatingPlayer !== false ? 'checked' : ''}>
@@ -3864,7 +3864,7 @@ function renderSiteSettingsUI() {
     {
       id: 'theme-img-heart-podiums',
       name: '3D Heart Podiums 🎁',
-      desc: 'Studio 3D pastel pink heart sculpture',
+      desc: '3D pastel pink heart sculpture',
       color: '#ec4899',
       img: '/images/themes/bg-heart-podiums.webp',
     },
@@ -3925,7 +3925,7 @@ function renderSiteSettingsUI() {
       <div class="share-url-box">
         <span class="share-url-text" id="siteShareUrl">${escapeHtml(publicSiteUrl)}</span>
         <button type="button" class="btn-copy-link" id="btnCopySiteLink" title="Copy website link">📋 Copy</button>
-        <a href="/sites/${encodeURIComponent(state.slug)}" target="_blank" class="btn-open-link" title="Open live site in new tab">↗ Open</a>
+        <a href="/sites/${encodeURIComponent(state.slug)}" target="_blank" class="btn-open-link" title="Open live project in new tab">↗ Open</a>
       </div>
     </div>
 
@@ -4369,7 +4369,7 @@ function renderSiteSettingsUI() {
     btn.onclick = async (e) => {
       e.stopPropagation();
       if (state.userRole === 'visitor') {
-        showToast('🔒 Only site admins can delete custom themes!', 'warning');
+        showToast('🔒 Only project admins can delete custom themes!', 'warning');
         return;
       }
       const themeId = btn.getAttribute('data-theme-id');
@@ -4478,10 +4478,17 @@ function initSidebarResizer() {
   const collapseArrow = document.getElementById('collapseArrow');
   if (!sidebar || !resizer) return;
 
+  const getLimits = () => {
+    const min = 320;
+    const max = Math.max(760, Math.min(1400, window.innerWidth - 360));
+    return { min, max };
+  };
+
   const savedWidth = localStorage.getItem('builder_sidebar_width');
   if (savedWidth) {
     const w = parseInt(savedWidth, 10);
-    if (w >= 360 && w <= 760) {
+    const { min, max } = getLimits();
+    if (w >= min && w <= max) {
       sidebar.style.width = `${w}px`;
       document.documentElement.style.setProperty('--sidebar-width', `${w}px`);
     }
@@ -4491,22 +4498,26 @@ function initSidebarResizer() {
   let startX = 0;
   let startWidth = 0;
 
-  const onMouseDown = (e) => {
+  const onDragStart = (clientX, pointerId) => {
     isDragging = true;
-    startX = e.clientX;
+    startX = clientX;
     startWidth = sidebar.offsetWidth;
+    if (pointerId !== undefined && resizer.setPointerCapture) {
+      try { resizer.setPointerCapture(pointerId); } catch (e) {}
+    }
     resizer.classList.add('resizing');
+    sidebar.classList.add('resizing');
+    document.body.classList.add('is-resizing-sidebar');
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
     if (previewIframe) previewIframe.style.pointerEvents = 'none';
   };
 
-  const onMouseMove = (e) => {
+  const onDragMove = (clientX) => {
     if (!isDragging) return;
-    const delta = e.clientX - startX;
-    let newWidth = startWidth + delta;
-    if (newWidth < 360) newWidth = 360;
-    if (newWidth > 760) newWidth = 760;
+    const { min, max } = getLimits();
+    const delta = clientX - startX;
+    const newWidth = Math.max(min, Math.min(max, startWidth + delta));
     sidebar.style.width = `${newWidth}px`;
     document.documentElement.style.setProperty(
       '--sidebar-width',
@@ -4518,33 +4529,43 @@ function initSidebarResizer() {
     }
   };
 
-  const onMouseUp = () => {
-    if (isDragging) {
-      isDragging = false;
-      resizer.classList.remove('resizing');
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-      if (previewIframe) previewIframe.style.pointerEvents = '';
-      localStorage.setItem('builder_sidebar_width', sidebar.offsetWidth);
+  const onDragEnd = (pointerId) => {
+    if (!isDragging) return;
+    isDragging = false;
+    if (pointerId !== undefined && resizer.releasePointerCapture) {
+      try { resizer.releasePointerCapture(pointerId); } catch (e) {}
     }
+    resizer.classList.remove('resizing');
+    sidebar.classList.remove('resizing');
+    document.body.classList.remove('is-resizing-sidebar');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    if (previewIframe) previewIframe.style.pointerEvents = '';
+    localStorage.setItem('builder_sidebar_width', sidebar.offsetWidth);
   };
 
-  resizer.addEventListener('mousedown', onMouseDown);
-  window.addEventListener('mousemove', onMouseMove);
-  window.addEventListener('mouseup', onMouseUp);
+  resizer.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    onDragStart(e.clientX, e.pointerId);
+  });
+  window.addEventListener('pointermove', (e) => onDragMove(e.clientX));
+  window.addEventListener('pointerup', (e) => onDragEnd(e.pointerId));
+  window.addEventListener('pointercancel', (e) => onDragEnd(e.pointerId));
 
   resizer.addEventListener('dblclick', () => {
     sidebar.style.width = '470px';
     document.documentElement.style.setProperty('--sidebar-width', '470px');
     localStorage.removeItem('builder_sidebar_width');
-    showToast('Sidebar width reset to default', 'info', 1500);
+    showToast('Sidebar width reset to default (470px)', 'info', 1500);
   });
 
   if (btnCollapse) {
     btnCollapse.onclick = () => {
+      sidebar.classList.add('collapsing');
       const isCollapsed = sidebar.classList.toggle('collapsed');
       if (collapseArrow) collapseArrow.textContent = isCollapsed ? '▶' : '◀';
       btnCollapse.title = isCollapsed ? 'Expand sidebar' : 'Collapse sidebar';
+      setTimeout(() => sidebar.classList.remove('collapsing'), 250);
     };
   }
 }
@@ -4699,7 +4720,7 @@ function renderProjectSwitcher() {
     listEl.innerHTML = `
       <div style="padding: 12px 14px; color: var(--text-muted); font-size: 0.78rem; text-align: center;">
         No other projects found.<br>
-        <span style="font-size: 0.72rem;">Click "+ New Site" to create one!</span>
+        <span style="font-size: 0.72rem;">Click "+ New Project" to create one!</span>
       </div>`;
     return;
   }
@@ -4745,7 +4766,7 @@ function renderProjectSwitcher() {
         `/builder?slug=${encodeURIComponent(slug)}${token ? `&token=${encodeURIComponent(token)}` : ''}`
       );
       await loadTenantData(slug);
-      showToast(`Switched to site "${slug}"`, 'info');
+      showToast(`Switched to project "${slug}"`, 'info');
       renderProjectSwitcher();
     });
   });
@@ -4939,7 +4960,7 @@ function initHeaderUserMenu() {
       toggleDropdownBackdrop(false);
       const url = `${window.location.origin}/sites/${encodeURIComponent(state.slug || 'demo')}`;
       navigator.clipboard?.writeText(url).then(() => {
-        showToast('Live site URL copied to clipboard! 📋', 'success');
+        showToast('Live project URL copied to clipboard! 📋', 'success');
       }).catch(() => {
         prompt('Copy this URL:', url);
       });
@@ -5001,7 +5022,7 @@ function initCopyLiveLink() {
       navigator.clipboard
         ?.writeText(url)
         .then(() => {
-          showToast('Live site URL copied to clipboard! 📋', 'success');
+          showToast('Live project URL copied to clipboard! 📋', 'success');
         })
         .catch(() => {
           prompt('Copy this URL:', url);
@@ -5242,11 +5263,11 @@ function setupEventListeners() {
         if (isRegisterMode) {
           titleEl.textContent = 'Create an Account';
           nameGroup.style.display = 'block';
-          submitBtn.textContent = 'Register & Open Studio';
+          submitBtn.textContent = 'Register & Open Builder';
           toggleText.textContent = 'Already have an account?';
           toggleBtn.textContent = 'Sign in';
         } else {
-          titleEl.textContent = 'Sign in to Studio';
+          titleEl.textContent = 'Sign in to Builder';
           nameGroup.style.display = 'none';
           submitBtn.textContent = 'Sign In';
           toggleText.textContent = "Don't have an account?";
@@ -5296,7 +5317,7 @@ function setupEventListeners() {
           }
           submitBtn.disabled = false;
           submitBtn.textContent = isRegisterMode
-            ? 'Register & Open Studio'
+            ? 'Register & Open Builder'
             : 'Sign In';
         }
       };
@@ -5391,7 +5412,7 @@ function showDesignPickerModal(designs) {
   let html = `
     <div class="design-picker-card design-picker-card--create" id="dpCardCreateNew">
       <div class="dp-create-icon">✨</div>
-      <div class="dp-create-title">+ Create New Site</div>
+      <div class="dp-create-title">+ Create New Project</div>
       <div class="dp-create-sub">Start a brand new couple website</div>
     </div>`;
 
@@ -5410,7 +5431,7 @@ function showDesignPickerModal(designs) {
         <div class="dp-stat"><span class="dp-stat-icon">📅</span> Created: ${dpFormatDate(d.createdAt)}</div>
         <div class="dp-stat"><span class="dp-stat-icon">✏️</span> Last modified: ${dpRelativeTime(d.updatedAt || d.createdAt)}</div>
       </div>
-      <button type="button" class="dp-card-action">Open in Studio →</button>
+      <button type="button" class="dp-card-action">Open in Builder →</button>
     </div>`;
   });
 
@@ -5779,7 +5800,7 @@ function setupNewProjectModal() {
         }
       } finally {
         btnSubmit.disabled = false;
-        btnSubmit.innerHTML = `<span>🚀 Create Website & Launch Studio</span>`;
+        btnSubmit.innerHTML = `<span>🚀 Create Website & Launch Builder</span>`;
       }
     });
   }

@@ -82,6 +82,17 @@ function setupInteractiveMap() {
   const indonesiaTourList = ["bali", "jakarta"];
   const indonesiaTourChapters = ["chap-bali", "chap-jakarta"];
 
+  const getActiveTourList = () => {
+    const isChina = tabChina && tabChina.classList.contains("active");
+    const isIndo = tabIndonesia && tabIndonesia.classList.contains("active");
+    if (typeof window !== "undefined" && Array.isArray(window.MAP_DESTINATIONS) && window.MAP_DESTINATIONS.length > 0) {
+      const activeRegion = isChina ? "china" : (isIndo ? "indonesia" : "global");
+      const list = window.MAP_DESTINATIONS.filter(d => d.region === activeRegion).map(d => d.key);
+      if (list.length > 0) return list;
+    }
+    return isChina ? chinaTourList : (isIndo ? indonesiaTourList : globalTourList);
+  };
+
   let tourInterval = null;
   let currentTourIndex = 0;
 
@@ -422,7 +433,7 @@ function setupInteractiveMap() {
 
     const isChina = tabChina && tabChina.classList.contains("active");
     const isIndo = tabIndonesia && tabIndonesia.classList.contains("active");
-    const activeTour = isChina ? chinaTourList : (isIndo ? indonesiaTourList : globalTourList);
+    const activeTour = getActiveTourList();
 
     if (tourIdx !== undefined && tourIdx >= 0 && tourIdx < activeTour.length) {
       currentTourIndex = tourIdx;
@@ -438,7 +449,7 @@ function setupInteractiveMap() {
     }
 
     // Highlight chip & scroll into view horizontally
-    chipBtns.forEach(btn => {
+    document.querySelectorAll(".map-chip-btn").forEach(btn => {
       const matchCity = btn.getAttribute("data-city") === key;
       const stopAttr = btn.getAttribute("data-stop");
       const matchStop = stopAttr ? (parseInt(stopAttr, 10) === currentTourIndex + 1) : matchCity;
@@ -475,6 +486,39 @@ function setupInteractiveMap() {
     popupIcon.textContent = story.icon;
     popupTag.textContent = story.tag;
     popupTitle.textContent = story.title;
+
+    const popupVehicle = document.getElementById("mapPopupVehicle");
+    if (popupVehicle) {
+      const VEHICLE_LABELS = {
+        airplane: "✈️ Flight Route",
+        flight: "✈️ Flight Route",
+        car: "🚗 Road Trip",
+        train: "🚆 High-Speed Rail",
+        bike: "🚲 Bike Ride",
+        boat: "🚢 Cruise / Boat",
+        walk: "🥾 Walking / Hike",
+        hike: "🥾 Mountain Hike"
+      };
+      let vMode = story.vehicle;
+      if (!vMode && typeof window !== "undefined" && Array.isArray(window.MAP_DESTINATIONS)) {
+        const dObj = window.MAP_DESTINATIONS.find(d => d.key === key);
+        if (dObj && dObj.vehicle) vMode = dObj.vehicle;
+      }
+      if (!vMode) {
+        const activeChip = document.querySelector(`.map-chip-btn[data-city="${key}"]`);
+        if (activeChip) vMode = activeChip.getAttribute("data-vehicle");
+      }
+      if (!vMode) {
+        const k = key.toLowerCase();
+        if (["nansha", "bipenggou", "dagu", "jiuzhaigou"].includes(k)) vMode = "car";
+        else if (k === "huanglong") vMode = "walk";
+        else if (k === "wuhan") vMode = "bike";
+        else if (["shenzhen", "chongqing", "chengdu", "nanjing", "shanghai"].includes(k)) vMode = "train";
+        else vMode = "airplane";
+      }
+      popupVehicle.textContent = VEHICLE_LABELS[vMode] || (vMode.includes(" ") ? vMode : `✈️ ${vMode}`);
+    }
+
     const rawChapterDesc = (photoData.desc && photoData.desc.trim()) ? photoData.desc : ((currentChapter && currentChapter.desc) ? currentChapter.desc : story.desc);
     popupDesc.textContent = formatTeaserDesc(rawChapterDesc);
     if (likeBtn) likeBtn.innerHTML = "<span>💖 I Lof This Memory!</span>";
@@ -728,9 +772,7 @@ function setupInteractiveMap() {
   if (prevCityBtn) {
     prevCityBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const isChina = tabChina && tabChina.classList.contains("active");
-      const isIndo = tabIndonesia && tabIndonesia.classList.contains("active");
-      const activeTour = isChina ? chinaTourList : (isIndo ? indonesiaTourList : globalTourList);
+      const activeTour = getActiveTourList();
       currentTourIndex = (currentTourIndex <= 0) ? activeTour.length - 1 : currentTourIndex - 1;
       displayCityMemory(activeTour[currentTourIndex], null, currentTourIndex);
       audio.playPop();
@@ -739,9 +781,7 @@ function setupInteractiveMap() {
   if (nextCityBtn) {
     nextCityBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const isChina = tabChina && tabChina.classList.contains("active");
-      const isIndo = tabIndonesia && tabIndonesia.classList.contains("active");
-      const activeTour = isChina ? chinaTourList : (isIndo ? indonesiaTourList : globalTourList);
+      const activeTour = getActiveTourList();
       currentTourIndex = (currentTourIndex >= activeTour.length - 1) ? 0 : currentTourIndex + 1;
       displayCityMemory(activeTour[currentTourIndex], null, currentTourIndex);
       audio.playPop();
@@ -775,26 +815,31 @@ function setupInteractiveMap() {
     });
   }
 
-  // Quick Chips Buttons
-  chipBtns.forEach(btn => {
-    btn.addEventListener("click", (e) => {
+  // Quick Chips Buttons (Delegated)
+  const quickChipsScroll = document.getElementById("quickChipsScroll");
+  if (quickChipsScroll) {
+    quickChipsScroll.addEventListener("click", (e) => {
+      const btn = e.target.closest(".map-chip-btn");
+      if (!btn) return;
       e.stopPropagation();
       const key = btn.getAttribute("data-city");
       const stopAttr = btn.getAttribute("data-stop");
       const stopIdx = stopAttr ? parseInt(stopAttr, 10) - 1 : undefined;
       displayCityMemory(key, btn.getBoundingClientRect(), stopIdx);
     });
-  });
+  }
 
-  // SVG Pins
-  const pins = document.querySelectorAll(".map-pin-group, .china-city-pin, .indo-city-pin");
-  pins.forEach(pin => {
-    pin.addEventListener("click", (e) => {
+  // SVG Pins (Delegated)
+  const mapFrameElDelegated = document.getElementById("mapFrame");
+  if (mapFrameElDelegated) {
+    mapFrameElDelegated.addEventListener("click", (e) => {
+      const pin = e.target.closest(".map-pin-group, .china-city-pin, .indo-city-pin");
+      if (!pin) return;
       e.stopPropagation();
       const key = pin.getAttribute("data-city");
-      displayCityMemory(key, pin.getBoundingClientRect());
+      if (key) displayCityMemory(key, pin.getBoundingClientRect());
     });
-  });
+  }
 
   // Animated Flight & Rail Route Lines
   const routeLines = document.querySelectorAll(".flight-path-curve, .map-route-line");
@@ -880,7 +925,7 @@ function setupInteractiveMap() {
         const stepTour = () => {
           const isChina = tabChina && tabChina.classList.contains("active");
           const isIndo = tabIndonesia && tabIndonesia.classList.contains("active");
-          const currTour = isChina ? chinaTourList : (isIndo ? indonesiaTourList : globalTourList);
+          const currTour = getActiveTourList();
           const activeJourney = isChina ? 'china' : (isIndo ? 'indonesia' : 'global');
           if (currentTourIndex >= currTour.length) currentTourIndex = 0;
           const key = currTour[currentTourIndex];

@@ -2106,9 +2106,10 @@ body.letter-unsealed .floating-controls {
   padding: 60px 0;
 }
 
-.section:not(:first-of-type) {
-  content-visibility: auto;
-  contain-intrinsic-size: 1px 700px;
+.section,
+.hero-section,
+[data-widget-id] {
+  scroll-margin-top: 24px;
 }
 
 .section-heading {
@@ -3508,7 +3509,10 @@ body.admin-mode #detailHighlights {
 
 /* Hide on public live site when not in builder preview */
 body:not(.builder-mode):not(.in-builder-preview) .site-add-section-divider,
-body:not(.builder-mode):not(.in-builder-preview) .site-section-admin-toolbar {
+body:not(.builder-mode):not(.in-builder-preview) .site-section-admin-toolbar,
+body:not(.builder-mode):not(.in-builder-preview) .btn-site-add-section,
+body:not(.builder-mode):not(.in-builder-preview) .btn-site-edit-section,
+body:not(.builder-mode):not(.in-builder-preview) .btn-site-remove-section {
   display: none !important;
 }
 
@@ -3593,5 +3597,20 @@ body:not(.builder-mode):not(.in-builder-preview) .site-section-admin-toolbar {
   pointer-events: none;
 }
 
+/* Builder preview scroll stability */
+body.in-builder-preview .main-content,
+body.builder-mode .main-content {
+  padding-bottom: 55vh !important;
+}
 
+body.in-builder-preview .main-content.app-revealed,
+body.builder-mode .main-content.app-revealed {
+  animation: none !important;
+  transform: none !important;
+}
 
+body.in-builder-preview .section,
+body.builder-mode .section {
+  content-visibility: visible !important;
+  contain-intrinsic-size: none !important;
+}

@@ -203,6 +203,7 @@
 .stage-revealed .unbox-glow-rays {
   opacity: 1;
   animation: raysBurstRotate 18s linear infinite;
+  will-change: transform;
 }
 .ray-beam {
   position: absolute;

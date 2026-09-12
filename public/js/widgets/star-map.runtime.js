@@ -157,6 +157,10 @@
       cancelAnimationFrame(window._starMapAnimId);
       window._starMapAnimId = null;
     }
+    if (window._starMapObserver) {
+      window._starMapObserver.disconnect();
+      window._starMapObserver = null;
+    }
 
     const section = document.getElementById("starMapSection");
     if (!section) return;
@@ -213,12 +217,36 @@
       };
     };
 
+    const projectedBgStars = BG_STARS.map(s => ({ ...s, pt: project(s.ra, s.dec) })).filter(s => s.pt.visible);
+
+    const starCoordsMap = {};
+    const projectedConstellations = CONSTELLATIONS_DATA.map(group => {
+      const stars = group.stars.map(s => {
+        const pt = project(s.ra, s.dec);
+        const starObj = { ...s, pt, constellation: group.name };
+        starCoordsMap[s.id] = starObj;
+        return starObj;
+      });
+      return { name: group.name, lines: group.lines, stars };
+    });
+
+    const activeConstellationStars = Object.values(starCoordsMap).filter(s => s.pt.visible);
+
     let hoveredStar = null;
     let mousePos = { x: -999, y: -999 };
+    let cachedRect = null;
+
+    const getCanvasRect = () => {
+      if (!cachedRect || cachedRect.width === 0) cachedRect = canvas.getBoundingClientRect();
+      return cachedRect;
+    };
+
+    window.addEventListener("resize", () => { cachedRect = null; }, { passive: true });
 
     const updatePos = (clientX, clientY) => {
-      const rect = canvas.getBoundingClientRect();
-      const scale = canvas.width / rect.width;
+      const rect = getCanvasRect();
+      if (!rect || rect.width === 0) return;
+      const scale = 600 / rect.width;
       mousePos = {
         x: (clientX - rect.left) * scale,
         y: (clientY - rect.top) * scale
@@ -245,10 +273,21 @@
         mousePos = { x: -999, y: -999 };
         hoveredStar = null;
         if (tooltip) tooltip.style.opacity = "0";
-      }, 2000);
+      }, 1500);
     }, { passive: true });
 
+    let lastFrameTime = 0;
+    const FRAME_INTERVAL = 1000 / 30;
+    let isIntersecting = true;
+    let isTabVisible = !document.hidden;
+
     const render = (time) => {
+      if (!window._starMapAnimId) return;
+      window._starMapAnimId = requestAnimationFrame(render);
+
+      if (time - lastFrameTime < FRAME_INTERVAL) return;
+      lastFrameTime = time;
+
       const th = THEMES[themeKey] || THEMES.midnight;
       const cx = 300, cy = 300, radius = 245;
 
@@ -292,41 +331,36 @@
       ctx.lineTo(cx + radius, cy);
       ctx.stroke();
 
-      BG_STARS.forEach(s => {
-        const p = project(s.ra, s.dec);
-        if (!p.visible) return;
+      projectedBgStars.forEach(s => {
         const twinkle = 1 + 0.15 * Math.sin(time * 0.003 + s.phase);
         const r = Math.max(0.6, (4.5 - s.mag * 0.5) * twinkle);
         ctx.fillStyle = th.star;
         ctx.globalAlpha = Math.max(0.2, Math.min(0.85, (6 - s.mag) / 3));
         ctx.beginPath();
-        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.arc(s.pt.x, s.pt.y, r, 0, Math.PI * 2);
         ctx.fill();
       });
       ctx.globalAlpha = 1;
 
-      const starCoordsMap = {};
       let nearestStar = null;
       let minDistance = 14;
 
-      CONSTELLATIONS_DATA.forEach(group => {
-        group.stars.forEach(s => {
-          const pt = project(s.ra, s.dec);
-          starCoordsMap[s.id] = { ...s, pt, constellation: group.name };
-
-          if (pt.visible) {
-            const dist = Math.hypot(pt.x - mousePos.x, pt.y - mousePos.y);
-            if (dist < minDistance) {
-              minDistance = dist;
-              nearestStar = starCoordsMap[s.id];
-            }
+      if (mousePos.x !== -999) {
+        for (let i = 0; i < activeConstellationStars.length; i++) {
+          const s = activeConstellationStars[i];
+          const dist = Math.hypot(s.pt.x - mousePos.x, s.pt.y - mousePos.y);
+          if (dist < minDistance) {
+            minDistance = dist;
+            nearestStar = s;
           }
-        });
+        }
+      }
 
-        if (showConstellations) {
-          ctx.strokeStyle = th.line;
-          ctx.lineWidth = 1.2;
-          ctx.setLineDash([3, 3]);
+      if (showConstellations) {
+        ctx.strokeStyle = th.line;
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 3]);
+        projectedConstellations.forEach(group => {
           group.lines.forEach(([id1, id2]) => {
             const p1 = starCoordsMap[id1]?.pt;
             const p2 = starCoordsMap[id2]?.pt;
@@ -337,12 +371,11 @@
               ctx.stroke();
             }
           });
-          ctx.setLineDash([]);
-        }
-      });
+        });
+        ctx.setLineDash([]);
+      }
 
-      Object.values(starCoordsMap).forEach(s => {
-        if (!s.pt.visible) return;
+      activeConstellationStars.forEach(s => {
         const twinkle = 1 + 0.12 * Math.sin(time * 0.004 + s.ra);
         const baseR = Math.max(1.8, (4 - s.mag * 0.8) * 1.5);
         const r = baseR * twinkle;
@@ -376,7 +409,7 @@
             <span>${hoveredStar.constellation}</span>
             <small>Mag: ${hoveredStar.mag} • Alt: ${(hoveredStar.pt.alt * 180 / Math.PI).toFixed(1)}°</small>
           `;
-          const rect = canvas.getBoundingClientRect();
+          const rect = getCanvasRect();
           const rawX = (hoveredStar.pt.x / 600) * rect.width;
           const rawY = (hoveredStar.pt.y / 600) * rect.height;
           const tipX = Math.max(65, Math.min(rect.width - 65, rawX));
@@ -422,11 +455,38 @@
         ctx.stroke();
       }
       ctx.restore();
-
-      window._starMapAnimId = requestAnimationFrame(render);
     };
 
-    window._starMapAnimId = requestAnimationFrame(render);
+    const startAnim = () => {
+      if (!window._starMapAnimId && isIntersecting && isTabVisible) {
+        window._starMapAnimId = requestAnimationFrame(render);
+      }
+    };
+
+    const stopAnim = () => {
+      if (window._starMapAnimId) {
+        cancelAnimationFrame(window._starMapAnimId);
+        window._starMapAnimId = null;
+      }
+    };
+
+    startAnim();
+
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver((entries) => {
+        isIntersecting = Boolean(entries[0] && entries[0].isIntersecting);
+        if (isIntersecting) startAnim();
+        else stopAnim();
+      }, { threshold: 0.05 });
+      observer.observe(section);
+      window._starMapObserver = observer;
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      isTabVisible = !document.hidden;
+      if (isTabVisible && isIntersecting) startAnim();
+      else stopAnim();
+    });
 
     const btnConst = document.getElementById("btnToggleConstellations");
     if (btnConst) {

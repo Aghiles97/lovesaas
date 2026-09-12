@@ -3,6 +3,45 @@
  */
 
 document.addEventListener("DOMContentLoaded", () => {
+  // 0. SCROLL RESET: Always ensure landing page starts at the beginning (top)
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
+  const isDirectOrReload = (() => {
+    try {
+      const navEntry = performance.getEntriesByType && performance.getEntriesByType("navigation")[0];
+      return !navEntry || navEntry.type === "navigate" || navEntry.type === "reload";
+    } catch {
+      return true;
+    }
+  })();
+
+  if (isDirectOrReload) {
+    if (window.location.hash && ["#pricing", "#studio", "#features", "#presets", "#demo-preview"].includes(window.location.hash)) {
+      history.replaceState(null, null, window.location.pathname);
+    }
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+
+  window.addEventListener("load", () => {
+    if (!window.location.hash || window.location.hash === "#") {
+      window.scrollTo(0, 0);
+    }
+  });
+
+  const navBrandLogo = document.querySelector(".nav-brand");
+  if (navBrandLogo) {
+    navBrandLogo.addEventListener("click", (e) => {
+      if (window.location.pathname === "/welcome" || window.location.pathname === "/") {
+        e.preventDefault();
+        if (window.location.hash) history.replaceState(null, null, window.location.pathname);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
+  }
+
   // Safe fetch helper that guarantees clean JSON parsing and friendly errors on HTML responses
   async function safeJsonFetch(url, options = {}) {
     let res;
@@ -252,31 +291,37 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ------------------------------------------------------------------
-  // 5. PRESETS & 5 LUXURY THEME PALETTES
+  // 5. PRESETS, REAL THEMES & MINI BUILDER DEMO
   // ------------------------------------------------------------------
   const PRESET_MAP = {
     complete: {
       title: "Complete Romance Suite",
-      desc: "The full production experience containing all 13 interactive widgets. Perfect for anniversaries, milestones, and lifelong memory preservation.",
-      icon: "💖",
-      badges: ["👑 Hero & Clocks", "📈 Lof-O-Meter", "🗺️ Interactive Map", "📖 Timeline", "💌 Audio Letter", "📸 Polaroids", "🍾 Truth / Dare", "🎡 Spinner", "🎟️ Coupons", "✈️ Boarding Pass", "❓ Love Quiz", "🎵 Soundtrack"]
+      desc: "The full production experience with all 26 interactive modules. Perfect for anniversaries, milestones, and lifelong memory preservation.",
+      badges: ["👑 Hero & Clocks", "💌 Audio Letter", "🗺️ Travel Map", "📖 Timeline", "📸 Polaroids", "📈 Lof-O-Meter", "✈️ Boarding Pass", "🍾 Truth / Dare", "🎡 Spinner", "🎟️ Coupons", "🧠 Love Quiz", "🎂 Candle Wish", "⏳ Life Stats", "🎁 Gift Unboxer"]
     },
     storyteller: {
       title: "The Storyteller Layout",
       desc: "Focused on your narrative journey, milestone chapters, travel locations, and romantic letters. Best for storytelling and travel memories.",
-      icon: "📖",
-      badges: ["👑 Hero Header", "📖 Timeline Chapters", "🗺️ Interactive Map", "📸 Memories Gallery", "✈️ Boarding Pass", "💌 Wax-Sealed Letter"]
+      badges: ["👑 Hero Header", "📖 Timeline Chapters", "🗺️ Interactive Map", "📸 Memories Gallery", "✈️ Boarding Pass", "💌 Wax-Sealed Letter", "⏳ Life Stats"]
     },
     playful: {
       title: "Playful & Interactive Fun",
       desc: "Packed with cute games, date night spinners, quiz competitions, scratchable love coupons, and the explosive Lof-O-Meter.",
-      icon: "🎮",
-      badges: ["👑 Hero Header", "📈 Lof-O-Meter", "🍾 Truth / Dare", "🎡 Date Night Spinner", "🎟️ Love Coupons", "❓ Love Quiz", "🕹️ Playful Games"]
+      badges: ["👑 Hero Header", "📈 Lof-O-Meter", "🍾 Truth / Dare", "🎡 Date Night Spinner", "🎟️ Love Coupons", "🧠 Love Quiz", "🙈 Runaway Button", "🥂 Roast & Toast"]
+    },
+    birthday: {
+      title: "Birthday Bash Suite",
+      desc: "Dedicated to their special day with interactive candle blowouts, audio messages, gift unboxer, and guestbook wishes.",
+      badges: ["👑 Hero Header", "🎂 Candle Blow-Out", "🎁 Gift Unboxer", "📌 Guestbook Wall", "📸 Polaroids", "💌 Wax Letter", "🎵 Birthday Song"]
+    },
+    anniversary: {
+      title: "Anniversary Keepsake",
+      desc: "Celebrates your time together with relationship countdowns, milestone odyssey map, anniversary card deck, and love receipts.",
+      badges: ["👑 Hero & Clocks", "💍 Anniversary Deck", "🗺️ Milestone Odyssey", "📖 Timeline", "📸 Memories Gallery", "💌 Wax-Sealed Letter"]
     },
     minimal: {
       title: "Minimal Aesthetic Gallery",
       desc: "Clean, elegant, distraction-free photo showcase with your favorite background music and personal love letter.",
-      icon: "📸",
       badges: ["👑 Hero Header", "📸 Polaroid Memories", "💌 Wax-Sealed Letter", "🎵 Background Soundtrack"]
     }
   };
@@ -289,12 +334,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const key = btn.dataset.preset;
       const data = PRESET_MAP[key] || PRESET_MAP.complete;
 
-      document.getElementById("presetTitle").textContent = data.title;
-      document.getElementById("presetDesc").textContent = data.desc;
-      document.getElementById("presetIcon").textContent = data.icon;
-
+      const pTitle = document.getElementById("presetTitle");
+      const pDesc = document.getElementById("presetDesc");
       const badgeWrap = document.getElementById("presetBadges");
-      badgeWrap.innerHTML = data.badges.map(b => `<span class="preset-widget-badge">${b}</span>`).join("");
+      if (pTitle) pTitle.textContent = data.title;
+      if (pDesc) pDesc.textContent = data.desc;
+      if (badgeWrap) {
+        badgeWrap.innerHTML = data.badges.map(b => `<span class="preset-widget-badge">${b}</span>`).join("");
+      }
     });
   });
 
@@ -303,62 +350,253 @@ document.addEventListener("DOMContentLoaded", () => {
     btnChoosePreset.addEventListener("click", () => openCheckoutModal("vip"));
   }
 
-  // Theme Swatches
-  const themeSwatches = document.querySelectorAll(".theme-swatch");
-  const heroMockupFrame = document.getElementById("heroMockupFrame");
-  const activeThemeLabel = document.getElementById("activeThemeLabel");
-
-  const THEME_STYLES = {
-    pink: {
-      name: "Theme: Romantic Rose",
-      gradient: "linear-gradient(180deg, #241424 0%, #0d111d 100%)",
-      border: "rgba(244, 63, 94, 0.5)",
-      labelColor: "#f43f5e"
+  // Real Themes Showcase in Presets Section
+  const REAL_THEMES_MAP = {
+    "theme-pink": {
+      name: "Romantic Rose",
+      category: "CLASSIC PALETTE",
+      badge: "FOREVER LOVE",
+      desc: "Soft romantic blush with champagne gold accents and warm rose tones.",
+      icon: "🌸",
+      cardBg: "linear-gradient(145deg, rgba(36, 20, 36, 0.95), rgba(13, 17, 29, 0.95))",
+      boxBg: "rgba(244, 63, 94, 0.12)",
+      accent: "#ff4d6d",
+      btnBg: "linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)"
     },
-    indigo: {
-      name: "Theme: Starry Night",
-      gradient: "linear-gradient(180deg, #151b44 0%, #080c18 100%)",
-      border: "rgba(99, 102, 241, 0.6)",
-      labelColor: "#818cf8"
+    "theme-midnight": {
+      name: "Starry Night",
+      category: "DEEP COSMIC",
+      badge: "UNDER THE STARS",
+      desc: "Deep sapphire blues and starlight silver for calm, dreamy, intimate memories.",
+      icon: "🌌",
+      cardBg: "linear-gradient(145deg, rgba(15, 23, 55, 0.95), rgba(8, 12, 24, 0.95))",
+      boxBg: "rgba(59, 130, 246, 0.12)",
+      accent: "#3b82f6",
+      btnBg: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
     },
-    peach: {
-      name: "Theme: Sunset Peach",
-      gradient: "linear-gradient(180deg, #331a0e 0%, #0c101b 100%)",
-      border: "rgba(249, 115, 22, 0.55)",
-      labelColor: "#fb923c"
+    "theme-purple": {
+      name: "Lavender Dream",
+      category: "LUXURY VELVET",
+      badge: "FAIRYTALE",
+      desc: "Regal lilac and amethyst hues evoking timeless romance and poetic devotion.",
+      icon: "💜",
+      cardBg: "linear-gradient(145deg, rgba(43, 19, 64, 0.95), rgba(10, 8, 20, 0.95))",
+      boxBg: "rgba(168, 85, 247, 0.12)",
+      accent: "#9b5de5",
+      btnBg: "linear-gradient(135deg, #9b5de5 0%, #7928ca 100%)"
     },
-    emerald: {
-      name: "Theme: Emerald Forest",
-      gradient: "linear-gradient(180deg, #0e2a20 0%, #07130e 100%)",
-      border: "rgba(16, 185, 129, 0.55)",
-      labelColor: "#34d399"
+    "theme-gold": {
+      name: "Sunset Gold",
+      category: "GOLDEN HOUR",
+      badge: "WARM RADIANCE",
+      desc: "Luminous amber, apricot gold, and honey glow reminiscent of sunsets at the beach.",
+      icon: "🌅",
+      cardBg: "linear-gradient(145deg, rgba(51, 26, 14, 0.95), rgba(12, 16, 27, 0.95))",
+      boxBg: "rgba(247, 127, 0, 0.12)",
+      accent: "#f77f00",
+      btnBg: "linear-gradient(135deg, #f77f00 0%, #d62828 100%)"
     },
-    purple: {
-      name: "Theme: Velvet Midnight",
-      gradient: "linear-gradient(180deg, #2b1340 0%, #0a0814 100%)",
-      border: "rgba(168, 85, 247, 0.6)",
-      labelColor: "#c084fc"
+    "theme-emerald": {
+      name: "Emerald Garden",
+      category: "BOTANICAL",
+      badge: "EVERGREEN",
+      desc: "Serene forest emeralds and mint undertones for earthy, growing relationships.",
+      icon: "🌿",
+      cardBg: "linear-gradient(145deg, rgba(14, 42, 32, 0.95), rgba(7, 19, 14, 0.95))",
+      boxBg: "rgba(16, 185, 129, 0.12)",
+      accent: "#10b981",
+      btnBg: "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+    },
+    "theme-img-watercolor-frame": {
+      name: "Watercolor Floral",
+      category: "ART BACKDROP",
+      badge: "HAND-PAINTED",
+      desc: "Delicate hand-painted botanical watercolor border framing your shared story.",
+      icon: "🎨",
+      cardBg: "linear-gradient(145deg, rgba(40, 20, 30, 0.95), rgba(15, 12, 22, 0.95))",
+      boxBg: "rgba(251, 113, 133, 0.12)",
+      accent: "#fb7185",
+      btnBg: "linear-gradient(135deg, #fb7185 0%, #e11d48 100%)"
+    },
+    "theme-img-pop-stickers": {
+      name: "Pop Stickers",
+      category: "ART BACKDROP",
+      badge: "PLAYFUL & BOLD",
+      desc: "Vibrant retro sticker collage backdrop with hearts, kisses, and sparkler decals.",
+      icon: "💋",
+      cardBg: "linear-gradient(145deg, rgba(45, 12, 35, 0.95), rgba(15, 8, 22, 0.95))",
+      boxBg: "rgba(255, 0, 127, 0.12)",
+      accent: "#ff007f",
+      btnBg: "linear-gradient(135deg, #ff007f 0%, #ff4d6d 100%)"
+    },
+    "theme-birthday": {
+      name: "Birthday Party",
+      category: "CELEBRATION",
+      badge: "BIRTHDAY BASH",
+      desc: "Festive candy pinks, glowing candles, party poppers, and celebratory confetti.",
+      icon: "🎂",
+      cardBg: "linear-gradient(145deg, rgba(48, 14, 38, 0.95), rgba(15, 9, 24, 0.95))",
+      boxBg: "rgba(255, 46, 147, 0.12)",
+      accent: "#ff2e93",
+      btnBg: "linear-gradient(135deg, #ff2e93 0%, #f72585 100%)"
+    },
+    "theme-anniversary": {
+      name: "Anniversary Crimson",
+      category: "HIGH LUXURY",
+      badge: "DECADE OF LOVE",
+      desc: "Rich ruby crimson velvet tones and polished metallic borders celebrating deep love.",
+      icon: "💍",
+      cardBg: "linear-gradient(145deg, rgba(45, 10, 24, 0.95), rgba(12, 8, 18, 0.95))",
+      boxBg: "rgba(201, 24, 74, 0.12)",
+      accent: "#c9184a",
+      btnBg: "linear-gradient(135deg, #c9184a 0%, #800f2f 100%)"
     }
   };
 
-  themeSwatches.forEach(swatch => {
-    swatch.addEventListener("click", () => {
-      themeSwatches.forEach(s => s.classList.remove("active"));
-      swatch.classList.add("active");
-      const themeKey = swatch.dataset.theme;
-      const theme = THEME_STYLES[themeKey] || THEME_STYLES.pink;
+  const themePills = document.querySelectorAll(".theme-pill-btn");
+  const themeCard = document.getElementById("themePreviewCard");
+  const realThemeIcon = document.getElementById("realThemeIcon");
+  const realThemeName = document.getElementById("realThemeName");
+  const realThemeCategory = document.getElementById("realThemeCategory");
+  const realThemeBadge = document.getElementById("realThemeBadge");
+  const realThemeDesc = document.getElementById("realThemeDesc");
+  const realThemeSampleBox = document.getElementById("realThemeSampleBox");
+  const realThemeSampleBtn = document.getElementById("realThemeSampleBtn");
 
-      activeThemeLabel.textContent = theme.name;
-      activeThemeLabel.style.color = theme.labelColor;
+  themePills.forEach(pill => {
+    pill.addEventListener("click", () => {
+      themePills.forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      const key = pill.dataset.realTheme;
+      const data = REAL_THEMES_MAP[key] || REAL_THEMES_MAP["theme-pink"];
 
-      if (heroMockupFrame) {
-        heroMockupFrame.style.boxShadow = `0 35px 90px -20px rgba(0, 0, 0, 0.9), 0 0 60px -5px ${theme.border}`;
-        heroMockupFrame.style.borderColor = theme.border;
-        const bContent = heroMockupFrame.querySelector(".browser-content");
-        if (bContent) bContent.style.background = theme.gradient;
+      if (themeCard) {
+        themeCard.style.background = data.cardBg;
+        themeCard.style.borderColor = `${data.accent}55`;
+      }
+      if (realThemeIcon) realThemeIcon.textContent = data.icon;
+      if (realThemeName) realThemeName.textContent = data.name;
+      if (realThemeCategory) realThemeCategory.textContent = data.category;
+      if (realThemeBadge) {
+        realThemeBadge.textContent = data.badge;
+        realThemeBadge.style.color = data.accent;
+        realThemeBadge.style.borderColor = `${data.accent}44`;
+        realThemeBadge.style.background = `${data.accent}22`;
+      }
+      if (realThemeDesc) realThemeDesc.textContent = data.desc;
+      if (realThemeSampleBox) {
+        realThemeSampleBox.style.background = data.boxBg;
+        realThemeSampleBox.style.borderColor = `${data.accent}44`;
+      }
+      if (realThemeSampleBtn) {
+        realThemeSampleBtn.style.background = data.btnBg;
       }
     });
   });
+
+  // ------------------------------------------------------------------
+  // 5B. INTERACTIVE MINI BUILDER DEMO IN STUDIO EXPERIENCE
+  // ------------------------------------------------------------------
+  const MINI_THEMES = {
+    pink: {
+      name: "Theme: Rose",
+      bg: "linear-gradient(180deg, #1f111c 0%, #0c0f18 100%)",
+      border: "#ff4d6d",
+      badgeColor: "#fda4af",
+      badgeBg: "rgba(244, 63, 94, 0.2)",
+      widgetBorder: "rgba(255, 77, 109, 0.25)"
+    },
+    midnight: {
+      name: "Theme: Night",
+      bg: "linear-gradient(180deg, #0d1527 0%, #060911 100%)",
+      border: "#3b82f6",
+      badgeColor: "#93c5fd",
+      badgeBg: "rgba(59, 130, 246, 0.2)",
+      widgetBorder: "rgba(59, 130, 246, 0.25)"
+    },
+    purple: {
+      name: "Theme: Lilac",
+      bg: "linear-gradient(180deg, #1d1127 0%, #090710 100%)",
+      border: "#9b5de5",
+      badgeColor: "#d8b4fe",
+      badgeBg: "rgba(155, 93, 229, 0.2)",
+      widgetBorder: "rgba(155, 93, 229, 0.25)"
+    },
+    gold: {
+      name: "Theme: Sunset",
+      bg: "linear-gradient(180deg, #24140a 0%, #0b0d13 100%)",
+      border: "#f77f00",
+      badgeColor: "#fdba74",
+      badgeBg: "rgba(247, 127, 0, 0.2)",
+      widgetBorder: "rgba(247, 127, 0, 0.25)"
+    },
+    emerald: {
+      name: "Theme: Emerald",
+      bg: "linear-gradient(180deg, #0b1e16 0%, #050d0a 100%)",
+      border: "#10b981",
+      badgeColor: "#6ee7b7",
+      badgeBg: "rgba(16, 185, 129, 0.2)",
+      widgetBorder: "rgba(16, 185, 129, 0.25)"
+    }
+  };
+
+  const miniThemeBtns = document.querySelectorAll(".mini-theme-btn");
+  const miniStage = document.getElementById("miniPreviewStage");
+  const miniBadge = document.getElementById("miniBuilderThemeBadge");
+
+  miniThemeBtns.forEach(btn => {
+    btn.addEventListener("click", () => {
+      miniThemeBtns.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const key = btn.dataset.miniTheme;
+      const theme = MINI_THEMES[key] || MINI_THEMES.pink;
+
+      if (miniStage) {
+        miniStage.style.background = theme.bg;
+        miniStage.style.borderColor = `${theme.border}66`;
+        miniStage.style.boxShadow = `0 15px 35px rgba(0,0,0,0.5), inset 0 0 40px ${theme.border}15`;
+        miniStage.querySelectorAll(".mini-dumb-widget").forEach(w => {
+          w.style.borderColor = theme.widgetBorder;
+        });
+      }
+      if (miniBadge) {
+        miniBadge.textContent = theme.name;
+        miniBadge.style.color = theme.badgeColor;
+        miniBadge.style.background = theme.badgeBg;
+        miniBadge.style.borderColor = `${theme.border}44`;
+      }
+    });
+  });
+
+  // Mini Builder: Widget Toggles
+  const miniToggles = document.querySelectorAll(".mini-widget-toggle input");
+  const miniCount = document.getElementById("miniWidgetsCount");
+
+  function updateMiniWidgetsCount() {
+    if (!miniCount) return;
+    const checkedCount = document.querySelectorAll(".mini-widget-toggle input:checked").length;
+    miniCount.textContent = `${checkedCount} Active`;
+  }
+
+  miniToggles.forEach(chk => {
+    chk.addEventListener("change", () => {
+      const widgetKey = chk.dataset.miniToggle;
+      const widgetEl = document.getElementById(`miniWidget_${widgetKey}`);
+      if (widgetEl) {
+        widgetEl.style.display = chk.checked ? "flex" : "none";
+      }
+      updateMiniWidgetsCount();
+    });
+  });
+
+  // Mini Builder: Kiss Button interaction
+  const btnMiniPumpLove = document.getElementById("btnMiniPumpLove");
+  if (btnMiniPumpLove) {
+    btnMiniPumpLove.addEventListener("click", () => {
+      spawnFloatingEmoji("💋", btnMiniPumpLove);
+      spawnFloatingEmoji("💖", btnMiniPumpLove);
+    });
+  }
 
   // ------------------------------------------------------------------
   // 6. WIDGET LIGHTBOX MODAL (HIGH-RES SVGS)
@@ -383,8 +621,41 @@ document.addEventListener("DOMContentLoaded", () => {
     coupons: { title: "🎟️ Scratchable Love Coupons", cat: "GAMES", sub: "Interactive scratch-to-reveal canvas with claim tracking" },
     boarding_pass: { title: "✈️ First-Class Boarding Pass", cat: "KEEPSAKE", sub: "Realistic airline boarding ticket for trips & reunions" },
     quiz: { title: "❓ Couples Love Quiz", cat: "GAMES", sub: "Trivia game with instant score & celebratory confetti" },
-    reasons: { title: "💌 Reasons Why I Lof You", cat: "STORY", sub: "Categorized card deck with flip animations" }
+    reasons: { title: "💌 Reasons Why I Lof You", cat: "STORY", sub: "Categorized card deck with flip animations" },
+    candle_blowout: { title: "🎂 Candle Blow-Out & Wish", cat: "BIRTHDAY", sub: "Microphone or tap triggered candle flame blow-out with confetti" },
+    milestone_stats: { title: "⏳ Milestone Life Stats", cat: "STATS", sub: "Live seconds alive ticker with quirky relationship counters" },
+    gift_unboxer: { title: "🎁 3D Surprise Gift Unboxer", cat: "SURPRISE", sub: "Multi-stage 3D unwrapping animation revealing special gift" },
+    roast_toast: { title: "🥂 Roast & Toast Spinner", cat: "GAMES", sub: "Decelerating roulette wheel alternating playful roasts and toasts" },
+    playful: { title: "🙈 Playful Runaway Button", cat: "GAMES", sub: "Playful question with an evasive No button that flees cursor" },
+    guestbook: { title: "📌 Guestbook Wish Wall", cat: "COMMUNITY", sub: "Corkboard sticky-notes with visitor messages and photos" },
+    party_jukebox: { title: "📻 Party Jukebox & Playlist", cat: "MUSIC", sub: "Vinyl turntable audio player with animated equalizer" },
+    tenure_ticker: { title: "⏳ Precision Tenure Ticker", cat: "STATS", sub: "Live elapsed time counter with next milestone tracker" },
+    star_map: { title: "✨ Night Sky Star Map", cat: "ROMANCE", sub: "Constellation alignment rendering on your exact date & location" },
+    then_now_slider: { title: "🌗 Then vs. Now Photo Slider", cat: "PHOTOS", sub: "Interactive split-screen slider comparing first vs recent photo" },
+    bucket_list: { title: "🎯 Couple Bucket List", cat: "GOALS", sub: "Shared relationship goals checklist with progress tracking" },
+    audio_capsule: { title: "🎙️ Audio Time Capsule", cat: "AUDIO", sub: "Waveform voice memo player archiving messages across years" },
+    milestone_odyssey: { title: "🚀 Milestone Odyssey Map", cat: "STORY", sub: "Horizontal constellation line map connecting key memories" },
+    valentine_scratch: { title: "💝 Valentine Date Scratchcard", cat: "VALENTINE", sub: "Interactive scratch-off card with secret itinerary reveal" }
   };
+
+  // More Widgets Toggle & Filter Bar
+  const btnToggleMoreWidgets = document.getElementById("btnToggleMoreWidgets");
+  const widgetsGrid = document.getElementById("widgetsGrid");
+  const moreWidgetsWrap = document.querySelector(".more-widgets-wrap");
+  const moreWidgetsArrow = document.getElementById("moreWidgetsArrow");
+
+  if (btnToggleMoreWidgets && widgetsGrid) {
+    btnToggleMoreWidgets.addEventListener("click", () => {
+      const isCollapsed = widgetsGrid.classList.toggle("collapsed-widgets");
+      const label = btnToggleMoreWidgets.querySelector("span");
+      if (label) {
+        label.textContent = isCollapsed ? "✨ Show All 26 Widgets (+14 More)" : "▴ Show Less Widgets";
+      }
+      if (moreWidgetsArrow) {
+        moreWidgetsArrow.textContent = isCollapsed ? "▾" : "▴";
+      }
+    });
+  }
 
   // Category Filter Bar
   const filterBtns = document.querySelectorAll(".widget-filter-btn");
@@ -394,6 +665,20 @@ document.addEventListener("DOMContentLoaded", () => {
       filterBtns.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       const cat = btn.dataset.cat;
+
+      if (cat !== "all" && widgetsGrid) {
+        widgetsGrid.classList.remove("collapsed-widgets");
+        if (moreWidgetsWrap) moreWidgetsWrap.style.display = "none";
+      } else if (widgetsGrid) {
+        widgetsGrid.classList.add("collapsed-widgets");
+        if (moreWidgetsWrap) {
+          moreWidgetsWrap.style.display = "flex";
+          const label = btnToggleMoreWidgets?.querySelector("span");
+          if (label) label.textContent = "✨ Show All 26 Widgets (+14 More)";
+          if (moreWidgetsArrow) moreWidgetsArrow.textContent = "▾";
+        }
+      }
+
       widgetCards.forEach(card => {
         if (cat === "all" || card.dataset.category === cat) {
           card.style.display = "flex";
@@ -438,23 +723,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const stickyCtaBar = document.getElementById("stickyCtaBar");
   const btnStickyBuy = document.getElementById("btnStickyBuy");
   const btnStickyDemo = document.getElementById("btnStickyDemo");
+  const mainNav = document.getElementById("mainNav");
 
   window.addEventListener("scroll", () => {
-    if (window.scrollY > 600) {
-      stickyCtaBar.classList.add("visible");
-    } else {
-      stickyCtaBar.classList.remove("visible");
+    if (mainNav) {
+      if (window.scrollY > 20) {
+        mainNav.classList.add("nav-scrolled");
+      } else {
+        mainNav.classList.remove("nav-scrolled");
+      }
     }
-  });
+    if (stickyCtaBar) {
+      if (window.scrollY > 600) {
+        stickyCtaBar.classList.add("visible");
+      } else {
+        stickyCtaBar.classList.remove("visible");
+      }
+    }
+  }, { passive: true });
 
   if (btnStickyBuy) btnStickyBuy.addEventListener("click", () => openCheckoutModal("vip"));
-  if (btnStickyDemo) {
-    btnStickyDemo.addEventListener("click", () => {
-      const demoIframe = document.getElementById("demoIframe");
-      demoIframe.src = "/sites/demo";
-      openModal(document.getElementById("demoPreviewModal"));
-    });
-  }
 
   // ------------------------------------------------------------------
   // 8. FAQ ACCORDION
@@ -470,7 +758,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ------------------------------------------------------------------
-  // 9. MODALS & IFRAME CONTROLLER
+  // 9. MODALS & FULL-SCREEN DEMO CONTROLLER
   // ------------------------------------------------------------------
   const checkoutModal = document.getElementById("checkoutModal");
   const signInModal = document.getElementById("signInModal");
@@ -490,19 +778,41 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.style.overflow = "";
   }
 
-  const btnHeroDemo = document.getElementById("btnHeroDemo");
-  if (btnHeroDemo) {
-    btnHeroDemo.addEventListener("click", () => {
-      demoIframe.src = "/sites/demo";
-      openModal(demoPreviewModal);
-    });
+  // Full-Screen Website Demo Handler
+  function openDemoModal() {
+    if (!demoPreviewModal || !demoIframe) return;
+    const loader = document.getElementById("demoIframeLoader");
+    if (loader) loader.classList.remove("hidden");
+    demoIframe.src = "/sites/demo";
+    demoIframe.onload = () => {
+      if (loader) loader.classList.add("hidden");
+    };
+    openModal(demoPreviewModal);
   }
 
+  function closeDemoModal() {
+    if (!demoPreviewModal) return;
+    closeModal(demoPreviewModal);
+    if (demoIframe) demoIframe.src = "";
+    const loader = document.getElementById("demoIframeLoader");
+    if (loader) loader.classList.remove("hidden");
+  }
+
+  const btnHeroDemo = document.getElementById("btnHeroDemo");
+  if (btnHeroDemo) btnHeroDemo.addEventListener("click", openDemoModal);
+  if (btnStickyDemo) btnStickyDemo.addEventListener("click", openDemoModal);
+
   const btnCloseDemoModal = document.getElementById("btnCloseDemoModal");
-  if (btnCloseDemoModal) {
-    btnCloseDemoModal.addEventListener("click", () => {
-      closeModal(demoPreviewModal);
-      demoIframe.src = "";
+  const btnCloseDemoModalX = document.getElementById("btnCloseDemoModalX");
+  if (btnCloseDemoModal) btnCloseDemoModal.addEventListener("click", closeDemoModal);
+  if (btnCloseDemoModalX) btnCloseDemoModalX.addEventListener("click", closeDemoModal);
+
+
+  const btnDemoClaimKeepsake = document.getElementById("btnDemoClaimKeepsake");
+  if (btnDemoClaimKeepsake) {
+    btnDemoClaimKeepsake.addEventListener("click", () => {
+      closeDemoModal();
+      openCheckoutModal("vip");
     });
   }
 
@@ -736,16 +1046,16 @@ document.addEventListener("DOMContentLoaded", () => {
       checkoutModalFooter.style.display = "flex";
       if (isAdmin) {
         checkoutModalSubtitle.textContent = "Master Admin Mode • Instant Provisioning • Zero Cost ($0)";
-        btnCheckoutNext.innerHTML = `<span>🚀 Instant Provision Site & Launch Studio (Admin)</span> <span>✨</span>`;
+        btnCheckoutNext.innerHTML = `<span>🚀 Instant Provision Project & Launch Builder (Admin)</span> <span>✨</span>`;
       } else {
-        checkoutModalSubtitle.textContent = `One-time payment • Lifetime access • Instant Studio unlock ($${cost})`;
-        btnCheckoutNext.innerHTML = `<span>💖 Claim Site & Launch Studio ($${cost})</span> <span>🚀</span>`;
+        checkoutModalSubtitle.textContent = `One-time payment • Lifetime access • Instant Builder unlock ($${cost})`;
+        btnCheckoutNext.innerHTML = `<span>💖 Claim Project & Launch Builder ($${cost})</span> <span>🚀</span>`;
       }
     } else if (checkoutState.step === 3) {
       checkoutStep1.style.display = "none";
       checkoutStep3.style.display = "block";
       checkoutModalFooter.style.display = "none";
-      checkoutModalSubtitle.textContent = "✨ Studio Unlocked & Ready!";
+      checkoutModalSubtitle.textContent = "✨ Builder Unlocked & Ready!";
     }
   }
 
@@ -772,7 +1082,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const isAdmin = currentUser && currentUser.role === "admin";
       btnCheckoutNext.disabled = true;
-      btnCheckoutNext.innerHTML = `<span>Activating Site & Studio...</span> <span>⏳</span>`;
+      btnCheckoutNext.innerHTML = `<span>Activating Project & Builder...</span> <span>⏳</span>`;
 
       try {
         const data = await safeJsonFetch("/api/checkout", {
@@ -868,8 +1178,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const count = (data.designs || []).length;
       const mobileBadge = document.getElementById("mobileBadgeSitesCount");
       const navBadge = document.getElementById("navBadgeSitesCount");
+      const dropBadge = document.getElementById("dropdownBadgeSitesCount");
       if (mobileBadge) mobileBadge.textContent = count;
       if (navBadge) navBadge.textContent = count;
+      if (dropBadge) dropBadge.textContent = count;
     } catch {}
   }
 
@@ -884,6 +1196,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const drawerGuestSection = document.getElementById("drawerGuestSection");
 
     if (currentUser) {
+      document.body.classList.add("user-logged-in");
       if (drawerAccountSection) drawerAccountSection.style.display = "flex";
       if (drawerGuestSection) drawerGuestSection.style.display = "none";
 
@@ -897,9 +1210,15 @@ document.addEventListener("DOMContentLoaded", () => {
       if (mobileUserName) mobileUserName.textContent = name;
       if (mobileUserEmail) mobileUserEmail.textContent = currentUser.email;
 
-      // Desktop avatar letter
+      // Dropdown user card & avatar letter
       const navAvatarLetter = document.getElementById("navUserAvatarLetter");
+      const dropdownAvatar = document.getElementById("dropdownAvatarLetter");
+      const dropdownName = document.getElementById("dropdownUserName");
+      const dropdownEmail = document.getElementById("dropdownUserEmail");
       if (navAvatarLetter) navAvatarLetter.textContent = initial;
+      if (dropdownAvatar) dropdownAvatar.textContent = initial;
+      if (dropdownName) dropdownName.textContent = name;
+      if (dropdownEmail) dropdownEmail.textContent = currentUser.email;
 
       if (btnNavGetStarted) btnNavGetStarted.style.display = "none";
 
@@ -927,15 +1246,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const portalAvatar = document.getElementById("portalAvatar");
       const portalTitle = document.getElementById("userPortalModalTitle");
-      const portalEmail = document.getElementById("portalEmail");
       const profileName = document.getElementById("profileName");
       const profileEmail = document.getElementById("profileEmail");
       if (portalAvatar) portalAvatar.textContent = initial;
       if (portalTitle) portalTitle.textContent = "My Websites";
-      if (portalEmail) portalEmail.textContent = currentUser.email;
       if (profileName) profileName.value = currentUser.name || "";
       if (profileEmail) profileEmail.value = currentUser.email;
     } else {
+      document.body.classList.remove("user-logged-in");
       if (drawerAccountSection) drawerAccountSection.style.display = "none";
       if (drawerGuestSection) drawerGuestSection.style.display = "flex";
 
@@ -949,15 +1267,15 @@ document.addEventListener("DOMContentLoaded", () => {
       if (mobileMenuBtn) mobileMenuBtn.style.display = "";
 
       if (btnHeroBuy) {
-        btnHeroBuy.innerHTML = `<span>💖</span> Create Our Couple Site — From $19`;
+        btnHeroBuy.innerHTML = `<span>💖</span> Create Our Couple Project — From $19`;
         btnHeroBuy.onclick = () => openCheckoutModal("vip");
       }
       if (btnStickyBuy) {
-        btnStickyBuy.innerHTML = `<span>💖</span> Claim Site & Launch Studio`;
+        btnStickyBuy.innerHTML = `<span>💖</span> Claim Project & Launch Builder`;
         btnStickyBuy.onclick = () => openCheckoutModal("vip");
       }
       if (btnMobileGetStarted) {
-        btnMobileGetStarted.innerHTML = `<span>💖</span> Create Site`;
+        btnMobileGetStarted.innerHTML = `<span>💖</span> Create Project`;
         btnMobileGetStarted.onclick = () => openCheckoutModal("vip");
       }
 
@@ -1048,6 +1366,10 @@ document.addEventListener("DOMContentLoaded", () => {
         openModal(signInModal);
       }
     });
+  }
+  const btnFooterStart = document.getElementById("btnFooterStart");
+  if (btnFooterStart) {
+    btnFooterStart.addEventListener("click", () => openCheckoutModal("vip"));
   }
   if (btnCloseSignInModal) btnCloseSignInModal.addEventListener("click", () => closeModal(signInModal));
 
@@ -1248,6 +1570,19 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnCloseAccountSettingsModal) btnCloseAccountSettingsModal.addEventListener("click", () => closeModal(accountSettingsModal));
   if (btnCloseReceiptsModal) btnCloseReceiptsModal.addEventListener("click", () => closeModal(receiptsModal));
 
+  const btnDropdownMyWebsites = document.getElementById("btnDropdownMyWebsites");
+  const btnDropdownReceipts = document.getElementById("btnDropdownReceipts");
+
+  if (btnDropdownMyWebsites) btnDropdownMyWebsites.addEventListener("click", () => {
+    if (navUserDropdownMenu) navUserDropdownMenu.classList.add("hidden");
+    openUserPortal();
+  });
+
+  if (btnDropdownReceipts) btnDropdownReceipts.addEventListener("click", () => {
+    if (navUserDropdownMenu) navUserDropdownMenu.classList.add("hidden");
+    openReceipts();
+  });
+
   if (btnDesktopAccountSettings) btnDesktopAccountSettings.addEventListener("click", () => {
     if (navUserDropdownMenu) navUserDropdownMenu.classList.add("hidden");
     openAccountSettings();
@@ -1284,6 +1619,35 @@ document.addEventListener("DOMContentLoaded", () => {
     performLogout();
   });
 
+  function formatLastModified(dateStr) {
+    if (!dateStr) return "Recently";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return "Recently";
+      const now = new Date();
+      const diffMs = now - d;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+      if (diffMins < 1) return "Just now";
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays === 1) return "Yesterday";
+      if (diffDays < 7) return `${diffDays}d ago`;
+      return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    } catch {
+      return "Recently";
+    }
+  }
+  if (userPortalModal) {
+    userPortalModal.addEventListener("wheel", (e) => {
+      const body = userPortalModal.querySelector(".user-portal-body");
+      if (!body) return;
+      if (e.target.closest(".user-portal-body")) return;
+      body.scrollTop += e.deltaY;
+    }, { passive: true });
+  }
+
   // Load User Designs (Simple, clean rows with ✏️ and 🗑️ icons)
   async function loadUserDesigns() {
     const listEl = document.getElementById("portalDesignsList");
@@ -1296,8 +1660,10 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const data = await safeJsonFetch("/api/user/designs", { headers: authHeaders() });
       const designs = data.designs || [];
+      const dropBadge = document.getElementById("dropdownBadgeSitesCount");
       if (mobileBadge) mobileBadge.textContent = designs.length;
       if (navBadge) navBadge.textContent = designs.length;
+      if (dropBadge) dropBadge.textContent = designs.length;
 
       if (designs.length === 0) {
         listEl.innerHTML = `
@@ -1323,6 +1689,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const studioUrl = `/builder?slug=${encodeURIComponent(d.slug)}&token=${encodeURIComponent(d.authToken || "")}`;
         const liveUrl = `/sites/${encodeURIComponent(d.slug)}`;
         const title = (d.partner1 && d.partner2) ? `${escapeHtml(d.partner1)} &amp; ${escapeHtml(d.partner2)}` : escapeHtml(d.slug);
+        const modDate = d.updatedAt || d.createdAt;
+        const modifiedText = formatLastModified(modDate);
+        const fullDate = modDate ? new Date(modDate).toLocaleString() : "";
 
         return `
           <div class="portal-simple-row" data-slug="${escapeHtml(d.slug)}">
@@ -1331,12 +1700,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="portal-simple-icon">💍</span>
                 <span class="portal-simple-name">${title}</span>
               </div>
-              <a href="${liveUrl}" target="_blank" rel="noopener" class="portal-simple-link" title="Visit live website">
-                /sites/${escapeHtml(d.slug)} ↗
-              </a>
+              <div class="portal-simple-meta">
+                <a href="${liveUrl}" target="_blank" rel="noopener" class="portal-simple-link" title="Visit live website">
+                  /sites/${escapeHtml(d.slug)} ↗
+                </a>
+                <span class="portal-simple-separator">•</span>
+                <span class="portal-simple-modified" title="Last modified: ${escapeHtml(fullDate)}">
+                  🕒 Modified ${escapeHtml(modifiedText)}
+                </span>
+              </div>
             </div>
             <div class="portal-simple-actions">
-              <a href="${studioUrl}" class="btn-icon-action btn-edit-icon" title="Edit in Studio" data-slug="${escapeHtml(d.slug)}" data-token="${escapeHtml(d.authToken || "")}" data-plan="${escapeHtml(d.plan || "vip")}">
+              <a href="${studioUrl}" class="btn-icon-action btn-edit-icon" title="Edit in Builder" data-slug="${escapeHtml(d.slug)}" data-token="${escapeHtml(d.authToken || "")}" data-plan="${escapeHtml(d.plan || "vip")}">
                 ✏️
               </a>
               ${d.slug === "demo" ? "" : `
@@ -1439,7 +1814,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="receipt-meta-grid">
               <div><span class="meta-label">Amount:</span> <strong style="color: var(--primary);">$${amt} ${p.currency || "USD"}</strong></div>
               <div><span class="meta-label">Date:</span> <span>${dateStr}</span></div>
-              <div><span class="meta-label">Site:</span> <a href="/sites/${escapeHtml(p.tenantSlug)}" target="_blank">/sites/${escapeHtml(p.tenantSlug)} ↗</a></div>
+              <div><span class="meta-label">Project:</span> <a href="/sites/${escapeHtml(p.tenantSlug)}" target="_blank">/sites/${escapeHtml(p.tenantSlug)} ↗</a></div>
               <div><span class="meta-label">License:</span> <span>Perpetual</span></div>
             </div>
           </div>

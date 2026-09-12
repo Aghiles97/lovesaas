@@ -212,10 +212,15 @@ class DynamicRenderer {
         }
       }
     }
-    if (sectionsData.map && sectionsData.map.stories) {
-      window.CITY_STORIES = { ...(typeof CITY_STORIES !== "undefined" ? CITY_STORIES : {}), ...sectionsData.map.stories };
-      if (typeof CITY_STORIES !== "undefined") {
-        try { CITY_STORIES = window.CITY_STORIES; } catch (e) {}
+    if (sectionsData.map) {
+      if (sectionsData.map.stories) {
+        window.CITY_STORIES = { ...(typeof CITY_STORIES !== "undefined" ? CITY_STORIES : {}), ...sectionsData.map.stories };
+        if (typeof CITY_STORIES !== "undefined") {
+          try { CITY_STORIES = window.CITY_STORIES; } catch (e) {}
+        }
+      }
+      if (Array.isArray(sectionsData.map.destinations)) {
+        window.MAP_DESTINATIONS = sectionsData.map.destinations;
       }
     }
     if (sectionsData.coupons) {
@@ -283,7 +288,7 @@ class DynamicRenderer {
       const isBuilder = (typeof document !== "undefined" && (
         document.body.classList.contains("builder-mode") ||
         document.body.classList.contains("in-builder-preview")
-      )) || (isIframe && Boolean(urlParams && (urlParams.get("preview") === "builder" || urlParams.get("builder") === "1")));
+      )) || Boolean(urlParams && (urlParams.get("preview") === "builder" || urlParams.get("builder") === "1"));
 
       if (activeId) {
         if (activeId === "timeline") {
@@ -343,7 +348,7 @@ class DynamicRenderer {
     const isBuilder = (typeof document !== "undefined" && (
       document.body.classList.contains("builder-mode") ||
       document.body.classList.contains("in-builder-preview")
-    )) || (isIframe && Boolean(urlParams && (urlParams.get("preview") === "builder" || urlParams.get("builder") === "1")));
+    )) || Boolean(urlParams && (urlParams.get("preview") === "builder" || urlParams.get("builder") === "1"));
 
     const createAddDivider = (insertIndex) => {
       const isEnd = insertIndex === layoutOrder.length;
@@ -629,7 +634,9 @@ class DynamicRenderer {
     [editReasonsHeaderBtn, editCurrentReasonBtn].forEach(btn => {
       if (btn) {
         btn.onclick = (e) => {
+          e.preventDefault();
           e.stopPropagation();
+          e.stopImmediatePropagation();
           if (isIframe) {
             window.parent.postMessage({ type: "SELECT_WIDGET", widgetId: "reasons" }, "*");
             return;

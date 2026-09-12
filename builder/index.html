@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Couple Site Builder Studio</title>
+  <title>Couple Project Builder</title>
   <link rel="stylesheet" href="/builder/builder.css?v=3.0.0">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script>
@@ -24,28 +24,28 @@
     <div class="brand-box">
       <a href="/welcome" class="brand-logo-link" title="Return to Dashboard">
         <span class="brand-icon">💍</span>
-        <span class="brand-title">LoveSaas <span class="brand-badge">Studio</span></span>
+        <span class="brand-title">LoveSaas <span class="brand-badge">Builder</span></span>
       </a>
 
       <!-- Project Switcher Dropdown -->
       <div class="project-switcher" id="projectSwitcher">
         <button type="button" class="project-switcher-btn" id="btnProjectSwitcher" aria-haspopup="true" aria-expanded="false" title="Switch between projects">
           <span class="project-switcher-icon">📂</span>
-          <span class="tenant-label">Site:</span>
+          <span class="tenant-label">Project:</span>
           <span class="tenant-pill" id="currentTenantBadge">demo</span>
           <span class="project-switcher-chevron">▾</span>
         </button>
         <div class="project-switcher-dropdown hidden" id="projectSwitcherDropdown" role="menu">
           <div class="project-dropdown-header">
             <span class="project-dropdown-title">My Projects</span>
-            <button type="button" class="btn-dropdown-new-site" id="btnProjectDropdownNew" title="Create a new site">+ New Site</button>
+            <button type="button" class="btn-dropdown-new-site" id="btnProjectDropdownNew" title="Create a new project">+ New Project</button>
           </div>
           <div class="project-dropdown-list" id="projectDropdownList">
             <!-- Populated dynamically with user projects -->
           </div>
           <div class="project-dropdown-footer">
             <button type="button" class="project-dropdown-action-btn" id="btnViewAllProjects">
-              <span>✨</span> View All Sites / Templates
+              <span>✨</span> View All Projects / Templates
             </button>
           </div>
         </div>
@@ -70,11 +70,11 @@
       <button type="button" id="btnCopyLiveLink" class="btn-secondary" title="Copy public website link">
         <span class="btn-icon">📋</span> <span class="btn-text-responsive">Copy Link</span>
       </button>
-      <a id="btnViewLive" href="/sites/demo" target="_blank" class="btn-secondary" title="Open live site in new tab">
+      <a id="btnViewLive" href="/sites/demo" target="_blank" class="btn-secondary" title="Open live project in new tab">
         <span class="btn-icon">↗</span> <span class="btn-text-responsive">View Live</span>
       </a>
-      <button type="button" id="btnHeaderNewProject" class="btn-secondary btn-header-new-project" title="Create a new couple site" style="display: none;">
-        <span>💖</span> <span class="btn-text-responsive">+ New Site</span>
+      <button type="button" id="btnHeaderNewProject" class="btn-secondary btn-header-new-project" title="Create a new couple project" style="display: none;">
+        <span>💖</span> <span class="btn-text-responsive">+ New Project</span>
       </button>
 
       <!-- User / Account Dropdown Menu (Functional on all screen sizes) -->
@@ -94,7 +94,7 @@
             <span class="item-icon">📂</span> Switch Project
           </button>
           <button type="button" class="user-dropdown-item" id="btnUserMenuNewProject">
-            <span class="item-icon">💖</span> + Create New Site
+            <span class="item-icon">💖</span> + Create New Project
           </button>
           <a href="/welcome" class="user-dropdown-item" id="btnUserMenuDashboard">
             <span class="item-icon">📊</span> Designs & Orders
@@ -126,8 +126,8 @@
         <div class="mobile-menu-site-info">
           <span class="brand-icon" style="font-size: 1.3rem;">💍</span>
           <div>
-            <div class="mobile-menu-site-name">LoveSaas <span class="brand-badge" style="font-size: 0.65rem; padding: 1px 5px; background: rgba(244,63,94,0.1); color: var(--primary); border-radius: 4px;">Studio</span></div>
-            <div class="mobile-menu-site-slug"><span class="tenant-label">Site:</span> <strong id="mobileMenuTenantBadge">demo</strong></div>
+            <div class="mobile-menu-site-name">LoveSaas <span class="brand-badge" style="font-size: 0.65rem; padding: 1px 5px; background: rgba(244,63,94,0.1); color: var(--primary); border-radius: 4px;">Builder</span></div>
+            <div class="mobile-menu-site-slug"><span class="tenant-label">Project:</span> <strong id="mobileMenuTenantBadge">demo</strong></div>
           </div>
         </div>
         <button type="button" class="btn-mobile-menu-close" id="btnCloseMobileMenu" aria-label="Close menu">✕</button>
@@ -150,7 +150,7 @@
         </button>
         <button type="button" id="btnMobileNewProject" class="mobile-menu-item highlight">
           <span class="menu-item-icon">💖</span>
-          <span class="menu-item-label">+ New Couple Site</span>
+          <span class="menu-item-label">+ New Couple Project</span>
         </button>
         <a id="btnMobileUserAccount" href="/welcome" class="mobile-menu-item">
           <span class="menu-item-icon">👤</span>
@@ -166,7 +166,7 @@
 
   <!-- DEMO MODE NOTIFICATION BANNER -->
   <div class="demo-banner-bar" id="demoBannerBar" style="display: none; background: linear-gradient(90deg, #1e293b 0%, #be123c 100%); color: #fff; padding: 7px 16px; font-size: 0.85rem; font-weight: 600; text-align: center; justify-content: center; align-items: center; gap: 12px; z-index: 50; border-bottom: 1px solid rgba(255,255,255,0.1);">
-    <span id="demoBannerText">🎨 Visitor Demo Mode — Previewing sample site. Controls are extremely limited.</span>
+    <span id="demoBannerText">🎨 Visitor Demo Mode — Previewing sample project. Controls are extremely limited.</span>
     <a id="demoBannerCta" href="/welcome#pricing" target="_blank" style="background: #ffffff; color: #111827; padding: 3px 12px; font-size: 0.78rem; font-weight: 700; border-radius: 9999px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
       Purchase now to customize ↗
     </a>
@@ -201,7 +201,7 @@
         </button>
         <button type="button" class="sidebar-tab-btn" data-tab="tab-website">
           <span class="tab-icon">⚙️</span>
-          <span class="tab-text">Site & Theme</span>
+          <span class="tab-text">Project & Theme</span>
         </button>
         <button type="button" class="sidebar-tab-btn" data-tab="tab-media">
           <span class="tab-icon">☁️</span>
@@ -489,7 +489,7 @@
   <div class="modal-backdrop hidden" id="builderAccessGateModal" style="z-index: 9999;">
     <div class="modal-box" style="max-width: 450px; text-align: center; border: 1px solid rgba(244, 63, 94, 0.4); box-shadow: 0 25px 60px -15px rgba(0,0,0,0.8), 0 0 40px -10px rgba(244,63,94,0.3);">
       <div style="font-size: 2.6rem; margin-bottom: 4px;">💍</div>
-      <h3 style="font-size: 1.35rem; margin-bottom: 4px; font-weight: 800;">LoveSaas Studio Access</h3>
+      <h3 style="font-size: 1.35rem; margin-bottom: 4px; font-weight: 800;">LoveSaas Builder Access</h3>
       <p style="font-size: 0.84rem; color: #94a3b8; margin-bottom: 14px;">
         Choose your role or unlock your couple website.
       </p>
@@ -531,10 +531,10 @@
       <!-- PANE 2: ADMIN LOGIN -->
       <div class="gate-tab-pane" id="paneGateAdmin" style="display: none; text-align: left;">
         <p style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 10px;">
-          🛡️ Master Admin has full rights across all sites with zero demo banners.
+          🛡️ Master Admin has full rights across all projects with zero demo banners.
         </p>
         <div class="input-group" style="margin-bottom: 8px;">
-          <label style="font-size: 0.82rem; font-weight: 600; color: #cbd5e1;">Target Site Slug</label>
+          <label style="font-size: 0.82rem; font-weight: 600; color: #cbd5e1;">Target Project Slug</label>
           <input type="text" id="gateAdminSlugInput" placeholder="demo (or any couple slug)" value="demo">
         </div>
         <button type="button" class="btn-primary" id="btnGateAdminLogin" style="width: 100%; justify-content: center; padding: 10px; font-weight: 700; margin-top: 10px; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
@@ -547,7 +547,7 @@
         <div style="background: rgba(244, 63, 94, 0.12); border: 1px solid rgba(244, 63, 94, 0.35); border-radius: 12px; padding: 14px; margin-bottom: 14px;">
           <div style="font-weight: 700; color: #fff; font-size: 0.92rem; margin-bottom: 6px;">Sandbox Demo Mode</div>
           <p style="font-size: 0.8rem; color: #fecdd3; margin-bottom: 12px;">
-            Preview sample site with extremely limited controls. Purchase now to unlock full customizations.
+            Preview sample project with extremely limited controls. Purchase now to unlock full customizations.
           </p>
           <button type="button" class="btn-primary" id="btnGateDemo" style="width: 100%; justify-content: center; padding: 10px; font-weight: 700; font-size: 0.92rem;">
             ✨ View Demo (Limited Preview)
@@ -654,7 +654,7 @@
       <div id="npErrorMsg" class="np-error-msg" style="display: none;"></div>
 
       <button type="button" class="btn-primary np-submit-btn" id="btnCreateProjectSubmit">
-        <span>🚀 Create Website & Launch Studio</span>
+        <span>🚀 Create Website & Launch Builder</span>
       </button>
       <button type="button" id="btnExploreDemoPreview" class="np-explore-link">
         👀 Or explore demo preview first
@@ -683,8 +683,8 @@
     <div class="modal-box" style="max-width: 400px; width: 90%; background: #1e293b; border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 26px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); color: #fff;">
       <div style="text-align: center; margin-bottom: 18px;">
         <span style="font-size: 2rem; display: block; margin-bottom: 4px;">💍</span>
-        <h3 id="builderAuthTitle" style="margin: 0 0 6px 0; font-size: 1.25rem; font-weight: 700; color: #fff;">Sign in to Studio</h3>
-        <p id="builderAuthSubtitle" style="margin: 0; font-size: 0.8rem; color: #94a3b8;">Enter your LoveSaas credentials to customize your site.</p>
+        <h3 id="builderAuthTitle" style="margin: 0 0 6px 0; font-size: 1.25rem; font-weight: 700; color: #fff;">Sign in to Builder</h3>
+        <p id="builderAuthSubtitle" style="margin: 0; font-size: 0.8rem; color: #94a3b8;">Enter your LoveSaas credentials to customize your project.</p>
       </div>
       <div id="builderAuthError" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; font-size: 0.8rem; padding: 8px 12px; border-radius: 8px; margin-bottom: 14px;"></div>
       <form id="builderAuthForm" onsubmit="return false;" style="display: flex; flex-direction: column; gap: 12px;">
@@ -716,7 +716,7 @@
       <h3 style="margin: 0 0 8px 0; font-size: 1.25rem; font-weight: 700; color: #fca5a5;">Access Denied</h3>
       <p id="builderForbiddenMsg" style="margin: 0 0 18px 0; font-size: 0.85rem; color: #94a3b8; line-height: 1.5;">Access Denied: You do not have permission to access or edit this design.</p>
       <div style="display: flex; flex-direction: column; gap: 10px;">
-        <button type="button" id="btnForbiddenMyDesigns" class="btn-primary" style="width: 100%; padding: 11px; font-weight: 700; font-size: 0.9rem; justify-content: center; background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);">📂 Go to My Sites / Designs</button>
+        <button type="button" id="btnForbiddenMyDesigns" class="btn-primary" style="width: 100%; padding: 11px; font-weight: 700; font-size: 0.9rem; justify-content: center; background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);">📂 Go to My Projects / Designs</button>
         <button type="button" id="btnForbiddenSwitchAccount" class="btn-secondary" style="width: 100%; padding: 11px; font-weight: 600; font-size: 0.85rem; justify-content: center; border-color: rgba(255,255,255,0.15);">🔄 Switch Account</button>
       </div>
     </div>

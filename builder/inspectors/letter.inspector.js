@@ -125,7 +125,7 @@ if (!state.sectionsData.letter) state.sectionsData.letter = {};
             <div id="let_audioUploadStatus" style="font-size:11px; color:var(--text-muted); margin-top:4px;"></div>
           </div>
           <div style="margin-top: 10px;">
-            <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Studio Narration Preview:</label>
+            <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Builder Narration Preview:</label>
             <audio id="let_audioPreview" controls src="${escapeHtml(letObj.audioUrl || 'audio/letter_voice-volume-adjusted.m4r')}" style="width: 100%; height: 36px;"></audio>
           </div>
         </div>

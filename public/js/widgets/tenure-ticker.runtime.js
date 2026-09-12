@@ -7,6 +7,11 @@
       window._tenureTickerInterval = null;
     }
 
+    if (window._tenureTickerObserver) {
+      window._tenureTickerObserver.disconnect();
+      window._tenureTickerObserver = null;
+    }
+
     const section = document.getElementById("tenureTickerSection");
     if (!section) return;
 
@@ -84,9 +89,41 @@
       }
     };
 
-    updateTicker();
-    if (timerInterval) clearInterval(timerInterval);
-    timerInterval = setInterval(updateTicker, 1000);
-    window._tenureTickerInterval = timerInterval;
+    let isIntersecting = true;
+    let isTabVisible = !document.hidden;
+
+    const startTimer = () => {
+      if (!timerInterval && isIntersecting && isTabVisible) {
+        updateTicker();
+        timerInterval = setInterval(updateTicker, 1000);
+        window._tenureTickerInterval = timerInterval;
+      }
+    };
+
+    const stopTimer = () => {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        window._tenureTickerInterval = null;
+      }
+    };
+
+    startTimer();
+
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver((entries) => {
+        isIntersecting = Boolean(entries[0] && entries[0].isIntersecting);
+        if (isIntersecting) startTimer();
+        else stopTimer();
+      }, { threshold: 0.05 });
+      observer.observe(section);
+      window._tenureTickerObserver = observer;
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      isTabVisible = !document.hidden;
+      if (isTabVisible && isIntersecting) startTimer();
+      else stopTimer();
+    });
   };
 })();

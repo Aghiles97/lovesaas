@@ -110,6 +110,7 @@
 }
 .vinyl-platter.spinning {
   animation: spinRecord 2.8s linear infinite;
+  will-change: transform;
 }
 @keyframes spinRecord {
   100% { transform: rotate(360deg); }
@@ -331,6 +332,7 @@
 }
 .cassette-shell.spinning .cassette-spool {
   animation: spinRecord 2.4s linear infinite;
+  will-change: transform;
 }
 .spool-teeth {
   width: 14px;

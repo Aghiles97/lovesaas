@@ -132,11 +132,11 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
               <div id="h_voiceUploadStatus" style="font-size:11px; color:var(--text-muted); margin-top:4px;"></div>
             </div>
             <div style="margin-top: 10px;">
-              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Studio Audio Preview:</label>
+              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Builder Audio Preview:</label>
               <audio id="h_voicePreview" controls src="${escapeHtml(h.voiceAudio || 'audio/myrecording-volume-adjusted.m4r')}" style="width: 100%; height: 36px;"></audio>
             </div>
             <div style="margin-top: 10px; display: flex; gap: 8px;">
-              <button type="button" id="btnTestVoicePlay" class="btn-sm btn-secondary">▶️ Test Voice Note in Preview Site</button>
+              <button type="button" id="btnTestVoicePlay" class="btn-sm btn-secondary">▶️ Test Voice Note in Preview Project</button>
             </div>
           </div>
         </div>
@@ -173,11 +173,11 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
             </div>
             <div id="h_musicUploadStatus" style="font-size:11px; color:var(--text-muted); margin-top:4px;"></div>
             <div style="margin-top: 10px;">
-              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Studio Soundtrack Preview:</label>
+              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Builder Soundtrack Preview:</label>
               <audio id="h_musicPreview" controls src="${escapeHtml(h.musicTrackUrl || 'taylor-swift-fate-of-ophelia.m4r')}" style="width: 100%; height: 36px;"></audio>
             </div>
             <div style="margin-top: 10px; display: flex; gap: 8px;">
-              <button type="button" id="btnTestMusicPlay" class="btn-sm btn-secondary">🎵 Toggle Music in Preview Site</button>
+              <button type="button" id="btnTestMusicPlay" class="btn-sm btn-secondary">🎵 Toggle Music in Preview Project</button>
             </div>
           </div>
         </div>
@@ -189,7 +189,7 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
               <h4 style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin: 0;">🎨 Website Visual Theme & Wallpaper</h4>
               <button type="button" id="btnGoToSiteThemeTab" class="btn-sm btn-primary" style="font-size: 11px; cursor: pointer;">⚙️ Manage Themes →</button>
             </div>
-            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin: 0;">Themes, wallpapers, and custom responsive templates are managed globally in <a href="#" id="linkGoToTheme" style="color: var(--primary); text-decoration: underline; font-weight: 600;">Site & Theme Settings</a>.</p>
+            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin: 0;">Themes, wallpapers, and custom responsive templates are managed globally in <a href="#" id="linkGoToTheme" style="color: var(--primary); text-decoration: underline; font-weight: 600;">Project & Theme Settings</a>.</p>
           </div>
         </div>
       `;

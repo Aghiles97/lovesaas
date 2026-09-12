@@ -111,7 +111,7 @@
           <div class="sticky-note-card note-${escapeHtml(n.color || 'yellow')}" style="transform: rotate(${rot}deg);" data-note-idx="${i}">
             <span class="note-pin pin-${escapeHtml(pin)}"></span>
             <div class="washi-tape tape-${escapeHtml(washi)}"></div>
-            ${n.photo ? `<div class="note-photo-frame"><img src="${escapeHtml(n.photo)}" class="note-photo-pin" alt="Wish Photo" /></div>` : ''}
+            ${n.photo ? `<div class="note-photo-frame"><img src="${escapeHtml(n.photo)}" class="note-photo-pin" alt="Wish Photo" loading="lazy" decoding="async" /></div>` : ''}
             <div class="note-content-text">${escapeHtml(n.note || '')}</div>
             <div class="note-footer-meta">
               <div class="note-author-info">

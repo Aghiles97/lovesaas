@@ -210,6 +210,14 @@
       });
     }
 
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        if (visualizerAnimId) clearTimeout(visualizerAnimId);
+      } else if (isPlaying) {
+        animateVisualizer();
+      }
+    });
+
     updateTrackUI();
 
     window.jukeboxPlayTrack = playTrack;

@@ -4,6 +4,34 @@
   <base href="/">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <script>
+    window.IS_TENANT_VIEWER = true;
+    window.IntroEnvelope = {
+      isSealed: true,
+      unseal(opts = {}) {
+        this.isSealed = false;
+        document.body.classList.add("letter-unsealed");
+        const env = document.getElementById("envelopeScreen");
+        if (env) {
+          env.classList.add("opened");
+          if (opts.instant) env.style.display = "none";
+        }
+        const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
+        if (app) app.classList.add("app-revealed");
+      },
+      reseal() {
+        this.isSealed = true;
+        document.body.classList.remove("letter-unsealed");
+        const env = document.getElementById("envelopeScreen");
+        if (env) {
+          env.classList.remove("opened");
+          env.style.display = "";
+        }
+        const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
+        if (app) app.classList.remove("app-revealed");
+      }
+    };
+  </script>
   <title>Our Infinite Love Story ❤️</title>
   <meta name="description" content="A cute, magical, and romantic surprise website made with endless lof lof.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -58,7 +86,7 @@
       💍 Made with LoveSaas
     </a>
     <a href="/builder?slug=demo" id="btnViewerEditStudio" class="btn-edit-link" style="font-size: 0.82rem;">
-      ✏️ Studio
+      ✏️ Builder
     </a>
   </div>
 
@@ -271,6 +299,7 @@
         <div class="postcard-header-meta">
           <span class="popup-tag" id="mapPopupTag">Main Destination</span>
           <h3 class="popup-title" id="mapPopupTitle">Guangzhou (Our Main City ⭐)</h3>
+          <span class="postcard-vehicle-badge" id="mapPopupVehicle">✈️ Flight</span>
         </div>
       </div>
 
@@ -970,11 +999,10 @@
 
       // Immediately handle empty canvas mode so zero old/demo widgets or envelope ever flash
       if (urlParams.get("empty") === "1") {
-        document.body.classList.add("letter-unsealed", "builder-mode", "in-builder-preview");
-        const env = document.getElementById("envelopeScreen");
-        if (env) { env.classList.add("opened"); env.style.display = "none"; }
+        window.IntroEnvelope.unseal({ instant: true });
+        document.body.classList.add("builder-mode", "in-builder-preview");
         const app = document.getElementById("modularGridContainer");
-        if (app) { app.innerHTML = ""; app.classList.add("app-revealed"); }
+        if (app) { app.innerHTML = ""; }
       }
 
 
@@ -986,7 +1014,7 @@
               <h2>Couple Website Not Found (404)</h2>
               <p style="color: #666; margin-top: 8px;">The couple link may be invalid.</p>
               <br/>
-              <a href="/welcome" class="btn-edit-link" style="display:inline-block;">Create Couple Site</a>
+              <a href="/welcome" class="btn-edit-link" style="display:inline-block;">Create Couple Project</a>
             </div>
           `;
           return;
@@ -1097,6 +1125,10 @@
 
         document.querySelectorAll(".partner-name-display").forEach(el => el.textContent = p2);
         document.querySelectorAll(".recipient-name-preview").forEach(el => el.textContent = p2);
+        if (typeof window.state !== "undefined") {
+          window.state.partnerName = p2;
+          window.state.senderName = p1;
+        }
         const envSender = document.getElementById("envelopePreviewSender");
         if (envSender) envSender.textContent = `From ${p1} with Infinite Lof & Birthday Kisses 🎂💕`;
         try {
@@ -1108,39 +1140,24 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const isIframe = window.parent && window.parent !== window;
-        const isBuilderPreview = isIframe || urlParams.get("preview") === "builder" || urlParams.get("builder") === "1";
+        const isBuilderPreview = urlParams.get("preview") === "builder" || urlParams.get("builder") === "1" || isIframe;
         const isLayoutEmpty = Array.isArray(data.layoutOrder) && data.layoutOrder.length === 0;
 
-        if (isLayoutEmpty) {
-          document.body.classList.add("letter-unsealed");
-          const env = document.getElementById("envelopeScreen");
-          if (env) {
-            env.classList.add("opened");
-            env.style.display = "none";
-          }
-          const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
-          if (app) app.classList.add("app-revealed");
-          const bgAudio = document.getElementById("bgAudioPlayer");
-          if (bgAudio) {
-            bgAudio.pause();
-            bgAudio.currentTime = 0;
-            bgAudio.src = "";
+        // Envelope state: ONLY unseal if layout is empty or unsealed=1 is explicitly requested
+        if (isLayoutEmpty || urlParams.get("unsealed") === "1") {
+          window.IntroEnvelope.unseal({ instant: isLayoutEmpty });
+          if (isLayoutEmpty) {
+            const bgAudio = document.getElementById("bgAudioPlayer");
+            if (bgAudio) {
+              bgAudio.pause();
+              bgAudio.currentTime = 0;
+              bgAudio.src = "";
+            }
           }
         }
 
         if (isBuilderPreview) {
           document.body.classList.add("builder-mode", "in-builder-preview");
-          if (urlParams.get("unsealed") === "1" || isLayoutEmpty) {
-            document.body.classList.add("letter-unsealed");
-            const env = document.getElementById("envelopeScreen");
-            if (env) {
-              env.classList.add("opened");
-              if (isLayoutEmpty) env.style.display = "none";
-            }
-            const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
-            if (app) app.classList.add("app-revealed");
-          }
-
           const bgAudioEl = document.getElementById("bgAudioPlayer");
           if (bgAudioEl) {
             bgAudioEl.addEventListener("play", () => {
@@ -1154,8 +1171,8 @@
           document.body.classList.remove("builder-mode", "in-builder-preview", "admin-mode", "admin-edit-on");
           const badgeBar = document.getElementById("saasBadgeBar");
           const editBtn = document.getElementById("btnViewerEditStudio");
-          if (badgeBar) badgeBar.style.display = "flex";
-          if (editBtn) editBtn.href = `/builder?slug=${encodeURIComponent(slug)}`;
+          if (badgeBar) badgeBar.style.display = isIframe ? "none" : "flex";
+          if (editBtn) editBtn.style.display = "none";
         }
 
         if (!isLayoutEmpty && typeof setupIntroSoundtrackSelector === "function") {
@@ -1163,9 +1180,9 @@
         }
 
         window.openAddSectionModal = function(insertIndex) {
-          if (isIframe) {
+          if (isBuilderPreview && isIframe) {
             window.parent.postMessage({ type: "OPEN_ADD_SECTION_MODAL", insertIndex }, window.location.origin);
-          } else {
+          } else if (isBuilderPreview) {
             window.location.href = `/builder?slug=${encodeURIComponent(slug)}&insert=${insertIndex}`;
           }
         };
@@ -1233,6 +1250,12 @@
             const liveP1 = liveHero.partner1 || data.partner1 || "Alex";
             const liveP2 = liveHero.partner2 || data.partner2 || "Sam";
             document.title = liveHero.pageTitle || `${liveP1} & ${liveP2} | Our Love Story ❤️`;
+            document.querySelectorAll(".partner-name-display").forEach(el => el.textContent = liveP2);
+            document.querySelectorAll(".recipient-name-preview").forEach(el => el.textContent = liveP2);
+            if (typeof window.state !== "undefined") {
+              window.state.partnerName = liveP2;
+              window.state.senderName = liveP1;
+            }
             const curEnvSender = document.getElementById("envelopePreviewSender");
             if (curEnvSender) curEnvSender.textContent = `From ${liveP1} with Infinite Lof & Birthday Kisses 🎂💕`;
 
@@ -1395,27 +1418,13 @@
             window.playfulReset();
           }
           if (e.data && e.data.type === "INTRO_ENVELOPE_UNSEAL") {
-            document.body.classList.add("letter-unsealed");
-            const env = document.getElementById("envelopeScreen");
-            if (env) env.classList.add("opened");
-            const app = document.getElementById("modularGridContainer");
-            if (app) app.classList.add("app-revealed");
+            window.IntroEnvelope.unseal();
           }
           if (e.data && e.data.type === "INTRO_ENVELOPE_RESEAL") {
-            document.body.classList.remove("letter-unsealed");
-            const env = document.getElementById("envelopeScreen");
-            if (env) env.classList.remove("opened");
-            const app = document.getElementById("modularGridContainer");
-            if (app) app.classList.remove("app-revealed");
+            window.IntroEnvelope.reseal();
           }
           if (e.data && (e.data.type === "SCROLL_TO_CHAPTER" || (e.data.type === "SCROLL_TO_WIDGET" && e.data.chapterId))) {
-            const env = document.getElementById("envelopeScreen");
-            const app = document.getElementById("modularGridContainer");
-            if (env && !env.classList.contains("opened")) {
-              document.body.classList.add("letter-unsealed");
-              env.classList.add("opened");
-              if (app) app.classList.add("app-revealed");
-            }
+            if (window.IntroEnvelope.isSealed) window.IntroEnvelope.unseal();
             const chapId = e.data.chapterId;
             const cityKey = e.data.cityKey;
             let target = null;
@@ -1439,13 +1448,7 @@
             }
           }
           if (e.data && e.data.type === "SCROLL_TO_WIDGET" && e.data.widgetId && !e.data.chapterId) {
-            const env = document.getElementById("envelopeScreen");
-            const app = document.getElementById("modularGridContainer");
-            if (env && !env.classList.contains("opened")) {
-              document.body.classList.add("letter-unsealed");
-              env.classList.add("opened");
-              if (app) app.classList.add("app-revealed");
-            }
+            if (window.IntroEnvelope.isSealed) window.IntroEnvelope.unseal();
             const target = document.getElementById("section-" + e.data.widgetId) || document.querySelector(`[data-widget-id="${e.data.widgetId}"]`);
             if (target) {
               target.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1456,7 +1459,7 @@
         });
 
       } catch (err) {
-        console.error("Failed to load tenant site:", err);
+        console.error("Failed to load tenant project:", err);
       }
     })();
   </script>

@@ -727,8 +727,7 @@
   position: fixed;
   inset: 0;
   z-index: 95;
-  pointer-events: auto;
-  cursor: pointer;
+  pointer-events: none !important;
   overflow: hidden;
   perspective: 1200px;
   perspective-origin: center center;
@@ -737,7 +736,7 @@
 
 .individual-flowers-screen-canvas.fade-out {
   opacity: 0;
-  pointer-events: none;
+  pointer-events: none !important;
 }
 
 .screen-flower-cell {

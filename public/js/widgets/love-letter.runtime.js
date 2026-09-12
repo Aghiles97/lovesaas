@@ -594,11 +594,12 @@ function setupLoveLetterFeatures() {
       canvas = document.createElement("div");
       canvas.id = "individualFlowersCanvas";
       canvas.className = "individual-flowers-screen-canvas";
+      canvas.style.pointerEvents = "none";
       document.body.appendChild(canvas);
     }
+    canvas.style.pointerEvents = "none";
     canvas.classList.remove("fade-out");
     canvas.innerHTML = "";
-    canvas.onclick = () => fadeAndRemoveFloralScreen(0);
 
     const letterSec = document.querySelector(".letter-section");
     if (letterSec) letterSec.classList.add("floral-active");
@@ -719,6 +720,7 @@ function setupLoveLetterFeatures() {
         setTimeout(() => {
           canvas.innerHTML = "";
           canvas.classList.remove("fade-out");
+          if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
         }, 880);
       }, delayMs);
     }

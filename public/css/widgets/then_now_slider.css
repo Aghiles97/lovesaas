@@ -34,6 +34,7 @@
   inset: 0;
   width: 100%;
   height: 100%;
+  will-change: clip-path;
 }
 .then-now-img {
   width: 100%;
@@ -82,6 +83,7 @@
   z-index: 10;
   box-shadow: 0 0 14px rgba(0, 0, 0, 0.4);
   pointer-events: none;
+  will-change: left;
 }
 .then-now-handle {
   position: absolute;

@@ -1,12 +1,14 @@
 // App State Engine
-let rawSavedDate = localStorage.getItem("gf_start_date");
+const isTenantViewer = typeof window !== "undefined" && Boolean(window.IS_TENANT_VIEWER || window.CURRENT_TENANT_SLUG || (window.location && (window.location.pathname.includes("/sites/") || window.location.pathname.includes("/builder"))));
+
+let rawSavedDate = isTenantViewer ? null : localStorage.getItem("gf_start_date");
 
 let state = {
-  partnerName: localStorage.getItem("gf_name") || DEFAULTS.partnerName,
-  senderName: localStorage.getItem("gf_sender") || DEFAULTS.senderName,
+  partnerName: isTenantViewer ? "Ella" : (localStorage.getItem("gf_name") || DEFAULTS.partnerName),
+  senderName: isTenantViewer ? "Aghiles" : (localStorage.getItem("gf_sender") || DEFAULTS.senderName),
   startDate: rawSavedDate || DEFAULTS.startDate,
-  letter: localStorage.getItem("gf_letter") || DEFAULTS.letter,
-  giftTitle: localStorage.getItem("gf_gift_title") || DEFAULTS.giftTitle,
+  letter: isTenantViewer ? DEFAULTS.letter : (localStorage.getItem("gf_letter") || DEFAULTS.letter),
+  giftTitle: isTenantViewer ? DEFAULTS.giftTitle : (localStorage.getItem("gf_gift_title") || DEFAULTS.giftTitle),
   memories: typeof loadStoredMemories === "function" ? loadStoredMemories() : (typeof DEFAULTS !== "undefined" ? DEFAULTS.memories || [] : []),
   voiceAudio: localStorage.getItem("gf_voice_audio") || DEFAULTS.voiceAudio || "audio/myrecording-volume-adjusted.mp3",
   letterAudio: localStorage.getItem("gf_letter_audio") || (DEFAULTS.letterAudio !== undefined ? DEFAULTS.letterAudio : "audio/letter_voice-volume-adjusted.mp3"),
@@ -48,7 +50,12 @@ let state = {
 };
 
 function isAdminEditAllowed() {
-  return true;
+  try {
+    const p = typeof window !== "undefined" && window.location ? new URLSearchParams(window.location.search) : null;
+    return Boolean(p && (p.get("preview") === "builder" || p.get("builder") === "1" || p.get("admin") === "1"));
+  } catch (e) {
+    return false;
+  }
 }
 window.isAdminEditAllowed = isAdminEditAllowed;
 
@@ -161,12 +168,14 @@ function renderDOM() {
     Boolean(window.CURRENT_TENANT_SLUG)
   );
 
-  document.querySelectorAll(".partner-name-display").forEach(el => {
-    el.textContent = state.partnerName || "Ella";
-  });
-  document.querySelectorAll(".recipient-name-preview").forEach(el => {
-    el.textContent = state.partnerName || "Ella";
-  });
+  if (!isTenantViewer) {
+    document.querySelectorAll(".partner-name-display").forEach(el => {
+      el.textContent = state.partnerName || "Ella";
+    });
+    document.querySelectorAll(".recipient-name-preview").forEach(el => {
+      el.textContent = state.partnerName || "Ella";
+    });
+  }
   document.querySelectorAll(".sender-name-display").forEach(el => {
     el.textContent = state.senderName || "Aghiles";
   });
@@ -515,11 +524,15 @@ function initEvents() {
     }
 
     setTimeout(() => {
-      document.body.classList.add("letter-unsealed");
-      if (envelopeScreen) envelopeScreen.classList.add("opened");
-      if (mainApp) {
-        mainApp.classList.remove("hidden");
-        mainApp.classList.add("app-revealed");
+      if (window.IntroEnvelope && typeof window.IntroEnvelope.unseal === "function") {
+        window.IntroEnvelope.unseal();
+      } else {
+        document.body.classList.add("letter-unsealed");
+        if (envelopeScreen) envelopeScreen.classList.add("opened");
+        if (mainApp) {
+          mainApp.classList.remove("hidden");
+          mainApp.classList.add("app-revealed");
+        }
       }
       if (typeof window.fadeAndRemoveFloralScreen === "function") {
         window.fadeAndRemoveFloralScreen(100);
@@ -569,8 +582,15 @@ function initEvents() {
   setupLoveConnectionHub();
 
   const musicToggle = document.getElementById("musicToggle");
+  const vinylDisc = document.getElementById("vinylDisc");
   if (musicToggle) {
     musicToggle.addEventListener("click", () => {
+      audio.toggleMusic();
+    });
+  }
+  if (vinylDisc) {
+    vinylDisc.style.cursor = "pointer";
+    vinylDisc.addEventListener("click", () => {
       audio.toggleMusic();
     });
   }

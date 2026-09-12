@@ -916,7 +916,10 @@ body {
   position: relative;
   container-type: inline-size;
   container-name: sidebar;
-  transition: width 0.05s ease, opacity 0.2s ease;
+  transition: opacity 0.2s ease;
+}
+.builder-sidebar.collapsing {
+  transition: width 0.2s ease, opacity 0.2s ease;
 }
 .builder-sidebar.collapsed {
   width: 0 !important;
@@ -926,9 +929,14 @@ body {
   pointer-events: none;
 }
 
+body.is-resizing-sidebar .builder-sidebar,
+.builder-sidebar.resizing {
+  transition: none !important;
+}
+
 /* RESIZER DRAG HANDLE */
 .builder-resizer {
-  width: 8px;
+  width: 10px;
   background: transparent;
   cursor: col-resize;
   position: relative;
@@ -938,13 +946,24 @@ body {
   align-items: center;
   justify-content: center;
   transition: background 0.15s;
+  touch-action: none;
+}
+.builder-resizer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -8px;
+  right: -8px;
+  cursor: col-resize;
+  z-index: 30;
 }
 .builder-resizer:hover, .builder-resizer.resizing {
-  background: rgba(244, 63, 94, 0.15);
+  background: rgba(244, 63, 94, 0.2);
 }
 .resizer-handle-grip {
-  width: 3px;
-  height: 36px;
+  width: 4px;
+  height: 44px;
   background: #cbd5e1;
   border-radius: 4px;
   transition: all 0.15s;
@@ -952,7 +971,7 @@ body {
 .builder-resizer:hover .resizer-handle-grip,
 .builder-resizer.resizing .resizer-handle-grip {
   background: var(--primary);
-  height: 48px;
+  height: 64px;
 }
 
 /* COLLAPSE/EXPAND FLOATING BUTTON */
@@ -960,14 +979,15 @@ body {
   position: absolute;
   top: 50%;
   left: var(--sidebar-width);
-  transform: translate(-50%, -50%);
+  transform: translateY(-50%);
   z-index: 26;
-  width: 20px;
+  width: 18px;
   height: 38px;
-  border-radius: var(--radius-xs);
+  border-radius: 0 6px 6px 0;
   background: #ffffff;
   border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  border-left: none;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -983,8 +1003,9 @@ body {
   box-shadow: 0 2px 8px var(--primary-glow);
 }
 .builder-sidebar.collapsed + .builder-resizer + .btn-sidebar-collapse {
-  left: 10px;
+  left: 0;
   transform: translateY(-50%);
+  border-left: 1px solid var(--border);
 }
 .builder-sidebar.collapsed + .builder-resizer + .btn-sidebar-collapse .collapse-arrow {
   transform: rotate(180deg);

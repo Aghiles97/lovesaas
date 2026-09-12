@@ -22,6 +22,15 @@
 
     const nodes = Array.from(section.querySelectorAll(".odyssey-node"));
 
+    let lineRaf = null;
+    function scheduleSvgLineUpdate() {
+      if (lineRaf) return;
+      lineRaf = requestAnimationFrame(() => {
+        lineRaf = null;
+        updateSvgLine();
+      });
+    }
+
     function updateSvgLine() {
       if (!track || !svgPath || !svgCanvas || nodes.length === 0) return;
 
@@ -168,16 +177,16 @@
     });
 
     // Resize and images loading listeners
-    window.addEventListener("resize", updateSvgLine, { passive: true });
-    window.addEventListener("orientationchange", () => setTimeout(updateSvgLine, 150), { passive: true });
+    window.addEventListener("resize", scheduleSvgLineUpdate, { passive: true });
+    window.addEventListener("orientationchange", () => setTimeout(scheduleSvgLineUpdate, 150), { passive: true });
     if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(() => setTimeout(updateSvgLine, 50));
+      document.fonts.ready.then(() => setTimeout(scheduleSvgLineUpdate, 50));
     }
     section.querySelectorAll("img").forEach(img => {
-      img.addEventListener("load", updateSvgLine);
+      img.addEventListener("load", scheduleSvgLineUpdate);
     });
-    setTimeout(updateSvgLine, 100);
-    setTimeout(updateSvgLine, 500);
+    setTimeout(scheduleSvgLineUpdate, 100);
+    setTimeout(scheduleSvgLineUpdate, 500);
 
     window.addEventListener("message", (e) => {
       if (e.data && e.data.type === "ODYSSEY_SCROLL_NEXT" && container) {

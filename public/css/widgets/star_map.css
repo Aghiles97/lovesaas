@@ -66,6 +66,8 @@
   border-radius: 50%;
   display: block;
   cursor: crosshair;
+  transform: translateZ(0);
+  will-change: transform;
 }
 .star-map-tooltip {
   position: absolute;

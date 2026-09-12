@@ -255,7 +255,7 @@ const server = http.createServer(async (req, res) => {
       const cleanSlug = String(slug).toLowerCase().trim().replace(/[^a-z0-9_-]/g, "-");
       const existing = await db.getTenantBySlug(cleanSlug);
       if (existing) {
-        return sendJson(res, 409, { error: `Site '${cleanSlug}' already exists. Please choose a different URL slug.` });
+        return sendJson(res, 409, { error: `Project '${cleanSlug}' already exists. Please choose a different URL slug.` });
       }
 
       // Associate with user account & check admin bypass
@@ -314,7 +314,7 @@ const server = http.createServer(async (req, res) => {
 
       return sendJson(res, 201, {
         success: true,
-        message: isAdmin ? "Admin VIP site provisioned (payment bypassed)!" : "Couple site provisioned successfully!",
+        message: isAdmin ? "Admin VIP project provisioned (payment bypassed)!" : "Couple project provisioned successfully!",
         isAdmin,
         tenant: {
           slug: created.slug,
@@ -1167,8 +1167,8 @@ server.listen(PORT, () => {
   console.log(`====================================================`);
   console.log(` Couples SaaS Platform Engine running on Port ${PORT}`);
   console.log(` Landing Page:   http://localhost:${PORT}/`);
-  console.log(` Builder Studio: http://localhost:${PORT}/builder`);
-  console.log(` Demo Couple Site: http://localhost:${PORT}/sites/demo`);
-  console.log(` Storage Mode: ${r2.isR2Configured ? "Cloudflare R2" : "Local Storage (R2 ready)"}`);
+  console.log(` Builder:        http://localhost:${PORT}/builder`);
+  console.log(` Demo Couple Project: http://localhost:${PORT}/sites/demo`);
+  console.log(` Storage Mode:   ${r2.isR2Configured ? "Cloudflare R2" : "Local Storage (R2 ready)"}`);
   console.log(`====================================================`);
 });

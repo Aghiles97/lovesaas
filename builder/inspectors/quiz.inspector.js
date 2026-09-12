@@ -68,7 +68,7 @@ if (Array.isArray(state.sectionsData.quiz)) {
               <div style="display:flex; gap:4px;">
                 <button type="button" class="btn-sm btn-reorder-up" data-idx="${idx}" ${idx === 0 ? 'disabled' : ''} title="Move Up">▲</button>
                 <button type="button" class="btn-sm btn-reorder-down" data-idx="${idx}" ${idx === quiz.length - 1 ? 'disabled' : ''} title="Move Down">▼</button>
-                <button type="button" class="btn-sm btn-preview-step" data-idx="${idx}" title="Preview in Live Site">▶️ Test</button>
+                <button type="button" class="btn-sm btn-preview-step" data-idx="${idx}" title="Preview in Live Project">▶️ Test</button>
                 <button type="button" class="btn-remove-item" data-remove-quiz="${idx}" title="Delete Question">🗑️</button>
               </div>
             </div>

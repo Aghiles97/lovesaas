@@ -89,14 +89,22 @@
       return simDuration > 0 ? (simCurrentTime / simDuration) : 0;
     }
 
+    let cachedCanvasRect = null;
+    const getCanvasRect = () => {
+      if (!cachedCanvasRect || cachedCanvasRect.width === 0) cachedCanvasRect = canvas.getBoundingClientRect();
+      return cachedCanvasRect;
+    };
+
     function drawWaveform() {
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
-      const rect = canvas.getBoundingClientRect();
+      const rect = getCanvasRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      if (rect.width > 0 && Math.round(rect.width * dpr) !== canvas.width) {
-        canvas.width = Math.round(rect.width * dpr);
-        canvas.height = Math.round((rect.height || 52) * dpr);
+      const targetW = Math.round(rect.width * dpr);
+      const targetH = Math.round((rect.height || 52) * dpr);
+      if (targetW > 0 && (canvas.width !== targetW || canvas.height !== targetH)) {
+        canvas.width = targetW;
+        canvas.height = targetH;
       }
       const { width, height } = canvas;
       ctx.clearRect(0, 0, width, height);
@@ -257,7 +265,8 @@
 
     if (canvas) {
       const handleScrub = (clientX) => {
-        const rect = canvas.getBoundingClientRect();
+        const rect = getCanvasRect();
+        if (!rect || rect.width <= 0) return;
         const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
         if (internalAudio && !isNaN(internalAudio.duration) && internalAudio.duration > 0) {
           internalAudio.currentTime = ratio * internalAudio.duration;
@@ -319,6 +328,7 @@
       if (e.data && e.data.type === "CAPSULE_TOGGLE") togglePlay();
     });
     window.addEventListener("resize", () => {
+      cachedCanvasRect = null;
       drawWaveform();
     }, { passive: true });
 

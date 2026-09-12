@@ -19,15 +19,23 @@
     applySplit(split);
 
     let isDragging = false;
+    let cachedRect = null;
+    let moveRaf = null;
+
+    const getContainerRect = () => {
+      if (!cachedRect) cachedRect = container.getBoundingClientRect();
+      return cachedRect;
+    };
 
     const calcPct = (clientX) => {
-      const rect = container.getBoundingClientRect();
+      const rect = getContainerRect();
       if (rect.width <= 0) return 50;
       return Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
     };
 
     const onPointerDown = (e) => {
       isDragging = true;
+      cachedRect = container.getBoundingClientRect();
       container.classList.add("dragging");
       applySplit(calcPct(e.clientX));
       if (e.pointerId && container.setPointerCapture) {
@@ -37,12 +45,22 @@
 
     const onPointerMove = (e) => {
       if (!isDragging) return;
-      applySplit(calcPct(e.clientX));
+      if (moveRaf) return;
+      const x = e.clientX;
+      moveRaf = requestAnimationFrame(() => {
+        moveRaf = null;
+        applySplit(calcPct(x));
+      });
     };
 
     const onPointerUp = (e) => {
       if (!isDragging) return;
       isDragging = false;
+      if (moveRaf) {
+        cancelAnimationFrame(moveRaf);
+        moveRaf = null;
+      }
+      cachedRect = null;
       container.classList.remove("dragging");
       if (e.pointerId && container.releasePointerCapture) {
         try { container.releasePointerCapture(e.pointerId); } catch (_) {}
@@ -69,6 +87,9 @@
       }
     };
 
-    window.addEventListener("resize", () => applySplit(split), { passive: true });
+    window.addEventListener("resize", () => {
+      cachedRect = null;
+      applySplit(split);
+    }, { passive: true });
   };
 })();
