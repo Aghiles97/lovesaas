@@ -106,6 +106,12 @@ function bindSoundtrackChip(chip) {
     try { localStorage.setItem("gf_music_audio", src); } catch (e) {}
     if (typeof saveToComputer === "function") saveToComputer({ gf_music_audio: src });
 
+    const bg = document.getElementById("bgAudioPlayer");
+    if (bg) {
+      bg.src = src;
+      bg.currentTime = start;
+    }
+
     const label = document.getElementById("selectedSongLabel");
     const floatingTitle = document.querySelector(".song-title");
     const floatingArtist = document.querySelector(".song-artist");
@@ -124,8 +130,8 @@ function bindSoundtrackChip(chip) {
   });
 }
 
-function selectAndPlaySong(song) {
-  if (!song) return;
+function selectAndPlaySong(song, opts = {}) {
+  if (!song || !song.src) return;
   currentChosenSong = song;
   state.customMusicAudio = song.src;
   try { localStorage.setItem("gf_music_audio", song.src); } catch (e) {}
@@ -134,9 +140,9 @@ function selectAndPlaySong(song) {
   const label = document.getElementById("selectedSongLabel");
   const floatingTitle = document.querySelector(".song-title");
   const floatingArtist = document.querySelector(".song-artist");
-  if (label) label.textContent = `${song.title} — ${song.artist}`;
-  if (floatingTitle) floatingTitle.textContent = song.title;
-  if (floatingArtist) floatingArtist.textContent = song.artist;
+  if (label) label.textContent = `${song.title || "Soundtrack"} — ${song.artist || "Special Choice ✨"}`;
+  if (floatingTitle) floatingTitle.textContent = song.title || "Soundtrack";
+  if (floatingArtist) floatingArtist.textContent = song.artist || "Special Choice ✨";
 
   const grid = document.getElementById("soundtrackGrid");
   let matched = Array.from(document.querySelectorAll(".soundtrack-chip, .soundtrack-card")).find(c => c.getAttribute("data-src") === song.src);
@@ -161,21 +167,13 @@ function selectAndPlaySong(song) {
     if (isDiff) {
       bgAudio.src = song.src;
       bgAudio.currentTime = 0;
-      const savedVol = parseInt(localStorage.getItem("gf_volume") || "80", 10) / 100;
-      bgAudio.volume = Math.min(Math.max(savedVol, 0), 1);
+    }
+    const savedVol = parseInt(localStorage.getItem("gf_volume") || "80", 10) / 100;
+    bgAudio.volume = Math.min(Math.max(savedVol, 0), 1);
+    if (!opts.doNotForcePlay) {
       bgAudio.play().catch(() => {});
     }
   }
-
-  state.musicPlaying = true;
-  const vinyl = document.getElementById("vinylDisc");
-  const widget = document.getElementById("musicPlayerWidget");
-  const icon = document.getElementById("musicPlayIcon");
-  const playLabel = document.getElementById("musicPlayLabel");
-  if (vinyl) vinyl.classList.add("playing");
-  if (widget) widget.classList.add("playing");
-  if (icon) icon.textContent = "⏸️";
-  if (playLabel) playLabel.textContent = "Pause";
 
   if (typeof audio !== "undefined" && typeof audio.hideEndedNotification === "function") {
     audio.hideEndedNotification();
@@ -207,15 +205,22 @@ function stopSampleAudio() {
 }
 window.stopSampleAudio = stopSampleAudio;
 
-function setupIntroSoundtrackSelector(heroData) {
+function setupIntroSoundtrackSelector(heroData, mediaSettings) {
+  heroData = heroData || (window.state && window.state.sectionsData && window.state.sectionsData.hero);
+  mediaSettings = mediaSettings || (window.state && window.state.sectionsData && window.state.sectionsData.mediaSettings);
+
   const grid = document.getElementById("soundtrackGrid");
-  if (grid && heroData && heroData.musicTrackUrl) {
-    const existing = Array.from(grid.querySelectorAll(".soundtrack-chip")).find(c => c.getAttribute("data-src") === heroData.musicTrackUrl);
+  const trackUrl = (mediaSettings && mediaSettings.soundtrackUrl) || (heroData && heroData.musicTrackUrl);
+  const trackTitle = (mediaSettings && mediaSettings.soundtrackTitle) || (heroData && heroData.musicTrackTitle) || "Custom Soundtrack";
+  const trackArtist = (mediaSettings && mediaSettings.soundtrackArtist) || (heroData && heroData.musicTrackArtist) || "Special Choice ✨";
+
+  if (grid && trackUrl) {
+    const existing = Array.from(grid.querySelectorAll(".soundtrack-chip, .soundtrack-card")).find(c => c.getAttribute("data-src") === trackUrl);
     if (!existing) {
       const customChip = createSoundtrackChipElement({
-        src: heroData.musicTrackUrl,
-        title: heroData.musicTrackTitle || "Custom Soundtrack",
-        artist: heroData.musicTrackArtist || "Special Choice ✨",
+        src: trackUrl,
+        title: trackTitle,
+        artist: trackArtist,
         start: 0
       });
       grid.appendChild(customChip);
@@ -225,7 +230,7 @@ function setupIntroSoundtrackSelector(heroData) {
   const chips = document.querySelectorAll(".soundtrack-chip, .soundtrack-card");
   chips.forEach(chip => bindSoundtrackChip(chip));
 
-  const preferredSrc = (heroData && heroData.musicTrackUrl) || state.customMusicAudio || localStorage.getItem("gf_music_audio");
+  const preferredSrc = trackUrl || state.customMusicAudio || localStorage.getItem("gf_music_audio");
   if (preferredSrc) {
     const matchedChip = Array.from(chips).find(c => c.getAttribute("data-src") === preferredSrc);
     if (matchedChip) {

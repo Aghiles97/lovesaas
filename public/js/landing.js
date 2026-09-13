@@ -635,7 +635,12 @@ document.addEventListener("DOMContentLoaded", () => {
     bucket_list: { title: "🎯 Couple Bucket List", cat: "GOALS", sub: "Shared relationship goals checklist with progress tracking" },
     audio_capsule: { title: "🎙️ Audio Time Capsule", cat: "AUDIO", sub: "Waveform voice memo player archiving messages across years" },
     milestone_odyssey: { title: "🚀 Milestone Odyssey Map", cat: "STORY", sub: "Horizontal constellation line map connecting key memories" },
-    valentine_scratch: { title: "💝 Valentine Date Scratchcard", cat: "VALENTINE", sub: "Interactive scratch-off card with secret itinerary reveal" }
+    valentine_scratch: { title: "💝 Valentine Date Scratchcard", cat: "VALENTINE", sub: "Interactive scratch-off card with secret itinerary reveal" },
+    forgiveness_meter: { title: "🕊️ Forgiveness Meter", cat: "RECONCILIATION", sub: "Interactive forgiveness slider with mood aura & celebration unlock" },
+    truce_agreement: { title: "📜 Bilateral Truce Treaty", cat: "RECONCILIATION", sub: "Hold-to-sign peace treaty with wax seal & downloadable keepsake" },
+    reform_deck: { title: "🃏 The Honest Reform Deck", cat: "RECONCILIATION", sub: "3D flip card deck with accountability promises & commitments" },
+    reparation_coupons: { title: "🎟️ Reparation Coupons", cat: "RECONCILIATION", sub: "Scratch-off peace offering vouchers with claimed status tracking" },
+    comfort_soundboard: { title: "🎧 Comfort Soundboard", cat: "AUDIO", sub: "Procedural ambient soundscapes mixer with calming photo stream" }
   };
 
   // More Widgets Toggle & Filter Bar
@@ -649,7 +654,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const isCollapsed = widgetsGrid.classList.toggle("collapsed-widgets");
       const label = btnToggleMoreWidgets.querySelector("span");
       if (label) {
-        label.textContent = isCollapsed ? "✨ Show All 26 Widgets (+14 More)" : "▴ Show Less Widgets";
+        label.textContent = isCollapsed ? "✨ Show All 31 Widgets (+19 More)" : "▴ Show Less Widgets";
       }
       if (moreWidgetsArrow) {
         moreWidgetsArrow.textContent = isCollapsed ? "▾" : "▴";

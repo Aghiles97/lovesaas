@@ -17,6 +17,7 @@ class SoundEngine {
   }
 
   playTone(freq, duration = 0.4, type = "sine", gainVal = 0.15) {
+    if (window.state && window.state.romanticSfx === false) return;
     this.init();
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -69,6 +70,7 @@ class SoundEngine {
   }
 
   playScratch() {
+    if (window.state && window.state.romanticSfx === false) return;
     this.init();
     if (!this.ctx) return;
     try {
@@ -138,7 +140,9 @@ class SoundEngine {
       const fallbackSrc = (typeof SOUNDTRACK_PLAYLIST !== "undefined" && SOUNDTRACK_PLAYLIST.length)
         ? SOUNDTRACK_PLAYLIST[0].src
         : "taylor-swift-fate-of-ophelia.m4r";
-      const targetSrc = state.customMusicAudio || (typeof currentChosenSong !== "undefined" && currentChosenSong ? currentChosenSong.src : fallbackSrc);
+      const targetSrc = (typeof currentChosenSong !== "undefined" && currentChosenSong && currentChosenSong.src)
+        || state.customMusicAudio
+        || fallbackSrc;
       if (!bgAudio.src || !bgAudio.src.includes(targetSrc)) {
         bgAudio.src = targetSrc;
       }
@@ -153,7 +157,19 @@ class SoundEngine {
       bgAudio.volume = isVoicePlaying ? Math.min(Math.max(voiceBgVol, 0), 1) : Math.min(Math.max(savedVol, 0), 1);
       const playPromise = bgAudio.play();
       if (playPromise !== undefined) {
-        playPromise.then(() => {}).catch(() => {
+        playPromise.then(() => {
+          state.musicPlaying = true;
+          if (vinyl) vinyl.classList.add("playing");
+          if (widget) widget.classList.add("playing");
+          if (icon) icon.textContent = "⏸️";
+          if (label) label.textContent = "Pause";
+          if (onToggle) onToggle(true);
+        }).catch(() => {
+          state.musicPlaying = false;
+          if (vinyl) vinyl.classList.remove("playing");
+          if (widget) widget.classList.remove("playing");
+          if (icon) icon.textContent = "▶️";
+          if (label) label.textContent = "Play";
           this.startOpheliaSynth();
         });
       }
@@ -165,6 +181,8 @@ class SoundEngine {
   fadeInMusic(durationMs = 1800) {
     const bgAudio = document.getElementById("bgAudioPlayer");
     if (!bgAudio) return;
+    if (window.state && window.state.soundtrackAutoplay === false) return;
+    if (typeof state !== "undefined" && state.musicPlaying === false && bgAudio.paused) return;
 
     if (this._fadeInterval) {
       clearInterval(this._fadeInterval);
@@ -174,22 +192,37 @@ class SoundEngine {
     const savedVol = parseInt(localStorage.getItem("gf_volume") || "80", 10) / 100;
     const targetVol = Math.min(Math.max(savedVol, 0), 1);
 
-    if (bgAudio.paused || bgAudio.ended) {
-      if (bgAudio.ended) bgAudio.currentTime = 0;
-      bgAudio.volume = Math.min(bgAudio.volume || 0.2, targetVol);
-      const p = bgAudio.play();
-      if (p !== undefined) p.catch(() => {});
-    }
-
-    state.musicPlaying = true;
     const vinyl = document.getElementById("vinylDisc");
     const widget = document.getElementById("musicPlayerWidget");
     const icon = document.getElementById("musicPlayIcon");
     const label = document.getElementById("musicPlayLabel");
-    if (vinyl) vinyl.classList.add("playing");
-    if (widget) widget.classList.add("playing");
-    if (icon) icon.textContent = "⏸️";
-    if (label) label.textContent = "Pause";
+
+    if (bgAudio.paused || bgAudio.ended) {
+      if (bgAudio.ended) bgAudio.currentTime = 0;
+      bgAudio.volume = Math.min(bgAudio.volume || 0.2, targetVol);
+      const p = bgAudio.play();
+      if (p !== undefined) {
+        p.then(() => {
+          state.musicPlaying = true;
+          if (vinyl) vinyl.classList.add("playing");
+          if (widget) widget.classList.add("playing");
+          if (icon) icon.textContent = "⏸️";
+          if (label) label.textContent = "Pause";
+        }).catch(() => {
+          state.musicPlaying = false;
+          if (vinyl) vinyl.classList.remove("playing");
+          if (widget) widget.classList.remove("playing");
+          if (icon) icon.textContent = "▶️";
+          if (label) label.textContent = "Play";
+        });
+      }
+    } else {
+      state.musicPlaying = true;
+      if (vinyl) vinyl.classList.add("playing");
+      if (widget) widget.classList.add("playing");
+      if (icon) icon.textContent = "⏸️";
+      if (label) label.textContent = "Pause";
+    }
 
     const startVol = Math.min(Math.max(bgAudio.volume, 0), targetVol);
     if (startVol >= targetVol) {
@@ -227,10 +260,47 @@ class SoundEngine {
     const bgAudio = document.getElementById("bgAudioPlayer");
     if (bgAudio && !bgAudio.dataset.endedBound) {
       bgAudio.dataset.endedBound = "true";
-      bgAudio.removeAttribute("loop");
-      bgAudio.loop = false;
+      const isLoop = window.state && window.state.soundtrackLoop !== undefined ? !!window.state.soundtrackLoop : true;
+      bgAudio.loop = isLoop;
+
+      bgAudio.addEventListener("play", () => {
+        state.musicPlaying = true;
+        const vinyl = document.getElementById("vinylDisc");
+        const widget = document.getElementById("musicPlayerWidget");
+        const icon = document.getElementById("musicPlayIcon");
+        const label = document.getElementById("musicPlayLabel");
+        if (vinyl) vinyl.classList.add("playing");
+        if (widget) widget.classList.add("playing");
+        if (icon) icon.textContent = "⏸️";
+        if (label) label.textContent = "Pause";
+      });
+
+      bgAudio.addEventListener("pause", () => {
+        state.musicPlaying = false;
+        const vinyl = document.getElementById("vinylDisc");
+        const widget = document.getElementById("musicPlayerWidget");
+        const icon = document.getElementById("musicPlayIcon");
+        const label = document.getElementById("musicPlayLabel");
+        if (vinyl) vinyl.classList.remove("playing");
+        if (widget) widget.classList.remove("playing");
+        if (icon) icon.textContent = "▶️";
+        if (label) label.textContent = "Play";
+      });
+
       bgAudio.addEventListener("ended", () => {
         this.handleMusicEnded();
+      });
+
+      bgAudio.addEventListener("error", () => {
+        state.musicPlaying = false;
+        const vinyl = document.getElementById("vinylDisc");
+        const widget = document.getElementById("musicPlayerWidget");
+        const icon = document.getElementById("musicPlayIcon");
+        const label = document.getElementById("musicPlayLabel");
+        if (vinyl) vinyl.classList.remove("playing");
+        if (widget) widget.classList.remove("playing");
+        if (icon) icon.textContent = "▶️";
+        if (label) label.textContent = "Play";
       });
     }
 
@@ -258,6 +328,11 @@ class SoundEngine {
   }
 
   handleMusicEnded() {
+    const bgAudio = document.getElementById("bgAudioPlayer");
+    if ((bgAudio && bgAudio.loop) || (window.state && window.state.soundtrackLoop !== false)) {
+      this.playAgain();
+      return;
+    }
     state.musicPlaying = false;
     const vinyl = document.getElementById("vinylDisc");
     const widget = document.getElementById("musicPlayerWidget");

@@ -17,6 +17,7 @@
   }
 
   function playChimeNote(freq = 659.25) {
+    if (window.state && window.state.romanticSfx === false) return;
     try {
       const ctx = getAudioContext();
       if (!ctx) return;

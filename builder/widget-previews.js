@@ -1051,6 +1051,313 @@
     </svg>
   `);
 
+  // 27. FORGIVENESS METER
+  PREVIEWS.forgiveness_meter = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <defs>
+        <linearGradient id="fmBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#f0fdf4"/>
+          <stop offset="100%" stop-color="#dcfce7"/>
+        </linearGradient>
+        <linearGradient id="fmSliderGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#ef4444"/>
+          <stop offset="50%" stop-color="#f59e0b"/>
+          <stop offset="100%" stop-color="#10b981"/>
+        </linearGradient>
+        <filter id="fmShadow" x="-10%" y="-10%" width="120%" height="120%">
+          <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#10b981" flood-opacity="0.15"/>
+        </filter>
+      </defs>
+      <rect width="800" height="480" fill="url(#fmBg)"/>
+      <rect x="100" y="25" width="600" height="430" rx="20" fill="#ffffff" filter="url(#fmShadow)"/>
+
+      <rect x="300" y="42" width="200" height="28" rx="14" fill="#10b981" opacity="0.15"/>
+      <text x="400" y="61" fill="#059669" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" text-anchor="middle">EMOTIONAL BAROMETER 💓</text>
+
+      <text x="400" y="98" fill="#1e293b" font-family="Georgia, serif" font-size="24" font-weight="700" text-anchor="middle">Forgiveness Meter for Ella 🕊️</text>
+      <text x="400" y="118" fill="#64748b" font-family="-apple-system, sans-serif" font-size="12" text-anchor="middle">Slide to adjust forgiveness level • Full peace unlocks celebration reward</text>
+
+      <!-- Mood Badge Display -->
+      <rect x="310" y="135" width="180" height="48" rx="24" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+      <text x="360" y="166" font-size="22">🥰</text>
+      <text x="415" y="164" fill="#059669" font-family="-apple-system, sans-serif" font-size="15" font-weight="800">Truce (100%)</text>
+
+      <!-- Slider Track -->
+      <rect x="150" y="205" width="500" height="16" rx="8" fill="#f1f5f9"/>
+      <rect x="150" y="205" width="500" height="16" rx="8" fill="url(#fmSliderGrad)"/>
+      <circle cx="650" cy="213" r="14" fill="#ffffff" stroke="#10b981" stroke-width="4"/>
+
+      <!-- Scale Markers -->
+      <text x="150" y="238" fill="#ef4444" font-family="-apple-system, sans-serif" font-size="11" font-weight="700">Furious 😤 (0%)</text>
+      <text x="400" y="238" fill="#f59e0b" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Slightly Annoyed 🙄 (50%)</text>
+      <text x="650" y="238" fill="#10b981" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="end">Truce 🥰 (100%)</text>
+
+      <!-- Gold Foil Reward Card -->
+      <rect x="160" y="260" width="480" height="170" rx="14" fill="#fffbeb" stroke="#f59e0b" stroke-width="2"/>
+      <rect x="330" y="275" width="140" height="22" rx="11" fill="#fef3c7"/>
+      <text x="400" y="290" fill="#b45309" font-family="-apple-system, sans-serif" font-size="10" font-weight="800" text-anchor="middle">🌟 LEVEL 100 PEACE</text>
+      <text x="400" y="325" fill="#92400e" font-family="Georgia, serif" font-size="18" font-weight="700" text-anchor="middle">Forgiveness Granted! 🎉</text>
+      <text x="400" y="350" fill="#78350f" font-family="-apple-system, sans-serif" font-size="12" text-anchor="middle">"Thank you for choosing peace, Ella. I love you endlessly!"</text>
+      <rect x="275" y="375" width="250" height="38" rx="19" fill="#10b981"/>
+      <text x="400" y="399" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" text-anchor="middle">Claim Reconciliation Gift 🎁</text>
+    </svg>
+  `);
+
+  // 28. TRUCE AGREEMENT
+  PREVIEWS.truce_agreement = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <defs>
+        <linearGradient id="taParchment" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#fffdf7"/>
+          <stop offset="100%" stop-color="#fbf4e2"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="480" fill="#f5f0e6"/>
+      <!-- Parchment Outer Frame -->
+      <rect x="90" y="25" width="620" height="430" rx="16" fill="url(#taParchment)" stroke="#d4b483" stroke-width="3"/>
+      <rect x="100" y="35" width="600" height="410" rx="12" fill="none" stroke="#d4b483" stroke-width="1" stroke-dasharray="4,4"/>
+
+      <!-- Corner Ornaments -->
+      <text x="115" y="60" fill="#c49a62" font-size="18">❦</text>
+      <text x="670" y="60" fill="#c49a62" font-size="18">❦</text>
+      <text x="115" y="430" fill="#c49a62" font-size="18">❦</text>
+      <text x="670" y="430" fill="#c49a62" font-size="18">❦</text>
+
+      <text x="400" y="70" fill="#92400e" font-family="Georgia, serif" font-size="22" font-weight="700" text-anchor="middle">📜 Bilateral Peace &amp; Truce Treaty</text>
+      <text x="400" y="90" fill="#78350f" font-family="-apple-system, sans-serif" font-size="11" text-anchor="middle">Official Diplomatic Accord Ratified with Sacred Covenants</text>
+
+      <!-- Parties Row -->
+      <rect x="160" y="105" width="200" height="50" rx="8" fill="#ffffff" stroke="#e6c99c"/>
+      <text x="260" y="125" fill="#a16207" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" text-anchor="middle">PARTY A (SENDER)</text>
+      <text x="260" y="145" fill="#1e293b" font-family="Georgia, serif" font-size="15" font-weight="700" text-anchor="middle">Aghiles</text>
+
+      <circle cx="400" cy="130" r="18" fill="#fef3c7"/>
+      <text x="400" y="136" font-size="16" text-anchor="middle">🕊️</text>
+
+      <rect x="440" y="105" width="200" height="50" rx="8" fill="#ffffff" stroke="#e6c99c"/>
+      <text x="540" y="125" fill="#a16207" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" text-anchor="middle">PARTY B (PARTNER)</text>
+      <text x="540" y="145" fill="#1e293b" font-family="Georgia, serif" font-size="15" font-weight="700" text-anchor="middle">Ella</text>
+
+      <!-- Terms Box -->
+      <rect x="150" y="170" width="500" height="150" rx="10" fill="#ffffff" opacity="0.85"/>
+      <text x="175" y="195" fill="#166534" font-size="13">✓</text>
+      <text x="195" y="195" fill="#334155" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">I promise to listen with an open, non-defensive heart whenever you speak.</text>
+      <text x="175" y="225" fill="#166534" font-size="13">✓</text>
+      <text x="195" y="225" fill="#334155" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">I promise immediate hugs, comfort, and soothing reassurance on demand.</text>
+      <text x="175" y="255" fill="#166534" font-size="13">✓</text>
+      <text x="195" y="255" fill="#334155" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">I promise never to let anger linger past sundown without reconciliation.</text>
+      <text x="175" y="285" fill="#166534" font-size="13">✓</text>
+      <text x="195" y="285" fill="#334155" font-family="-apple-system, sans-serif" font-size="11" font-weight="600">I promise to prioritize our connection, empathy, and love over individual pride.</text>
+
+      <!-- Wax Seal & Signature -->
+      <circle cx="400" cy="370" r="42" fill="#be123c" stroke="#9f1239" stroke-width="4"/>
+      <circle cx="400" cy="370" r="34" fill="none" stroke="#fecdd3" stroke-width="1" stroke-dasharray="3,3"/>
+      <text x="400" y="360" font-size="16" text-anchor="middle">⚜️</text>
+      <text x="400" y="378" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="9" font-weight="900" text-anchor="middle">RATIFIED</text>
+      <text x="400" y="390" fill="#fecdd3" font-family="-apple-system, sans-serif" font-size="8" text-anchor="middle">&amp; SEALED</text>
+      <text x="400" y="425" fill="#78350f" font-family="Georgia, serif" font-size="11" font-style="italic" text-anchor="middle">Ratified on September 13, 2026 • Eternal Peace Accord</text>
+    </svg>
+  `);
+
+  // 29. REFORM DECK
+  PREVIEWS.reform_deck = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <rect width="800" height="480" fill="#faf5ff"/>
+      <text x="400" y="55" fill="#6b21a8" font-family="Georgia, serif" font-size="24" font-weight="700" text-anchor="middle">🃏 The Honest Reform Deck</text>
+      <text x="400" y="78" fill="#64748b" font-family="-apple-system, sans-serif" font-size="12" text-anchor="middle">3D Flippable Cards • Apology • Complete Ownership • Future Actionable Commitments</text>
+
+      <!-- 3 Cards Fan / Grid -->
+      <!-- Card 1: Front -->
+      <rect x="80" y="110" width="190" height="300" rx="14" fill="#ffffff" stroke="#c084fc" stroke-width="2"/>
+      <rect x="100" y="130" width="150" height="24" rx="12" fill="#f3e8ff"/>
+      <text x="175" y="146" fill="#7e22ce" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" text-anchor="middle">🃏 PLEDGE #1</text>
+      <circle cx="175" cy="210" r="30" fill="#faf5ff"/>
+      <text x="175" y="219" font-size="28" text-anchor="middle">👂</text>
+      <text x="175" y="275" fill="#1e293b" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" text-anchor="middle">Listening Without</text>
+      <text x="175" y="295" fill="#1e293b" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" text-anchor="middle">Defensiveness</text>
+      <rect x="110" y="345" width="130" height="32" rx="16" fill="#f3e8ff"/>
+      <text x="175" y="365" fill="#7e22ce" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" text-anchor="middle">Tap to Flip ↻</text>
+
+      <!-- Card 2: Flipped (Back Side Revealed) -->
+      <rect x="305" y="105" width="190" height="310" rx="14" fill="#ffffff" stroke="#9333ea" stroke-width="3"/>
+      <rect x="315" y="115" width="170" height="24" rx="6" fill="#f5f3ff"/>
+      <text x="400" y="131" fill="#6d28d9" font-family="-apple-system, sans-serif" font-size="10" font-weight="800" text-anchor="middle">💬 PROMISE REVEALED ✅</text>
+      <rect x="315" y="145" width="170" height="60" rx="6" fill="#fdf2f8"/>
+      <text x="325" y="162" fill="#be185d" font-family="-apple-system, sans-serif" font-size="9" font-weight="700">THE APOLOGY</text>
+      <text x="325" y="178" fill="#475569" font-family="-apple-system, sans-serif" font-size="9">Sorry for retreating into</text>
+      <text x="325" y="192" fill="#475569" font-family="-apple-system, sans-serif" font-size="9">silence during stress.</text>
+
+      <rect x="315" y="212" width="170" height="60" rx="6" fill="#fefce8"/>
+      <text x="325" y="228" fill="#a16207" font-family="-apple-system, sans-serif" font-size="9" font-weight="700">ACCOUNTABILITY</text>
+      <text x="325" y="244" fill="#475569" font-family="-apple-system, sans-serif" font-size="9">Distance creates worry;</text>
+      <text x="325" y="258" fill="#475569" font-family="-apple-system, sans-serif" font-size="9">you deserve transparency.</text>
+
+      <rect x="315" y="278" width="170" height="60" rx="6" fill="#ecfdf5"/>
+      <text x="325" y="294" fill="#047857" font-family="-apple-system, sans-serif" font-size="9" font-weight="700">FUTURE COMMITMENT</text>
+      <text x="325" y="310" fill="#475569" font-family="-apple-system, sans-serif" font-size="9">I promise proactive updates</text>
+      <text x="325" y="324" fill="#475569" font-family="-apple-system, sans-serif" font-size="9">and open emotional doors.</text>
+      <text x="400" y="395" fill="#9333ea" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" text-anchor="middle">Flip Back ↺</text>
+
+      <!-- Card 3: Front -->
+      <rect x="530" y="110" width="190" height="300" rx="14" fill="#ffffff" stroke="#c084fc" stroke-width="2"/>
+      <rect x="550" y="130" width="150" height="24" rx="12" fill="#f3e8ff"/>
+      <text x="625" y="146" fill="#7e22ce" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" text-anchor="middle">🃏 PLEDGE #3</text>
+      <circle cx="625" cy="210" r="30" fill="#faf5ff"/>
+      <text x="625" y="219" font-size="28" text-anchor="middle">🕊️</text>
+      <text x="625" y="275" fill="#1e293b" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" text-anchor="middle">Patience &amp; Gentle</text>
+      <text x="625" y="295" fill="#1e293b" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" text-anchor="middle">Loving Tone</text>
+      <rect x="560" y="345" width="130" height="32" rx="16" fill="#f3e8ff"/>
+      <text x="625" y="365" fill="#7e22ce" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" text-anchor="middle">Tap to Flip ↻</text>
+
+      <text x="400" y="445" fill="#9333ea" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" text-anchor="middle">Progress: 1 / 4 Promises Reviewed ❤️</text>
+    </svg>
+  `);
+
+  // 30. REPARATION COUPONS
+  PREVIEWS.reparation_coupons = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <rect width="800" height="480" fill="#fffbeb"/>
+      <text x="400" y="55" fill="#b45309" font-family="Georgia, serif" font-size="24" font-weight="700" text-anchor="middle">🎟️ Reparation &amp; Peace Offering Coupons</text>
+      <text x="400" y="78" fill="#78350f" font-family="-apple-system, sans-serif" font-size="12" text-anchor="middle">Scratchable Gold Foil Vouchers • Guaranteed Restitution Passes • Redeem Anytime</text>
+
+      <!-- Coupon 1: Scratched -->
+      <g transform="translate(80, 110)">
+        <rect width="300" height="150" rx="12" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="0" cy="75" r="12" fill="#fffbeb"/>
+        <circle cx="300" cy="75" r="12" fill="#fffbeb"/>
+        <rect x="25" y="20" width="80" height="20" rx="10" fill="#fef3c7"/>
+        <text x="65" y="34" fill="#d97706" font-family="-apple-system, sans-serif" font-size="9" font-weight="800" text-anchor="middle">ULTRA PAMPER</text>
+        <text x="30" y="75" font-size="28">💆‍♀️</text>
+        <text x="75" y="65" fill="#1e293b" font-family="Georgia, serif" font-size="14" font-weight="700">30-Min Full Massage</text>
+        <text x="75" y="85" fill="#64748b" font-family="-apple-system, sans-serif" font-size="10">Essential oils &amp; zero complaints.</text>
+        <!-- Claimed Stamp Overlay -->
+        <rect x="180" y="45" width="100" height="40" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="2" transform="rotate(-10 230 65)"/>
+        <text x="230" y="70" fill="#dc2626" font-family="-apple-system, sans-serif" font-size="12" font-weight="900" text-anchor="middle" transform="rotate(-10 230 65)">CLAIMED ✓</text>
+        <rect x="25" y="105" width="250" height="30" rx="6" fill="#f1f5f9"/>
+        <text x="150" y="125" fill="#64748b" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" text-anchor="middle">✓ Redeemed</text>
+      </g>
+
+      <!-- Coupon 2: Unscratched Foil -->
+      <g transform="translate(420, 110)">
+        <rect width="300" height="150" rx="12" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="0" cy="75" r="12" fill="#fffbeb"/>
+        <circle cx="300" cy="75" r="12" fill="#fffbeb"/>
+        <!-- Gold foil simulated -->
+        <rect x="20" y="20" width="260" height="75" rx="8" fill="#fbbf24"/>
+        <text x="150" y="62" fill="#78350f" font-family="-apple-system, sans-serif" font-size="13" font-weight="800" text-anchor="middle">✨ Scratch to Reveal Foil ✨</text>
+        <rect x="25" y="105" width="250" height="30" rx="6" fill="#f59e0b"/>
+        <text x="150" y="125" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" text-anchor="middle">Mark as Claimed</text>
+      </g>
+
+      <!-- Coupon 3: Golden Pass -->
+      <g transform="translate(80, 280)">
+        <rect width="300" height="150" rx="12" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="0" cy="75" r="12" fill="#fffbeb"/>
+        <circle cx="300" cy="75" r="12" fill="#fffbeb"/>
+        <rect x="25" y="20" width="80" height="20" rx="10" fill="#fef3c7"/>
+        <text x="65" y="34" fill="#d97706" font-family="-apple-system, sans-serif" font-size="9" font-weight="800" text-anchor="middle">GOLDEN PASS</text>
+        <text x="30" y="75" font-size="28">🏳️</text>
+        <text x="75" y="65" fill="#1e293b" font-family="Georgia, serif" font-size="14" font-weight="700">Win Any Argument</text>
+        <text x="75" y="85" fill="#64748b" font-family="-apple-system, sans-serif" font-size="10">Instant surrender on the spot!</text>
+        <rect x="25" y="105" width="250" height="30" rx="6" fill="#f59e0b"/>
+        <text x="150" y="125" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" text-anchor="middle">Mark as Claimed</text>
+      </g>
+
+      <!-- Coupon 4: Breakfast in Bed -->
+      <g transform="translate(420, 280)">
+        <rect width="300" height="150" rx="12" fill="#ffffff" stroke="#f59e0b" stroke-width="2"/>
+        <circle cx="0" cy="75" r="12" fill="#fffbeb"/>
+        <circle cx="300" cy="75" r="12" fill="#fffbeb"/>
+        <rect x="25" y="20" width="80" height="20" rx="10" fill="#fef3c7"/>
+        <text x="65" y="34" fill="#d97706" font-family="-apple-system, sans-serif" font-size="9" font-weight="800" text-anchor="middle">ROOM SERVICE</text>
+        <text x="30" y="75" font-size="28">🥐</text>
+        <text x="75" y="65" fill="#1e293b" font-family="Georgia, serif" font-size="14" font-weight="700">VIP Breakfast in Bed</text>
+        <text x="75" y="85" fill="#64748b" font-family="-apple-system, sans-serif" font-size="10">Coffee, pastries &amp; berries served.</text>
+        <rect x="25" y="105" width="250" height="30" rx="6" fill="#f59e0b"/>
+        <text x="150" y="125" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" text-anchor="middle">Mark as Claimed</text>
+      </g>
+    </svg>
+  `);
+
+  // 31. COMFORT SOUNDBOARD
+  PREVIEWS.comfort_soundboard = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <rect width="800" height="480" fill="#f0f9ff"/>
+      <text x="400" y="55" fill="#0369a1" font-family="Georgia, serif" font-size="24" font-weight="700" text-anchor="middle">🎧 Comfort &amp; Calming Soundboard</text>
+      <text x="400" y="78" fill="#0284c7" font-family="-apple-system, sans-serif" font-size="12" text-anchor="middle">Procedural Web Audio Ambient Mixer • Sound Equalizer • Serene Photo Stream</text>
+
+      <!-- Master Deck -->
+      <rect x="80" y="100" width="640" height="55" rx="12" fill="#ffffff" stroke="#bae6fd"/>
+      <rect x="100" y="112" width="160" height="32" rx="16" fill="#0284c7"/>
+      <text x="180" y="132" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">▶ Play Calming Ambience</text>
+
+      <!-- Equalizer Bars -->
+      <g transform="translate(560, 115)">
+        <rect x="0" y="15" width="5" height="15" rx="2" fill="#0284c7"/>
+        <rect x="9" y="8" width="5" height="22" rx="2" fill="#0ea5e9"/>
+        <rect x="18" y="3" width="5" height="27" rx="2" fill="#38bdf8"/>
+        <rect x="27" y="12" width="5" height="18" rx="2" fill="#0284c7"/>
+        <rect x="36" y="5" width="5" height="25" rx="2" fill="#0ea5e9"/>
+        <rect x="45" y="18" width="5" height="12" rx="2" fill="#38bdf8"/>
+      </g>
+
+      <!-- Mixer Channels Row -->
+      <g transform="translate(80, 175)">
+        <!-- Ch 1: Rain -->
+        <rect x="0" y="0" width="120" height="110" rx="10" fill="#ffffff" stroke="#e0f2fe"/>
+        <text x="60" y="30" font-size="22" text-anchor="middle">🌧️</text>
+        <text x="60" y="50" fill="#1e293b" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Soft Rain</text>
+        <rect x="15" y="70" width="90" height="6" rx="3" fill="#e2e8f0"/>
+        <rect x="15" y="70" width="60" height="6" rx="3" fill="#0284c7"/>
+        <text x="60" y="95" fill="#64748b" font-family="-apple-system, sans-serif" font-size="9" text-anchor="middle">65%</text>
+
+        <!-- Ch 2: Hearth -->
+        <rect x="130" y="0" width="120" height="110" rx="10" fill="#ffffff" stroke="#e0f2fe"/>
+        <text x="190" y="30" font-size="22" text-anchor="middle">🔥</text>
+        <text x="190" y="50" fill="#1e293b" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Warm Hearth</text>
+        <rect x="145" y="70" width="90" height="6" rx="3" fill="#e2e8f0"/>
+        <rect x="145" y="70" width="45" height="6" rx="3" fill="#0284c7"/>
+        <text x="190" y="95" fill="#64748b" font-family="-apple-system, sans-serif" font-size="9" text-anchor="middle">50%</text>
+
+        <!-- Ch 3: Waves -->
+        <rect x="260" y="0" width="120" height="110" rx="10" fill="#ffffff" stroke="#e0f2fe"/>
+        <text x="320" y="30" font-size="22" text-anchor="middle">🌊</text>
+        <text x="320" y="50" fill="#1e293b" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Ocean Shore</text>
+        <rect x="275" y="70" width="90" height="6" rx="3" fill="#e2e8f0"/>
+        <rect x="275" y="70" width="40" height="6" rx="3" fill="#0284c7"/>
+        <text x="320" y="95" fill="#64748b" font-family="-apple-system, sans-serif" font-size="9" text-anchor="middle">45%</text>
+
+        <!-- Ch 4: Breeze -->
+        <rect x="390" y="0" width="120" height="110" rx="10" fill="#ffffff" stroke="#e0f2fe"/>
+        <text x="450" y="30" font-size="22" text-anchor="middle">🍃</text>
+        <text x="450" y="50" fill="#1e293b" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Night Breeze</text>
+        <rect x="405" y="70" width="90" height="6" rx="3" fill="#e2e8f0"/>
+        <rect x="405" y="70" width="30" height="6" rx="3" fill="#0284c7"/>
+        <text x="450" y="95" fill="#64748b" font-family="-apple-system, sans-serif" font-size="9" text-anchor="middle">35%</text>
+
+        <!-- Ch 5: Cafe -->
+        <rect x="520" y="0" width="120" height="110" rx="10" fill="#ffffff" stroke="#e0f2fe"/>
+        <text x="580" y="30" font-size="22" text-anchor="middle">☕</text>
+        <text x="580" y="50" fill="#1e293b" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Cozy Cafe</text>
+        <rect x="535" y="70" width="90" height="6" rx="3" fill="#e2e8f0"/>
+        <rect x="535" y="70" width="25" height="6" rx="3" fill="#0284c7"/>
+        <text x="580" y="95" fill="#64748b" font-family="-apple-system, sans-serif" font-size="9" text-anchor="middle">30%</text>
+      </g>
+
+      <!-- Calming Photo Stream Carousel Preview -->
+      <g transform="translate(80, 305)">
+        <rect width="640" height="145" rx="12" fill="#1e293b"/>
+        <!-- Simulated Landscape Photo -->
+        <rect x="2" y="2" width="636" height="141" rx="10" fill="#0f172a"/>
+        <circle cx="150" cy="50" r="30" fill="#fde047" opacity="0.3"/>
+        <path d="M 0 120 Q 200 60 400 110 T 640 90 L 640 145 L 0 145 Z" fill="#047857" opacity="0.7"/>
+        <!-- Caption Bar -->
+        <rect x="0" y="110" width="640" height="35" rx="0" fill="rgba(0,0,0,0.6)"/>
+        <text x="320" y="132" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" text-anchor="middle">Golden sunlight drifting through gentle forest leaves 🍃</text>
+      </g>
+    </svg>
+  `);
+
   window.WIDGET_PREVIEWS = PREVIEWS;
   window.getWidgetPreviewImage = function(widgetId) {
     return PREVIEWS[widgetId] || null;

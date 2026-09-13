@@ -350,6 +350,71 @@ const WIDGET_REGISTRY = {
     inspector: "/builder/inspectors/valentine_scratch.inspector.js",
     runtime: "/public/js/widgets/valentine-scratch.runtime.js",
     initFn: "setupValentineScratch"
+  },
+  forgiveness_meter: {
+    id: "forgiveness_meter",
+    title: "Forgiveness Meter",
+    icon: "🕊️",
+    desc: "Interactive forgiveness slider with mood aura, celebratory chime & reward unlock.",
+    category: "reconciliation",
+    defaultEnabled: true,
+    css: "/public/css/widgets/forgiveness_meter.css",
+    template: "/core/templates/forgiveness_meter.template.js",
+    inspector: "/builder/inspectors/forgiveness_meter.inspector.js",
+    runtime: "/public/js/widgets/forgiveness-meter.runtime.js",
+    initFn: "setupForgivenessMeter"
+  },
+  truce_agreement: {
+    id: "truce_agreement",
+    title: "Truce Agreement",
+    icon: "📜",
+    desc: "Hold-to-sign formal peace treaty with wax seal stamp and PNG keepsake download.",
+    category: "reconciliation",
+    defaultEnabled: true,
+    css: "/public/css/widgets/truce_agreement.css",
+    template: "/core/templates/truce_agreement.template.js",
+    inspector: "/builder/inspectors/truce_agreement.inspector.js",
+    runtime: "/public/js/widgets/truce-agreement.runtime.js",
+    initFn: "setupTruceAgreement"
+  },
+  reform_deck: {
+    id: "reform_deck",
+    title: "Reform Deck",
+    icon: "🎴",
+    desc: "3D flip card deck with accountability promises, apology notes & commitment tracker.",
+    category: "reconciliation",
+    defaultEnabled: true,
+    css: "/public/css/widgets/reform_deck.css",
+    template: "/core/templates/reform_deck.template.js",
+    inspector: "/builder/inspectors/reform_deck.inspector.js",
+    runtime: "/public/js/widgets/reform-deck.runtime.js",
+    initFn: "setupReformDeck"
+  },
+  reparation_coupons: {
+    id: "reparation_coupons",
+    title: "Reparation Coupons",
+    icon: "🎟️",
+    desc: "Scratch-off coupon vouchers for peace offerings, breakfast in bed, and cuddle passes.",
+    category: "reconciliation",
+    defaultEnabled: true,
+    css: "/public/css/widgets/reparation_coupons.css",
+    template: "/core/templates/reparation_coupons.template.js",
+    inspector: "/builder/inspectors/reparation_coupons.inspector.js",
+    runtime: "/public/js/widgets/reparation-coupons.runtime.js",
+    initFn: "setupReparationCoupons"
+  },
+  comfort_soundboard: {
+    id: "comfort_soundboard",
+    title: "Comfort Soundboard",
+    icon: "🎧",
+    desc: "Procedural ambient sound mixer (rain, ocean, campfire, lofi) with calming photo stream.",
+    category: "birthday",
+    defaultEnabled: true,
+    css: "/public/css/widgets/comfort_soundboard.css",
+    template: "/core/templates/comfort_soundboard.template.js",
+    inspector: "/builder/inspectors/comfort_soundboard.inspector.js",
+    runtime: "/public/js/widgets/comfort-soundboard.runtime.js",
+    initFn: "setupComfortSoundboard"
   }
 };
 
@@ -389,6 +454,11 @@ const PRESETS = {
       "roast_toast",
       "guestbook",
       "party_jukebox",
+      "forgiveness_meter",
+      "truce_agreement",
+      "reform_deck",
+      "reparation_coupons",
+      "comfort_soundboard",
       "letter"
     ]
   },
@@ -431,6 +501,11 @@ const PRESETS = {
       "quiz",
       "letter",
       "valentine_scratch",
+      "forgiveness_meter",
+      "truce_agreement",
+      "reform_deck",
+      "reparation_coupons",
+      "comfort_soundboard",
       "playful"
     ]
   },

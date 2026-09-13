@@ -1,0 +1,235 @@
+.forgiveness-meter-section {
+  padding: 60px 20px;
+  position: relative;
+}
+
+.forgiveness-meter-card {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 36px 28px;
+  background: var(--surface, rgba(255, 255, 255, 0.9));
+  border: 1px solid var(--surface-border, rgba(255, 84, 112, 0.2));
+  border-radius: var(--radius-lg, 28px);
+  box-shadow: var(--shadow-md, 0 8px 24px rgba(255, 84, 112, 0.12));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  text-align: center;
+}
+
+.meter-mood-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 0 16px;
+  padding: 14px 20px;
+  background: var(--primary-subtle, rgba(255, 84, 112, 0.08));
+  border-radius: var(--radius-md, 18px);
+  border: 1px solid var(--primary-border, rgba(255, 84, 112, 0.2));
+}
+
+.mood-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mood-emoji {
+  font-size: 2rem;
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.mood-text {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main, #33202a);
+}
+
+.mood-percentage {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-family: var(--font-body, monospace);
+  color: var(--primary, #ff5470);
+}
+
+.meter-slider-container {
+  position: relative;
+  margin: 24px 0 10px;
+  padding: 8px 0;
+}
+
+.slider-progress-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 14px;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.slider-fill-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #ff4d6d 0%, #ff758f 50%, #52b788 100%);
+  border-radius: 10px;
+  transition: width 0.1s linear;
+}
+
+.forgiveness-range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 14px;
+  background: transparent;
+  outline: none;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  margin: 0;
+}
+
+.forgiveness-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid var(--primary, #ff5470);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb, 255, 84, 112), 0.4), 0 0 0 4px rgba(255, 255, 255, 0.8);
+  cursor: grab;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.forgiveness-range-slider:active::-webkit-slider-thumb {
+  cursor: grabbing;
+  transform: scale(1.15);
+  box-shadow: 0 6px 18px rgba(var(--primary-rgb, 255, 84, 112), 0.6), 0 0 0 6px rgba(255, 255, 255, 0.9);
+}
+
+.forgiveness-range-slider::-moz-range-thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid var(--primary, #ff5470);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb, 255, 84, 112), 0.4);
+  cursor: grab;
+}
+
+.meter-scale-markers {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding: 0 4px;
+}
+
+.marker-point {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.marker-pip {
+  width: 4px;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+}
+
+.marker-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted, #7e6772);
+}
+
+.forgiveness-reward-card {
+  margin-top: 28px;
+  padding: 24px;
+  border-radius: var(--radius-md, 20px);
+  background: linear-gradient(135deg, #fff9f0 0%, #fff0f3 100%);
+  border: 2px solid var(--accent-gold, #ffbe76);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(255, 190, 118, 0.25);
+  animation: rewardPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.gold-foil-sheen {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(60deg, transparent 40%, rgba(255, 255, 255, 0.6) 50%, transparent 60%);
+  animation: sheenSlide 4s infinite linear;
+  pointer-events: none;
+}
+
+.reward-card-badge {
+  display: inline-block;
+  padding: 4px 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #b7791f;
+  background: rgba(255, 190, 118, 0.3);
+  border-radius: 50px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.reward-card-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-main, #33202a);
+  margin-bottom: 8px;
+}
+
+.reward-card-text {
+  font-size: 0.95rem;
+  color: var(--text-muted, #7e6772);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.forgiveness-reward-card.hidden {
+  display: none;
+}
+
+@keyframes rewardPop {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes sheenSlide {
+  0% { transform: translate(-100%, -100%); }
+  100% { transform: translate(100%, 100%); }
+}
+
+@media (max-width: 767px) {
+  .forgiveness-meter-card {
+    padding: 24px 16px;
+    border-radius: var(--radius-md, 20px);
+  }
+  .meter-mood-display {
+    padding: 10px 14px;
+  }
+  .mood-emoji {
+    font-size: 1.6rem;
+  }
+  .mood-text {
+    font-size: 0.95rem;
+  }
+  .mood-percentage {
+    font-size: 1.25rem;
+  }
+  .marker-label {
+    font-size: 0.72rem;
+  }
+}

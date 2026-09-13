@@ -90,7 +90,11 @@ function setupVoiceNotePlayer() {
 
   applyVoiceVolGain(getVoiceVol());
 
+  let _wasBgPlaying = false;
+
   const restoreVolume = () => {
+    if (!_wasBgPlaying) return;
+    _wasBgPlaying = false;
     if (typeof fadeInBgMusic === "function") {
       fadeInBgMusic();
     } else if (bgAudio) {
@@ -112,21 +116,10 @@ function setupVoiceNotePlayer() {
       if (letterPlayText) letterPlayText.textContent = "Play";
     }
     applyVoiceVolGain(getVoiceVol());
-    if (bgAudio) {
+    _wasBgPlaying = Boolean(bgAudio && !bgAudio.paused && !bgAudio.ended);
+    if (bgAudio && _wasBgPlaying) {
       const bgVol = getVoiceBgVol();
       bgAudio.volume = bgVol;
-      if (bgAudio.paused && bgVol > 0) {
-        bgAudio.play().catch(() => {});
-        state.musicPlaying = true;
-        const vinyl = document.getElementById("vinylDisc");
-        const widget = document.getElementById("musicPlayerWidget");
-        const icon = document.getElementById("musicPlayIcon");
-        const label = document.getElementById("musicPlayLabel");
-        if (vinyl) vinyl.classList.add("playing");
-        if (widget) widget.classList.add("playing");
-        if (icon) icon.textContent = "⏸️";
-        if (label) label.textContent = "Pause";
-      }
     }
   });
 
@@ -317,7 +310,7 @@ function setupVoiceNotePlayer() {
           const ext = file.name.split('.').pop() || 'mp3';
           const fname = `custom-music.${ext}`;
           const saved = typeof saveAudioToDisk === "function" ? await saveAudioToDisk(dataUrl, fname) : false;
-          const audioPath = saved ? `audio/${fname}` : dataUrl;
+          const audioPath = (typeof saved === "string" && !saved.startsWith("data:")) ? saved : dataUrl;
           state.customMusicAudio = audioPath;
           try { localStorage.setItem("gf_music_audio", audioPath); } catch (err) {}
           if (typeof saveToComputer === "function") await saveToComputer({ gf_music_audio: audioPath });

@@ -48,6 +48,8 @@ let state = {
   bonusLof: 0,
   musicPlaying: false
 };
+window.state = Object.assign(window.state || {}, state);
+state = window.state;
 
 function isAdminEditAllowed() {
   try {
@@ -518,9 +520,14 @@ function initEvents() {
     particles.burst(window.innerWidth / 2, window.innerHeight / 2, 40);
 
     const bgAudio = document.getElementById("bgAudioPlayer");
-    if (bgAudio) {
-      bgAudio.src = currentChosenSong.src;
-      bgAudio.currentTime = 0;
+    if (bgAudio && currentChosenSong) {
+      if (!bgAudio.src || !bgAudio.src.endsWith(currentChosenSong.src)) {
+        bgAudio.src = currentChosenSong.src;
+        bgAudio.currentTime = 0;
+      }
+      if (window.state && window.state.soundtrackAutoplay !== false) {
+        bgAudio.play().catch(() => {});
+      }
     }
 
     setTimeout(() => {
@@ -539,8 +546,10 @@ function initEvents() {
       }
       renderScratchCoupons();
       renderQuizStep();
-      if (!state.musicPlaying) {
-        audio.toggleMusic();
+      if (window.state && window.state.soundtrackAutoplay === false) {
+        if (bgAudio && !bgAudio.paused) bgAudio.pause();
+      } else if (bgAudio && bgAudio.paused) {
+        bgAudio.play().catch(() => {});
       }
       showComplimentToast(window.innerWidth / 2, 100, `🎂 Happy Celebration ${state.partnerName || "Sweetheart"}! Welcome to your magical world! 💖🎉`);
       preloadRemainingImagesProgressively();

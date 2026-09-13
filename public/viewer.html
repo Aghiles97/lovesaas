@@ -18,6 +18,36 @@
         }
         const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
         if (app) app.classList.add("app-revealed");
+        const bgAudio = document.getElementById("bgAudioPlayer");
+        if (window.state && window.state.soundtrackAutoplay === false) {
+          if (bgAudio && !bgAudio.paused) bgAudio.pause();
+        } else if (bgAudio && bgAudio.paused) {
+          const songSrc = (typeof currentChosenSong !== "undefined" && currentChosenSong && currentChosenSong.src)
+            || (window.state && window.state.customMusicAudio)
+            || (typeof state !== "undefined" && state.customMusicAudio)
+            || "taylor-swift-fate-of-ophelia.m4r";
+          const cur = bgAudio.currentSrc || bgAudio.src || "";
+          if (!cur || (!cur.endsWith(songSrc) && cur !== songSrc)) {
+            bgAudio.src = songSrc;
+            bgAudio.currentTime = 0;
+          }
+          const savedVol = parseInt(localStorage.getItem("gf_volume") || "80", 10) / 100;
+          bgAudio.volume = Math.min(Math.max(savedVol, 0), 1);
+          const p = bgAudio.play();
+          if (p !== undefined) {
+            p.catch(() => {
+              const onInteract = () => {
+                if (bgAudio.paused && (!window.state || window.state.soundtrackAutoplay !== false) && !window.IntroEnvelope.isSealed) {
+                  bgAudio.play().catch(() => {});
+                }
+                document.removeEventListener("pointerdown", onInteract);
+                document.removeEventListener("click", onInteract);
+              };
+              document.addEventListener("pointerdown", onInteract, { once: true });
+              document.addEventListener("click", onInteract, { once: true });
+            });
+          }
+        }
         if (window.parent && window.parent !== window) {
           window.parent.postMessage({ type: "PREVIEW_SCREEN_CHANGED", screen: "website" }, window.location.origin);
         }
@@ -34,6 +64,8 @@
         if (card) card.classList.remove("envelope-opening-active");
         const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
         if (app) app.classList.remove("app-revealed");
+        const bgAudio = document.getElementById("bgAudioPlayer");
+        if (bgAudio && !bgAudio.paused) bgAudio.pause();
         if (window.parent && window.parent !== window) {
           window.parent.postMessage({ type: "PREVIEW_SCREEN_CHANGED", screen: "intro" }, window.location.origin);
         }
@@ -55,6 +87,11 @@
   <link rel="stylesheet" href="/public/css/widgets/bucket_list.css">
   <link rel="stylesheet" href="/public/css/widgets/audio_capsule.css">
   <link rel="stylesheet" href="/public/css/widgets/milestone_odyssey.css">
+  <link rel="stylesheet" href="/public/css/widgets/forgiveness_meter.css">
+  <link rel="stylesheet" href="/public/css/widgets/truce_agreement.css">
+  <link rel="stylesheet" href="/public/css/widgets/reform_deck.css">
+  <link rel="stylesheet" href="/public/css/widgets/reparation_coupons.css">
+  <link rel="stylesheet" href="/public/css/widgets/comfort_soundboard.css">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <style>
@@ -106,7 +143,7 @@
   <div id="bubbleContainer" class="bubble-container"></div>
 
     <!-- Floating Music Player & Settings Controls -->
-  <div class="floating-controls">
+  <div class="floating-controls" id="floatingControls">
     <div id="musicPlayerWidget" class="music-player-widget">
       <div class="vinyl-disc" id="vinylDisc">
         <span class="vinyl-center">💿</span>
@@ -959,6 +996,11 @@
   <script src="/core/templates/audio_capsule.template.js"></script>
   <script src="/core/templates/milestone_odyssey.template.js"></script>
   <script src="/core/templates/valentine_scratch.template.js"></script>
+  <script src="/core/templates/forgiveness_meter.template.js"></script>
+  <script src="/core/templates/truce_agreement.template.js"></script>
+  <script src="/core/templates/reform_deck.template.js"></script>
+  <script src="/core/templates/reparation_coupons.template.js"></script>
+  <script src="/core/templates/comfort_soundboard.template.js"></script>
   <script src="/core/widget-templates.js"></script>
   <script src="/public/js/data.js"></script>
   <script src="/public/js/storage.js"></script>
@@ -993,6 +1035,11 @@
   <script src="/public/js/widgets/audio-capsule.runtime.js"></script>
   <script src="/public/js/widgets/milestone-odyssey.runtime.js"></script>
   <script src="/public/js/widgets/valentine-scratch.runtime.js"></script>
+  <script src="/public/js/widgets/forgiveness-meter.runtime.js"></script>
+  <script src="/public/js/widgets/truce-agreement.runtime.js"></script>
+  <script src="/public/js/widgets/reform-deck.runtime.js"></script>
+  <script src="/public/js/widgets/reparation-coupons.runtime.js"></script>
+  <script src="/public/js/widgets/comfort-soundboard.runtime.js"></script>
   <script src="/public/js/games-widgets.js"></script>
   <script src="/public/js/main.js"></script>
   <script src="/core/dynamic-renderer.js"></script>
@@ -1280,8 +1327,77 @@
           if (editBtn) editBtn.style.display = "none";
         }
 
+        function applyMediaSettings(ms) {
+          if (!ms) return;
+          window.state = window.state || (typeof state !== "undefined" ? state : {});
+          if (typeof state !== "undefined") {
+            Object.assign(state, ms);
+          }
+          if (ms.soundtrackAutoplay !== undefined) {
+            window.state.soundtrackAutoplay = !!ms.soundtrackAutoplay;
+            if (typeof state !== "undefined") state.soundtrackAutoplay = !!ms.soundtrackAutoplay;
+          }
+          if (ms.soundtrackLoop !== undefined) {
+            const isLoop = !!ms.soundtrackLoop;
+            window.state.soundtrackLoop = isLoop;
+            if (typeof state !== "undefined") state.soundtrackLoop = isLoop;
+          }
+          if (ms.romanticSfx !== undefined) {
+            const sfx = !!ms.romanticSfx;
+            window.state.romanticSfx = sfx;
+            if (typeof state !== "undefined") state.romanticSfx = sfx;
+          }
+          if (ms.floatingPlayer !== undefined) {
+            const show = ms.floatingPlayer !== false;
+            window.state.floatingPlayer = show;
+            if (typeof state !== "undefined") state.floatingPlayer = show;
+          }
+          if (ms.soundtrackUrl) {
+            window.state.customMusicAudio = ms.soundtrackUrl;
+            if (typeof state !== "undefined") state.customMusicAudio = ms.soundtrackUrl;
+          }
+
+          const bgAudio = document.getElementById("bgAudioPlayer");
+          if (bgAudio) {
+            if (ms.soundtrackUrl) {
+              const cur = bgAudio.currentSrc || bgAudio.src || "";
+              if (!cur || (!cur.endsWith(ms.soundtrackUrl) && cur !== ms.soundtrackUrl)) {
+                const wasPlaying = !bgAudio.paused;
+                bgAudio.src = ms.soundtrackUrl;
+                if (wasPlaying && window.state.soundtrackAutoplay !== false) {
+                  bgAudio.play().catch(() => {});
+                }
+              }
+              window.currentChosenSong = {
+                src: ms.soundtrackUrl,
+                title: ms.soundtrackTitle || "Soundtrack",
+                artist: ms.soundtrackArtist || "Special Choice ✨"
+              };
+              const titleEl = document.querySelector(".song-title");
+              const artistEl = document.querySelector(".song-artist");
+              if (titleEl && ms.soundtrackTitle) titleEl.textContent = ms.soundtrackTitle;
+              if (artistEl && ms.soundtrackArtist) artistEl.textContent = ms.soundtrackArtist;
+            }
+            if (ms.soundtrackLoop !== undefined) bgAudio.loop = !!ms.soundtrackLoop;
+            if (ms.soundtrackVolume !== undefined) {
+              const v = Math.max(0, Math.min(100, Number(ms.soundtrackVolume))) / 100;
+              bgAudio.volume = v;
+              const volSlider = document.getElementById("volumeSlider");
+              if (volSlider) volSlider.value = Math.round(v * 100);
+              const volVal = document.getElementById("volumeVal");
+              if (volVal) volVal.textContent = `${Math.round(v * 100)}%`;
+              localStorage.setItem("gf_volume", Math.round(v * 100));
+            }
+          }
+          const floatingControls = document.getElementById("floatingControls") || document.querySelector(".floating-controls");
+          if (floatingControls && ms.floatingPlayer !== undefined) {
+            floatingControls.style.display = ms.floatingPlayer === false ? "none" : "";
+          }
+          document.body.classList.toggle("hide-floating-player", ms.floatingPlayer === false);
+        }
+
         if (!isLayoutEmpty && typeof setupIntroSoundtrackSelector === "function") {
-          setupIntroSoundtrackSelector(data.sectionsData && data.sectionsData.hero);
+          setupIntroSoundtrackSelector(data.sectionsData && data.sectionsData.hero, data.sectionsData && data.sectionsData.mediaSettings);
         }
 
         window.openAddSectionModal = function(insertIndex) {
@@ -1298,26 +1414,7 @@
           sectionsData: data.sectionsData
         });
 
-        if (data.sectionsData && data.sectionsData.mediaSettings) {
-          const ms = data.sectionsData.mediaSettings;
-          const bgAudio = document.getElementById("bgAudioPlayer");
-          if (bgAudio) {
-            if (ms.soundtrackLoop !== undefined) bgAudio.loop = !!ms.soundtrackLoop;
-            if (ms.soundtrackVolume !== undefined) {
-              const v = Math.max(0, Math.min(100, Number(ms.soundtrackVolume))) / 100;
-              bgAudio.volume = v;
-              const volSlider = document.getElementById("volumeSlider");
-              if (volSlider) volSlider.value = Math.round(v * 100);
-              const volVal = document.getElementById("volumeVal");
-              if (volVal) volVal.textContent = `${Math.round(v * 100)}%`;
-              localStorage.setItem("gf_volume", Math.round(v * 100));
-            }
-          }
-          const floatingControls = document.getElementById("floatingControls");
-          if (floatingControls && ms.floatingPlayer !== undefined) {
-            floatingControls.style.display = ms.floatingPlayer === false ? "none" : "";
-          }
-        }
+        applyMediaSettings(data.sectionsData && data.sectionsData.mediaSettings);
 
         if (isIframe) {
           window.parent.postMessage({ type: "BUILDER_IFRAME_READY" }, window.location.origin);
@@ -1369,22 +1466,13 @@
 
             if (e.data.config.sectionsData && e.data.config.sectionsData.mediaSettings) {
               const ms = e.data.config.sectionsData.mediaSettings;
-              const bgAudio = document.getElementById("bgAudioPlayer");
-              if (bgAudio) {
-                if (ms.soundtrackLoop !== undefined) bgAudio.loop = !!ms.soundtrackLoop;
-                if (ms.soundtrackVolume !== undefined) {
-                  const v = Math.max(0, Math.min(100, Number(ms.soundtrackVolume))) / 100;
-                  bgAudio.volume = v;
-                  const volSlider = document.getElementById("volumeSlider");
-                  if (volSlider) volSlider.value = Math.round(v * 100);
-                  const volVal = document.getElementById("volumeVal");
-                  if (volVal) volVal.textContent = `${Math.round(v * 100)}%`;
-                  localStorage.setItem("gf_volume", Math.round(v * 100));
-                }
-              }
-              const floatingControls = document.getElementById("floatingControls");
-              if (floatingControls && ms.floatingPlayer !== undefined) {
-                floatingControls.style.display = ms.floatingPlayer === false ? "none" : "";
+              applyMediaSettings(ms);
+              if (ms.soundtrackUrl && typeof window.selectAndPlaySong === "function") {
+                window.selectAndPlaySong({
+                  src: ms.soundtrackUrl,
+                  title: ms.soundtrackTitle || "Soundtrack",
+                  artist: ms.soundtrackArtist || "Special Choice ✨"
+                }, { doNotForcePlay: true });
               }
             }
 
@@ -1486,8 +1574,28 @@
             const btn = document.getElementById("musicToggle");
             if (btn) btn.click();
           }
-          if (e.data && e.data.type === "SET_SONG" && typeof window.selectAndPlaySong === "function") {
-            window.selectAndPlaySong(e.data.song);
+          if (e.data && e.data.type === "SET_SONG") {
+            if (typeof window.selectAndPlaySong === "function") {
+              window.selectAndPlaySong(e.data.song);
+            } else if (e.data.song && e.data.song.src) {
+              const s = e.data.song;
+              window.currentChosenSong = s;
+              window.state = window.state || {};
+              window.state.customMusicAudio = s.src;
+              if (typeof state !== "undefined") state.customMusicAudio = s.src;
+              const bgAudio = document.getElementById("bgAudioPlayer");
+              if (bgAudio) {
+                const cur = bgAudio.currentSrc || bgAudio.src || "";
+                if (!cur || (!cur.endsWith(s.src) && cur !== s.src)) {
+                  bgAudio.src = s.src;
+                  bgAudio.currentTime = 0;
+                }
+              }
+              const floatingTitle = document.querySelector(".song-title");
+              const floatingArtist = document.querySelector(".song-artist");
+              if (floatingTitle) floatingTitle.textContent = s.title || "Soundtrack";
+              if (floatingArtist) floatingArtist.textContent = s.artist || "Special Choice ✨";
+            }
           }
           if (e.data && e.data.type === "SET_VOLUME" && e.data.volume !== undefined) {
             const vol = Math.max(0, Math.min(1, Number(e.data.volume)));
@@ -1500,24 +1608,7 @@
             localStorage.setItem("gf_volume", Math.round(vol * 100));
           }
           if (e.data && e.data.type === "MEDIA_SETTINGS_UPDATE" && e.data.mediaSettings) {
-            const ms = e.data.mediaSettings;
-            const bgAudio = document.getElementById("bgAudioPlayer");
-            if (bgAudio) {
-              if (ms.soundtrackLoop !== undefined) bgAudio.loop = !!ms.soundtrackLoop;
-              if (ms.soundtrackVolume !== undefined) {
-                const v = Math.max(0, Math.min(100, Number(ms.soundtrackVolume))) / 100;
-                bgAudio.volume = v;
-                const volSlider = document.getElementById("volumeSlider");
-                if (volSlider) volSlider.value = Math.round(v * 100);
-                const volVal = document.getElementById("volumeVal");
-                if (volVal) volVal.textContent = `${Math.round(v * 100)}%`;
-                localStorage.setItem("gf_volume", Math.round(v * 100));
-              }
-            }
-            const floatingControls = document.getElementById("floatingControls");
-            if (floatingControls && ms.floatingPlayer !== undefined) {
-              floatingControls.style.display = ms.floatingPlayer === false ? "none" : "";
-            }
+            applyMediaSettings(e.data.mediaSettings);
           }
           if (e.data && e.data.type === "PLAYFUL_TRIGGER_YES" && typeof window.playfulTriggerYes === "function") {
             window.playfulTriggerYes();

@@ -1,0 +1,180 @@
+.reparation-coupons-section {
+  padding: 60px 20px;
+  position: relative;
+}
+
+.reparation-coupons-panel {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 36px 28px;
+  background: var(--surface, rgba(255, 255, 255, 0.9));
+  border: 1px solid var(--surface-border, rgba(255, 84, 112, 0.2));
+  border-radius: var(--radius-lg, 28px);
+  box-shadow: var(--shadow-md, 0 8px 24px rgba(255, 84, 112, 0.12));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.reparation-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 24px;
+}
+
+.reparation-coupons-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.reparation-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: var(--radius-md, 18px);
+  border: 2px dashed rgba(255, 84, 112, 0.35);
+  box-shadow: var(--shadow-sm, 0 4px 12px rgba(0, 0, 0, 0.06));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reparation-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md, 0 8px 20px rgba(255, 84, 112, 0.15));
+}
+
+.card-ticket-edge {
+  position: absolute;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  background: var(--surface, #fff0f3);
+  border-radius: 50%;
+  z-index: 5;
+  transform: translateY(-50%);
+}
+.card-ticket-edge.edge-left { left: -10px; }
+.card-ticket-edge.edge-right { right: -10px; }
+
+.reparation-scratch-layer {
+  position: relative;
+  width: 100%;
+  min-height: 210px;
+  overflow: hidden;
+}
+
+.underlying-reward-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  background: linear-gradient(135deg, #fff7ed 0%, #fff1f2 100%);
+  text-align: center;
+}
+
+.reward-pill-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #c2410c;
+  background: rgba(254, 215, 170, 0.6);
+  padding: 3px 10px;
+  border-radius: 50px;
+  margin-bottom: 6px;
+}
+
+.reward-icon {
+  font-size: 2.2rem;
+  margin-bottom: 4px;
+}
+
+.reward-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-main, #33202a);
+  margin-bottom: 6px;
+}
+
+.reward-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted, #7e6772);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.reparation-scratch-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+  touch-action: none;
+  z-index: 3;
+}
+
+.claimed-stamp-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: scale(1.2) rotate(-15deg);
+}
+
+.claimed-stamp-overlay.active {
+  opacity: 1;
+  transform: scale(1) rotate(-12deg);
+}
+
+.stamp-box {
+  padding: 10px 24px;
+  border: 4px solid #dc2626;
+  border-radius: 12px;
+  color: #dc2626;
+  font-family: var(--font-body, monospace);
+  font-size: 1.4rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25);
+}
+
+.reparation-card-footer {
+  padding: 12px 18px;
+  background: #ffffff;
+  border-top: 1px dashed rgba(255, 84, 112, 0.2);
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 6;
+}
+
+.btn-redeem-stamp {
+  width: 100%;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+@media (max-width: 767px) {
+  .reparation-coupons-panel {
+    padding: 24px 16px;
+  }
+  .reparation-coupons-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .reparation-scratch-layer {
+    min-height: 190px;
+  }
+}

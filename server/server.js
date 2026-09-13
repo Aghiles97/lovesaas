@@ -25,7 +25,11 @@ const MIME_TYPES = {
   ".mp3": "audio/mpeg",
   ".m4a": "audio/mp4",
   ".m4r": "audio/mp4",
+  ".aac": "audio/aac",
+  ".flac": "audio/flac",
+  ".weba": "audio/webm",
   ".mp4": "video/mp4",
+  ".webm": "video/webm",
   ".ogg": "audio/ogg",
   ".wav": "audio/wav"
 };
@@ -1005,25 +1009,29 @@ const server = http.createServer(async (req, res) => {
       if (!access.authorized || access.role === "visitor") {
         return sendJson(res, 403, { error: "Purchase now to customize and upload audio files." });
       }
-      const filename = path.basename(body.filename || "audio.webm");
+      const rawName = path.basename(body.filename || "audio.webm");
+      const cleanFilename = rawName.replace(/[^a-zA-Z0-9_.-]/g, "_");
       const dataUrl = body.dataUrl || "";
       if (!dataUrl) return sendJson(res, 400, { error: "Missing audio data" });
       const base64Data = dataUrl.replace(/^data:audio\/\w+;base64,/, "");
       const buf = Buffer.from(base64Data, "base64");
-      const ext = path.extname(filename).toLowerCase();
+      const ext = path.extname(cleanFilename).toLowerCase();
       const mime = MIME_TYPES[ext] || "audio/webm";
-      await r2.uploadBufferToR2(`audio/${filename}`, buf, mime);
-      return sendJson(res, 200, { status: "ok", path: `audio/${filename}` });
+      const targetSlug = slug || "demo";
+      const r2Key = `${targetSlug}/${cleanFilename}`;
+      await r2.uploadBufferToR2(r2Key, buf, mime);
+      const publicPath = `/uploads/${r2Key}`;
+      return sendJson(res, 200, { status: "ok", path: publicPath, url: publicPath, key: cleanFilename });
     } catch (err) {
       return sendJson(res, 500, { error: err.message });
     }
   }
 
-  // POST /api/upload/local (Local upload helper fallback with 10MB limit)
-  if (pathname === "/api/upload/local" && method === "POST") {
+  // POST /api/upload & /api/upload/local (Upload to Cloudflare R2 bucket with 10MB limit)
+  if ((pathname === "/api/upload" || pathname === "/api/upload/local") && method === "POST") {
     const rawKey = String(parsedUrl.query.key || "");
     if (!rawKey || rawKey.includes("..") || path.isAbsolute(rawKey)) return sendJson(res, 400, { error: "Invalid key param" });
-    const key = path.normalize(rawKey);
+    const key = path.normalize(rawKey).replace(/^(\/|\\)+/, "");
     const keyParts = key.split(/[\/\\]/);
     const keySlug = keyParts.length > 1 ? keyParts[0] : null;
     const slug = resolveTenantSlug(req, parsedUrl) || parsedUrl.query.slug || keySlug;
@@ -1052,15 +1060,14 @@ const server = http.createServer(async (req, res) => {
     req.on("end", async () => {
       if (destroyed) return;
       try {
+        if (!r2.isR2Configured) {
+          return sendJson(res, 500, { error: "Cloudflare R2 is not configured" });
+        }
         const buffer = Buffer.concat(chunks);
         const ext = path.extname(key).toLowerCase();
         const ct = MIME_TYPES[ext] || "application/octet-stream";
-        if (r2.isR2Configured) {
-          await r2.uploadBufferToR2(key, buffer, ct);
-        } else {
-          r2.saveLocalFile(key, buffer);
-        }
-        return sendJson(res, 200, { status: "ok", publicUrl: `/uploads/${key}` });
+        const publicUrl = await r2.uploadBufferToR2(key, buffer, ct);
+        return sendJson(res, 200, { status: "ok", publicUrl, key });
       } catch (err) {
         return sendJson(res, 500, { error: err.message });
       }
@@ -1086,10 +1093,14 @@ const server = http.createServer(async (req, res) => {
   // Stream media (images, audio, uploads, demo) directly from Cloudflare R2
   const isR2Media = pathname.startsWith("/images/") || pathname.startsWith("/audio/") || pathname.startsWith("/uploads/") || pathname.startsWith("/demo/");
   if (isR2Media && r2.isR2Configured) {
-    const rawKey = pathname.replace(/^\//, "");
-    const candidateKeys = [rawKey];
-    if (rawKey.startsWith("uploads/")) candidateKeys.push(rawKey.replace(/^uploads\//, ""));
-    else candidateKeys.push(`uploads/${rawKey}`);
+    let rawKey = pathname.replace(/^\//, "");
+    try { rawKey = decodeURIComponent(rawKey); } catch (e) {}
+    const candidateKeys = [];
+    if (rawKey.startsWith("uploads/")) {
+      candidateKeys.push(rawKey.replace(/^uploads\//, ""), rawKey);
+    } else {
+      candidateKeys.push(rawKey, `uploads/${rawKey}`);
+    }
     if (rawKey.startsWith("images/")) {
       const base = rawKey.replace(/^images\//, "");
       candidateKeys.push(`demo/${base}`, `uploads/demo/${base}`);
@@ -1105,19 +1116,25 @@ const server = http.createServer(async (req, res) => {
     }
     try {
       let r2Obj = null;
+      const rangeReq = req.headers.range || null;
       for (const k of candidateKeys) {
-        r2Obj = await r2.getObjectFromR2(k);
+        r2Obj = await r2.getObjectFromR2(k, rangeReq);
         if (r2Obj && r2Obj.Body) break;
       }
       if (r2Obj && r2Obj.Body) {
         const ext = path.extname(pathname).toLowerCase();
         const mime = r2Obj.ContentType || MIME_TYPES[ext] || "application/octet-stream";
         const isThemeMedia = pathname.startsWith("/images/themes/");
-        res.writeHead(200, {
+        const isPartial = Boolean(rangeReq && r2Obj.ContentRange);
+        const headers = {
           "Content-Type": mime,
           "Access-Control-Allow-Origin": "*",
+          "Accept-Ranges": "bytes",
           "Cache-Control": isThemeMedia ? "no-cache, must-revalidate" : "public, max-age=86400"
-        });
+        };
+        if (r2Obj.ContentRange) headers["Content-Range"] = r2Obj.ContentRange;
+        if (r2Obj.ContentLength) headers["Content-Length"] = r2Obj.ContentLength;
+        res.writeHead(isPartial ? 206 : 200, headers);
         r2Obj.Body.pipe(res);
         return;
       }

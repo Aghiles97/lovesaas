@@ -272,7 +272,11 @@ function setupLoveLetterFeatures() {
     return Math.min(Math.max(isNaN(num) ? 7 : num, 0), 100) / 100;
   };
 
+  let _wasBgPlaying = false;
+
   const restoreBgVolume = () => {
+    if (!_wasBgPlaying) return;
+    _wasBgPlaying = false;
     if (typeof fadeInBgMusic === "function") {
       fadeInBgMusic();
     } else if (bgAudio) {
@@ -410,21 +414,10 @@ function setupLoveLetterFeatures() {
       if (voicePlayText) voicePlayText.textContent = "Listen";
     }
     applyLetterVoiceVolGain(getLetterVoiceVol());
-    if (bgAudio) {
+    _wasBgPlaying = Boolean(bgAudio && !bgAudio.paused && !bgAudio.ended);
+    if (bgAudio && _wasBgPlaying) {
       const bgVol = getLetterBgVol();
       bgAudio.volume = bgVol;
-      if (bgAudio.paused && bgVol > 0) {
-        bgAudio.play().catch(() => {});
-        state.musicPlaying = true;
-        const vinyl = document.getElementById("vinylDisc");
-        const widget = document.getElementById("musicPlayerWidget");
-        const icon = document.getElementById("musicPlayIcon");
-        const label = document.getElementById("musicPlayLabel");
-        if (vinyl) vinyl.classList.add("playing");
-        if (widget) widget.classList.add("playing");
-        if (icon) icon.textContent = "⏸️";
-        if (label) label.textContent = "Pause";
-      }
     }
     if (playIcon) playIcon.textContent = "⏸️";
     if (playText) playText.textContent = "Pause";

@@ -82,6 +82,11 @@ const DEFAULT_PRESETS = {
     "roast_toast",
     "guestbook",
     "party_jukebox",
+    "forgiveness_meter",
+    "truce_agreement",
+    "reform_deck",
+    "reparation_coupons",
+    "comfort_soundboard",
     "letter"
   ],
   valentine: [
@@ -119,6 +124,11 @@ const DEFAULT_PRESETS = {
     "quiz",
     "letter",
     "valentine_scratch",
+    "forgiveness_meter",
+    "truce_agreement",
+    "reform_deck",
+    "reparation_coupons",
+    "comfort_soundboard",
     "playful"
   ],
   minimal_gallery: ["hero", "memories", "letter"]
@@ -1142,6 +1152,135 @@ const DEFAULT_SECTIONS_DATA = {
     dressCode: "Dress to impress & warm coat 💃🕺",
     message: "Every single day with you is Valentine's Day. I can't wait for our special night together! ❤️",
     overlayColor: "#e84393"
+  },
+  forgiveness_meter: {
+    tag: "Emotional Barometer 💓",
+    title: "Forgiveness Meter for Ella",
+    desc: "Slide to adjust how forgiven I am today. Full forgiveness unlocks a special celebration reward!",
+    sliderMinLabel: "Furious 😤",
+    sliderMidLabel: "Slightly Annoyed 🙄",
+    sliderMaxLabel: "Truce 🥰",
+    sliderVal: 0,
+    rewardBadge: "🌟 Level 100 Peace",
+    rewardTitle: "Forgiveness Granted! 🎉",
+    rewardMessage: "Thank you for choosing peace, Ella. I love you endlessly!",
+    rewardBtnText: "Claim Your Reconciliation Gift 🎁"
+  },
+  truce_agreement: {
+    tag: "Diplomatic Accord 🕊️",
+    title: "Bilateral Peace & Truce Treaty",
+    desc: "Review the sacred covenants below. Press and hold the seal to ratify our peace accord.",
+    party1: "Aghiles",
+    party2: "Ella",
+    holdDurationSec: 3,
+    downloadBtnText: "📜 Download Ratified Treaty PDF",
+    signedDate: "September 13, 2026",
+    terms: [
+      "I promise to listen with an open, non-defensive heart whenever you speak.",
+      "I promise immediate hugs, comfort, and soothing reassurance on demand.",
+      "I promise never to let anger linger past sundown without reconciliation.",
+      "I promise to prioritize our connection, empathy, and love over individual pride."
+    ]
+  },
+  reform_deck: {
+    tag: "Accountability & Reform 🃏",
+    title: "The Honest Reform Deck",
+    desc: "Words alone are not enough. Flip each card to inspect the apology, true accountability, and actionable promise.",
+    cards: [
+      {
+        frontTitle: "Listening Without Defensiveness",
+        icon: "👂",
+        apology: "I am truly sorry for reacting defensively when you were expressing vulnerability.",
+        accountability: "I acknowledge that making it about my feelings dismissed your valid experience.",
+        commitment: "I commit to breathing, listening completely, and validating you before speaking."
+      },
+      {
+        frontTitle: "Consistent Communication",
+        icon: "💬",
+        apology: "I apologize for going quiet or taking too long to communicate when overwhelmed.",
+        accountability: "I understand that emotional distance creates anxiety and hurts our closeness.",
+        commitment: "I promise to stay transparent, give gentle updates, and never shut you out."
+      },
+      {
+        frontTitle: "Patience & Gentle Tone",
+        icon: "🕊️",
+        apology: "I am deeply sorry for any sharpness, frustration, or impatience in my tone.",
+        accountability: "You deserve softness, gentleness, and respect in every single interaction.",
+        commitment: "I will maintain gentleness and speak from love, especially during tough talks."
+      },
+      {
+        frontTitle: "Presence & Undivided Attention",
+        icon: "✨",
+        apology: "I apologize for moments where distractions robbed us of our quality moments.",
+        accountability: "Your time is precious and you deserve my undivided presence and gaze.",
+        commitment: "No phones or distractions during our dates and heart-to-heart talks."
+      }
+    ]
+  },
+  reparation_coupons: {
+    tag: "Restitution & Amends 🎟️",
+    title: "Reparation Coupons for Ella",
+    desc: "Scratch the surface to reveal your guaranteed compensation coupon, then mark it redeemed whenever you cash it in!",
+    coupons: [
+      {
+        id: "coupon_massage",
+        title: "Full 30-Min Relaxation Massage",
+        desc: "Complete pampering session with essential oils, soft music, and zero complaints.",
+        icon: "💆‍♀️",
+        badge: "Ultra Pamper",
+        isRedeemed: false
+      },
+      {
+        id: "coupon_argument",
+        title: "Unconditional Argument Concession",
+        desc: "Present this ticket to instantly win any debate or disagreement on the spot.",
+        icon: "🏳️",
+        badge: "Golden Pass",
+        isRedeemed: false
+      },
+      {
+        id: "coupon_breakfast",
+        title: "VIP Breakfast in Bed",
+        desc: "Fresh coffee, pastries, fruit, and breakfast favorites served directly to your bedside.",
+        icon: "🥐",
+        badge: "Room Service",
+        isRedeemed: false
+      },
+      {
+        id: "coupon_date_night",
+        title: "Executive Date Night Decider",
+        desc: "You choose the movie, the restaurant, the dessert, and the playlist. 100% your choice.",
+        icon: "🎬",
+        badge: "All-Access",
+        isRedeemed: false
+      }
+    ]
+  },
+  comfort_soundboard: {
+    tag: "Sanctuary of Peace 🎧",
+    title: "Comfort & Calming Soundboard",
+    desc: "A dedicated quiet space for Ella to unwind, listen to calming soundscapes, and flip through serene memories.",
+    sounds: [
+      { id: "rain", name: "Soft Rainfall", icon: "🌧️", volume: 65 },
+      { id: "fireplace", name: "Warm Hearth", icon: "🔥", volume: 50 },
+      { id: "waves", name: "Ocean Shoreline", icon: "🌊", volume: 45 },
+      { id: "breeze", name: "Night Breeze", icon: "🍃", volume: 35 },
+      { id: "coffee", name: "Cozy Cafe", icon: "☕", volume: 30 }
+    ],
+    photos: [
+      {
+        url: "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=800&q=80",
+        caption: "Golden sunlight drifting through gentle forest leaves 🍃"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+        caption: "Tidal waves carrying every single worry away into the sea 🌊"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=80",
+        caption: "Infinite quiet stars watching over our eternal bond ✨"
+      }
+    ]
   }
 };
 

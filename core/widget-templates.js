@@ -39,7 +39,12 @@ if (typeof module !== "undefined" && module.exports) {
     bucket_list: require("./templates/bucket_list.template.js"),
     audio_capsule: require("./templates/audio_capsule.template.js"),
     milestone_odyssey: require("./templates/milestone_odyssey.template.js"),
-    valentine_scratch: require("./templates/valentine_scratch.template.js")
+    valentine_scratch: require("./templates/valentine_scratch.template.js"),
+    forgiveness_meter: require("./templates/forgiveness_meter.template.js"),
+    truce_agreement: require("./templates/truce_agreement.template.js"),
+    reform_deck: require("./templates/reform_deck.template.js"),
+    reparation_coupons: require("./templates/reparation_coupons.template.js"),
+    comfort_soundboard: require("./templates/comfort_soundboard.template.js")
   };
   module.exports = { WIDGET_TEMPLATES };
 }

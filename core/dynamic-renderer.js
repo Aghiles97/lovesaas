@@ -641,6 +641,21 @@ class DynamicRenderer {
       valentine_scratch: () => {
         if (typeof setupValentineScratch === "function") try { setupValentineScratch(sectionsData.valentine_scratch); } catch (e) {}
       },
+      forgiveness_meter: () => {
+        if (typeof setupForgivenessMeter === "function") try { setupForgivenessMeter(sectionsData.forgiveness_meter, hero); } catch (e) {}
+      },
+      truce_agreement: () => {
+        if (typeof setupTruceAgreement === "function") try { setupTruceAgreement(sectionsData.truce_agreement, hero); } catch (e) {}
+      },
+      reform_deck: () => {
+        if (typeof setupReformDeck === "function") try { setupReformDeck(sectionsData.reform_deck, hero); } catch (e) {}
+      },
+      reparation_coupons: () => {
+        if (typeof setupReparationCoupons === "function") try { setupReparationCoupons(sectionsData.reparation_coupons, hero); } catch (e) {}
+      },
+      comfort_soundboard: () => {
+        if (typeof setupComfortSoundboard === "function") try { setupComfortSoundboard(sectionsData.comfort_soundboard, hero); } catch (e) {}
+      },
       hero: () => {
         if (typeof setupQuintillionObserver === "function") try { setupQuintillionObserver(); } catch (e) {}
         if (typeof updateQuintillionLive === "function") try { updateQuintillionLive(); } catch (e) {}

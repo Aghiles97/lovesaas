@@ -1478,6 +1478,10 @@ body.letter-unsealed .floating-controls {
   transform: translateY(0);
 }
 
+body.hide-floating-player .floating-controls {
+  display: none !important;
+}
+
 .music-player-widget {
   background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(12px);

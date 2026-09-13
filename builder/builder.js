@@ -1696,7 +1696,22 @@ const WIDGET_CATEGORIES = {
   audio_capsule: 'Voice Vault',
   milestone_odyssey: 'Journey Map',
   valentine_scratch: 'Valentine Scratchcard',
+  forgiveness_meter: 'Forgiveness Meter',
+  truce_agreement: 'Truce Agreement',
+  reform_deck: 'Reform Deck',
+  reparation_coupons: 'Reparation Coupons',
+  comfort_soundboard: 'Comfort Soundboard',
 };
+
+const WIDGET_LABELS = {
+  ...WIDGET_CATEGORIES,
+  forgiveness_meter: 'Forgiveness Meter',
+  truce_agreement: 'Truce Agreement',
+  reform_deck: 'Reform Deck',
+  reparation_coupons: 'Reparation Coupons',
+  comfort_soundboard: 'Comfort Soundboard',
+};
+if (typeof window !== 'undefined') window.WIDGET_LABELS = WIDGET_LABELS;
 
 let activeMediaPickerCallback = null;
 let activePickerFilter = 'all';
@@ -2379,7 +2394,7 @@ async function uploadFileToR2(file) {
   if (useFallback) {
     const localUrl = (dest.mode === 'local' && dest.uploadUrl)
       ? dest.uploadUrl
-      : `/api/upload/local?slug=${encodeURIComponent(state.slug)}&key=${encodeURIComponent(dest.key)}${state.authToken ? `&token=${encodeURIComponent(state.authToken)}` : ''}`;
+      : `/api/upload?slug=${encodeURIComponent(state.slug)}&key=${encodeURIComponent(dest.key)}${state.authToken ? `&token=${encodeURIComponent(state.authToken)}` : ''}`;
     uploadRes = await fetch(localUrl, {
       method: 'POST',
       headers: uploadHeaders,
@@ -3379,6 +3394,34 @@ function bindMediaSettingsControls(container, prefix = 'ms_') {
   const voiceVolIcon = container.querySelector('#' + prefix + 'voice_vol_icon');
   const testVoiceBtn = container.querySelector('#' + prefix + 'btn_test_voice');
 
+  const postMediaSettingsUpdate = () => {
+    if (previewIframe && previewIframe.contentWindow) {
+      previewIframe.contentWindow.postMessage(
+        {
+          type: 'MEDIA_SETTINGS_UPDATE',
+          mediaSettings: ms,
+        },
+        window.location.origin,
+      );
+    }
+  };
+
+  const postSongToPreview = (src, title = '', artist = '') => {
+    if (previewIframe && previewIframe.contentWindow && src) {
+      previewIframe.contentWindow.postMessage(
+        {
+          type: 'SET_SONG',
+          song: {
+            title: title || ms.soundtrackTitle || 'Soundtrack',
+            artist: artist || ms.soundtrackArtist || 'Special Choice ✨',
+            src,
+          },
+        },
+        window.location.origin,
+      );
+    }
+  };
+
   // Preset dropdown
   if (presetEl) {
     presetEl.onchange = (e) => {
@@ -3396,16 +3439,9 @@ function bindMediaSettingsControls(container, prefix = 'ms_') {
           if (titleEl) titleEl.value = ms.soundtrackTitle;
         }
         if (urlEl) urlEl.value = val;
-        if (previewIframe && previewIframe.contentWindow) {
-          previewIframe.contentWindow.postMessage(
-            {
-              type: 'SET_SONG',
-              song: { title, artist, src: val },
-            },
-            window.location.origin,
-          );
-        }
+        postSongToPreview(val, title, artist);
       }
+      postMediaSettingsUpdate();
       debouncedLiveUpdate(true);
       debouncedAutoSaveLayout();
     };
@@ -3416,6 +3452,8 @@ function bindMediaSettingsControls(container, prefix = 'ms_') {
     titleEl.oninput = (e) => {
       ms.soundtrackTitle = e.target.value.trim();
       hero.musicTrackTitle = ms.soundtrackTitle;
+      postSongToPreview(ms.soundtrackUrl, ms.soundtrackTitle);
+      postMediaSettingsUpdate();
       debouncedLiveUpdate();
       debouncedAutoSaveLayout();
     };
@@ -3437,6 +3475,8 @@ function bindMediaSettingsControls(container, prefix = 'ms_') {
         else presetEl.value = 'custom';
         ms.soundtrackPreset = presetEl.value;
       }
+      postSongToPreview(v, ms.soundtrackTitle);
+      postMediaSettingsUpdate();
       debouncedLiveUpdate();
       debouncedAutoSaveLayout();
     };
@@ -3469,6 +3509,8 @@ function bindMediaSettingsControls(container, prefix = 'ms_') {
             hero.musicTrackTitle = autoTitle;
             if (titleEl) titleEl.value = autoTitle;
           }
+          postSongToPreview(url, ms.soundtrackTitle);
+          postMediaSettingsUpdate();
           debouncedLiveUpdate(true);
           debouncedAutoSaveLayout();
         },
@@ -3509,6 +3551,8 @@ function bindMediaSettingsControls(container, prefix = 'ms_') {
           statusSoundtrackEl.textContent = `✓ Uploaded (${(file.size / (1024 * 1024)).toFixed(2)} MB)!`;
           statusSoundtrackEl.style.color = '#2ed573';
         }
+        postSongToPreview(publicUrl, customTitle);
+        postMediaSettingsUpdate();
         debouncedLiveUpdate(true);
         debouncedAutoSaveLayout();
       } catch (err) {
@@ -3523,6 +3567,9 @@ function bindMediaSettingsControls(container, prefix = 'ms_') {
   // Test soundtrack button
   if (testSoundtrackBtn) {
     testSoundtrackBtn.onclick = () => {
+      if (ms.soundtrackUrl) {
+        postSongToPreview(ms.soundtrackUrl, ms.soundtrackTitle);
+      }
       if (previewIframe && previewIframe.contentWindow) {
         previewIframe.contentWindow.postMessage({ type: 'MUSIC_TOGGLE' }, window.location.origin);
       }
@@ -3572,15 +3619,7 @@ function bindMediaSettingsControls(container, prefix = 'ms_') {
     if (!el) return;
     el.onchange = () => {
       ms[key] = el.checked;
-      if (previewIframe && previewIframe.contentWindow) {
-        previewIframe.contentWindow.postMessage(
-          {
-            type: 'MEDIA_SETTINGS_UPDATE',
-            mediaSettings: ms,
-          },
-          window.location.origin,
-        );
-      }
+      postMediaSettingsUpdate();
       debouncedLiveUpdate(true);
       debouncedAutoSaveLayout();
     };
@@ -3977,18 +4016,18 @@ function renderSiteSettingsUI() {
   ];
 
   const otherOccasions = [
-    { id: 'theme-apology', name: 'Sincere Apology 🕊️', color: '#3a86ff' },
-    { id: 'theme-anniversary', name: 'Anniversary 💍', color: '#c9184a' },
-    { id: 'theme-scrapbook', name: 'Scrapbook 📖', color: '#b05d3b' },
+    { id: 'theme-apology', name: 'Sincere Apology 🕊️', desc: 'Serene blues & heartfelt tone', color: '#3a86ff', bg: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', icon: '🕊️', category: 'palette' },
+    { id: 'theme-anniversary', name: 'Anniversary 💍', desc: 'Crimson rose & gold romance', color: '#c9184a', bg: 'linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)', icon: '💍', category: 'palette' },
+    { id: 'theme-scrapbook', name: 'Scrapbook 📖', desc: 'Craft paper & warm nostalgia', color: '#b05d3b', bg: 'linear-gradient(135deg, #fef3c7 0%, #fae8bf 100%)', icon: '📖', category: 'palette' },
   ];
 
   const colorThemes = [
-    { id: 'theme-pink', name: 'Romantic Rose', color: '#ff4d6d' },
-    { id: 'theme-midnight', name: 'Ocean Blue', color: '#3b82f6' },
-    { id: 'theme-purple', name: 'Lavender Dream', color: '#9b5de5' },
-    { id: 'theme-gold', name: 'Sunset Gold', color: '#f77f00' },
-    { id: 'theme-emerald', name: 'Emerald Garden', color: '#10b981' },
-    { id: 'theme-peach', name: 'Warm Peach', color: '#f97316' },
+    { id: 'theme-pink', name: 'Romantic Rose', desc: 'Vibrant pink & velvet blush', color: '#ff4d6d', bg: 'linear-gradient(135deg, #fff0f3 0%, #ffd1dc 100%)', icon: '🌹', category: 'palette' },
+    { id: 'theme-midnight', name: 'Ocean Blue', desc: 'Calm twilight deep blue', color: '#3b82f6', bg: 'linear-gradient(135deg, #eff6ff 0%, #bfdbfe 100%)', icon: '🌊', category: 'palette' },
+    { id: 'theme-purple', name: 'Lavender Dream', desc: 'Ethereal lilac & purple haze', color: '#9b5de5', bg: 'linear-gradient(135deg, #faf5ff 0%, #e9d5ff 100%)', icon: '🔮', category: 'palette' },
+    { id: 'theme-gold', name: 'Sunset Gold', desc: 'Warm amber & golden glow', color: '#f77f00', bg: 'linear-gradient(135deg, #fffbeb 0%, #fde68a 100%)', icon: '🌅', category: 'palette' },
+    { id: 'theme-emerald', name: 'Emerald Garden', desc: 'Fresh mint & lush forest', color: '#10b981', bg: 'linear-gradient(135deg, #f0fdf4 0%, #bbf7d0 100%)', icon: '🌿', category: 'palette' },
+    { id: 'theme-peach', name: 'Warm Peach', desc: 'Soft apricot & sunny warmth', color: '#f97316', bg: 'linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%)', icon: '🍑', category: 'palette' },
   ];
 
   let currentTheme = state.themeId || 'theme-pink';
@@ -4004,6 +4043,39 @@ function renderSiteSettingsUI() {
   else if (currentTheme.endsWith('-16-9') || currentTheme.endsWith('-9-16')) {
     currentTheme = currentTheme.replace(/-(16-9|9-16)$/, '');
   }
+
+  const categoryLabels = {
+    birthday: '🎂 Birthday',
+    illustrated: '✨ Art Style',
+    wallpaper: '🖼️ Wallpaper',
+    palette: '🎨 Color Palette',
+  };
+
+  const customThemes = (state.sectionsData.customThemes || []).map((t) => ({
+    ...t,
+    category: 'wallpaper',
+    isCustom: true,
+  }));
+
+  const allThemes = [
+    ...birthdayThemes.map((t) => ({ ...t, category: 'birthday' })),
+    ...artStyles.map((t) => ({ ...t, category: 'illustrated' })),
+    ...customThemes,
+    ...imageBackgroundThemes.map((t) => ({ ...t, category: 'wallpaper' })),
+    ...otherOccasions,
+    ...colorThemes,
+  ];
+
+  const activeTheme =
+    allThemes.find((t) => t.id === currentTheme) || allThemes[0];
+
+  if (typeof window._themeCatalogExpanded !== 'boolean') {
+    window._themeCatalogExpanded = false;
+  }
+  if (!window._themeCategoryFilter) {
+    window._themeCategoryFilter = 'all';
+  }
+
   const safeDateVal = (hero.anniversaryDate || '2024-02-14').split('T')[0];
   const publicSiteUrl = `${window.location.origin}/sites/${encodeURIComponent(state.slug)}`;
 
@@ -4055,117 +4127,106 @@ function renderSiteSettingsUI() {
       </div>
     </div>
 
-    <!-- Visual Theme Card -->
-    <div class="settings-group-card">
-      <div class="settings-group-title"><span>🎂</span> Birthday Theme & Background Variations</div>
-      <div style="font-size: 11px; color: var(--text-muted, #64748b); margin-bottom: 10px;">Select from 9 unique birthday designs & illustrated background art:</div>
-      <div class="theme-chips-grid" style="grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;">
-        ${birthdayThemes
-          .map(
-            (t) => `
-          <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden;">
-            <div style="width: 100%; height: 65px; background: ${t.bg}; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; position: relative; box-shadow: inset 0 0 10px rgba(0,0,0,0.05);">
-              <span style="font-size: 26px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">${t.icon}</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
-              <span class="theme-color-dot" style="background: ${t.color}"></span>
-              <span style="font-weight: 700; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.name}</span>
-            </div>
-            <span style="font-size: 10px; color: var(--text-muted, #64748b); font-weight: normal; line-height: 1.25;">${t.desc}</span>
+    <!-- Visual Theme Manager Card -->
+    <div class="settings-group-card theme-manager-card">
+      <div class="theme-manager-header">
+        <div class="settings-group-title" style="margin-bottom: 0;">
+          <span>🎨</span> Website Theme & Style
+        </div>
+        <div class="theme-header-actions">
+          <button type="button" id="btnOpenAddThemeModal" class="btn-ghost-admin" title="Create Custom Theme (Admin)">
+            <span>+</span> Custom (Admin)
           </button>
-        `,
-          )
-          .join('')}
-      </div>
-
-      <div class="settings-group-title" style="font-size: 12px; opacity: 0.9; margin-top: 6px;"><span>✨</span> Illustrated Romance & Art Styles</div>
-      <div style="font-size: 11px; color: var(--text-muted, #64748b); margin-bottom: 10px;">Select from 3 illustrated aesthetics (Watercolor Frame, Pop Stickers, Sketch Tapestry):</div>
-      <div class="theme-chips-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px;">
-        ${artStyles
-          .map(
-            (t) => `
-          <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden;">
-            <div style="width: 100%; height: 65px; background: url('${t.img}') center/cover no-repeat; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1);"></div>
-            <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
-              <span class="theme-color-dot" style="background: ${t.color}"></span>
-              <span style="font-weight: 700; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.name}</span>
-            </div>
-            <span style="font-size: 10px; color: var(--text-muted, #64748b); font-weight: normal; line-height: 1.25;">${t.desc}</span>
+          <button type="button" id="btnToggleThemeCatalog" class="btn-theme-expand ${window._themeCatalogExpanded ? 'expanded' : ''}" title="Toggle theme list">
+            <span class="btn-expand-text">${window._themeCatalogExpanded ? 'Collapse ▲' : `Browse Themes (${allThemes.length}) ▾`}</span>
           </button>
-        `,
-          )
-          .join('')}
+        </div>
       </div>
 
-      <div class="settings-group-title" style="font-size: 13px; font-weight: 700; margin-top: 14px;"><span>🖼️</span> Background Wallpaper & Imagery</div>
-      <div style="font-size: 11px; color: var(--text-muted, #64748b); margin-bottom: 10px;">Select a wallpaper preset or create your own custom theme:</div>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <span style="font-size: 11px; font-weight: 600; color: var(--text-muted, #64748b);">Wallpaper Presets & Custom Themes:</span>
-        <button type="button" id="btnOpenAddThemeModal" class="btn-sm btn-primary" style="padding: 3px 8px; font-size: 11px; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;"><span>+</span> Add Theme (Admin)</button>
-      </div>
-      <div class="theme-chips-grid" style="grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;">
-        ${(state.sectionsData.customThemes || [])
-          .map(
-            (t) => `
-          <div style="position: relative; width: 100%;">
-            <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden; width: 100%; border: 1px solid rgba(225,29,72,0.35);">
-              <div style="width: 100%; height: 75px; background: ${t.color || '#e11d48'} url('${escapeHtml(t.desktopImg || t.mobileImg)}') center/cover no-repeat; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1); position: relative;">
-                <span style="position: absolute; top: 4px; left: 4px; background: rgba(225,29,72,0.85); color: #fff; font-size: 9px; padding: 2px 5px; border-radius: 4px; font-weight: 700;">CUSTOM</span>
-              </div>
-              <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
-                <span class="theme-color-dot" style="background: ${t.color || '#e11d48'}"></span>
-                <span style="font-weight: 700; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(t.name)}</span>
-              </div>
-              <span style="font-size: 10px; color: var(--text-muted, #64748b); font-weight: normal; line-height: 1.2;">${escapeHtml(t.desc || 'Custom 16:9 & 9:16 theme')}</span>
-            </button>
-            <button type="button" class="btn-delete-custom-theme" data-theme-id="${escapeHtml(t.id)}" title="Delete theme (Admin only)" style="position: absolute; top: 6px; right: 6px; background: rgba(239,68,68,0.9); color: white; border: none; border-radius: 4px; padding: 3px 6px; font-size: 10px; cursor: pointer; z-index: 2;">🗑️</button>
+      <!-- Active Theme Banner (Always Visible) -->
+      <div class="theme-active-banner">
+        <div class="theme-active-preview" id="themeActiveBannerThumb" style="${activeTheme.img ? `background-image: url('${activeTheme.img}');` : activeTheme.isCustom && (activeTheme.desktopImg || activeTheme.mobileImg) ? `background-image: url('${escapeHtml(activeTheme.desktopImg || activeTheme.mobileImg)}');` : `background: ${activeTheme.bg || activeTheme.color};`}">
+          ${!activeTheme.img && (!activeTheme.isCustom || (!activeTheme.desktopImg && !activeTheme.mobileImg)) ? `<span class="theme-active-icon" id="themeActiveBannerIcon">${activeTheme.icon || '🎨'}</span>` : '<span class="theme-active-icon" id="themeActiveBannerIcon" style="display:none;"></span>'}
+        </div>
+        <div class="theme-active-info">
+          <div class="theme-active-meta">
+            <span class="theme-active-badge">ACTIVE THEME</span>
+            <span class="theme-active-category" id="themeActiveBannerCat">${categoryLabels[activeTheme.category] || '🎨 Theme'}</span>
           </div>
-        `,
-          )
-          .join('')}
-        ${imageBackgroundThemes
-          .map(
-            (t) => `
-          <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}" style="padding: 8px; display: flex; flex-direction: column; align-items: flex-start; text-align: left; gap: 6px; border-radius: 10px; overflow: hidden;">
-            <div style="width: 100%; height: 75px; background: url('${t.img}') center/cover no-repeat; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1);"></div>
-            <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
-              <span class="theme-color-dot" style="background: ${t.color}"></span>
-              <span style="font-weight: 700; font-size: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.name}</span>
+          <div class="theme-active-name" id="themeActiveBannerName" title="${escapeHtml(activeTheme.name)}">
+            <span class="theme-color-dot" id="themeActiveBannerDot" style="background: ${activeTheme.color}"></span>
+            <strong id="themeActiveBannerTitle">${escapeHtml(activeTheme.name)}</strong>
+          </div>
+          <div class="theme-active-desc" id="themeActiveBannerDesc">${escapeHtml(activeTheme.desc || '')}</div>
+        </div>
+        <button type="button" id="btnQuickExpandThemes" class="theme-active-change-btn" title="Expand or collapse themes">
+          <span class="change-btn-text">${window._themeCatalogExpanded ? '▲ Collapse' : '⚡ Change'}</span>
+        </button>
+      </div>
+
+      <!-- Collapsible Theme Drawer -->
+      <div class="theme-catalog-drawer ${window._themeCatalogExpanded ? 'expanded' : 'collapsed'}" id="themeCatalogDrawer">
+        <!-- Category Filter Pills -->
+        <div class="theme-category-nav">
+          <button type="button" class="theme-cat-pill ${window._themeCategoryFilter === 'all' ? 'active' : ''}" data-category="all">
+            <span>🌟</span> All (${allThemes.length})
+          </button>
+          <button type="button" class="theme-cat-pill ${window._themeCategoryFilter === 'birthday' ? 'active' : ''}" data-category="birthday">
+            <span>🎂</span> Birthday (${birthdayThemes.length})
+          </button>
+          <button type="button" class="theme-cat-pill ${window._themeCategoryFilter === 'illustrated' ? 'active' : ''}" data-category="illustrated">
+            <span>✨</span> Art Styles (${artStyles.length})
+          </button>
+          <button type="button" class="theme-cat-pill ${window._themeCategoryFilter === 'wallpaper' ? 'active' : ''}" data-category="wallpaper">
+            <span>🖼️</span> Wallpapers (${imageBackgroundThemes.length + customThemes.length})
+          </button>
+          <button type="button" class="theme-cat-pill ${window._themeCategoryFilter === 'palette' ? 'active' : ''}" data-category="palette">
+            <span>🎨</span> Palettes (${otherOccasions.length + colorThemes.length})
+          </button>
+        </div>
+
+        <!-- Grid of Themes -->
+        <div class="theme-catalog-grid" id="themeCatalogGrid">
+          ${allThemes
+            .map((t) => {
+              const isActive = currentTheme === t.id;
+              const isHidden =
+                window._themeCategoryFilter !== 'all' &&
+                window._themeCategoryFilter !== t.category;
+              const bgStyle = t.img
+                ? `background-image: url('${t.img}');`
+                : t.isCustom && (t.desktopImg || t.mobileImg)
+                  ? `background-image: url('${escapeHtml(t.desktopImg || t.mobileImg)}');`
+                  : `background: ${t.bg || t.color};`;
+              return `
+            <div class="theme-card-wrapper" data-category="${t.category}" style="${isHidden ? 'display: none;' : ''}">
+              <button type="button" class="theme-chip-btn ${isActive ? 'active' : ''}" data-theme="${t.id}" title="${escapeHtml(t.name)}">
+                <div class="theme-card-thumb" style="${bgStyle}">
+                  ${t.isCustom ? `<span class="theme-badge-custom">CUSTOM</span>` : ''}
+                  ${!t.img && (!t.isCustom || (!t.desktopImg && !t.mobileImg)) ? `<span class="theme-card-icon">${t.icon || '🎨'}</span>` : ''}
+                  ${isActive ? `<span class="theme-badge-active">✓ Active</span>` : ''}
+                </div>
+                <div class="theme-card-body">
+                  <div class="theme-card-title">
+                    <span class="theme-color-dot" style="background: ${t.color}"></span>
+                    <span>${escapeHtml(t.name)}</span>
+                  </div>
+                  <span class="theme-card-desc">${escapeHtml(t.desc || '')}</span>
+                </div>
+              </button>
+              ${t.isCustom ? `<button type="button" class="btn-delete-custom-theme" data-theme-id="${escapeHtml(t.id)}" title="Delete custom theme">🗑️</button>` : ''}
             </div>
-            <span style="font-size: 10px; color: var(--text-muted, #64748b); font-weight: normal; line-height: 1.2;">${t.desc}</span>
-          </button>
-        `,
-          )
-          .join('')}
-      </div>
+          `;
+            })
+            .join('')}
+        </div>
 
-      <div class="settings-group-title" style="font-size: 12px; opacity: 0.9; margin-top: 6px;"><span>💌</span> Other Occasions</div>
-      <div class="theme-chips-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 14px;">
-        ${otherOccasions
-          .map(
-            (t) => `
-          <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}">
-            <span class="theme-color-dot" style="background: ${t.color}"></span>
-            <span>${t.name}</span>
+        <!-- Bottom Collapse Button -->
+        <div class="theme-collapse-footer">
+          <button type="button" id="btnCollapseThemeBottom" class="btn-theme-collapse-bottom">
+            ▲ Collapse Theme Catalog
           </button>
-        `,
-          )
-          .join('')}
-      </div>
-
-      <div class="settings-group-title" style="font-size: 12px; opacity: 0.9; margin-top: 6px;"><span>🎨</span> Classic Color Palettes</div>
-      <div class="theme-chips-grid">
-        ${colorThemes
-          .map(
-            (t) => `
-          <button type="button" class="theme-chip-btn ${currentTheme === t.id ? 'active' : ''}" data-theme="${t.id}">
-            <span class="theme-color-dot" style="background: ${t.color}"></span>
-            <span>${t.name}</span>
-          </button>
-        `,
-          )
-          .join('')}
+        </div>
       </div>
     </div>
 
@@ -4195,7 +4256,61 @@ function renderSiteSettingsUI() {
   // Bind unified media and audio settings controls
   bindMediaSettingsControls(container, 'site_');
 
+  // Toggle theme catalog expand / collapse
+  const toggleCatalog = (forceState) => {
+    window._themeCatalogExpanded =
+      typeof forceState === 'boolean'
+        ? forceState
+        : !window._themeCatalogExpanded;
+    const drawer = document.getElementById('themeCatalogDrawer');
+    const toggleBtn = document.getElementById('btnToggleThemeCatalog');
+    const quickBtn = document.getElementById('btnQuickExpandThemes');
 
+    if (drawer) {
+      drawer.classList.toggle('expanded', window._themeCatalogExpanded);
+      drawer.classList.toggle('collapsed', !window._themeCatalogExpanded);
+    }
+    if (toggleBtn) {
+      toggleBtn.classList.toggle('expanded', window._themeCatalogExpanded);
+      const txt = toggleBtn.querySelector('.btn-expand-text');
+      if (txt)
+        txt.textContent = window._themeCatalogExpanded
+          ? 'Collapse ▲'
+          : `Browse Themes (${allThemes.length}) ▾`;
+    }
+    if (quickBtn) {
+      const txt = quickBtn.querySelector('.change-btn-text');
+      if (txt)
+        txt.textContent = window._themeCatalogExpanded
+          ? '▲ Collapse'
+          : '⚡ Change';
+    }
+  };
+
+  const btnToggleCatalog = document.getElementById('btnToggleThemeCatalog');
+  if (btnToggleCatalog) btnToggleCatalog.onclick = () => toggleCatalog();
+
+  const btnQuickExpand = document.getElementById('btnQuickExpandThemes');
+  if (btnQuickExpand) btnQuickExpand.onclick = () => toggleCatalog();
+
+  const btnCollapseBottom = document.getElementById('btnCollapseThemeBottom');
+  if (btnCollapseBottom) btnCollapseBottom.onclick = () => toggleCatalog(false);
+
+  // Category filter pills
+  container.querySelectorAll('.theme-cat-pill').forEach((pill) => {
+    pill.onclick = () => {
+      const cat = pill.getAttribute('data-category');
+      window._themeCategoryFilter = cat;
+      container
+        .querySelectorAll('.theme-cat-pill')
+        .forEach((p) => p.classList.toggle('active', p === pill));
+      container.querySelectorAll('.theme-card-wrapper').forEach((wrapper) => {
+        const itemCat = wrapper.getAttribute('data-category');
+        wrapper.style.display =
+          cat === 'all' || itemCat === cat ? '' : 'none';
+      });
+    };
+  });
 
   // Bind theme clicks
   container.querySelectorAll('.theme-chip-btn').forEach((btn) => {
@@ -4208,12 +4323,61 @@ function renderSiteSettingsUI() {
         window.open('/welcome#pricing', '_blank');
         return;
       }
-      container
-        .querySelectorAll('.theme-chip-btn')
-        .forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.themeId = btn.getAttribute('data-theme');
+      const selectedId = btn.getAttribute('data-theme');
+      state.themeId = selectedId;
       state.customBgUrl = '';
+
+      container.querySelectorAll('.theme-card-wrapper').forEach((wrapper) => {
+        const chipBtn = wrapper.querySelector('.theme-chip-btn');
+        if (!chipBtn) return;
+        const isSelected = chipBtn.getAttribute('data-theme') === selectedId;
+        chipBtn.classList.toggle('active', isSelected);
+        let badge = wrapper.querySelector('.theme-badge-active');
+        if (isSelected) {
+          if (!badge) {
+            const thumb = wrapper.querySelector('.theme-card-thumb');
+            if (thumb) {
+              const span = document.createElement('span');
+              span.className = 'theme-badge-active';
+              span.textContent = '✓ Active';
+              thumb.appendChild(span);
+            }
+          }
+        } else if (badge) {
+          badge.remove();
+        }
+      });
+
+      const matched = allThemes.find((t) => t.id === selectedId);
+      if (matched) {
+        const bannerThumb = document.getElementById('themeActiveBannerThumb');
+        const bannerIcon = document.getElementById('themeActiveBannerIcon');
+        const bannerCat = document.getElementById('themeActiveBannerCat');
+        const bannerDot = document.getElementById('themeActiveBannerDot');
+        const bannerTitle = document.getElementById('themeActiveBannerTitle');
+        const bannerDesc = document.getElementById('themeActiveBannerDesc');
+
+        if (bannerThumb) {
+          if (matched.img || (matched.isCustom && (matched.desktopImg || matched.mobileImg))) {
+            bannerThumb.style.backgroundImage = `url('${matched.img || matched.desktopImg || matched.mobileImg}')`;
+            bannerThumb.style.background = '';
+            if (bannerIcon) bannerIcon.style.display = 'none';
+          } else {
+            bannerThumb.style.backgroundImage = '';
+            bannerThumb.style.background = matched.bg || matched.color;
+            if (bannerIcon) {
+              bannerIcon.style.display = 'inline';
+              bannerIcon.textContent = matched.icon || '🎨';
+            }
+          }
+        }
+        if (bannerCat)
+          bannerCat.textContent = categoryLabels[matched.category] || '🎨 Theme';
+        if (bannerDot) bannerDot.style.background = matched.color;
+        if (bannerTitle) bannerTitle.textContent = matched.name;
+        if (bannerDesc) bannerDesc.textContent = matched.desc || '';
+      }
+
       if (previewIframe && previewIframe.contentWindow) {
         previewIframe.contentWindow.postMessage(
           {
@@ -4226,7 +4390,6 @@ function renderSiteSettingsUI() {
           window.location.origin,
         );
       }
-      renderSiteSettingsUI();
       debouncedLiveUpdate(true);
       debouncedAutoSaveLayout();
     };

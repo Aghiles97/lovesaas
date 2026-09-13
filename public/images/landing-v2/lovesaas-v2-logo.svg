@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" fill="none">
+  <g transform="translate(2, 6) scale(0.85)">
+    <path d="M14.5 7.5 C11.5 3.5 6 3.8 3.5 7 C0.8 10.5 1 16 4.5 20 L16 32 L20 28" stroke="#f5a39a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M29.5 7.5 C32.5 3.5 38 3.8 40.5 7 C43.2 10.5 43 16 39.5 20 L28 32 L16 20" stroke="#f5a39a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M14.5 7.5 C16.5 10 18.5 13 22 17 C25.5 13 27.5 10 29.5 7.5" stroke="#f5a39a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="48" y="24" font-family="'Playfair Display', 'Cormorant Garamond', serif" font-size="20" font-weight="600" fill="#ffffff" letter-spacing="0.3">LoveSaas</text>
+  <text x="49" y="37" font-family="'Plus Jakarta Sans', -apple-system, sans-serif" font-size="7.5" font-weight="600" fill="rgba(255, 255, 255, 0.65)" letter-spacing="2.2">PRESERVE WHAT MATTERS</text>
+</svg>

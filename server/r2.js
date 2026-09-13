@@ -43,12 +43,23 @@ if (!fs.existsSync(LOCAL_UPLOADS_DIR)) {
   fs.mkdirSync(LOCAL_UPLOADS_DIR, { recursive: true });
 }
 
+function sanitizeUploadFilename(filename) {
+  const ext = (path.extname(filename || "") || ".bin").toLowerCase();
+  const rawBase = path.basename(filename || "media", ext);
+  const cleanBase = rawBase
+    .trim()
+    .replace(/[/\\?%*:|"<>#]/g, "")
+    .replace(/\s+/g, "_")
+    .slice(0, 100) || "upload";
+  return `${cleanBase}${ext}`;
+}
+
 /**
  * Generate S3 Presigned Upload URL for Cloudflare R2 or local fallback
  */
 async function getUploadDestination(tenantSlug, filename, contentType = "image/jpeg", authToken = "") {
-  const ext = path.extname(filename) || ".jpg";
-  const uniqueKey = `${tenantSlug}/${Date.now()}-${crypto.randomBytes(4).toString("hex")}${ext}`;
+  const safeFilename = sanitizeUploadFilename(filename);
+  const uniqueKey = `${tenantSlug}/${safeFilename}`;
 
   if (isR2Configured && s3Client) {
     const uploadUrl = await getSignedUrl(s3Client, new PutObjectCommand({
@@ -62,16 +73,18 @@ async function getUploadDestination(tenantSlug, filename, contentType = "image/j
       mode: "r2",
       uploadUrl,
       publicUrl,
-      key: uniqueKey
+      key: uniqueKey,
+      filename: safeFilename
     };
   }
 
   const tokenParam = authToken ? `&token=${encodeURIComponent(authToken)}` : "";
   return {
     mode: "local",
-    uploadUrl: `/api/upload/local?slug=${encodeURIComponent(tenantSlug)}&key=${encodeURIComponent(uniqueKey)}${tokenParam}`,
+    uploadUrl: `/api/upload?slug=${encodeURIComponent(tenantSlug)}&key=${encodeURIComponent(uniqueKey)}${tokenParam}`,
     publicUrl: `/uploads/${uniqueKey}`,
-    key: uniqueKey
+    key: uniqueKey,
+    filename: safeFilename
   };
 }
 
@@ -80,7 +93,7 @@ async function getUploadDestination(tenantSlug, filename, contentType = "image/j
  */
 async function uploadBufferToR2(key, buffer, contentType = "image/jpeg") {
   if (!isR2Configured || !s3Client) {
-    return saveLocalFile(key, buffer);
+    throw new Error("Cloudflare R2 is not configured.");
   }
   await s3Client.send(new PutObjectCommand({
     Bucket: R2_BUCKET_NAME,
@@ -88,7 +101,7 @@ async function uploadBufferToR2(key, buffer, contentType = "image/jpeg") {
     Body: buffer,
     ContentType: contentType
   }));
-  return R2_PUBLIC_DOMAIN ? `${R2_PUBLIC_DOMAIN}/${key}` : `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_BUCKET_NAME}/${key}`;
+  return R2_PUBLIC_DOMAIN ? `${R2_PUBLIC_DOMAIN}/${key}` : `/uploads/${key}`;
 }
 
 function saveLocalFile(key, buffer) {
@@ -116,8 +129,8 @@ async function listTenantUploads(tenantSlug) {
       if (resp.Contents) {
         for (const item of resp.Contents) {
           const filename = path.basename(item.Key);
-          if (!filename || filename.startsWith(".") || (item.Size || 0) < 200) continue;
-          const isAudio = /\.(mp3|m4a|m4r|wav|ogg|aac)$/i.test(filename);
+          if (!filename || filename.startsWith(".") || (item.Size || 0) <= 0) continue;
+          const isAudio = /\.(mp3|m4a|m4r|wav|ogg|aac|flac|weba|webm)$/i.test(filename);
           list.push({
             key: item.Key,
             filename,
@@ -226,13 +239,17 @@ async function listR2Images(prefix = "images/") {
   return results.sort();
 }
 
-async function getObjectFromR2(key) {
+async function getObjectFromR2(key, rangeHeader = null) {
   if (!isR2Configured || !s3Client) return null;
   try {
-    const res = await s3Client.send(new GetObjectCommand({
+    const params = {
       Bucket: R2_BUCKET_NAME,
       Key: key
-    }));
+    };
+    if (rangeHeader) {
+      params.Range = rangeHeader;
+    }
+    const res = await s3Client.send(new GetObjectCommand(params));
     return res;
   } catch (err) {
     return null;
