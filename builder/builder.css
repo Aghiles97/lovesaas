@@ -3029,26 +3029,28 @@ body.is-resizing-sidebar .builder-sidebar,
 }
 .sections-quick-actions {
   display: inline-flex;
+  align-items: center;
   background: #f1f5f9;
-  border-radius: 5px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
   padding: 2px;
-  gap: 1px;
+  gap: 2px;
 }
 .btn-quick-action {
   border: none;
   background: transparent;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-muted);
-  padding: 2px 5px;
-  border-radius: 3px;
+  padding: 3px 8px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all 0.15s ease;
 }
 .btn-quick-action:hover {
   background: #ffffff;
   color: var(--text);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 /* Preset dropdown card */
@@ -3417,7 +3419,7 @@ body.is-resizing-sidebar .builder-sidebar,
 .tray-actions {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 10px;
   flex-shrink: 0;
 }
 .tray-reorder-arrows {
@@ -3442,9 +3444,9 @@ body.is-resizing-sidebar .builder-sidebar,
   transition: all 0.12s ease;
 }
 .btn-arrow-move:hover:not(:disabled) {
-  background: #e2e8f0;
-  color: var(--text);
-  border-color: var(--border-hover);
+  background: #ffffff;
+  color: var(--primary);
+  border-color: var(--primary);
 }
 .btn-arrow-move:disabled {
   opacity: 0.2;
@@ -3479,15 +3481,18 @@ input:checked + .slider:before { transform: translateX(14px); }
 input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
 
 .tray-chevron {
-  font-size: 0.9rem;
-  color: #cbd5e1;
+  font-size: 0.95rem;
+  color: #94a3b8;
   font-weight: 700;
+  padding: 3px 5px;
+  border-radius: 4px;
   margin-left: 2px;
-  transition: transform 0.15s ease, color 0.15s ease;
+  transition: transform 0.15s ease, color 0.15s ease, background 0.15s ease;
   line-height: 1;
 }
 .tray-item:hover .tray-chevron {
   color: var(--primary);
+  background: rgba(244, 63, 94, 0.08);
   transform: translateX(2px);
 }
 
@@ -3638,7 +3643,8 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
   font-size: 0.72rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   color: #cbd5e1;
-  max-width: 220px;
+  max-width: 320px;
+  min-width: 180px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -6045,7 +6051,7 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
 }
 
 #tabActiveWidgetPill {
-  max-width: 80px;
+  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

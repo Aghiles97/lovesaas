@@ -890,24 +890,10 @@ function renderWidgetTray() {
   const showIntroCard = !query || 'first screen wax sealed letter intro gate flower burst soundtrack'.includes(query);
 
   if (showIntroCard && currentWidgetFilter !== 'inactive') {
-    const screen1Header = document.createElement('div');
-    screen1Header.className = 'screen-section-banner screen-1-banner';
-    screen1Header.innerHTML = `
-      <div class="screen-banner-left">
-        <span class="screen-banner-icon">✉️</span>
-        <div class="screen-banner-text">
-          <span class="screen-banner-title">Screen 1: Intro Gate</span>
-          <span class="screen-banner-hint">Wax-sealed letter, music & burst trigger</span>
-        </div>
-      </div>
-      <span class="screen-banner-badge">Intro Screen</span>
-    `;
-    widgetTray.appendChild(screen1Header);
-
     const screen1Card = document.createElement('div');
     screen1Card.className = `tray-item screen1-pinned-card active-widget ${state.activeInspectorWidget === 'intro' ? 'selected-for-edit' : ''}`;
     screen1Card.dataset.widgetId = 'intro';
-    screen1Card.title = 'Customize First Screen: Wax Sealed Letter';
+    screen1Card.title = 'Customize Screen 1: Wax Sealed Letter';
     screen1Card.style.cursor = 'pointer';
     screen1Card.style.marginBottom = '14px';
     screen1Card.innerHTML = `
@@ -915,8 +901,8 @@ function renderWidgetTray() {
         <span class="screen1-icon">✉️</span>
         <div class="screen1-info">
           <div class="screen1-title-row">
-            <span class="screen1-title">First Screen: Wax Sealed Letter</span>
-            <span class="screen1-badge">Screen 1</span>
+            <span class="screen1-title">Screen 1: Wax Sealed Letter</span>
+            <span class="screen1-badge">Intro Gate</span>
           </div>
           <div class="screen1-desc">Opening Gate • Flower Burst &amp; Soundtrack</div>
         </div>
@@ -945,11 +931,12 @@ function renderWidgetTray() {
     widgetTray.appendChild(screen1Card);
   }
 
+  const totalWebsiteWidgets = state.allWidgetIds.filter((id) => id !== 'intro').length;
   const countEl = document.getElementById('activeWidgetsCount');
   if (countEl)
-    countEl.textContent = `${state.layoutOrder.length}/${state.allWidgetIds.length}`;
+    countEl.textContent = `${state.layoutOrder.length}/${totalWebsiteWidgets}`;
   const countAllEl = document.getElementById('filterCountAll');
-  if (countAllEl) countAllEl.textContent = state.allWidgetIds.length;
+  if (countAllEl) countAllEl.textContent = totalWebsiteWidgets;
   const countActiveEl = document.getElementById('filterCountActive');
   if (countActiveEl) countActiveEl.textContent = state.layoutOrder.length;
   const countInactiveEl = document.getElementById('filterCountInactive');
@@ -957,7 +944,7 @@ function renderWidgetTray() {
 
   const tabBadge = document.getElementById('tabWidgetCountBadge');
   if (tabBadge)
-    tabBadge.textContent = `${state.layoutOrder.length}/${state.allWidgetIds.length}`;
+    tabBadge.textContent = `${state.layoutOrder.length}/${totalWebsiteWidgets}`;
 
   const filteredList = fullList.filter((id) => {
     const meta = WIDGET_REGISTRY[id];
@@ -1027,7 +1014,7 @@ function renderWidgetTray() {
   `;
   widgetTray.appendChild(screen2Header);
 
-  const createTrayItem = (id) => {
+  const createTrayItem = (id, inChapter = false) => {
     const meta = WIDGET_REGISTRY[id];
     if (!meta) return null;
     const isActive = activeSet.has(id);
@@ -1042,14 +1029,14 @@ function renderWidgetTray() {
 
     item.innerHTML = `
       <div class="tray-lead">
-        <span class="tray-handle" title="${isActive ? 'Drag to reorder' : 'Disabled'}">⋮⋮</span>
+        <span class="tray-handle" style="${isActive ? '' : 'visibility:hidden'}" title="${isActive ? 'Drag to reorder' : ''}">⋮⋮</span>
         <span class="tray-num ${isActive ? 'active' : 'inactive'}">${isActive ? activeIndex + 1 : '—'}</span>
         <span class="tray-icon">${meta.icon}</span>
       </div>
       <div class="tray-info">
         <div class="tray-title-row">
           <span class="tray-title">${escapeHtml(meta.title)}</span>
-          <span class="tray-cat-tag cat-${escapeHtml(meta.category || 'modular')}">${escapeHtml(meta.category || 'modular')}</span>
+          ${!inChapter ? `<span class="tray-cat-tag cat-${escapeHtml(meta.category || 'modular')}">${escapeHtml(meta.category || 'modular')}</span>` : ''}
           ${meta.required ? `<span class="tray-req-pill" title="Required section">Req</span>` : ''}
         </div>
       </div>
@@ -1141,7 +1128,7 @@ function renderWidgetTray() {
       };
 
       chapterWidgets.forEach((id) => {
-        const el = createTrayItem(id);
+        const el = createTrayItem(id, true);
         if (el) chapBody.appendChild(el);
       });
 
@@ -1150,7 +1137,7 @@ function renderWidgetTray() {
     });
   } else {
     filteredList.forEach((id) => {
-      const el = createTrayItem(id);
+      const el = createTrayItem(id, false);
       if (el) widgetTray.appendChild(el);
     });
   }
@@ -2067,7 +2054,7 @@ function selectWidgetForInspector(widgetId) {
   const pill = document.getElementById('tabActiveWidgetPill');
   if (pill) {
     const meta = WIDGET_REGISTRY[widgetId];
-    pill.textContent = meta?.title || widgetId;
+    pill.textContent = widgetId === 'intro' ? 'Intro Screen' : (meta?.title || widgetId);
     pill.style.display = '';
   }
 
