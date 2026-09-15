@@ -3200,11 +3200,20 @@ body.is-resizing-sidebar .builder-sidebar,
   display: flex;
   background: #f1f5f9;
   border-radius: 6px;
-  padding: 2px;
-  gap: 1px;
-  flex-shrink: 0;
+  padding: 3px;
+  gap: 3px;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+.widget-filter-chips::-webkit-scrollbar {
+  display: none;
 }
 .filter-chip {
+  flex-shrink: 0;
+  white-space: nowrap;
   border: none;
   background: transparent;
   font-size: 0.68rem;
@@ -5893,6 +5902,7 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
   color: #94a3b8;
   cursor: pointer;
   padding: 3px 6px;
+  margin-right: 6px;
   border-radius: 4px;
   font-size: 0.78rem;
   line-height: 1;
@@ -5900,11 +5910,81 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.5;
+}
+
+.tray-item:hover .btn-tray-remove {
+  opacity: 1;
 }
 
 .btn-tray-remove:hover {
   background: #fee2e2;
   color: #ef4444;
+  opacity: 1;
+}
+
+/* Screen 1 / Screen 2 Distinct Section Banners */
+.screen-section-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin: 10px 0 8px 0;
+  font-size: 0.76rem;
+  border: 1px solid var(--border);
+  box-sizing: border-box;
+}
+.screen-section-banner.screen-1-banner {
+  background: linear-gradient(90deg, #fff1f2 0%, #ffffff 100%);
+  border-color: rgba(244, 63, 94, 0.35);
+}
+.screen-section-banner.screen-2-banner {
+  background: linear-gradient(90deg, #f0f9ff 0%, #ffffff 100%);
+  border-color: rgba(14, 165, 233, 0.35);
+  margin-top: 14px;
+}
+.screen-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.screen-banner-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+.screen-banner-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.screen-banner-title {
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+}
+.screen-banner-hint {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+.screen-banner-badge {
+  font-size: 0.64rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: #e2e8f0;
+  color: #475569;
+  flex-shrink: 0;
+}
+.screen-1-banner .screen-banner-badge {
+  background: #ffe4e6;
+  color: #e11d48;
+}
+.screen-2-banner .screen-banner-badge {
+  background: #e0f2fe;
+  color: #0369a1;
 }
 
 .add-section-modal-footer {

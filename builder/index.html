@@ -127,9 +127,6 @@
       <a id="btnViewLive" href="/sites/demo" target="_blank" class="btn-secondary" title="Open live project in new tab">
         <span class="btn-icon">↗</span> <span class="btn-text-responsive">View Live</span>
       </a>
-      <button type="button" id="btnHeaderNewProject" class="btn-secondary btn-header-new-project" title="Create a new couple project" style="display: none;">
-        <span>💖</span> <span class="btn-text-responsive">+ New Project</span>
-      </button>
 
       <!-- User / Account Dropdown Menu (Functional on all screen sizes) -->
       <div class="header-user-menu" id="headerUserMenu">
@@ -269,23 +266,20 @@
         <div class="sections-header-panel">
           <!-- Main Control Bar -->
           <div class="sections-control-bar">
-            <div class="sections-title-group">
-              <span class="sections-icon">🧩</span>
-              <span class="sections-title-text">Sections</span>
-              <span class="sections-counter-pill" id="activeWidgetsCount">0/25</span>
-            </div>
-            <div class="sections-control-actions">
-              <button type="button" class="btn-preset-pill" id="btnTogglePresets" title="Change layout preset">
-                <span class="preset-icon">🎨</span>
-                <span class="active-preset-name" id="currentPresetNameBadge">Storyteller</span>
-                <span class="preset-arrow" id="btnPresetToggleText">▾</span>
-              </button>
-              <button type="button" class="btn-add-section-pill" id="btnSidebarAddSection" title="Add a new section">
-                <span>+</span> Widget
-              </button>
+            <div class="sections-control-actions" style="width: 100%; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" class="btn-preset-pill" id="btnTogglePresets" title="Change layout preset">
+                  <span class="preset-icon">🎨</span>
+                  <span class="active-preset-name" id="currentPresetNameBadge">Storyteller</span>
+                  <span class="preset-arrow" id="btnPresetToggleText">▾</span>
+                </button>
+                <button type="button" class="btn-add-section-pill" id="btnSidebarAddSection" title="Add a new section">
+                  <span>+</span> Widget
+                </button>
+              </div>
               <div class="sections-quick-actions">
                 <button type="button" class="btn-quick-action" id="btnEnableAllWidgets" title="Enable all sections">All</button>
-                <button type="button" class="btn-quick-action" id="btnDisableAllWidgets" title="Disable optional sections">None</button>
+                <button type="button" class="btn-quick-action" id="btnDisableAllWidgets" title="Disable optional sections (prompts confirmation)">None</button>
               </div>
             </div>
           </div>

@@ -256,10 +256,7 @@ function updateRoleUI() {
 
   const btnHeaderNew = document.getElementById('btnHeaderNewProject');
   if (btnHeaderNew) {
-    btnHeaderNew.style.display =
-      state.userRole === 'admin' || state.userRole === 'user'
-        ? 'inline-flex'
-        : 'none';
+    btnHeaderNew.style.display = 'none';
   }
 
   if (state.userRole === 'admin') {
@@ -892,12 +889,26 @@ function renderWidgetTray() {
   const showIntroCard = !query || 'first screen wax sealed letter intro gate flower burst soundtrack'.includes(query);
 
   if (showIntroCard && currentWidgetFilter !== 'inactive') {
+    const screen1Header = document.createElement('div');
+    screen1Header.className = 'screen-section-banner screen-1-banner';
+    screen1Header.innerHTML = `
+      <div class="screen-banner-left">
+        <span class="screen-banner-icon">✉️</span>
+        <div class="screen-banner-text">
+          <span class="screen-banner-title">Screen 1: Intro Gate</span>
+          <span class="screen-banner-hint">Wax-sealed letter, music & burst trigger</span>
+        </div>
+      </div>
+      <span class="screen-banner-badge">Intro Screen</span>
+    `;
+    widgetTray.appendChild(screen1Header);
+
     const screen1Card = document.createElement('div');
     screen1Card.className = `tray-item screen1-pinned-card active-widget ${state.activeInspectorWidget === 'intro' ? 'selected-for-edit' : ''}`;
     screen1Card.dataset.widgetId = 'intro';
     screen1Card.title = 'Customize First Screen: Wax Sealed Letter';
     screen1Card.style.cursor = 'pointer';
-    screen1Card.style.marginBottom = '12px';
+    screen1Card.style.marginBottom = '14px';
     screen1Card.innerHTML = `
       <div class="screen1-lead">
         <span class="screen1-icon">✉️</span>
@@ -920,6 +931,9 @@ function renderWidgetTray() {
     const openIntroCustomize = (e) => {
       if (e) e.stopPropagation();
       selectWidgetForInspector('intro');
+      if (typeof window.setPreviewScreen === 'function') {
+        window.setPreviewScreen('intro');
+      }
       if (typeof switchToTab === 'function') switchToTab('tab-inspector', true);
     };
 
@@ -997,6 +1011,21 @@ function renderWidgetTray() {
     return;
   }
 
+  // Screen 2 Header Separator
+  const screen2Header = document.createElement('div');
+  screen2Header.className = 'screen-section-banner screen-2-banner';
+  screen2Header.innerHTML = `
+    <div class="screen-banner-left">
+      <span class="screen-banner-icon">🌐</span>
+      <div class="screen-banner-text">
+        <span class="screen-banner-title">Screen 2: Main Website</span>
+        <span class="screen-banner-hint">Scrollable website after opening letter</span>
+      </div>
+    </div>
+    <span class="screen-banner-badge">${filteredList.length} Sections</span>
+  `;
+  widgetTray.appendChild(screen2Header);
+
   filteredList.forEach((id) => {
     const meta = WIDGET_REGISTRY[id];
     if (!meta) return;
@@ -1010,8 +1039,6 @@ function renderWidgetTray() {
     item.dataset.widgetId = id;
     item.title = `Customize ${meta.title}`;
 
-    const maxPositions = state.layoutOrder.length;
-
     item.innerHTML = `
       <div class="tray-lead">
         <span class="tray-handle" title="${isActive ? 'Drag to reorder' : 'Disabled'}">⋮⋮</span>
@@ -1021,16 +1048,16 @@ function renderWidgetTray() {
       <div class="tray-info">
         <div class="tray-title-row">
           <span class="tray-title">${escapeHtml(meta.title)}</span>
+          <span class="tray-cat-tag cat-${escapeHtml(meta.category || 'modular')}">${escapeHtml(meta.category || 'modular')}</span>
           ${meta.required ? `<span class="tray-req-pill" title="Required section">Req</span>` : ''}
         </div>
         <div class="tray-sub-row">
-          <span class="tray-cat-tag cat-${escapeHtml(meta.category || 'modular')}">${escapeHtml(meta.category || 'modular')}</span>
           <span class="tray-desc">${escapeHtml(meta.desc)}</span>
         </div>
       </div>
       <div class="tray-actions">
         ${
-          isActive
+          isActive && !meta.required
             ? `
           <button type="button" class="btn-tray-remove" data-remove-tray="${id}" title="Remove section from website">✕</button>
         `
@@ -1046,6 +1073,9 @@ function renderWidgetTray() {
 
     item.onclick = () => {
       selectWidgetForInspector(id);
+      if (typeof window.setPreviewScreen === 'function') {
+        window.setPreviewScreen('website');
+      }
       switchToTab('tab-inspector');
       if (previewIframe && previewIframe.contentWindow) {
         previewIframe.contentWindow.postMessage(
@@ -1059,6 +1089,7 @@ function renderWidgetTray() {
     if (removeBtn) {
       removeBtn.onclick = (e) => {
         e.stopPropagation();
+        if (!confirm(`Remove "${meta.title}" from your website? You can re-enable it at any time.`)) return;
         removeWidgetFromLayout(id);
       };
     }
@@ -1066,7 +1097,12 @@ function renderWidgetTray() {
     const toggle = item.querySelector(`[data-toggle="${id}"]`);
     if (toggle) {
       toggle.onclick = (e) => e.stopPropagation();
-      toggle.onchange = (e) => toggleWidgetActive(id, e.target.checked);
+      toggle.onchange = (e) => {
+        if (typeof window.setPreviewScreen === 'function') {
+          window.setPreviewScreen('website');
+        }
+        toggleWidgetActive(id, e.target.checked);
+      };
     }
 
     if (isActive) setupDragEvents(item);
@@ -1189,6 +1225,7 @@ function initWidgetTrayControls() {
   const btnDisableAll = document.getElementById('btnDisableAllWidgets');
   if (btnDisableAll) {
     btnDisableAll.onclick = () => {
+      if (!confirm('Are you sure you want to disable all optional sections? You can re-enable them at any time.')) return;
       const required = state.allWidgetIds.filter(
         (id) => WIDGET_REGISTRY[id] && WIDGET_REGISTRY[id].required,
       );
@@ -4938,6 +4975,7 @@ function initScreenSwitcher() {
 
   if (btnIntro) btnIntro.onclick = () => setPreviewScreen('intro');
   if (btnCore) btnCore.onclick = () => setPreviewScreen('website');
+  window.setPreviewScreen = setPreviewScreen;
 }
 
 function initMobileWorkspaceToggle() {
