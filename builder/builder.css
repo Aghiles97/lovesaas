@@ -3152,8 +3152,9 @@ body.is-resizing-sidebar .builder-sidebar,
 /* Row 2: Search + Filter Tabs */
 .sections-toolbar-row {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 6px;
+  width: 100%;
 }
 .widget-search-wrap {
   position: relative;
@@ -5985,6 +5986,69 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
 .screen-2-banner .screen-banner-badge {
   background: #e0f2fe;
   color: #0369a1;
+}
+
+/* Chapter Accordion Groups */
+.chapter-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 10px 0 6px 0;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+.chapter-group-header:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+.chapter-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.chapter-icon {
+  font-size: 0.95rem;
+}
+.chapter-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.chapter-count {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: #e2e8f0;
+  padding: 1px 6px;
+  border-radius: 9999px;
+}
+.chapter-chevron {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+.chapter-group-header.collapsed .chapter-chevron {
+  transform: rotate(-90deg);
+}
+.chapter-group-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.chapter-group-body.collapsed {
+  display: none !important;
+}
+
+#tabActiveWidgetPill {
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .add-section-modal-footer {

@@ -811,6 +811,7 @@ function updateNavbarUI() {
 // ----------------------------------------------------
 let currentWidgetFilter = 'all';
 let currentWidgetSearchQuery = '';
+const collapsedChapters = new Set();
 
 function renderPresetsUI() {
   presetGrid.innerHTML = '';
@@ -1026,9 +1027,9 @@ function renderWidgetTray() {
   `;
   widgetTray.appendChild(screen2Header);
 
-  filteredList.forEach((id) => {
+  const createTrayItem = (id) => {
     const meta = WIDGET_REGISTRY[id];
-    if (!meta) return;
+    if (!meta) return null;
     const isActive = activeSet.has(id);
     const activeIndex = state.layoutOrder.indexOf(id);
     const isSelected = state.activeInspectorWidget === id;
@@ -1051,18 +1052,8 @@ function renderWidgetTray() {
           <span class="tray-cat-tag cat-${escapeHtml(meta.category || 'modular')}">${escapeHtml(meta.category || 'modular')}</span>
           ${meta.required ? `<span class="tray-req-pill" title="Required section">Req</span>` : ''}
         </div>
-        <div class="tray-sub-row">
-          <span class="tray-desc">${escapeHtml(meta.desc)}</span>
-        </div>
       </div>
       <div class="tray-actions">
-        ${
-          isActive && !meta.required
-            ? `
-          <button type="button" class="btn-tray-remove" data-remove-tray="${id}" title="Remove section from website">✕</button>
-        `
-            : ''
-        }
         <label class="toggle-switch" title="${meta.required ? 'Required section' : isActive ? 'Hide section' : 'Show section'}">
           <input type="checkbox" ${isActive ? 'checked' : ''} data-toggle="${id}" ${meta.required ? 'disabled' : ''}>
           <span class="slider"></span>
@@ -1085,15 +1076,6 @@ function renderWidgetTray() {
       }
     };
 
-    const removeBtn = item.querySelector(`[data-remove-tray="${id}"]`);
-    if (removeBtn) {
-      removeBtn.onclick = (e) => {
-        e.stopPropagation();
-        if (!confirm(`Remove "${meta.title}" from your website? You can re-enable it at any time.`)) return;
-        removeWidgetFromLayout(id);
-      };
-    }
-
     const toggle = item.querySelector(`[data-toggle="${id}"]`);
     if (toggle) {
       toggle.onclick = (e) => e.stopPropagation();
@@ -1106,8 +1088,72 @@ function renderWidgetTray() {
     }
 
     if (isActive) setupDragEvents(item);
-    widgetTray.appendChild(item);
-  });
+    return item;
+  };
+
+  const CHAPTERS = [
+    { id: 'hero', name: '👑 Welcome & Hero', match: (c) => c === 'header' },
+    { id: 'birthday', name: '🎂 Birthday Specials', match: (c) => c === 'birthday' },
+    { id: 'story', name: '📖 Our Love Story & Gallery', match: (c) => ['story', 'gallery', 'letter'].includes(c) },
+    { id: 'interactive', name: '🎮 Interactive Games & Surprises', match: (c) => ['interactive', 'games', 'valentine'].includes(c) },
+    { id: 'reconciliation', name: '🕊️ Keepsakes & Celebrations', match: () => true },
+  ];
+
+  if (currentWidgetFilter === 'all' && !query) {
+    const assigned = new Set();
+    CHAPTERS.forEach((chap) => {
+      const chapterWidgets = filteredList.filter((id) => {
+        if (assigned.has(id)) return false;
+        const meta = WIDGET_REGISTRY[id];
+        if (!meta) return false;
+        return chap.match(meta.category || '');
+      });
+      chapterWidgets.forEach((id) => assigned.add(id));
+      if (chapterWidgets.length === 0) return;
+
+      const activeCount = chapterWidgets.filter((id) => activeSet.has(id)).length;
+      const isCollapsed = collapsedChapters.has(chap.id);
+
+      const chapHeader = document.createElement('div');
+      chapHeader.className = `chapter-group-header ${isCollapsed ? 'collapsed' : ''}`;
+      chapHeader.innerHTML = `
+        <div class="chapter-title-wrap">
+          <span class="chapter-name">${escapeHtml(chap.name)}</span>
+          <span class="chapter-count">${activeCount}/${chapterWidgets.length}</span>
+        </div>
+        <span class="chapter-chevron">▼</span>
+      `;
+
+      const chapBody = document.createElement('div');
+      chapBody.className = `chapter-group-body ${isCollapsed ? 'collapsed' : ''}`;
+
+      chapHeader.onclick = () => {
+        const nowCollapsed = !collapsedChapters.has(chap.id);
+        if (nowCollapsed) {
+          collapsedChapters.add(chap.id);
+          chapHeader.classList.add('collapsed');
+          chapBody.classList.add('collapsed');
+        } else {
+          collapsedChapters.delete(chap.id);
+          chapHeader.classList.remove('collapsed');
+          chapBody.classList.remove('collapsed');
+        }
+      };
+
+      chapterWidgets.forEach((id) => {
+        const el = createTrayItem(id);
+        if (el) chapBody.appendChild(el);
+      });
+
+      widgetTray.appendChild(chapHeader);
+      widgetTray.appendChild(chapBody);
+    });
+  } else {
+    filteredList.forEach((id) => {
+      const el = createTrayItem(id);
+      if (el) widgetTray.appendChild(el);
+    });
+  }
 }
 
 function moveWidgetByDelta(widgetId, delta) {
