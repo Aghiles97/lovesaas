@@ -11,35 +11,35 @@ const DEFAULTS = {
       id: "mem-1",
       title: "Where We Met in China 🇨🇳 (Sept 17)",
       desc: "The magical moment our eyes first met on Sept 17. 12 unforgettable days filled with sweet smiles, late-night walks, and dim sum breakfasts!",
-      img: "images/mem-1.jpg"
+      img: "/uploads/demo/mem-1.jpg"
     },
     {
       id: "mem-2",
       title: "Reunion in China ✈️ (Dec 10)",
       desc: "Counting every single hour in Algeria until Dec 10, when I finally landed back in China and held you tight in my arms at the airport.",
-      img: "images/mem-2.jpg"
+      img: "/uploads/demo/mem-2.jpg"
     },
     {
       id: "mem-3",
       title: "Dream Vacation in Bali 🌴 (Jan 19)",
       desc: "Golden tropical beach sunsets, holding hands along the warm sand, drinking fresh coconuts, and falling more in lof every second.",
-      img: "images/mem-3.jpg"
+      img: "/uploads/demo/mem-3.jpg"
     },
     {
       id: "mem-4",
       title: "At Your Home in Jakarta 🇮🇩 (Jan 26 - Feb 7)",
       desc: "Staying at your home in Jakarta, meeting your lovely family, tasting home-cooked meals, and infinite morning cuddles with you.",
-      img: "images/mem-4.jpg"
+      img: "/uploads/demo/mem-4.jpg"
     },
     {
       id: "mem-5",
       title: "Spring in China Together 🌸 (Apr 7 - May 25)",
       desc: "Nearly two whole months traveling across China hand-in-hand—spring blossoms, cozy cafe dates, and making memories to last forever.",
-      img: "images/mem-5.jpg"
+      img: "/uploads/demo/mem-5.jpg"
     }
   ],
-  voiceAudio: "audio/myrecording-volume-adjusted.mp3",
-  letterAudio: "audio/letter_voice-volume-adjusted.mp3",
+  voiceAudio: "/uploads/demo/myrecording-volume-adjusted.m4a",
+  letterAudio: "/uploads/demo/letter_voice-volume-adjusted.m4a",
   herVoiceAudio: null,
   voiceVolume: 300,
   voiceBgVolume: 7,

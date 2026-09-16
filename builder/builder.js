@@ -797,20 +797,34 @@ async function loadTenantData(slug) {
       : PRESETS.storyteller?.widgets || [];
     state.sectionsData = data.sectionsData || {};
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramP1 = urlParams.get('partner1') || urlParams.get('p1');
+    const paramP2 = urlParams.get('partner2') || urlParams.get('p2');
+    if (paramP1) state.partner1 = paramP1;
+    if (paramP2) state.partner2 = paramP2;
+
     if (state.sectionsData.hero) {
       if (
         state.partner1 &&
         (!state.sectionsData.hero.partner1 ||
-          state.sectionsData.hero.partner1 === 'Alex')
+          state.sectionsData.hero.partner1 === 'Alex' ||
+          paramP1)
       ) {
         state.sectionsData.hero.partner1 = state.partner1;
       }
       if (
         state.partner2 &&
         (!state.sectionsData.hero.partner2 ||
-          state.sectionsData.hero.partner2 === 'Sam')
+          state.sectionsData.hero.partner2 === 'Sam' ||
+          paramP2)
       ) {
         state.sectionsData.hero.partner2 = state.partner2;
+      }
+      if (paramP1 || paramP2) {
+        const p1Disp = state.partner1 || 'Partner 1';
+        const p2Disp = state.partner2 || 'Partner 2';
+        state.sectionsData.hero.subtitle = `${p1Disp} & ${p2Disp}'s Infinite Love Story ❤️`;
+        state.sectionsData.hero.pageTitle = `${p1Disp} & ${p2Disp} | Our Love Story ❤️`;
       }
     }
 
@@ -827,6 +841,7 @@ async function loadTenantData(slug) {
     closeWidgetEditMode();
     renderPresetsUI();
     renderWidgetTray();
+    fetchTenantMediaAssets().catch(() => {});
     if (state.layoutOrder.length === 0 || !state.activeInspectorWidget) {
       renderInspectorEmptyState();
     } else {
@@ -2631,7 +2646,54 @@ async function fetchTenantMediaAssets() {
     console.warn('fetchTenantMediaAssets:', err);
   }
 
+  function harvestSectionsMedia(node) {
+    if (!node) return;
+    if (typeof node === 'string') {
+      const trimmed = node.trim();
+      if (
+        (trimmed.startsWith('/uploads/') ||
+          trimmed.startsWith('/images/') ||
+          trimmed.startsWith('/audio/') ||
+          trimmed.startsWith('images/') ||
+          trimmed.startsWith('audio/') ||
+          /\.(jpg|jpeg|png|webp|gif|svg|mp3|m4a|m4r|wav|ogg)$/i.test(trimmed)) &&
+        !trimmed.startsWith('data:')
+      ) {
+        let cleanUrl = trimmed;
+        if (!cleanUrl.startsWith('/') && !cleanUrl.startsWith('http')) {
+          cleanUrl = `/${cleanUrl}`;
+        }
+        if (!seen.has(cleanUrl)) {
+          seen.add(cleanUrl);
+          const fn = cleanUrl.split('/').pop().split('?')[0];
+          const isAud = /\.(mp3|m4a|m4r|wav|ogg|aac|flac|weba|webm)$/i.test(fn);
+          assets.push({
+            key: cleanUrl.replace(/^\/uploads\//, ''),
+            filename: fn,
+            name: fn,
+            url: cleanUrl,
+            isAudio: isAud,
+            isUploaded: true,
+            size: 0,
+            mtime: new Date(),
+          });
+        }
+      }
+      return;
+    }
+    if (Array.isArray(node)) {
+      node.forEach(harvestSectionsMedia);
+      return;
+    }
+    if (typeof node === 'object') {
+      Object.values(node).forEach(harvestSectionsMedia);
+    }
+  }
+  harvestSectionsMedia(state.sectionsData);
+
   state.mediaAssets = assets;
+  const tabMediaBadge = document.getElementById('tabMediaCountBadge');
+  if (tabMediaBadge) tabMediaBadge.innerText = assets.length;
   return assets;
 }
 

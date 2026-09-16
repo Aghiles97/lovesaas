@@ -105,9 +105,9 @@
             </div>
           </div>
         </div>
-        <button type="button" class="btn btn-primary btn-sm desktop-only" id="btnNavGetStarted">
-          Create Keepsake →
-        </button>
+        <a href="/builder?slug=demo" class="btn btn-primary btn-sm desktop-only hero-btn-start" id="btnNavGetStarted">
+          <span>✨</span> Start Building Free →
+        </a>
         <button type="button" class="mobile-menu-btn" id="btnMobileMenuToggle" aria-label="Toggle navigation">☰</button>
       </div>
     </div>
@@ -229,16 +229,41 @@
         Photos, wax-sealed letters, travel maps, and milestone countdowns — ready in 2 minutes.
       </p>
 
-      <div class="hero-ctas">
-        <button type="button" class="btn btn-primary btn-lg" id="btnHeroBuy">
-          <span>💖</span> Create Keepsake — $19
-        </button>
-        <a href="/builder?slug=demo" class="btn btn-secondary btn-lg" id="btnHeroTryBuilder">
-          <span>🎨</span> Builder Demo
-        </a>
-        <button type="button" class="btn btn-ghost btn-lg" id="btnHeroDemo">
-          <span>👁️</span> Website Demo
-        </button>
+      <div class="hero-ctas-container">
+        <div class="hero-ctas">
+          <a href="/builder?slug=demo" class="btn btn-primary btn-lg hero-btn-start" id="btnHeroBuy">
+            <span class="hero-btn-badge">FREE</span>
+            <span>✨</span> Start Building Your Website →
+          </a>
+          <a href="/builder?slug=demo" class="btn btn-secondary btn-lg" id="btnHeroTryBuilder">
+            <span>🎨</span> Builder Demo
+          </a>
+          <button type="button" class="btn btn-ghost btn-lg" id="btnHeroDemo">
+            <span>👁️</span> Website Demo
+          </button>
+        </div>
+        <div class="hero-cta-guarantee">
+          <span>⚡ No credit card required</span>
+          <span class="dot">•</span>
+          <span>Instant live preview</span>
+          <span class="dot">•</span>
+          <span>Ready in 2 mins</span>
+        </div>
+        <!-- 1-Click Interactive Name Personalizer -->
+        <div class="welcome-quick-starter" id="v1QuickStarter">
+          <div class="quick-starter-header">
+            <span class="quick-sparkle">💖</span>
+            <span class="quick-title">Or customize with your names right now:</span>
+          </div>
+          <div class="quick-starter-row">
+            <input type="text" id="v1QuickP1" placeholder="Your Name (e.g. Ella)" class="quick-starter-input" maxlength="28" autocomplete="off">
+            <span class="quick-amp">&amp;</span>
+            <input type="text" id="v1QuickP2" placeholder="Partner's Name (e.g. Alex)" class="quick-starter-input" maxlength="28" autocomplete="off">
+            <button type="button" id="btnV1QuickStart" class="quick-starter-btn">
+              <span>✨</span> Customize →
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Live Metric Stats -->

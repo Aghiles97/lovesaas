@@ -183,8 +183,11 @@ async function syncLocalDbImages() {
 
     if (typeof state !== "undefined" && state.memories) {
       state.memories.forEach(m => {
-        const img = LOCAL_IMG_CACHE[`mem_${m.id}`] || LOCAL_IMG_CACHE[m.id];
-        if (img) m.img = img;
+        const isServerImg = m && m.img && (m.img.startsWith("/uploads/") || m.img.startsWith("http://") || m.img.startsWith("https://"));
+        if (!isServerImg) {
+          const img = LOCAL_IMG_CACHE[`mem_${m.id}`] || LOCAL_IMG_CACHE[m.id];
+          if (img) m.img = img;
+        }
       });
     }
     if (typeof renderTimeline === "function") renderTimeline();
@@ -385,6 +388,9 @@ function getCityPhotoData(key, fallbackKey) {
   if (explicitPhotoSaved) {
     if (Array.isArray(images) && images.length > 0) {
       images = images.map((im, i) => {
+        if (im && (im.startsWith("/uploads/") || im.startsWith("http://") || im.startsWith("https://"))) {
+          return im;
+        }
         const subKey = i === 0 ? key : `${key}_${i}`;
         const cached = LOCAL_IMG_CACHE[`city_${subKey}`] || LOCAL_IMG_CACHE[subKey] || (fallbackKey ? (LOCAL_IMG_CACHE[`city_${fallbackKey}_${i}`] || LOCAL_IMG_CACHE[`${fallbackKey}_${i}`]) : null);
         return (cached && typeof cached === "string" && cached.startsWith("data:")) ? cached : im;
@@ -398,26 +404,31 @@ function getCityPhotoData(key, fallbackKey) {
     return { img, images, caption, desc, highlights, svgFallback };
   }
 
-  if (!isChapter) {
-    if (LOCAL_IMG_CACHE[`city_${key}`]) {
-      img = LOCAL_IMG_CACHE[`city_${key}`];
-    } else if (LOCAL_IMG_CACHE[key]) {
-      img = LOCAL_IMG_CACHE[key];
-    } else if (fallbackKey && LOCAL_IMG_CACHE[`city_${fallbackKey}`]) {
-      img = LOCAL_IMG_CACHE[`city_${fallbackKey}`];
-    } else if (fallbackKey && LOCAL_IMG_CACHE[fallbackKey]) {
-      img = LOCAL_IMG_CACHE[fallbackKey];
+  const hasServerImg = img && (img.startsWith("/uploads/") || img.startsWith("http://") || img.startsWith("https://"));
+  if (!hasServerImg) {
+    if (!isChapter) {
+      if (LOCAL_IMG_CACHE[`city_${key}`]) {
+        img = LOCAL_IMG_CACHE[`city_${key}`];
+      } else if (LOCAL_IMG_CACHE[key]) {
+        img = LOCAL_IMG_CACHE[key];
+      } else if (fallbackKey && LOCAL_IMG_CACHE[`city_${fallbackKey}`]) {
+        img = LOCAL_IMG_CACHE[`city_${fallbackKey}`];
+      } else if (fallbackKey && LOCAL_IMG_CACHE[fallbackKey]) {
+        img = LOCAL_IMG_CACHE[fallbackKey];
+      }
+    } else {
+      if (LOCAL_IMG_CACHE[`city_${key}`]) img = LOCAL_IMG_CACHE[`city_${key}`];
+      else if (LOCAL_IMG_CACHE[key]) img = LOCAL_IMG_CACHE[key];
     }
-  } else {
-    if (LOCAL_IMG_CACHE[`city_${key}`]) img = LOCAL_IMG_CACHE[`city_${key}`];
-    else if (LOCAL_IMG_CACHE[key]) img = LOCAL_IMG_CACHE[key];
   }
 
   if (images.length === 0) {
     if (img) images.push(img);
-    for (let i = 1; i <= 20; i++) {
-      const cachedSub = LOCAL_IMG_CACHE[`city_${key}_${i}`] || (!isChapter && fallbackKey ? LOCAL_IMG_CACHE[`city_${fallbackKey}_${i}`] : null);
-      if (cachedSub && !images.includes(cachedSub)) images.push(cachedSub);
+    if (!hasServerImg) {
+      for (let i = 1; i <= 20; i++) {
+        const cachedSub = LOCAL_IMG_CACHE[`city_${key}_${i}`] || (!isChapter && fallbackKey ? LOCAL_IMG_CACHE[`city_${fallbackKey}_${i}`] : null);
+        if (cachedSub && !images.includes(cachedSub)) images.push(cachedSub);
+      }
     }
   }
 
@@ -425,7 +436,7 @@ function getCityPhotoData(key, fallbackKey) {
     if (ch && (ch.img || (Array.isArray(ch.images) && ch.images[0]))) {
       img = ch.img || ch.images[0];
     } else {
-      img = `images/${key}.jpg`;
+      img = `/uploads/demo/${key}.jpg`;
     }
     if (images.length === 0) images.push(img);
   }

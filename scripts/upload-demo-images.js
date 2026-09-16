@@ -36,8 +36,35 @@ const MIME_MAP = {
   ".jpeg": "image/jpeg",
   ".png": "image/png",
   ".webp": "image/webp",
-  ".svg": "image/svg+xml"
+  ".svg": "image/svg+xml",
+  ".mp3": "audio/mpeg",
+  ".m4a": "audio/mp4",
+  ".m4r": "audio/mp4",
+  ".wav": "audio/wav",
+  ".ogg": "audio/ogg",
+  ".webm": "audio/webm"
 };
+
+async function getExistingR2Keys() {
+  const keys = new Set();
+  let isTruncated = true;
+  let continuationToken = undefined;
+  while (isTruncated) {
+    const resp = await s3Client.send(new ListObjectsV2Command({
+      Bucket: R2_BUCKET_NAME,
+      Prefix: "demo/",
+      ContinuationToken: continuationToken
+    }));
+    if (resp.Contents) {
+      for (const item of resp.Contents) {
+        keys.add(path.basename(item.Key));
+      }
+    }
+    isTruncated = Boolean(resp.IsTruncated);
+    continuationToken = resp.NextContinuationToken;
+  }
+  return keys;
+}
 
 async function main() {
   if (!fs.existsSync(IMAGES_DIR)) {
@@ -45,21 +72,53 @@ async function main() {
     process.exit(1);
   }
 
-  const allFiles = fs.readdirSync(IMAGES_DIR)
+  const existingKeys = await getExistingR2Keys();
+  console.log(`Already in R2 under demo/: ${existingKeys.size} files`);
+
+  const fileEntries = [];
+
+  // Images
+  fs.readdirSync(IMAGES_DIR)
     .filter(f => !f.startsWith(".") && !f.startsWith("Thumbs.db"))
-    .filter(f => {
+    .forEach(f => {
       const ext = path.extname(f).toLowerCase();
-      return MIME_MAP[ext] != null;
+      if (MIME_MAP[ext] && !existingKeys.has(f)) {
+        fileEntries.push({ filePath: path.join(IMAGES_DIR, f), filename: f });
+      }
     });
 
-  console.log(`Found ${allFiles.length} images to upload from ${IMAGES_DIR} to bucket '${R2_BUCKET_NAME}' under prefix 'demo/'`);
+  // Audio in ../../audio
+  const audioDir = path.resolve(__dirname, "../../audio");
+  if (fs.existsSync(audioDir)) {
+    fs.readdirSync(audioDir)
+      .filter(f => !f.startsWith("."))
+      .forEach(f => {
+        const ext = path.extname(f).toLowerCase();
+        if (MIME_MAP[ext] && !existingKeys.has(f)) {
+          fileEntries.push({ filePath: path.join(audioDir, f), filename: f });
+        }
+      });
+  }
+
+  // Root audio files in ../..
+  const rootDir = path.resolve(__dirname, "../..");
+  fs.readdirSync(rootDir)
+    .filter(f => !f.startsWith("."))
+    .forEach(f => {
+      const ext = path.extname(f).toLowerCase();
+      if (MIME_MAP[ext] && !existingKeys.has(f)) {
+        fileEntries.push({ filePath: path.join(rootDir, f), filename: f });
+      }
+    });
+
+  console.log(`Found ${fileEntries.length} new files to upload to '${R2_BUCKET_NAME}' under prefix 'demo/'`);
 
   let completed = 0;
   let failed = 0;
   let totalBytes = 0;
 
-  async function uploadFile(filename) {
-    const filePath = path.join(IMAGES_DIR, filename);
+  async function uploadFile(entry) {
+    const { filePath, filename } = entry;
     const ext = path.extname(filename).toLowerCase();
     const contentType = MIME_MAP[ext] || "application/octet-stream";
     const key = `demo/${filename}`;
@@ -76,8 +135,8 @@ async function main() {
         }));
         completed++;
         totalBytes += buffer.length;
-        if (completed % 25 === 0 || completed === allFiles.length) {
-          console.log(`[${completed}/${allFiles.length}] Uploaded: ${key} (${(buffer.length / 1024).toFixed(1)} KB) - Total: ${(totalBytes / 1024 / 1024).toFixed(2)} MB`);
+        if (completed % 25 === 0 || completed === fileEntries.length) {
+          console.log(`[${completed}/${fileEntries.length}] Uploaded: ${key} (${(buffer.length / 1024).toFixed(1)} KB) - Total: ${(totalBytes / 1024 / 1024).toFixed(2)} MB`);
         }
         return;
       } catch (err) {
@@ -92,12 +151,12 @@ async function main() {
     }
   }
 
-  const queue = [...allFiles];
+  const queue = [...fileEntries];
   async function worker() {
     while (queue.length > 0) {
-      const file = queue.shift();
-      if (!file) break;
-      await uploadFile(file);
+      const entry = queue.shift();
+      if (!entry) break;
+      await uploadFile(entry);
     }
   }
 

@@ -117,35 +117,43 @@ function saveLocalFile(key, buffer) {
 async function listTenantUploads(tenantSlug) {
   if (!isR2Configured || !s3Client) return [];
   const list = [];
-  let isTruncated = true;
-  let continuationToken = undefined;
-  try {
-    while (isTruncated) {
-      const resp = await s3Client.send(new ListObjectsV2Command({
-        Bucket: R2_BUCKET_NAME,
-        Prefix: `${tenantSlug}/`,
-        ContinuationToken: continuationToken
-      }));
-      if (resp.Contents) {
-        for (const item of resp.Contents) {
-          const filename = path.basename(item.Key);
-          if (!filename || filename.startsWith(".") || (item.Size || 0) <= 0) continue;
-          const isAudio = /\.(mp3|m4a|m4r|wav|ogg|aac|flac|weba|webm)$/i.test(filename);
-          list.push({
-            key: item.Key,
-            filename,
-            size: item.Size || 0,
-            mtime: item.LastModified || new Date(),
-            isAudio,
-            url: `/uploads/${item.Key}`
-          });
+  const seenFilenames = new Set();
+  const prefixes = [tenantSlug];
+  if (tenantSlug !== "demo") prefixes.push("demo");
+
+  for (const pfx of prefixes) {
+    let isTruncated = true;
+    let continuationToken = undefined;
+    try {
+      while (isTruncated) {
+        const resp = await s3Client.send(new ListObjectsV2Command({
+          Bucket: R2_BUCKET_NAME,
+          Prefix: `${pfx}/`,
+          ContinuationToken: continuationToken
+        }));
+        if (resp.Contents) {
+          for (const item of resp.Contents) {
+            const filename = path.basename(item.Key);
+            if (!filename || filename.startsWith(".") || (item.Size || 0) <= 0) continue;
+            if (seenFilenames.has(filename)) continue;
+            seenFilenames.add(filename);
+            const isAudio = /\.(mp3|m4a|m4r|wav|ogg|aac|flac|weba|webm)$/i.test(filename);
+            list.push({
+              key: item.Key,
+              filename,
+              size: item.Size || 0,
+              mtime: item.LastModified || new Date(),
+              isAudio,
+              url: `/uploads/${item.Key}`
+            });
+          }
         }
+        isTruncated = Boolean(resp.IsTruncated);
+        continuationToken = resp.NextContinuationToken;
       }
-      isTruncated = Boolean(resp.IsTruncated);
-      continuationToken = resp.NextContinuationToken;
+    } catch (err) {
+      console.warn("R2 list error:", err.message);
     }
-  } catch (err) {
-    console.warn("R2 list error:", err.message);
   }
   return list.sort((a, b) => new Date(b.mtime) - new Date(a.mtime));
 }

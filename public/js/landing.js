@@ -955,13 +955,56 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const btnHeroBuy = document.getElementById("btnHeroBuy");
-  if (btnHeroBuy) btnHeroBuy.addEventListener("click", () => openCheckoutModal("vip"));
+  if (btnHeroBuy) {
+    btnHeroBuy.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.location.href = "/builder?slug=demo";
+    });
+  }
 
   const btnNavGetStarted = document.getElementById("btnNavGetStarted");
-  if (btnNavGetStarted) btnNavGetStarted.addEventListener("click", () => openCheckoutModal("vip"));
+  if (btnNavGetStarted) {
+    btnNavGetStarted.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.location.href = "/builder?slug=demo";
+    });
+  }
 
   const btnMobileGetStarted = document.getElementById("btnMobileGetStarted");
-  if (btnMobileGetStarted) btnMobileGetStarted.addEventListener("click", () => openCheckoutModal("vip"));
+  if (btnMobileGetStarted) {
+    btnMobileGetStarted.addEventListener("click", (e) => {
+      e.preventDefault();
+      window.location.href = "/builder?slug=demo";
+    });
+  }
+
+  function setupQuickPersonalizer(p1Id, p2Id, btnId) {
+    const p1 = document.getElementById(p1Id);
+    const p2 = document.getElementById(p2Id);
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    const launch = () => {
+      const v1 = (p1?.value || "").trim();
+      const v2 = (p2?.value || "").trim();
+      let url = "/builder?slug=demo";
+      if (v1) url += `&partner1=${encodeURIComponent(v1)}`;
+      if (v2) url += `&partner2=${encodeURIComponent(v2)}`;
+      window.location.href = url;
+    };
+    btn.addEventListener("click", launch);
+    [p1, p2].forEach(inp => {
+      if (inp) {
+        inp.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            launch();
+          }
+        });
+      }
+    });
+  }
+  setupQuickPersonalizer("v1QuickP1", "v1QuickP2", "btnV1QuickStart");
+  setupQuickPersonalizer("v2QuickP1", "v2QuickP2", "btnV2QuickStart");
 
   const btnCloseCheckoutModal = document.getElementById("btnCloseCheckoutModal");
   if (btnCloseCheckoutModal) {
@@ -1272,16 +1315,16 @@ document.addEventListener("DOMContentLoaded", () => {
       if (mobileMenuBtn) mobileMenuBtn.style.display = "";
 
       if (btnHeroBuy) {
-        btnHeroBuy.innerHTML = `<span>💖</span> Create Our Couple Project — From $19`;
-        btnHeroBuy.onclick = () => openCheckoutModal("vip");
+        btnHeroBuy.innerHTML = `<span class="hero-btn-badge">FREE</span> <span>✨</span> Start Building Your Website →`;
+        btnHeroBuy.onclick = (e) => { e.preventDefault(); window.location.href = "/builder?slug=demo"; };
       }
       if (btnStickyBuy) {
-        btnStickyBuy.innerHTML = `<span>💖</span> Claim Project & Launch Builder`;
-        btnStickyBuy.onclick = () => openCheckoutModal("vip");
+        btnStickyBuy.innerHTML = `<span>✨</span> Start Building Free →`;
+        btnStickyBuy.onclick = (e) => { e.preventDefault(); window.location.href = "/builder?slug=demo"; };
       }
       if (btnMobileGetStarted) {
-        btnMobileGetStarted.innerHTML = `<span>💖</span> Create Project`;
-        btnMobileGetStarted.onclick = () => openCheckoutModal("vip");
+        btnMobileGetStarted.innerHTML = `<span>✨</span> Start Building Free →`;
+        btnMobileGetStarted.onclick = (e) => { e.preventDefault(); window.location.href = "/builder?slug=demo"; };
       }
 
       if (mobileAuthLoggedOut) mobileAuthLoggedOut.style.display = "flex";

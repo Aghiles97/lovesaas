@@ -1114,6 +1114,7 @@ const server = http.createServer(async (req, res) => {
     let rawKey = pathname.replace(/^\//, "");
     try { rawKey = decodeURIComponent(rawKey); } catch (e) {}
     const candidateKeys = [];
+    const baseFilename = path.basename(rawKey);
     if (rawKey.startsWith("uploads/")) {
       candidateKeys.push(rawKey.replace(/^uploads\//, ""), rawKey);
     } else {
@@ -1121,16 +1122,23 @@ const server = http.createServer(async (req, res) => {
     }
     if (rawKey.startsWith("images/")) {
       const base = rawKey.replace(/^images\//, "");
-      candidateKeys.push(`demo/${base}`, `uploads/demo/${base}`);
+      candidateKeys.push(`demo/${base}`, `uploads/demo/${base}`, base);
+    } else if (rawKey.startsWith("audio/")) {
+      const base = rawKey.replace(/^audio\//, "");
+      candidateKeys.push(`demo/${base}`, `uploads/demo/${base}`, base);
     } else if (rawKey.startsWith("demo/")) {
       candidateKeys.push(`uploads/${rawKey}`);
     }
+    candidateKeys.push(`demo/${baseFilename}`, `uploads/demo/${baseFilename}`, baseFilename);
     if (rawKey.endsWith(".webp")) {
       const jpg = rawKey.replace(/\.webp$/i, ".jpg");
       candidateKeys.push(jpg, `uploads/${jpg}`, `demo/${path.basename(jpg)}`);
     } else if (rawKey.endsWith(".jpg") || rawKey.endsWith(".jpeg")) {
       const webp = rawKey.replace(/\.jpe?g$/i, ".webp");
       candidateKeys.push(webp, `uploads/${webp}`, `demo/${path.basename(webp)}`);
+    } else if (/\.(mp3|m4a|m4r)$/i.test(rawKey)) {
+      const bare = baseFilename.replace(/\.(mp3|m4a|m4r)$/i, "");
+      candidateKeys.push(`demo/${bare}.m4a`, `demo/${bare}.m4r`, `demo/${bare}.mp3`);
     }
     try {
       let r2Obj = null;
