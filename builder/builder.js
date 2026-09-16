@@ -86,7 +86,7 @@ function updateLiveSyncPill(status = 'live') {
 
 // Live Sync Debouncer & Real-time Iframe Communication
 let liveSyncTimeout = null;
-function debouncedLiveUpdate(immediate = false, modifiedWidgetId = null) {
+function debouncedLiveUpdate(immediate = false, modifiedWidgetId = null, scrollToWidgetId = null) {
   clearTimeout(liveSyncTimeout);
   const doUpdate = () => {
     if (previewIframe && previewIframe.contentWindow) {
@@ -99,9 +99,10 @@ function debouncedLiveUpdate(immediate = false, modifiedWidgetId = null) {
             layoutOrder: state.layoutOrder,
             sectionsData: state.sectionsData,
             activeWidgetId: modifiedWidgetId || state.activeInspectorWidget,
+            scrollToWidgetId: scrollToWidgetId || null,
           },
         },
-        window.location.origin,
+        '*',
       );
     }
     const syncPill = document.getElementById('inspectorLiveSyncPill');
@@ -1258,16 +1259,20 @@ function toggleWidgetActive(widgetId, isEnabled) {
   if (widgetId === 'intro') {
     if (!state.sectionsData.intro) state.sectionsData.intro = {};
     state.sectionsData.intro.enabled = isEnabled;
-    debouncedLiveUpdate(true);
+    debouncedLiveUpdate(true, 'intro', isEnabled ? 'intro' : null);
     debouncedAutoSaveLayout();
+    if (isEnabled && typeof window.setPreviewScreen === 'function') {
+      window.setPreviewScreen('intro');
+    }
     return;
   }
   if (isEnabled) {
     if (!state.layoutOrder.includes(widgetId)) {
       state.layoutOrder.push(widgetId);
     }
-    if (!state.activeInspectorWidget) {
-      selectWidgetForInspector(widgetId);
+    selectWidgetForInspector(widgetId);
+    if (typeof window.setPreviewScreen === 'function') {
+      window.setPreviewScreen('website');
     }
   } else {
     state.layoutOrder = state.layoutOrder.filter((id) => id !== widgetId);
@@ -1281,8 +1286,22 @@ function toggleWidgetActive(widgetId, isEnabled) {
 
   renderPresetsUI();
   renderWidgetTray();
-  debouncedLiveUpdate(true);
+  debouncedLiveUpdate(true, widgetId, isEnabled ? widgetId : null);
   debouncedAutoSaveLayout();
+
+  if (isEnabled) {
+    const postScroll = () => {
+      if (previewIframe && previewIframe.contentWindow) {
+        previewIframe.contentWindow.postMessage(
+          { type: 'SCROLL_TO_WIDGET', widgetId },
+          '*',
+        );
+      }
+    };
+    postScroll();
+    setTimeout(postScroll, 60);
+    setTimeout(postScroll, 200);
+  }
 }
 
 function initWidgetTrayControls() {
@@ -1408,20 +1427,27 @@ async function addWidgetAtPosition(widgetId, targetIndex) {
 
   renderPresetsUI();
   renderWidgetTray();
-  debouncedLiveUpdate(true);
+  debouncedLiveUpdate(true, widgetId, widgetId);
   debouncedAutoSaveLayout();
 
-  setTimeout(() => {
+  if (typeof window.setPreviewScreen === 'function') {
+    window.setPreviewScreen('website');
+  }
+
+  const postScroll = () => {
     if (previewIframe && previewIframe.contentWindow) {
       previewIframe.contentWindow.postMessage(
         {
           type: 'SCROLL_TO_WIDGET',
           widgetId,
         },
-        window.location.origin,
+        '*',
       );
     }
-  }, 120);
+  };
+  postScroll();
+  setTimeout(postScroll, 60);
+  setTimeout(postScroll, 200);
 
   selectWidgetForInspector(widgetId);
 

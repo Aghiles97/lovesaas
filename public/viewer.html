@@ -1487,6 +1487,24 @@
             }
 
             renderer.render(e.data.config);
+            if (e.data.config.scrollToWidgetId) {
+              const wid = e.data.config.scrollToWidgetId;
+              if (wid === "intro") {
+                window.IntroEnvelope.reseal();
+              } else {
+                if (window.IntroEnvelope.isSealed) window.IntroEnvelope.unseal({ instant: true });
+                requestAnimationFrame(() => {
+                  const target = document.getElementById("section-" + wid) ||
+                                 document.querySelector(`[data-widget-id="${wid}"]`) ||
+                                 document.querySelector(`.widget-wrap-${wid}`);
+                  if (target) {
+                    target.scrollIntoView({ behavior: "smooth", block: "start" });
+                    target.classList.add("widget-locate-highlight");
+                    setTimeout(() => target.classList.remove("widget-locate-highlight"), 1800);
+                  }
+                });
+              }
+            }
           }
           if (e.data && e.data.type === "SPOTLIGHT_CITY") {
             if (typeof window.spotlightMapCity === "function") window.spotlightMapCity(e.data.cityKey);
@@ -1681,13 +1699,20 @@
               window.IntroEnvelope.reseal();
               return;
             }
-            if (window.IntroEnvelope.isSealed) window.IntroEnvelope.unseal();
-            const target = document.getElementById("section-" + e.data.widgetId) || document.querySelector(`[data-widget-id="${e.data.widgetId}"]`);
-            if (target) {
-              target.scrollIntoView({ behavior: "smooth", block: "start" });
-              target.classList.add("widget-locate-highlight");
-              setTimeout(() => target.classList.remove("widget-locate-highlight"), 1800);
-            }
+            if (window.IntroEnvelope.isSealed) window.IntroEnvelope.unseal({ instant: true });
+            const doScroll = (attempt = 0) => {
+              const target = document.getElementById("section-" + e.data.widgetId) ||
+                             document.querySelector(`[data-widget-id="${e.data.widgetId}"]`) ||
+                             document.querySelector(`.widget-wrap-${e.data.widgetId}`);
+              if (target) {
+                target.scrollIntoView({ behavior: "smooth", block: "start" });
+                target.classList.add("widget-locate-highlight");
+                setTimeout(() => target.classList.remove("widget-locate-highlight"), 1800);
+              } else if (attempt < 5) {
+                setTimeout(() => doScroll(attempt + 1), 60);
+              }
+            };
+            requestAnimationFrame(() => doScroll(0));
           }
         });
 
