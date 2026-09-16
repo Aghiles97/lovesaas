@@ -640,7 +640,8 @@ document.addEventListener("DOMContentLoaded", () => {
     truce_agreement: { title: "📜 Bilateral Truce Treaty", cat: "RECONCILIATION", sub: "Hold-to-sign peace treaty with wax seal & downloadable keepsake" },
     reform_deck: { title: "🃏 The Honest Reform Deck", cat: "RECONCILIATION", sub: "3D flip card deck with accountability promises & commitments" },
     reparation_coupons: { title: "🎟️ Reparation Coupons", cat: "RECONCILIATION", sub: "Scratch-off peace offering vouchers with claimed status tracking" },
-    comfort_soundboard: { title: "🎧 Comfort Soundboard", cat: "AUDIO", sub: "Procedural ambient soundscapes mixer with calming photo stream" }
+    comfort_soundboard: { title: "🎧 Comfort Soundboard", cat: "AUDIO", sub: "Procedural ambient soundscapes mixer with calming photo stream" },
+    scrapbook_game: { title: "📓 Scrapbook: How Well Do You Know Me?", cat: "GAMES", sub: "Tactile couple scrapbook challenge with taped polaroids, choice stickers & keepsake" }
   };
 
   // More Widgets Toggle & Filter Bar

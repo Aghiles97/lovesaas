@@ -1358,6 +1358,44 @@
     </svg>
   `);
 
+  // 32. SCRAPBOOK GAME
+  PREVIEWS.scrapbook_game = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <defs>
+        <linearGradient id="sbBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#faf6ee"/>
+          <stop offset="100%" stop-color="#f2ebe0"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="480" fill="url(#sbBg)"/>
+      <rect x="40" y="30" width="720" height="420" rx="16" fill="#fffdf9" stroke="#d5c7b5" stroke-dasharray="6,6" stroke-width="2"/>
+      <rect x="50" y="18" width="100" height="24" rx="2" fill="#fbb6ce" opacity="0.85" transform="rotate(-5 100 30)"/>
+      <rect x="650" y="18" width="100" height="24" rx="2" fill="#fcd34d" opacity="0.85" transform="rotate(6 700 30)"/>
+      <text x="400" y="80" fill="#b03a60" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" letter-spacing="1" text-anchor="middle">INTERACTIVE COUPLE SCRAPBOOK 📓✨</text>
+      <text x="400" y="115" fill="#2b1e1a" font-family="-apple-system, sans-serif" font-size="24" font-weight="800" text-anchor="middle">How Well Do You Know Me? ✂️</text>
+      <g transform="translate(90, 150)">
+        <rect width="220" height="240" rx="6" fill="#ffffff" filter="drop-shadow(0 6px 12px rgba(0,0,0,0.1))" transform="rotate(-3)"/>
+        <rect x="12" y="12" width="196" height="170" rx="4" fill="#fed7aa" transform="rotate(-3)"/>
+        <text x="110" y="105" font-size="36" text-anchor="middle" transform="rotate(-3)">🍜</text>
+        <text x="110" y="215" fill="#55443e" font-family="-apple-system, sans-serif" font-size="12" font-style="italic" text-anchor="middle" transform="rotate(-3)">Late-night food crawls</text>
+      </g>
+      <g transform="translate(360, 155)">
+        <text x="0" y="25" fill="#8c6a5b" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">MEMORY 1 OF 5</text>
+        <text x="0" y="55" fill="#2b1e1a" font-family="-apple-system, sans-serif" font-size="18" font-weight="700">What is my absolute comfort food?</text>
+        <rect x="0" y="80" width="180" height="42" rx="8" fill="#e8f8f0" stroke="#2ecc71" stroke-width="2"/>
+        <text x="15" y="106" fill="#1b6d3d" font-family="-apple-system, sans-serif" font-size="13" font-weight="700">A. Spicy Noodles 🍜 ✓</text>
+        <rect x="195" y="80" width="180" height="42" rx="8" fill="#fdfbf7" stroke="#ecdccc" stroke-width="2"/>
+        <text x="210" y="106" fill="#4a3b34" font-family="-apple-system, sans-serif" font-size="13">B. Cheese Pizza 🍕</text>
+        <rect x="0" y="132" width="180" height="42" rx="8" fill="#fdfbf7" stroke="#ecdccc" stroke-width="2"/>
+        <text x="15" y="158" fill="#4a3b34" font-family="-apple-system, sans-serif" font-size="13">C. Warm Rice Bowl 🍚</text>
+        <rect x="195" y="132" width="180" height="42" rx="8" fill="#fdfbf7" stroke="#ecdccc" stroke-width="2"/>
+        <text x="210" y="158" fill="#4a3b34" font-family="-apple-system, sans-serif" font-size="13">D. Dessert Crepe 🥞</text>
+        <rect x="120" y="195" width="140" height="34" rx="6" fill="none" stroke="#27ae60" stroke-width="3" transform="rotate(-6)"/>
+        <text x="190" y="218" fill="#27ae60" font-family="-apple-system, sans-serif" font-size="14" font-weight="800" text-anchor="middle" transform="rotate(-6)">✨ SPOT ON!</text>
+      </g>
+    </svg>
+  `);
+
   window.WIDGET_PREVIEWS = PREVIEWS;
   window.getWidgetPreviewImage = function(widgetId) {
     return PREVIEWS[widgetId] || null;

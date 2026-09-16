@@ -156,6 +156,19 @@ const WIDGET_REGISTRY = {
     runtime: "/public/js/widgets/quiz-trivia.runtime.js",
     initFn: "renderQuizStep"
   },
+  scrapbook_game: {
+    id: "scrapbook_game",
+    title: "Scrapbook: How Well Do You Know Me?",
+    icon: "📓",
+    desc: "Tactile couple scrapbook challenge with taped polaroids, choice stickers, and keepsake certificate.",
+    category: "games",
+    defaultEnabled: false,
+    css: "/public/css/widgets/scrapbook_game.css",
+    template: "/core/templates/scrapbook_game.template.js",
+    inspector: "/builder/inspectors/scrapbook_game.inspector.js",
+    runtime: "/public/js/widgets/scrapbook-game.runtime.js",
+    initFn: "setupScrapbookGame"
+  },
   letter: {
     id: "letter",
     title: "Wax-Sealed Love Letter",

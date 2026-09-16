@@ -280,6 +280,9 @@ class DynamicRenderer {
       const celebrationBtnText = document.getElementById("celebrationBtnText");
       if (celebrationBtnText && pl.celebrationBtnText) celebrationBtnText.textContent = pl.celebrationBtnText;
     }
+    if (sectionsData.scrapbook_game) {
+      window.SCRAPBOOK_DATA = sectionsData.scrapbook_game;
+    }
 
     if (isSameLayout) {
       const activeId = config.activeWidgetId || config.modifiedWidgetId;
@@ -672,6 +675,9 @@ class DynamicRenderer {
       },
       comfort_soundboard: () => {
         if (typeof setupComfortSoundboard === "function") try { setupComfortSoundboard(sectionsData.comfort_soundboard, hero); } catch (e) {}
+      },
+      scrapbook_game: () => {
+        if (typeof setupScrapbookGame === "function") try { setupScrapbookGame(sectionsData.scrapbook_game, hero); } catch (e) {}
       },
       hero: () => {
         if (typeof setupQuintillionObserver === "function") try { setupQuintillionObserver(); } catch (e) {}

@@ -1,0 +1,912 @@
+/* Hyper-Realistic Scrapbook Game Widget CSS */
+.scrapbook-section {
+  position: relative;
+  padding: 90px 0;
+  z-index: 10;
+}
+
+/* Outer Album Binder Wrap with Spiral Spine */
+.scrapbook-album-outer {
+  position: relative;
+  display: flex;
+  margin: 0 auto;
+  max-width: 1060px;
+  filter: drop-shadow(0 20px 45px rgba(35, 18, 10, 0.18));
+}
+
+.scrapbook-spiral-spine {
+  position: absolute;
+  left: 20px;
+  top: 40px;
+  bottom: 40px;
+  width: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  z-index: 25;
+  pointer-events: none;
+}
+.spiral-loop {
+  position: relative;
+  height: 28px;
+  display: flex;
+  align-items: center;
+}
+.spiral-hole {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #24140e 50%, #4a2f20 80%, #6d4b38 100%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7), 0 1px 1px rgba(255, 255, 255, 0.4);
+}
+.spiral-wire {
+  position: absolute;
+  left: 4px;
+  width: 24px;
+  height: 16px;
+  border-radius: 12px 12px 4px 4px;
+  background: linear-gradient(135deg, #d4af37 0%, #fff7d6 35%, #aa8010 70%, #594200 100%);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.45);
+  transform: rotate(-12deg);
+}
+
+.scrapbook-album {
+  position: relative;
+  flex: 1;
+  background: 
+    radial-gradient(circle at 50% 50%, rgba(255, 253, 248, 0.98), rgba(246, 239, 227, 0.96)),
+    repeating-linear-gradient(0deg, transparent, transparent 24px, rgba(180, 150, 120, 0.04) 25px);
+  border: 1px solid rgba(190, 160, 130, 0.4);
+  border-radius: 18px;
+  padding: 44px 40px 44px 64px;
+  box-shadow: inset 0 0 40px rgba(180, 140, 100, 0.12);
+  color: #3d2f2b;
+  overflow: hidden;
+}
+
+/* Washi Tape Strips with Zig-Zag Cut Edges */
+.washi-tape {
+  position: absolute;
+  height: 32px;
+  width: 140px;
+  opacity: 0.92;
+  z-index: 15;
+  box-shadow: 0 3px 8px rgba(30, 15, 5, 0.16);
+  pointer-events: none;
+}
+.washi-tape-zigzag::before,
+.washi-tape-zigzag::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background-size: 6px 6px;
+  background-repeat: repeat-y;
+}
+.washi-tape-zigzag::before {
+  left: -5px;
+  background-image: radial-gradient(circle at 0 3px, transparent 3px, currentColor 3px);
+}
+.washi-tape-zigzag::after {
+  right: -5px;
+  background-image: radial-gradient(circle at 6px 3px, transparent 3px, currentColor 3px);
+}
+.washi-pink {
+  color: #fca5b9;
+  background: repeating-linear-gradient(45deg, rgba(255, 182, 193, 0.88), rgba(255, 182, 193, 0.88) 12px, rgba(255, 196, 206, 0.92) 12px, rgba(255, 196, 206, 0.92) 24px);
+}
+.washi-gold {
+  color: #f1cf85;
+  background: repeating-linear-gradient(-45deg, rgba(243, 212, 140, 0.88), rgba(243, 212, 140, 0.88) 12px, rgba(230, 195, 110, 0.92) 12px, rgba(230, 195, 110, 0.92) 24px);
+}
+.washi-mint {
+  color: #a7e2cc;
+  background: repeating-linear-gradient(45deg, rgba(182, 230, 212, 0.88), rgba(182, 230, 212, 0.88) 12px, rgba(165, 222, 202, 0.92) 12px, rgba(165, 222, 202, 0.92) 24px);
+}
+
+.scrapbook-tape-top-left {
+  top: -10px;
+  left: 70px;
+  transform: rotate(-5deg);
+}
+.scrapbook-tape-top-right {
+  top: -10px;
+  right: 50px;
+  transform: rotate(6deg);
+}
+.scrapbook-tape-bottom-right {
+  bottom: -10px;
+  right: 60px;
+  transform: rotate(-3deg);
+}
+
+/* Vintage Airmail Stamp & Pins */
+.scrapbook-airmail-stamp {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  border: 2px dashed rgba(190, 70, 90, 0.6);
+  border-radius: 8px;
+  padding: 6px 12px;
+  transform: rotate(12deg);
+  opacity: 0.85;
+  pointer-events: none;
+  text-align: center;
+}
+.scrapbook-airmail-stamp .stamp-code {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: #b03a60;
+}
+.scrapbook-airmail-stamp .stamp-date {
+  display: block;
+  font-size: 8px;
+  font-weight: 700;
+  color: #7d5a50;
+}
+
+.scrapbook-corner-pin {
+  position: absolute;
+  top: 18px;
+  left: 64px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #e67e22, #a04000 80%);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+/* Header */
+.scrapbook-header .section-tag {
+  background: rgba(220, 110, 140, 0.15);
+  color: #b03a60;
+  border: 1px solid rgba(220, 110, 140, 0.3);
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+.scrapbook-header .section-title {
+  color: #2b1e1a;
+  font-size: 2.3rem;
+  margin-bottom: 8px;
+  font-weight: 800;
+}
+.scrapbook-header .section-desc {
+  color: #6d5b54;
+  font-size: 1.05rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Ribbon Bar */
+.scrapbook-ribbon-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 2px dashed rgba(200, 170, 140, 0.5);
+  border-radius: 14px;
+  padding: 12px 20px;
+  margin: 26px 0 34px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+.ribbon-left-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 280px;
+}
+.scrapbook-ribbon-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #8c6a5b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.scrapbook-ribbon-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ribbon-empty-hint {
+  font-size: 12px;
+  color: #9e877a;
+  font-style: italic;
+}
+.ribbon-sticker-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.14);
+  font-size: 20px;
+  transform: rotate(-4deg);
+  animation: stickerSlapIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes stickerSlapIn {
+  0% { transform: scale(2.6) rotate(30deg); opacity: 0; }
+  60% { transform: scale(0.9) rotate(-8deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-4deg); }
+}
+
+.ribbon-right-pills {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.scrapbook-streak-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #ff7e5f, #feb47b);
+  color: #fff;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 3px 8px rgba(255, 126, 95, 0.35);
+  animation: pulseStreak 1.4s infinite alternate;
+}
+.scrapbook-streak-pill.hidden {
+  display: none;
+}
+@keyframes pulseStreak {
+  from { transform: scale(1); }
+  to { transform: scale(1.06); }
+}
+.scrapbook-score-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #2b1e1a;
+  color: #fff;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.scrapbook-score-pill .score-val {
+  color: #ffd166;
+}
+
+/* 3D Polaroid Card Container */
+.scrapbook-card {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 36px;
+  background: #fffdfa;
+  border-radius: 18px;
+  padding: 32px 30px;
+  border: 1px solid rgba(220, 205, 190, 0.7);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+  perspective: 1200px;
+  transition: transform 0.3s ease;
+}
+@media (max-width: 860px) {
+  .scrapbook-album {
+    padding: 30px 20px 30px 48px;
+  }
+  .scrapbook-card {
+    grid-template-columns: 1fr;
+  }
+}
+.scrapbook-card.shake-error {
+  animation: shakeWobble 0.5s ease;
+}
+@keyframes shakeWobble {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px) rotate(-1deg); }
+  40%, 80% { transform: translateX(8px) rotate(1deg); }
+}
+
+/* 3D Flippable Polaroid Photo Card */
+.polaroid-3d-scene {
+  position: relative;
+  width: 100%;
+  max-width: 310px;
+  height: 380px;
+  margin: 0 auto;
+  perspective: 1200px;
+}
+.polaroid-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+.polaroid-card-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+/* Front & Back Faces */
+.polaroid-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 14px 14px 28px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+.polaroid-face-front {
+  transform: rotate(-2deg);
+}
+.polaroid-face-back {
+  transform: rotateY(180deg) rotate(2deg);
+  background: radial-gradient(circle, #fffdf8, #f8f1e3);
+  justify-content: space-between;
+  border: 1px dashed #d5c0aa;
+  padding: 24px 20px;
+}
+
+.polaroid-tape-header {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%) rotate(1deg);
+  width: 110px;
+  height: 26px;
+  z-index: 5;
+}
+.scrapbook-polaroid-img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #eee;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.15);
+}
+.scrapbook-polaroid-caption {
+  margin-top: 14px;
+  font-size: 13.5px;
+  color: #44332d;
+  font-style: italic;
+  text-align: center;
+  font-weight: 600;
+}
+.polaroid-flip-hint {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #a08479;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* Polaroid Back Content */
+.polaroid-back-postmark {
+  border: 2px solid #b03a60;
+  color: #b03a60;
+  border-radius: 50%;
+  width: 70px;
+  height: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  transform: rotate(-10deg);
+  opacity: 0.85;
+}
+.polaroid-back-postmark span {
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.polaroid-back-note {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #553e34;
+  font-style: italic;
+  text-align: center;
+}
+.polaroid-back-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #8c7368;
+  border-top: 1px dashed #d5c0aa;
+  padding-top: 10px;
+}
+
+/* Question & Choices Side */
+.scrapbook-content-side {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.scrapbook-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.scrapbook-step-tag {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #b03a60;
+  letter-spacing: 0.08em;
+}
+.scrapbook-card-sticker-badge {
+  font-size: 22px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+}
+.scrapbook-prompt-title {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #2b1e1a;
+  line-height: 1.35;
+  margin-bottom: 16px;
+}
+
+/* Folded Whisper Hint Note */
+.scrapbook-whisper-hint {
+  margin-bottom: 20px;
+}
+.btn-toggle-hint {
+  background: #fdf5e6;
+  border: 1px dashed #e67e22;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #d35400;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.btn-toggle-hint:hover {
+  background: #faebd7;
+  transform: translateY(-1px);
+}
+.hint-unfolded-box {
+  background: #fff8e7;
+  border-left: 3px solid #e67e22;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #795548;
+  animation: cardFade 0.25s ease;
+}
+.hint-unfolded-box.hidden {
+  display: none;
+}
+
+/* Choices Grid */
+.scrapbook-choices-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+@media (max-width: 580px) {
+  .scrapbook-choices-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.scrapbook-choice-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fffdf9;
+  border: 2px solid #ecdccc;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #4a3b34;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.scrapbook-choice-btn:hover:not(:disabled) {
+  border-color: #d1758c;
+  background: #fff;
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 6px 16px rgba(209, 117, 140, 0.22);
+}
+.choice-badge-idx {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ecdccc;
+  color: #6a4f43;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.scrapbook-choice-btn.selected-correct {
+  background: #e8f8f0 !important;
+  border-color: #2ecc71 !important;
+  color: #1b6d3d !important;
+  box-shadow: 0 4px 14px rgba(46, 204, 113, 0.25) !important;
+}
+.scrapbook-choice-btn.selected-correct .choice-badge-idx {
+  background: #2ecc71;
+  color: #fff;
+}
+.scrapbook-choice-btn.selected-wrong {
+  background: #fdeeee !important;
+  border-color: #e74c3c !important;
+  color: #922b21 !important;
+}
+.scrapbook-choice-btn.selected-wrong .choice-badge-idx {
+  background: #e74c3c;
+  color: #fff;
+}
+
+/* Rubber Stamp Effect */
+.scrapbook-stamp {
+  display: inline-block;
+  font-size: 15px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 5px 14px;
+  border: 3px solid currentColor;
+  border-radius: 6px;
+  animation: stampPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+.stamp-correct {
+  color: #27ae60;
+}
+.stamp-wrong {
+  color: #d35400;
+}
+@keyframes stampPop {
+  0% { transform: scale(2.8) rotate(-22deg); opacity: 0; }
+  100% { transform: scale(1) rotate(-8deg); opacity: 1; }
+}
+
+/* Secret Memory Card */
+.scrapbook-memory-card {
+  background: #fff9e6;
+  border: 2px dashed #f39c12;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-top: 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  animation: cardFade 0.35s ease;
+}
+.memory-note-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.memory-note-tag {
+  font-size: 12px;
+  font-weight: 800;
+  color: #d68910;
+  text-transform: uppercase;
+}
+.memory-note-body {
+  font-size: 14px;
+  color: #5d4037;
+  line-height: 1.5;
+  margin: 0 0 14px;
+  font-style: italic;
+}
+.btn-scrapbook-next {
+  background: linear-gradient(135deg, #b03a60, #d15277);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 22px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(176, 58, 96, 0.35);
+}
+.btn-scrapbook-next:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(176, 58, 96, 0.45);
+}
+
+/* Keepsake Book Modal: Dual-Page Layout */
+.scrapbook-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.scrapbook-modal.hidden {
+  display: none;
+}
+.scrapbook-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(25, 15, 10, 0.8);
+  backdrop-filter: blur(8px);
+}
+.scrapbook-modal-content {
+  position: relative;
+  max-width: 960px;
+  width: 100%;
+  z-index: 2;
+  animation: bookSwing 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes bookSwing {
+  0% { transform: scale(0.85) rotateX(15deg); opacity: 0; }
+  100% { transform: scale(1) rotateX(0deg); opacity: 1; }
+}
+.scrapbook-modal-close {
+  position: absolute;
+  top: -16px;
+  right: -16px;
+  background: #fff;
+  border: 2px solid #2b1e1a;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  z-index: 20;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Dual Page Keepsake Book */
+.scrapbook-keepsake-book {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  background: #fdfbf7;
+  border: 10px solid #ecdccc;
+  border-radius: 20px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+@media (max-width: 800px) {
+  .scrapbook-keepsake-book {
+    grid-template-columns: 1fr;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+}
+
+.keepsake-page {
+  padding: 32px 28px;
+  position: relative;
+}
+.keepsake-page-left {
+  background: radial-gradient(circle at 30% 30%, #fffefb, #f5ede0);
+  border-right: 2px dashed #d5c0aa;
+}
+.keepsake-page-heading {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #4a3b34;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.keepsake-collage-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.collage-polaroid-item {
+  background: #fff;
+  padding: 6px 6px 14px;
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  transform: rotate(-3deg);
+  transition: transform 0.2s;
+}
+.collage-polaroid-item:nth-child(even) {
+  transform: rotate(4deg);
+}
+.collage-polaroid-item img {
+  width: 100%;
+  height: 85px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+.collage-polaroid-item .cap {
+  font-size: 10px;
+  color: #55443e;
+  text-align: center;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.keepsake-stickers-deck {
+  border-top: 1px dashed #d5c0aa;
+  padding-top: 14px;
+}
+.stickers-deck-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #8c7368;
+  display: block;
+  margin-bottom: 8px;
+}
+.keepsake-sticker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Right Page Certificate */
+.keepsake-page-right {
+  background: radial-gradient(circle at 50% 50%, #fffdf8, #f8f1e3);
+  text-align: center;
+}
+.keepsake-gold-foil-border {
+  border: 3px double #d4af37;
+  padding: 24px 20px;
+  border-radius: 12px;
+  position: relative;
+}
+
+/* 3D Wax Seal */
+.wax-seal-container {
+  margin: -10px auto 12px;
+}
+.wax-seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #e74c3c 10%, #c0392b 60%, #962d22 100%);
+  box-shadow: 0 6px 14px rgba(192, 57, 43, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  transform: rotate(-5deg);
+}
+.wax-seal .seal-heart {
+  font-size: 22px;
+  color: #fff;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+.keepsake-stamp-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: #b03a60;
+  border: 1.5px solid #b03a60;
+  border-radius: 4px;
+  padding: 3px 10px;
+  margin-bottom: 8px;
+}
+.keepsake-title {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #2b1e1a;
+  margin-bottom: 6px;
+}
+.keepsake-awardee {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #b03a60;
+  margin-bottom: 12px;
+}
+
+.keepsake-score-seal {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fff;
+  border: 2px dashed #e67e22;
+  border-radius: 12px;
+  padding: 6px 18px;
+  margin-bottom: 14px;
+}
+.seal-rating-stars {
+  color: #f39c12;
+  font-size: 16px;
+  letter-spacing: 2px;
+}
+.seal-score {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #d35400;
+}
+.keepsake-quote {
+  font-size: 13px;
+  font-style: italic;
+  color: #55443e;
+  line-height: 1.4;
+  margin: 10px 0;
+}
+.keepsake-note {
+  font-size: 12px;
+  color: #795548;
+  margin-bottom: 16px;
+}
+
+/* Signatures Block */
+.keepsake-sign-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-top: 10px;
+  border-top: 1px dashed #d5c0aa;
+}
+.sign-line {
+  display: flex;
+  flex-direction: column;
+}
+.sign-handwritten {
+  font-family: cursive, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #2b1e1a;
+}
+.sign-label {
+  font-size: 10px;
+  color: #8c7368;
+  text-transform: uppercase;
+}
+.sign-heart-knot {
+  font-size: 18px;
+  color: #e74c3c;
+}
+
+/* Actions */
+.keepsake-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.btn-gold-action {
+  background: linear-gradient(135deg, #d4af37, #aa8010);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.4);
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-gold-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.55);
+}

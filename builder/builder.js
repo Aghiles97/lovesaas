@@ -1911,6 +1911,7 @@ const WIDGET_CATEGORIES = {
   reform_deck: 'Reform Deck',
   reparation_coupons: 'Reparation Coupons',
   comfort_soundboard: 'Comfort Soundboard',
+  scrapbook_game: 'Scrapbook Game',
 };
 
 const WIDGET_LABELS = {
@@ -1920,6 +1921,7 @@ const WIDGET_LABELS = {
   reform_deck: 'Reform Deck',
   reparation_coupons: 'Reparation Coupons',
   comfort_soundboard: 'Comfort Soundboard',
+  scrapbook_game: 'Scrapbook Game',
 };
 if (typeof window !== 'undefined') window.WIDGET_LABELS = WIDGET_LABELS;
 

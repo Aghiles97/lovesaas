@@ -44,7 +44,8 @@ if (typeof module !== "undefined" && module.exports) {
     truce_agreement: require("./templates/truce_agreement.template.js"),
     reform_deck: require("./templates/reform_deck.template.js"),
     reparation_coupons: require("./templates/reparation_coupons.template.js"),
-    comfort_soundboard: require("./templates/comfort_soundboard.template.js")
+    comfort_soundboard: require("./templates/comfort_soundboard.template.js"),
+    scrapbook_game: require("./templates/scrapbook_game.template.js")
   };
   module.exports = { WIDGET_TEMPLATES };
 }

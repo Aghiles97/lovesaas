@@ -102,6 +102,7 @@
   <link rel="stylesheet" href="/public/css/widgets/reform_deck.css">
   <link rel="stylesheet" href="/public/css/widgets/reparation_coupons.css">
   <link rel="stylesheet" href="/public/css/widgets/comfort_soundboard.css">
+  <link rel="stylesheet" href="/public/css/widgets/scrapbook_game.css">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <style>
@@ -1011,6 +1012,7 @@
   <script src="/core/templates/reform_deck.template.js"></script>
   <script src="/core/templates/reparation_coupons.template.js"></script>
   <script src="/core/templates/comfort_soundboard.template.js"></script>
+  <script src="/core/templates/scrapbook_game.template.js"></script>
   <script src="/core/widget-templates.js"></script>
   <script src="/public/js/data.js"></script>
   <script src="/public/js/storage.js"></script>
@@ -1050,6 +1052,7 @@
   <script src="/public/js/widgets/reform-deck.runtime.js"></script>
   <script src="/public/js/widgets/reparation-coupons.runtime.js"></script>
   <script src="/public/js/widgets/comfort-soundboard.runtime.js"></script>
+  <script src="/public/js/widgets/scrapbook-game.runtime.js"></script>
   <script src="/public/js/games-widgets.js"></script>
   <script src="/public/js/main.js"></script>
   <script src="/core/dynamic-renderer.js"></script>
@@ -1593,6 +1596,15 @@
           }
           if (e.data && e.data.type === "QUIZ_OPEN_CERT" && typeof window.quizOpenCertificate === "function") {
             window.quizOpenCertificate();
+          }
+          if (e.data && e.data.type === "SCRAPBOOK_JUMP_STEP" && typeof window.scrapbookJumpToQuestion === "function") {
+            window.scrapbookJumpToQuestion(e.data.step);
+          }
+          if (e.data && e.data.type === "SCRAPBOOK_RESET" && typeof window.scrapbookReset === "function") {
+            window.scrapbookReset();
+          }
+          if (e.data && e.data.type === "SCRAPBOOK_OPEN_KEEPSAKE" && typeof window.scrapbookOpenKeepsake === "function") {
+            window.scrapbookOpenKeepsake();
           }
           if (e.data && e.data.type === "LETTER_OPEN" && typeof window.openLoveLetterEnvelope === "function") {
             window.openLoveLetterEnvelope();

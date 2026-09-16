@@ -1145,6 +1145,44 @@ const DEFAULT_SECTIONS_DATA = {
         caption: "Infinite quiet stars watching over our eternal bond ✨"
       }
     ]
+  },
+  scrapbook_game: {
+    tag: "Interactive Couple Scrapbook 📓✨",
+    title: "How Well Do You Know Me? ✂️",
+    desc: "Flip through handwritten memories, test how well you know each other, and unlock keepsake stickers!",
+    certTitle: "Soulmate Scrapbook Keepsake 🏆",
+    certAwardee: "Certified Heart Keeper",
+    certQuote: "« The Most Attentive, Loving & Precious Partner in the Universe »",
+    certNote: "Officially stamped with unconditional love, verified hugs, and eternal memories.",
+    items: [
+      {
+        q: "What is my absolute favorite comfort meal when we are tired?",
+        options: ["Spicy Noodles 🍜", "Cheese Pizza 🍕", "Warm Rice Bowl 🍚", "Sweet Dessert Crepe 🥞"],
+        correct: 0,
+        sticker: "🍜",
+        image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=600&q=80",
+        caption: "Late-night food crawls together!",
+        memoryNote: "Every time we walk around late, you already know spicy noodles with extra soup is the instant mood fixer!"
+      },
+      {
+        q: "Where was the place we spent 7 hours talking without noticing time?",
+        options: ["At the airport cafe ✈️", "Under Canton Tower lights 🗼", "On the beach sand 🏖️", "Inside the train carriage 🚆"],
+        correct: 1,
+        sticker: "🗼",
+        image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=600&q=80",
+        caption: "Golden midnight breeze",
+        memoryNote: "We sat by the river with the tower shining above us until the sunrise told us 7 hours had already passed."
+      },
+      {
+        q: "What is my favorite nickname for you when no one else is around?",
+        options: ["My Sweetest Honey 🍯", "My Precious Princess 👑", "Little Trouble Maker 😜", "My Forever Lof ❤️"],
+        correct: 3,
+        sticker: "❤️",
+        image: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=600&q=80",
+        caption: "Secret code of our hearts",
+        memoryNote: "Because no word in any dictionary fits you more perfectly than my eternal Lof!"
+      }
+    ]
   }
 };
 

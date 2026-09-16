@@ -33,7 +33,7 @@ const DEFAULT_PRESETS = {
     "letter"
   ],
   storyteller: ["hero", "timeline", "map", "memories", "boarding_pass", "letter"],
-  playful: ["hero", "love_meter", "reasons", "truth_dare", "spinner", "coupons", "quiz", "playful"],
+  playful: ["hero", "love_meter", "reasons", "truth_dare", "spinner", "coupons", "quiz", "scrapbook_game", "playful"],
   complete: [
     "hero",
     "candle_blowout",
@@ -58,6 +58,7 @@ const DEFAULT_PRESETS = {
     "coupons",
     "boarding_pass",
     "quiz",
+    "scrapbook_game",
     "letter",
     "valentine_scratch",
     "forgiveness_meter",
