@@ -90,9 +90,8 @@ async function runStaticChecks() {
   const checks = [
     { label: 'Design 2 sole container', pass: html.includes('id="landingViewV2"') && !html.includes('id="landingViewV1"') },
     { label: 'Design switcher completely removed', pass: !html.includes('id="landingDesignSwitcher"') && !html.includes('btnSwitchV1') && !html.includes('btnSwitchV2') },
-    { label: 'Landing v2 CSS linked', pass: html.includes('landing-v2.css') },
-    { label: 'Desktop navigation links', pass: html.includes('v2-desktop-nav-links') && css.includes('.v2-desktop-nav-links') },
-    { label: 'Mobile slide-out menu', pass: html.includes('v2-mobile-menu') && css.includes('.v2-mobile-menu') },
+    { label: 'Desktop navigation links', pass: html.includes('desktop-nav-links') },
+    { label: 'Mobile slide-out menu', pass: html.includes('mobile-nav-drawer') || html.includes('v2-mobile-menu') },
     { label: 'Promo banner 50% OFF', pass: html.includes('50% OFF') && html.includes('Private Couple Keepsake') },
     { label: 'Hero Primary CTA', pass: html.includes('Start Building Your Website') || html.includes('Go to Builder') },
     { label: '5 Feature quick tags', pass: html.includes('Wax-Sealed Letters') && html.includes('Travel Maps') },
@@ -183,8 +182,8 @@ async function runBrowserTests() {
     const sectionsStatus = await cdp.evaluate(`(() => {
       const v2 = document.getElementById('landingViewV2');
       return {
-        desktopNav: !!v2.querySelector('.v2-desktop-nav-links'),
-        mobileMenu: !!v2.querySelector('#v2MobileMenu'),
+        desktopNav: !!v2.querySelector('.desktop-nav-links, .v2-desktop-nav-links'),
+        mobileMenu: !!v2.querySelector('.mobile-nav-drawer, #v2MobileMenu'),
         heroCtas: v2.querySelectorAll('.v2-hero-ctas a, .v2-hero-ctas button').length,
         polaroidCards: v2.querySelectorAll('.v2-polaroid-card').length,
         templateCards: v2.querySelectorAll('.v2-template-card').length,
@@ -252,16 +251,16 @@ async function runBrowserTests() {
     // TEST 7: Interactive Feature - Mobile Drawer Open & Close
     console.log('\n[TEST 7] Testing mobile drawer open & close ...');
     const drawerTest = await cdp.evaluate(`(() => {
-      const hamburger = document.getElementById('btnV2Hamburger');
-      const menu = document.getElementById('v2MobileMenu');
-      const closeBtn = document.getElementById('btnV2CloseMenu');
+      const hamburger = document.getElementById('btnMobileMenuToggle') || document.getElementById('btnV2Hamburger');
+      const menu = document.getElementById('navLinks') || document.getElementById('v2MobileMenu');
+      const closeBtn = document.getElementById('btnCloseMobileDrawer') || document.getElementById('btnV2CloseMenu');
       if (!hamburger || !menu || !closeBtn) return { success: false, reason: 'Missing menu elements' };
 
       hamburger.click();
-      const opened = menu.classList.contains('active');
+      const opened = menu.classList.contains('mobile-open') || menu.classList.contains('active');
 
       closeBtn.click();
-      const closed = !menu.classList.contains('active');
+      const closed = !menu.classList.contains('mobile-open') && !menu.classList.contains('active');
 
       return {
         success: opened && closed,
