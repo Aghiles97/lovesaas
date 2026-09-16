@@ -104,10 +104,6 @@
         </div>
       </div>
 
-      <div class="live-status-pill" title="Real-time live sync active">
-        <span class="live-status-dot"></span> Live Sync
-      </div>
-
       <div class="auto-save-indicator" id="autoSaveIndicator" title="Changes auto-sync continuously (⌘S to force sync)">
         <span class="indicator-dot"></span>
         <span class="indicator-text">All changes saved</span>
@@ -187,7 +183,6 @@
           <span class="indicator-dot"></span>
           <span class="indicator-text">All changes saved</span>
         </div>
-        <div class="live-status-pill" style="display: inline-flex;"><span class="live-status-dot"></span> Live Sync Active</div>
       </div>
       <div class="mobile-menu-actions">
         <a id="btnMobileViewLive" href="/sites/demo" target="_blank" class="mobile-menu-item">
@@ -294,11 +289,12 @@
                 <button type="button" id="btnClearWidgetSearch" class="btn-clear-search hidden" title="Clear search">✕</button>
               </div>
               <div class="widget-filter-chips">
-                <button type="button" class="filter-chip active" data-filter="all">All <span id="filterCountAll">26</span></button>
+                <button type="button" class="filter-chip active" data-filter="all">All <span id="filterCountAll">31</span></button>
                 <button type="button" class="filter-chip" data-filter="active">Active <span id="filterCountActive">0</span></button>
                 <button type="button" class="filter-chip" data-filter="birthday">🎂 Birthday</button>
-                <button type="button" class="filter-chip" data-filter="valentine">💝 Valentine</button>
                 <button type="button" class="filter-chip" data-filter="anniversary">💍 Anniversary</button>
+                <button type="button" class="filter-chip" data-filter="valentine">💝 Valentine</button>
+                <button type="button" class="filter-chip" data-filter="reconciliation">🕊️ Peace</button>
                 <button type="button" class="filter-chip" data-filter="inactive">Off <span id="filterCountInactive">0</span></button>
               </div>
             </div>
@@ -846,15 +842,16 @@
       </div>
 
       <div class="add-section-filter-chips" id="addSectionFilterChips">
-        <button type="button" class="add-sec-filter-chip active" data-cat="all">All (<span id="addSecCountAll">26</span>)</button>
+        <button type="button" class="add-sec-filter-chip active" data-cat="all">All (<span id="addSecCountAll">31</span>)</button>
         <button type="button" class="add-sec-filter-chip" data-cat="story">📖 Story</button>
         <button type="button" class="add-sec-filter-chip" data-cat="interactive">⚡ Interactive</button>
         <button type="button" class="add-sec-filter-chip" data-cat="games">🎮 Games</button>
         <button type="button" class="add-sec-filter-chip" data-cat="gallery">📸 Gallery</button>
         <button type="button" class="add-sec-filter-chip" data-cat="letter">💌 Letter</button>
         <button type="button" class="add-sec-filter-chip" data-cat="birthday">🎂 Birthday</button>
-        <button type="button" class="add-sec-filter-chip" data-cat="valentine">💝 Valentine</button>
         <button type="button" class="add-sec-filter-chip" data-cat="anniversary">💍 Anniversary</button>
+        <button type="button" class="add-sec-filter-chip" data-cat="valentine">💝 Valentine</button>
+        <button type="button" class="add-sec-filter-chip" data-cat="reconciliation">🕊️ Peace &amp; Apology</button>
       </div>
 
       <div class="add-section-widgets-grid" id="addSectionWidgetsGrid"></div>

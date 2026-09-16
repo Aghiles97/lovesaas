@@ -3465,8 +3465,18 @@ body.admin-mode #detailHighlights {
 }
 
 .site-add-section-divider.site-add-section-empty {
-  margin-top: clamp(140px, 24vh, 200px) !important;
-  margin-bottom: 36px !important;
+  min-height: calc(100vh - 140px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+  padding: 0 16px !important;
+}
+
+.site-add-section-divider.site-add-section-empty .btn-site-add-section {
+  padding: 10px 22px;
+  font-size: 0.95rem;
+  box-shadow: 0 6px 20px rgba(255, 67, 101, 0.22);
 }
 
 .site-add-section-divider:hover {

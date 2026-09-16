@@ -408,7 +408,7 @@ const WIDGET_REGISTRY = {
     title: "Comfort Soundboard",
     icon: "🎧",
     desc: "Procedural ambient sound mixer (rain, ocean, campfire, lofi) with calming photo stream.",
-    category: "birthday",
+    category: "reconciliation",
     defaultEnabled: true,
     css: "/public/css/widgets/comfort_soundboard.css",
     template: "/core/templates/comfort_soundboard.template.js",

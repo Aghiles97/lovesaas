@@ -41,6 +41,7 @@ let state = {
   layoutOrder: [],
   sectionsData: {},
   allWidgetIds: Object.keys(WIDGET_REGISTRY),
+  activeScreen: 'intro',
   activeInspectorWidget: null,
   mediaViewMode:
     (typeof localStorage !== 'undefined' &&
@@ -837,13 +838,24 @@ async function loadTenantData(slug) {
       state.activeInspectorWidget = null;
     }
 
+    const savedScreen =
+      (state.slug &&
+        sessionStorage.getItem('builder_active_screen_' + state.slug)) ||
+      'intro';
+    state.activeScreen = savedScreen;
+    if (typeof window.setPreviewScreen === 'function') {
+      window.setPreviewScreen(savedScreen);
+    }
+
     updateNavbarUI();
     updateRoleUI();
     closeWidgetEditMode();
     renderPresetsUI();
     renderWidgetTray();
     fetchTenantMediaAssets().catch(() => {});
-    if (state.layoutOrder.length === 0 || !state.activeInspectorWidget) {
+    if (savedScreen === 'intro') {
+      selectWidgetForInspector('intro');
+    } else if (state.layoutOrder.length === 0 || !state.activeInspectorWidget) {
       renderInspectorEmptyState();
     } else {
       selectWidgetForInspector(state.activeInspectorWidget);
@@ -966,7 +978,7 @@ function renderWidgetTray() {
   const fullList = [...state.layoutOrder.filter(id => id !== 'intro'), ...inactiveWidgets];
 
   const query = (currentWidgetSearchQuery || '').toLowerCase().trim();
-  const showIntroCard = !query || 'first screen wax sealed letter intro gate flower burst soundtrack'.includes(query);
+  const showIntroCard = !query || 'first screen wax sealed letter opening card intro gate flower burst soundtrack'.includes(query);
 
   if (showIntroCard && currentWidgetFilter !== 'inactive') {
     const screen1Card = document.createElement('div');
@@ -981,15 +993,12 @@ function renderWidgetTray() {
         <div class="screen1-info">
           <div class="screen1-title-row">
             <span class="screen1-title">Screen 1: Wax Sealed Letter</span>
-            <span class="screen1-badge">Intro Gate</span>
+            <span class="screen1-badge">Opening Card</span>
           </div>
-          <div class="screen1-desc">Opening Gate • Flower Burst &amp; Soundtrack</div>
+          <div class="screen1-desc">Opening Card • Flower Burst &amp; Soundtrack</div>
         </div>
       </div>
       <div class="screen1-actions">
-        <button type="button" class="btn-customize-intro" title="Edit First Screen">
-          <span>Edit</span>
-        </button>
         <span class="screen1-chevron">›</span>
       </div>
     `;
@@ -1003,8 +1012,6 @@ function renderWidgetTray() {
     };
 
     screen1Card.onclick = openIntroCustomize;
-    const btnCust = screen1Card.querySelector('.btn-customize-intro');
-    if (btnCust) btnCust.onclick = openIntroCustomize;
 
     widgetTray.appendChild(screen1Card);
   }
@@ -1158,9 +1165,11 @@ function renderWidgetTray() {
   const CHAPTERS = [
     { id: 'hero', name: '👑 Welcome & Hero', match: (c) => c === 'header' },
     { id: 'birthday', name: '🎂 Birthday Specials', match: (c) => c === 'birthday' },
+    { id: 'anniversary', name: '💍 Milestones & Anniversary', match: (c) => c === 'anniversary' },
     { id: 'story', name: '📖 Our Love Story & Gallery', match: (c) => ['story', 'gallery', 'letter'].includes(c) },
     { id: 'interactive', name: '🎮 Interactive Games & Surprises', match: (c) => ['interactive', 'games', 'valentine'].includes(c) },
-    { id: 'reconciliation', name: '🕊️ Keepsakes & Celebrations', match: () => true },
+    { id: 'reconciliation', name: '🕊️ Peace & Reconciliation', match: (c) => c === 'reconciliation' },
+    { id: 'other', name: '✨ Extra Surprises', match: () => true },
   ];
 
   if (currentWidgetFilter === 'all' && !query) {
@@ -2480,7 +2489,12 @@ function renderWidgetInspector(widgetId, forceScrollTop = false) {
 function reloadPreview() {
   const isEmpty =
     state.layoutOrder && state.layoutOrder.length === 0 ? '1' : '0';
-  previewIframe.src = `/sites/${encodeURIComponent(state.slug)}?preview=builder&empty=${isEmpty}&t=${Date.now()}`;
+  const currentScreen =
+    state.activeScreen ||
+    (state.slug &&
+      sessionStorage.getItem('builder_active_screen_' + state.slug)) ||
+    'intro';
+  previewIframe.src = `/sites/${encodeURIComponent(state.slug)}?preview=builder&empty=${isEmpty}&t=${Date.now()}&screen=${currentScreen}${currentScreen === 'website' ? '&unsealed=1' : '&sealed=1'}`;
 }
 
 // ----------------------------------------------------
@@ -5215,6 +5229,10 @@ function initScreenSwitcher() {
   const btnCore = document.getElementById('btnPreviewScreenCore');
 
   const setPreviewScreen = (screen) => {
+    state.activeScreen = screen;
+    if (state.slug) {
+      sessionStorage.setItem('builder_active_screen_' + state.slug, screen);
+    }
     if (screen === 'intro') {
       btnIntro?.classList.add('active');
       btnCore?.classList.remove('active');
@@ -5826,10 +5844,15 @@ function setupEventListeners() {
 
   window.addEventListener('message', (e) => {
     if (!e.data) return;
-    if (e.data.type === 'PREVIEW_SCREEN_CHANGED') {
+    if (e.data.type === 'PREVIEW_SCREEN_CHANGED' || e.data.type === 'SET_PREVIEW_SCREEN') {
+      const screen = e.data.screen;
+      state.activeScreen = screen;
+      if (state.slug) {
+        sessionStorage.setItem('builder_active_screen_' + state.slug, screen);
+      }
       const btnIntro = document.getElementById('btnPreviewScreenIntro');
       const btnCore = document.getElementById('btnPreviewScreenCore');
-      if (e.data.screen === 'intro') {
+      if (screen === 'intro') {
         btnIntro?.classList.add('active');
         btnCore?.classList.remove('active');
       } else {
@@ -5839,7 +5862,19 @@ function setupEventListeners() {
     }
     if (e.data.type === 'BUILDER_IFRAME_READY') {
       debouncedLiveUpdate(true);
+      const currentScreen =
+        state.activeScreen ||
+        (state.slug &&
+          sessionStorage.getItem('builder_active_screen_' + state.slug)) ||
+        'intro';
       if (previewIframe && previewIframe.contentWindow) {
+        previewIframe.contentWindow.postMessage(
+          {
+            type: 'SET_PREVIEW_SCREEN',
+            screen: currentScreen,
+          },
+          '*',
+        );
         previewIframe.contentWindow.postMessage(
           {
             type: 'SET_DEVICE_MODE',

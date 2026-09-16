@@ -70,12 +70,12 @@
       <div class="section-settings-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: 8px; padding: 14px; margin-bottom: 16px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div>
-            <h4 style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted, #94a3b8); margin: 0 0 4px 0;">🛡️ Gate & Screen Settings</h4>
+            <h4 style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted, #94a3b8); margin: 0 0 4px 0;">✉️ Opening Card Settings</h4>
             <p style="font-size: 11px; color: var(--text-muted, #94a3b8); margin: 0;">Show wax sealed opening screen before entering website</p>
           </div>
           <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; font-weight: 600;">
             <input type="checkbox" id="intro_enabled" ${intro.enabled !== false ? 'checked' : ''}>
-            <span>Enable Intro Gate Screen</span>
+            <span>Enable Opening Card Screen</span>
           </label>
         </div>
       </div>

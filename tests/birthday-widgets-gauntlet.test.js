@@ -143,7 +143,11 @@ for (const id of WIDGET_IDS) {
 
 // --- GATE 6: DATABASE DEFAULTS & SCHEMA ---
 console.log('\n--- GATE 6: Database Defaults & Schema ---');
-const dbCode = fs.readFileSync(path.join(ROOT_DIR, 'server/db/index.js'), 'utf8');
+const dbCode =
+  fs.readFileSync(path.join(ROOT_DIR, 'server/db/index.js'), 'utf8') +
+  (fs.existsSync(path.join(ROOT_DIR, 'server/db/defaults/sections.js'))
+    ? fs.readFileSync(path.join(ROOT_DIR, 'server/db/defaults/sections.js'), 'utf8')
+    : '');
 for (const id of WIDGET_IDS) {
   assert(dbCode.includes(`${id}:`), `server/db/index.js contains default config for ${id}`);
 }

@@ -403,9 +403,16 @@ class DynamicRenderer {
       const divider = document.createElement("div");
       divider.className = `site-add-section-divider${isEnd ? " site-add-section-bottom" : ""}${isTop ? " site-add-section-top" : ""}${isEmpty ? " site-add-section-empty" : ""}`;
       divider.dataset.insertIndex = insertIndex;
-      if (isTop) {
-        divider.style.marginTop = isEmpty ? "clamp(140px, 24vh, 200px)" : "clamp(75px, 12vh, 95px)";
-        divider.style.marginBottom = isEmpty ? "36px" : "20px";
+      if (isEmpty) {
+        divider.style.minHeight = "calc(100vh - 140px)";
+        divider.style.display = "flex";
+        divider.style.alignItems = "center";
+        divider.style.justifyContent = "center";
+        divider.style.margin = "0 auto";
+        divider.style.padding = "0 16px";
+      } else if (isTop) {
+        divider.style.marginTop = "clamp(75px, 12vh, 95px)";
+        divider.style.marginBottom = "20px";
       }
       divider.innerHTML = `
         <div class="site-add-section-line"></div>

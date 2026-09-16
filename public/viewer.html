@@ -59,7 +59,7 @@
           }
         }
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: "PREVIEW_SCREEN_CHANGED", screen: "website" }, window.location.origin);
+          window.parent.postMessage({ type: "PREVIEW_SCREEN_CHANGED", screen: "website" }, "*");
         }
       },
       reseal() {
@@ -77,7 +77,7 @@
         const bgAudio = document.getElementById("bgAudioPlayer");
         if (bgAudio && !bgAudio.paused) bgAudio.pause();
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: "PREVIEW_SCREEN_CHANGED", screen: "intro" }, window.location.origin);
+          window.parent.postMessage({ type: "PREVIEW_SCREEN_CHANGED", screen: "intro" }, "*");
         }
       }
     };
@@ -1305,8 +1305,17 @@
         const isBuilderPreview = urlParams.get("preview") === "builder" || urlParams.get("builder") === "1" || isIframe;
         const isLayoutEmpty = Array.isArray(data.layoutOrder) && data.layoutOrder.length === 0;
 
-        // Envelope state: ONLY unseal if layout is empty, unsealed=1 is explicitly requested, or intro disabled outside preview
-        if (isLayoutEmpty || urlParams.get("unsealed") === "1" || (introData.enabled === false && !isBuilderPreview)) {
+        // Envelope state: ONLY unseal if website screen requested, unsealed=1 explicitly requested, or intro disabled outside preview
+        const requestedScreen = urlParams.get("screen");
+        const shouldStaySealed = requestedScreen === "intro" || urlParams.get("sealed") === "1";
+        const shouldUnseal = !shouldStaySealed && (
+          requestedScreen === "website" ||
+          urlParams.get("unsealed") === "1" ||
+          (isLayoutEmpty && !isBuilderPreview) ||
+          (introData.enabled === false && !isBuilderPreview)
+        );
+
+        if (shouldUnseal) {
           window.IntroEnvelope.unseal({ instant: true });
           if (isLayoutEmpty) {
             const bgAudio = document.getElementById("bgAudioPlayer");

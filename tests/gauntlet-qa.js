@@ -203,22 +203,25 @@ async function runBrowserTests() {
     // TEST 5: Interactive Feature - Widget Filter Tabs
     console.log('\n[TEST 5] Testing interactive widget filter tabs ...');
     const filterTest = await cdp.evaluate(`(() => {
-      const gamesBtn = document.querySelector('.v2-filter-btn[data-filter="games"]');
-      if (!gamesBtn) return { success: false, reason: 'No games filter btn' };
-      gamesBtn.click();
+      const targetBtn = document.querySelector('.v2-filter-btn[data-filter="apology"]') ||
+                        document.querySelector('.v2-filter-btn[data-filter="games"]');
+      if (!targetBtn) return { success: false, reason: 'No category filter btn' };
+      const filterName = targetBtn.dataset.filter;
+      targetBtn.click();
       
       const allCards = Array.from(document.querySelectorAll('#landingViewV2 .v2-widget-card'));
       const visibleCards = allCards.filter(c => !c.classList.contains('hidden'));
       const hiddenCards = allCards.filter(c => c.classList.contains('hidden'));
-      const allVisibleAreGames = visibleCards.every(c => c.dataset.cat === 'games');
+      const allVisibleMatch = visibleCards.every(c => c.dataset.cat === filterName);
 
       // Click 'all' back
       document.querySelector('.v2-filter-btn[data-filter="all"]').click();
       const allVisibleAfterReset = allCards.every(c => !c.classList.contains('hidden'));
 
       return {
-        success: allVisibleAreGames && allVisibleAfterReset,
-        visibleGamesCount: visibleCards.length,
+        success: allVisibleMatch && allVisibleAfterReset,
+        filterTested: filterName,
+        visibleCount: visibleCards.length,
         hiddenCount: hiddenCards.length,
         totalCards: allCards.length
       };
@@ -359,6 +362,14 @@ async function runBrowserTests() {
     const galleryPath = path.join(ARTIFACTS_DIR, 'qa-v2-gallery-section.png');
     fs.writeFileSync(galleryPath, Buffer.from(galleryShot.data, 'base64'));
     console.log(`Captured ${galleryPath}`);
+
+    // Capture templates showcase section
+    await cdp.evaluate(`document.getElementById('v2Templates').scrollIntoView({ block: 'start' })`);
+    await sleep(400);
+    const templatesShot = await cdp.send('Page.captureScreenshot', { format: 'png' });
+    const templatesPath = path.join(ARTIFACTS_DIR, 'qa-v2-templates-contexts.png');
+    fs.writeFileSync(templatesPath, Buffer.from(templatesShot.data, 'base64'));
+    console.log(`Captured ${templatesPath}`);
 
     // Console errors summary
     console.log(`\nConsole Errors detected: ${consoleErrors.length}`);
