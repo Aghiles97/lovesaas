@@ -1499,7 +1499,8 @@ function renderAddSectionModal() {
   const subtitle = document.getElementById('addSectionModalSubtitle');
   if (!grid) return;
 
-  const totalWidgets = state.allWidgetIds.length;
+  const availableWidgets = state.allWidgetIds.filter((id) => id !== 'intro');
+  const totalWidgets = availableWidgets.length;
   const countAllSpan = document.getElementById('addSecCountAll');
   if (countAllSpan) countAllSpan.textContent = totalWidgets;
 
@@ -1536,7 +1537,7 @@ function renderAddSectionModal() {
   const q = (addSectionSearchQuery || '').toLowerCase().trim();
   const cat = addSectionCategoryFilter || 'all';
 
-  const sortedIds = [...state.allWidgetIds].sort((a, b) => {
+  const sortedIds = [...availableWidgets].sort((a, b) => {
     const aActive = state.layoutOrder.includes(a);
     const bActive = state.layoutOrder.includes(b);
     if (!aActive && bActive) return -1;
@@ -1589,9 +1590,9 @@ function renderAddSectionModal() {
       </div>
       <div class="add-widget-card-bottom">
         <span class="add-widget-status ${isActive ? 'active' : ''}">
-          ${isActive ? `✓ On project (#${activePos + 1})` : '✨ Available'}
+          ${isActive ? `✓ Added (#${activePos + 1})` : '• Available'}
         </span>
-        <div style="display: flex; gap: 6px;">
+        <div style="display: flex; gap: 6px; align-items: center;">
           <button type="button" class="btn-add-widget-action preview-btn" data-preview-id="${id}" title="Preview full widget">
             👁️ Preview
           </button>
