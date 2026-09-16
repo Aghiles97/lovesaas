@@ -2,6 +2,245 @@
  * Runtime Widget Engine: love-letter.runtime.js
  * Modularized for high maintainability.
  */
+const INDIVIDUAL_FLOWER_VARIETIES = [
+  // Royal Peonies & Classic Blooms
+  { url: "/images/flowers/flower_hydrangea.png", baseSize: 345, tier: "huge" },
+  { url: "/images/flowers/flower_peony.png", baseSize: 325, tier: "huge" },
+  { url: "/images/flowers/flower_pink_peony.png", baseSize: 320, tier: "huge" },
+  { url: "/images/flowers/flower_stargazer.png", baseSize: 295, tier: "large" },
+  { url: "/images/flowers/flower_lily.png", baseSize: 280, tier: "large" },
+  { url: "/images/flowers/flower_peach_rose.png", baseSize: 235, tier: "medium-large" },
+  { url: "/images/flowers/flower_rose.png", baseSize: 230, tier: "medium-large" },
+  { url: "/images/flowers/flower_carnation.png", baseSize: 200, tier: "medium" },
+  { url: "/images/flowers/flower_spray_rose.png", baseSize: 180, tier: "medium" },
+  { url: "/images/flowers/flower_mini_rose.png", baseSize: 135, tier: "small" },
+  { url: "/images/flowers/flower_rosebud.png", baseSize: 120, tier: "small" },
+  // Sakura Cherry Blossoms
+  { url: "/images/flowers/flower_sakura_1.png", baseSize: 310, tier: "large" },
+  { url: "/images/flowers/flower_sakura_2.png", baseSize: 285, tier: "medium-large" },
+  { url: "/images/flowers/flower_sakura_branch.png", baseSize: 340, tier: "huge" },
+  // Golden Sunflowers & Daisies
+  { url: "/images/flowers/flower_sunflower_1.png", baseSize: 350, tier: "huge" },
+  { url: "/images/flowers/flower_sunflower_2.png", baseSize: 320, tier: "huge" },
+  { url: "/images/flowers/flower_sunflower_bloom.png", baseSize: 300, tier: "large" },
+  { url: "/images/flowers/flower_daisy_1.png", baseSize: 240, tier: "medium" },
+  { url: "/images/flowers/flower_daisy_2.png", baseSize: 220, tier: "medium" },
+  // Spring Tulips & Poppies
+  { url: "/images/flowers/flower_tulip_red.png", baseSize: 310, tier: "large" },
+  { url: "/images/flowers/flower_tulip_pink.png", baseSize: 300, tier: "large" },
+  { url: "/images/flowers/flower_poppy_1.png", baseSize: 270, tier: "medium-large" },
+  { url: "/images/flowers/flower_poppy_2.png", baseSize: 260, tier: "medium-large" },
+  // Purple Lilacs & Violas
+  { url: "/images/flowers/flower_lilac_1.png", baseSize: 330, tier: "huge" },
+  { url: "/images/flowers/flower_lilac_2.png", baseSize: 310, tier: "large" },
+  { url: "/images/flowers/flower_viola_purple.png", baseSize: 260, tier: "medium-large" },
+  // Foliage & Petals
+  { url: "/images/flowers/flower_eucalyptus.png", baseSize: 190, tier: "foliage" },
+  { url: "/images/flowers/flower_eucalyptus_leaf.png", baseSize: 115, tier: "foliage" },
+  { url: "/images/flowers/petal_1.png", baseSize: 90, tier: "petal" },
+  { url: "/images/flowers/petal_2.png", baseSize: 85, tier: "petal" },
+  { url: "/images/flowers/petal_3.png", baseSize: 80, tier: "petal" },
+  { url: "/images/flowers/petal_4.png", baseSize: 75, tier: "petal" }
+];
+
+// Preload flower assets
+INDIVIDUAL_FLOWER_VARIETIES.forEach(item => {
+  const pre = new Image();
+  pre.src = item.url;
+});
+
+window.ACTIVE_FLOWER_THEME = "royal-blend";
+
+const FLOWER_THEMES = {
+  "royal-blend": INDIVIDUAL_FLOWER_VARIETIES,
+  "garden-roses": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("rose") || f.tier === "petal"),
+  "sakura-dream": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("sakura") || f.url.includes("pink_peony") || f.tier === "petal"),
+  "golden-sunflower": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("sunflower") || f.url.includes("daisy") || f.url.includes("peach_rose")),
+  "spring-tulips": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("tulip") || f.url.includes("daisy") || f.url.includes("poppy") || f.url.includes("eucalyptus")),
+  "lavender-lilac": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("lilac") || f.url.includes("viola") || f.url.includes("hydrangea") || f.url.includes("peony"))
+};
+
+const initFlowerSelector = () => {
+  const chips = document.querySelectorAll(".flower-chip");
+  chips.forEach(chip => {
+    chip.addEventListener("click", () => {
+      chips.forEach(c => c.classList.remove("selected"));
+      chip.classList.add("selected");
+      window.ACTIVE_FLOWER_THEME = chip.getAttribute("data-style") || "royal-blend";
+      if (typeof audio !== "undefined" && audio.playPop) {
+        audio.playPop();
+      }
+    });
+    chip.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        chip.click();
+      }
+    });
+  });
+};
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initFlowerSelector);
+} else {
+  initFlowerSelector();
+}
+
+let ambientPetalsInterval = null;
+
+const spawnRealisticFloralScreenBurst = (originX, originY) => {
+  let canvas = document.getElementById("individualFlowersCanvas");
+  if (!canvas) {
+    canvas = document.createElement("div");
+    canvas.id = "individualFlowersCanvas";
+    canvas.className = "individual-flowers-screen-canvas";
+    canvas.style.pointerEvents = "none";
+    canvas.style.zIndex = "9999";
+    document.body.appendChild(canvas);
+  }
+  canvas.style.pointerEvents = "none";
+  canvas.style.zIndex = "9999";
+  canvas.classList.remove("fade-out");
+  canvas.innerHTML = "";
+
+  const letterSec = document.querySelector(".letter-section");
+  if (letterSec) letterSec.classList.add("floral-active");
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  const ox = (originX && !isNaN(originX)) ? originX : vw / 2;
+  const oy = (originY && !isNaN(originY)) ? originY : vh / 2;
+
+  const isMobile = vw < 768;
+  const currentTheme = window.ACTIVE_FLOWER_THEME || "royal-blend";
+  const pool = (FLOWER_THEMES[currentTheme] && FLOWER_THEMES[currentTheme].length > 0)
+    ? FLOWER_THEMES[currentTheme]
+    : INDIVIDUAL_FLOWER_VARIETIES;
+
+  // Optimized screen-filling grid (balanced for maximum density + 60/120fps lock)
+  const cols = isMobile ? 6 : 9;
+  const rows = isMobile ? 8 : 6;
+  const cellW = vw / cols;
+  const cellH = vh / rows;
+  const targets = [];
+
+  // Primary grid targets with organic jitter and edge bleed
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const jx = (Math.random() - 0.5) * (cellW * 0.55);
+      const jy = (Math.random() - 0.5) * (cellH * 0.55);
+      targets.push({
+        x: Math.round((c + 0.5) * cellW + jx),
+        y: Math.round((r + 0.5) * cellH + jy)
+      });
+    }
+  }
+
+  // Edge and center filler blooms to guarantee zero empty spots
+  const extraBlooms = isMobile ? 14 : 20;
+  for (let k = 0; k < extraBlooms; k++) {
+    targets.push({
+      x: Math.round((Math.random() * 1.12 - 0.06) * vw),
+      y: Math.round((Math.random() * 1.12 - 0.06) * vh)
+    });
+  }
+
+  // Radial distance sorting from wax seal for fluid outward wave
+  targets.sort((a, b) => Math.hypot(a.x - ox, a.y - oy) - Math.hypot(b.x - ox, b.y - oy));
+
+  const totalCount = targets.length;
+  const baseMult = isMobile ? 1.05 : 1.34;
+
+  for (let i = 0; i < totalCount; i++) {
+    const item = pool[i % pool.length];
+    const target = targets[i];
+    const el = document.createElement("div");
+    el.className = "screen-flower-cell";
+
+    const scaleMult = (0.92 + Math.random() * 0.24);
+    const size = Math.round(item.baseSize * baseMult * scaleMult);
+
+    const destX = target.x;
+    const destY = target.y;
+
+    // Smooth parabolic arc: launches up from envelope mouth, then expands into screen
+    const midDistRatio = 0.38;
+    const midX = Math.round(ox + (destX - ox) * midDistRatio);
+    const midY = Math.round(oy + (destY - oy) * midDistRatio - (55 + Math.random() * 65));
+
+    // Continuous angular deceleration: 72% spin in first 38% of time, gentle settle to 100%
+    const rotStart = Math.round((Math.random() - 0.5) * 80);
+    const spinSpeed = (Math.random() > 0.5 ? 1 : -1) * (180 + Math.random() * 220);
+    const rotMid = Math.round(rotStart + spinSpeed * 0.72);
+    const rotEnd = Math.round(rotStart + spinSpeed);
+
+    const delayMs = Math.round((i / totalCount) * 580 + Math.random() * 20);
+    const durationMs = Math.round(750 + Math.random() * 160);
+
+    el.style.width = `${size}px`;
+    el.style.height = `${size}px`;
+
+    const img = document.createElement("img");
+    img.src = item.url;
+    img.alt = "Bloom";
+    img.loading = "eager";
+    el.appendChild(img);
+    canvas.appendChild(el);
+
+    // Monotonic scaling (0.08 -> 0.68 -> 1.0) with segmented easings for 100% fluid motion
+    el.animate([
+      {
+        transform: `translate3d(${ox - size / 2}px, ${oy - size / 2}px, 0) scale(0.08) rotate(${rotStart}deg)`,
+        opacity: 0,
+        easing: "cubic-bezier(0.22, 0.61, 0.36, 1)"
+      },
+      {
+        transform: `translate3d(${midX - size / 2}px, ${midY - size / 2}px, 0) scale(0.68) rotate(${rotMid}deg)`,
+        opacity: 1,
+        offset: 0.38,
+        easing: "cubic-bezier(0.16, 1, 0.3, 1)"
+      },
+      {
+        transform: `translate3d(${destX - size / 2}px, ${destY - size / 2}px, 0) scale(1.0) rotate(${rotEnd}deg)`,
+        opacity: 1
+      }
+    ], {
+      duration: durationMs,
+      delay: delayMs,
+      fill: "forwards"
+    });
+  }
+};
+
+const fadeAndRemoveFloralScreen = (delayMs = 0) => {
+  clearInterval(ambientPetalsInterval);
+  const canvas = document.getElementById("individualFlowersCanvas");
+  if (canvas) {
+    setTimeout(() => {
+      canvas.classList.add("fade-out");
+      setTimeout(() => {
+        canvas.innerHTML = "";
+        canvas.classList.remove("fade-out");
+        if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      }, 880);
+    }, delayMs);
+  }
+  document.querySelectorAll(".floating-flower-petal").forEach(p => {
+    p.style.transition = "opacity 0.5s ease";
+    p.style.opacity = "0";
+    setTimeout(() => p.remove(), 550);
+  });
+  const letterSec = document.querySelector(".letter-section");
+  if (letterSec) letterSec.classList.remove("floral-active");
+};
+
+const dismissRealisticFloralScreen = fadeAndRemoveFloralScreen;
+
+window.spawnRealisticFloralScreenBurst = spawnRealisticFloralScreenBurst;
+window.dismissRealisticFloralScreen = dismissRealisticFloralScreen;
+window.fadeAndRemoveFloralScreen = fadeAndRemoveFloralScreen;
+
 function setupLoveLetterFeatures() {
   const letterEl = document.getElementById("letterContent");
   const playBtn = document.getElementById("btnPlayLetter");
@@ -494,243 +733,6 @@ function setupLoveLetterFeatures() {
       }
     });
   }
-
-  const INDIVIDUAL_FLOWER_VARIETIES = [
-    // Royal Peonies & Classic Blooms
-    { url: "/images/flowers/flower_hydrangea.png", baseSize: 345, tier: "huge" },
-    { url: "/images/flowers/flower_peony.png", baseSize: 325, tier: "huge" },
-    { url: "/images/flowers/flower_pink_peony.png", baseSize: 320, tier: "huge" },
-    { url: "/images/flowers/flower_stargazer.png", baseSize: 295, tier: "large" },
-    { url: "/images/flowers/flower_lily.png", baseSize: 280, tier: "large" },
-    { url: "/images/flowers/flower_peach_rose.png", baseSize: 235, tier: "medium-large" },
-    { url: "/images/flowers/flower_rose.png", baseSize: 230, tier: "medium-large" },
-    { url: "/images/flowers/flower_carnation.png", baseSize: 200, tier: "medium" },
-    { url: "/images/flowers/flower_spray_rose.png", baseSize: 180, tier: "medium" },
-    { url: "/images/flowers/flower_mini_rose.png", baseSize: 135, tier: "small" },
-    { url: "/images/flowers/flower_rosebud.png", baseSize: 120, tier: "small" },
-    // Sakura Cherry Blossoms
-    { url: "/images/flowers/flower_sakura_1.png", baseSize: 310, tier: "large" },
-    { url: "/images/flowers/flower_sakura_2.png", baseSize: 285, tier: "medium-large" },
-    { url: "/images/flowers/flower_sakura_branch.png", baseSize: 340, tier: "huge" },
-    // Golden Sunflowers & Daisies
-    { url: "/images/flowers/flower_sunflower_1.png", baseSize: 350, tier: "huge" },
-    { url: "/images/flowers/flower_sunflower_2.png", baseSize: 320, tier: "huge" },
-    { url: "/images/flowers/flower_sunflower_bloom.png", baseSize: 300, tier: "large" },
-    { url: "/images/flowers/flower_daisy_1.png", baseSize: 240, tier: "medium" },
-    { url: "/images/flowers/flower_daisy_2.png", baseSize: 220, tier: "medium" },
-    // Spring Tulips & Poppies
-    { url: "/images/flowers/flower_tulip_red.png", baseSize: 310, tier: "large" },
-    { url: "/images/flowers/flower_tulip_pink.png", baseSize: 300, tier: "large" },
-    { url: "/images/flowers/flower_poppy_1.png", baseSize: 270, tier: "medium-large" },
-    { url: "/images/flowers/flower_poppy_2.png", baseSize: 260, tier: "medium-large" },
-    // Purple Lilacs & Violas
-    { url: "/images/flowers/flower_lilac_1.png", baseSize: 330, tier: "huge" },
-    { url: "/images/flowers/flower_lilac_2.png", baseSize: 310, tier: "large" },
-    { url: "/images/flowers/flower_viola_purple.png", baseSize: 260, tier: "medium-large" },
-    // Foliage & Petals
-    { url: "/images/flowers/flower_eucalyptus.png", baseSize: 190, tier: "foliage" },
-    { url: "/images/flowers/flower_eucalyptus_leaf.png", baseSize: 115, tier: "foliage" },
-    { url: "/images/flowers/petal_1.png", baseSize: 90, tier: "petal" },
-    { url: "/images/flowers/petal_2.png", baseSize: 85, tier: "petal" },
-    { url: "/images/flowers/petal_3.png", baseSize: 80, tier: "petal" },
-    { url: "/images/flowers/petal_4.png", baseSize: 75, tier: "petal" }
-  ];
-
-  // Preload flower assets
-  INDIVIDUAL_FLOWER_VARIETIES.forEach(item => {
-    const pre = new Image();
-    pre.src = item.url;
-  });
-
-  window.ACTIVE_FLOWER_THEME = "royal-blend";
-
-  const FLOWER_THEMES = {
-    "royal-blend": INDIVIDUAL_FLOWER_VARIETIES,
-    "garden-roses": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("rose") || f.tier === "petal"),
-    "sakura-dream": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("sakura") || f.url.includes("pink_peony") || f.tier === "petal"),
-    "golden-sunflower": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("sunflower") || f.url.includes("daisy") || f.url.includes("peach_rose")),
-    "spring-tulips": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("tulip") || f.url.includes("daisy") || f.url.includes("poppy") || f.url.includes("eucalyptus")),
-    "lavender-lilac": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("lilac") || f.url.includes("viola") || f.url.includes("hydrangea") || f.url.includes("peony"))
-  };
-
-  const initFlowerSelector = () => {
-    const chips = document.querySelectorAll(".flower-chip");
-    chips.forEach(chip => {
-      chip.addEventListener("click", () => {
-        chips.forEach(c => c.classList.remove("selected"));
-        chip.classList.add("selected");
-        window.ACTIVE_FLOWER_THEME = chip.getAttribute("data-style") || "royal-blend";
-        if (typeof audio !== "undefined" && audio.playPop) {
-          audio.playPop();
-        }
-      });
-      chip.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          chip.click();
-        }
-      });
-    });
-  };
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initFlowerSelector);
-  } else {
-    initFlowerSelector();
-  }
-
-  let ambientPetalsInterval = null;
-
-  const spawnRealisticFloralScreenBurst = (originX, originY) => {
-    let canvas = document.getElementById("individualFlowersCanvas");
-    if (!canvas) {
-      canvas = document.createElement("div");
-      canvas.id = "individualFlowersCanvas";
-      canvas.className = "individual-flowers-screen-canvas";
-      canvas.style.pointerEvents = "none";
-      document.body.appendChild(canvas);
-    }
-    canvas.style.pointerEvents = "none";
-    canvas.classList.remove("fade-out");
-    canvas.innerHTML = "";
-
-    const letterSec = document.querySelector(".letter-section");
-    if (letterSec) letterSec.classList.add("floral-active");
-
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    const ox = (originX && !isNaN(originX)) ? originX : vw / 2;
-    const oy = (originY && !isNaN(originY)) ? originY : vh / 2;
-
-    const isMobile = vw < 768;
-    const currentTheme = window.ACTIVE_FLOWER_THEME || "royal-blend";
-    const pool = (FLOWER_THEMES[currentTheme] && FLOWER_THEMES[currentTheme].length > 0)
-      ? FLOWER_THEMES[currentTheme]
-      : INDIVIDUAL_FLOWER_VARIETIES;
-
-    // Optimized screen-filling grid (balanced for maximum density + 60/120fps lock)
-    const cols = isMobile ? 6 : 9;
-    const rows = isMobile ? 8 : 6;
-    const cellW = vw / cols;
-    const cellH = vh / rows;
-    const targets = [];
-
-    // Primary grid targets with organic jitter and edge bleed
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const jx = (Math.random() - 0.5) * (cellW * 0.55);
-        const jy = (Math.random() - 0.5) * (cellH * 0.55);
-        targets.push({
-          x: Math.round((c + 0.5) * cellW + jx),
-          y: Math.round((r + 0.5) * cellH + jy)
-        });
-      }
-    }
-
-    // Edge and center filler blooms to guarantee zero empty spots
-    const extraBlooms = isMobile ? 14 : 20;
-    for (let k = 0; k < extraBlooms; k++) {
-      targets.push({
-        x: Math.round((Math.random() * 1.12 - 0.06) * vw),
-        y: Math.round((Math.random() * 1.12 - 0.06) * vh)
-      });
-    }
-
-    // Radial distance sorting from wax seal for fluid outward wave
-    targets.sort((a, b) => Math.hypot(a.x - ox, a.y - oy) - Math.hypot(b.x - ox, b.y - oy));
-
-    const totalCount = targets.length;
-    const baseMult = isMobile ? 1.05 : 1.34;
-
-    for (let i = 0; i < totalCount; i++) {
-      const item = pool[i % pool.length];
-      const target = targets[i];
-      const el = document.createElement("div");
-      el.className = "screen-flower-cell";
-
-      const scaleMult = (0.92 + Math.random() * 0.24);
-      const size = Math.round(item.baseSize * baseMult * scaleMult);
-
-      const destX = target.x;
-      const destY = target.y;
-
-      // Smooth parabolic arc: launches up from envelope mouth, then expands into screen
-      const midDistRatio = 0.38;
-      const midX = Math.round(ox + (destX - ox) * midDistRatio);
-      const midY = Math.round(oy + (destY - oy) * midDistRatio - (55 + Math.random() * 65));
-
-      // Continuous angular deceleration: 72% spin in first 38% of time, gentle settle to 100%
-      const rotStart = Math.round((Math.random() - 0.5) * 80);
-      const spinSpeed = (Math.random() > 0.5 ? 1 : -1) * (180 + Math.random() * 220);
-      const rotMid = Math.round(rotStart + spinSpeed * 0.72);
-      const rotEnd = Math.round(rotStart + spinSpeed);
-
-      const delayMs = Math.round((i / totalCount) * 580 + Math.random() * 20);
-      const durationMs = Math.round(750 + Math.random() * 160);
-
-      el.style.width = `${size}px`;
-      el.style.height = `${size}px`;
-
-      const img = document.createElement("img");
-      img.src = item.url;
-      img.alt = "Bloom";
-      img.loading = "eager";
-      el.appendChild(img);
-      canvas.appendChild(el);
-
-      // Monotonic scaling (0.08 -> 0.68 -> 1.0) with segmented easings for 100% fluid motion
-      el.animate([
-        {
-          transform: `translate3d(${ox - size / 2}px, ${oy - size / 2}px, 0) scale(0.08) rotate(${rotStart}deg)`,
-          opacity: 0,
-          easing: "cubic-bezier(0.22, 0.61, 0.36, 1)"
-        },
-        {
-          transform: `translate3d(${midX - size / 2}px, ${midY - size / 2}px, 0) scale(0.68) rotate(${rotMid}deg)`,
-          opacity: 1,
-          offset: 0.38,
-          easing: "cubic-bezier(0.16, 1, 0.3, 1)"
-        },
-        {
-          transform: `translate3d(${destX - size / 2}px, ${destY - size / 2}px, 0) scale(1.0) rotate(${rotEnd}deg)`,
-          opacity: 1
-        }
-      ], {
-        duration: durationMs,
-        delay: delayMs,
-        fill: "forwards"
-      });
-    }
-  };
-
-  const fadeAndRemoveFloralScreen = (delayMs = 0) => {
-    clearInterval(ambientPetalsInterval);
-    const canvas = document.getElementById("individualFlowersCanvas");
-    if (canvas) {
-      setTimeout(() => {
-        canvas.classList.add("fade-out");
-        setTimeout(() => {
-          canvas.innerHTML = "";
-          canvas.classList.remove("fade-out");
-          if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
-        }, 880);
-      }, delayMs);
-    }
-    document.querySelectorAll(".floating-flower-petal").forEach(p => {
-      p.style.transition = "opacity 0.5s ease";
-      p.style.opacity = "0";
-      setTimeout(() => p.remove(), 550);
-    });
-    const letterSec = document.querySelector(".letter-section");
-    if (letterSec) letterSec.classList.remove("floral-active");
-  };
-
-  const dismissRealisticFloralScreen = fadeAndRemoveFloralScreen;
-
-  window.spawnRealisticFloralScreenBurst = spawnRealisticFloralScreenBurst;
-  window.dismissRealisticFloralScreen = dismissRealisticFloralScreen;
-  window.fadeAndRemoveFloralScreen = fadeAndRemoveFloralScreen;
 
   const openLetterEnvelope = () => {
     if (!envelopeCard || !openedWrap) return;

@@ -1739,10 +1739,10 @@
           <button type="button" class="v2-btn-signin-ghost btn-open-signin-v2" id="btnV2SignIn">
             Sign In
           </button>
-          <a href="/builder" class="v2-btn-builder" id="btnV2HeaderBuilder">
+          <a href="/builder?slug=demo" class="v2-btn-builder" id="btnV2HeaderBuilder" title="Start Building Free">
             <span class="v2-builder-dot"></span>
-            <span>Builder</span>
-            <span class="v2-builder-arrow">›</span>
+            <span>Start Free</span>
+            <span class="v2-builder-arrow">→</span>
           </a>
           <button type="button" class="v2-user-avatar btn-open-signin-v2" id="btnV2Avatar" title="Account Menu">
             <span>M</span>
@@ -1783,15 +1783,45 @@
           </p>
 
           <div class="v2-hero-ctas">
-            <a href="/builder" class="v2-btn-primary" id="btnV2HeroBuilder">
-              <span>🚀</span> Go to Builder →
+            <a href="/builder?slug=demo" class="v2-btn-primary v2-btn-hero-main" id="btnV2HeroBuilder" title="Go to Builder — Start Building Free">
+              <span class="v2-btn-badge">FREE</span>
+              <span>✨</span>
+              <span class="v2-btn-title">Start Building Your Website</span>
+              <span class="v2-btn-sublabel">(Go to Builder)</span>
+              <span class="v2-btn-arrow">→</span>
             </a>
-            <button type="button" class="v2-btn-secondary" id="btnV2BuilderDemo">
-              <span>🎨</span> Builder Demo
-            </button>
-            <button type="button" class="v2-btn-tertiary" id="btnV2WebsiteDemo">
-              <span>▶</span> Website Demo
-            </button>
+            <div class="v2-hero-secondary-ctas">
+              <a href="/builder?slug=demo" class="v2-btn-secondary" id="btnV2BuilderDemo" title="Open Builder Demo">
+                <span>🎨</span> Builder Demo
+              </a>
+              <button type="button" class="v2-btn-tertiary" id="btnV2WebsiteDemo" title="Watch Website Demo">
+                <span>▶</span> Website Demo
+              </button>
+            </div>
+          </div>
+
+          <div class="v2-hero-cta-guarantee">
+            <span>⚡ No credit card required</span>
+            <span class="v2-dot">•</span>
+            <span>Instant live preview</span>
+            <span class="v2-dot">•</span>
+            <span>Ready in 2 mins</span>
+          </div>
+
+          <!-- Instant 1-Click Name Starter -->
+          <div class="welcome-quick-starter" id="v2QuickStarter">
+            <div class="quick-starter-header">
+              <span class="quick-starter-sparkle">💖</span>
+              <span class="quick-starter-title">Or customize with your names right now:</span>
+            </div>
+            <div class="quick-starter-row">
+              <input type="text" id="v2QuickP1" placeholder="Your Name (e.g. Ella)" class="quick-starter-input" maxlength="28" autocomplete="off">
+              <span class="quick-starter-amp">&amp;</span>
+              <input type="text" id="v2QuickP2" placeholder="Partner's Name (e.g. Alex)" class="quick-starter-input" maxlength="28" autocomplete="off">
+              <button type="button" id="btnV2QuickStart" class="quick-starter-btn">
+                <span>✨</span> Customize →
+              </button>
+            </div>
           </div>
         </div>
 
@@ -2892,8 +2922,9 @@
       // Delegate V2 Demo Buttons
       const v2BuilderDemo = document.getElementById('btnV2BuilderDemo');
       if (v2BuilderDemo) {
-        v2BuilderDemo.addEventListener('click', () => {
-          window.location.href = '/builder?demo=1';
+        v2BuilderDemo.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.location.href = '/builder?slug=demo';
         });
       }
 

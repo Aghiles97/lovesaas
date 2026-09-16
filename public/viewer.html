@@ -18,6 +18,16 @@
         }
         const app = document.getElementById("modularGridContainer") || document.getElementById("mainApp");
         if (app) app.classList.add("app-revealed");
+        if (opts.withBurst && typeof window.spawnRealisticFloralScreenBurst === "function") {
+          const sealEl = document.getElementById("openEnvelopeBtn") || document.getElementById("bdayWaxSeal");
+          const rect = sealEl ? sealEl.getBoundingClientRect() : { left: window.innerWidth / 2, top: window.innerHeight / 2, width: 0, height: 0 };
+          window.spawnRealisticFloralScreenBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+          setTimeout(() => {
+            if (typeof window.fadeAndRemoveFloralScreen === "function") {
+              window.fadeAndRemoveFloralScreen(100);
+            }
+          }, 1800);
+        }
         const bgAudio = document.getElementById("bgAudioPlayer");
         if (window.state && window.state.soundtrackAutoplay === false) {
           if (bgAudio && !bgAudio.paused) bgAudio.pause();
