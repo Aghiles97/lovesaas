@@ -5,84 +5,12 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Caveat:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600;1,700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,900;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap');
 
-/* --- Version View Toggle Utility --- */
-.landing-version-view.hidden {
-  display: none !important;
-}
-
-/* ==========================================================================
-   FLOATING 2-BUTTON DESIGN SWITCHER
-   ========================================================================== */
-#landingDesignSwitcher {
-  position: fixed;
-  bottom: 18px;
-  right: 18px;
-  left: auto;
-  transform: none;
-  z-index: 99999;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 6px;
-  background: rgba(13, 10, 16, 0.88);
-  backdrop-filter: blur(18px) saturate(180%);
-  -webkit-backdrop-filter: blur(18px) saturate(180%);
-  border: 1px solid rgba(223, 154, 146, 0.35);
-  border-radius: 9999px;
-  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.65), 0 0 20px rgba(223, 154, 146, 0.18);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-#landingDesignSwitcher:hover {
-  border-color: rgba(223, 154, 146, 0.55);
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.75), 0 0 26px rgba(223, 154, 146, 0.28);
-}
-
-#landingDesignSwitcher .switcher-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 18px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.7);
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  border: none;
-  border-radius: 9999px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  text-decoration: none;
-  user-select: none;
-}
-
-#landingDesignSwitcher .switcher-btn:hover {
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #0a090c;
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-#landingDesignSwitcher .switcher-btn.active {
-  background: linear-gradient(135deg, #e3a39b 0%, #df9a92 45%, #c4766e 100%);
-  color: #311c19;
-  font-weight: 700;
-  box-shadow: 0 3px 12px rgba(223, 154, 146, 0.45);
-}
-
-@media (max-width: 600px) {
-  #landingDesignSwitcher {
-    bottom: 12px;
-    right: 12px;
-    padding: 3px 4px;
-    transform: scale(0.8);
-    transform-origin: bottom right;
-  }
-  #landingDesignSwitcher .switcher-btn {
-    padding: 6px 11px;
-    font-size: 11px;
-  }
+  overflow-x: hidden;
 }
 
 /* ==========================================================================
@@ -841,21 +769,130 @@
   transform: translateY(-1px);
 }
 
-/* Hero Visual Art (Seamless Couple Silhouette + Script Note Composition) */
+/* Hero Visual Art & Photo Cluster */
 #landingViewV2 .v2-hero-visual {
   position: absolute;
   top: 10px;
   right: -8px;
   width: 196px;
   max-width: 44%;
-  pointer-events: none;
   z-index: 1;
+}
+
+#landingViewV2 .v2-hero-photo-cluster {
+  position: relative;
 }
 
 #landingViewV2 .v2-hero-art-img {
   width: 100%;
   height: auto;
   display: block;
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.35));
+  border-radius: 12px;
+}
+
+#landingViewV2 .v2-hero-polaroid {
+  display: none;
+}
+
+@media (min-width: 600px) {
+  #landingViewV2 .v2-hero-polaroid {
+    display: block;
+    position: absolute;
+    background: #ffffff;
+    padding: 6px 6px 14px;
+    border-radius: 6px;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.42), 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+    z-index: 2;
+    cursor: pointer;
+  }
+
+  #landingViewV2 .v2-hero-polaroid:hover {
+    transform: scale(1.06) rotate(0deg) !important;
+    box-shadow: 0 22px 40px rgba(244, 63, 94, 0.3);
+    z-index: 5;
+  }
+
+  #landingViewV2 .v2-polaroid-float-1 {
+    width: 110px;
+    top: -12px;
+    left: -28px;
+    transform: rotate(-7deg);
+  }
+
+  #landingViewV2 .v2-polaroid-float-2 {
+    width: 118px;
+    bottom: -16px;
+    right: -10px;
+    transform: rotate(6deg);
+  }
+
+  #landingViewV2 .v2-polaroid-pin {
+    position: absolute;
+    top: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 15px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    line-height: 1;
+  }
+
+  #landingViewV2 .v2-polaroid-tape {
+    position: absolute;
+    top: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 13px;
+    background: rgba(254, 205, 211, 0.65);
+    backdrop-filter: blur(2px);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    border-radius: 2px;
+  }
+
+  #landingViewV2 .v2-polaroid-img-box {
+    width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 3px;
+    background: #1e1520;
+  }
+
+  #landingViewV2 .v2-polaroid-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  #landingViewV2 .v2-polaroid-caption {
+    font-family: 'Caveat', cursive, serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #2c1a1d;
+    text-align: center;
+    margin-top: 5px;
+    line-height: 1.1;
+  }
+
+  #landingViewV2 .v2-hero-photo-badge {
+    position: absolute;
+    bottom: -10px;
+    left: -14px;
+    background: rgba(26, 17, 24, 0.92);
+    border: 1px solid rgba(244, 63, 94, 0.35);
+    backdrop-filter: blur(12px);
+    padding: 5px 12px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    color: #fecdd3;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    z-index: 3;
+  }
 }
 
 /* ==========================================================================
@@ -2332,5 +2369,219 @@
 
   #landingViewV2 .v2-hero-visual {
     max-width: 480px;
+  }
+}
+
+/* ==========================================================================
+   PHOTO KEEPSAKE GALLERY SECTION (#v2PhotoMoments)
+   ========================================================================== */
+#landingViewV2 .v2-photo-gallery-section {
+  padding: 60px 0 64px;
+  background: linear-gradient(180deg, rgba(25, 17, 26, 0) 0%, rgba(38, 22, 33, 0.5) 50%, rgba(25, 17, 26, 0) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+#landingViewV2 .v2-polaroids-wall {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px 24px;
+  margin: 40px auto 36px;
+  max-width: 1140px;
+  padding: 12px 6px;
+}
+
+@media (max-width: 900px) {
+  #landingViewV2 .v2-polaroids-wall {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  #landingViewV2 .v2-polaroids-wall {
+    grid-template-columns: 1fr;
+    max-width: 320px;
+  }
+}
+
+#landingViewV2 .v2-polaroid-card {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 10px 10px 20px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), 0 3px 10px rgba(0, 0, 0, 0.2);
+  position: relative;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  #landingViewV2 .v2-polaroid-card {
+    padding: 8px 8px 16px;
+  }
+}
+
+#landingViewV2 .v2-polaroid-card:hover {
+  transform: scale(1.04) rotate(0deg) translateY(-6px) !important;
+  box-shadow: 0 26px 52px rgba(244, 63, 94, 0.3), 0 8px 16px rgba(0, 0, 0, 0.25);
+  z-index: 10;
+}
+
+#landingViewV2 .v2-rot-neg-2 { transform: rotate(-2.5deg); }
+#landingViewV2 .v2-rot-pos-3 { transform: rotate(2.8deg); }
+#landingViewV2 .v2-rot-neg-1 { transform: rotate(-1.5deg); }
+#landingViewV2 .v2-rot-pos-2 { transform: rotate(2.2deg); }
+#landingViewV2 .v2-rot-neg-3 { transform: rotate(-3deg); }
+#landingViewV2 .v2-rot-pos-1 { transform: rotate(1.8deg); }
+
+#landingViewV2 .v2-polaroids-wall .v2-polaroid-pin {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+  z-index: 2;
+  line-height: 1;
+}
+
+#landingViewV2 .v2-polaroids-wall .v2-polaroid-tape {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 16px;
+  background: rgba(254, 205, 211, 0.65);
+  backdrop-filter: blur(3px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  border-radius: 2px;
+  z-index: 2;
+}
+
+#landingViewV2 .v2-polaroids-wall .v2-polaroid-heart-clip {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 19px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+  z-index: 2;
+  line-height: 1;
+}
+
+#landingViewV2 .v2-polaroids-wall .v2-polaroid-photo {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #180f15;
+}
+
+#landingViewV2 .v2-polaroids-wall .v2-polaroid-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.5s ease;
+}
+
+#landingViewV2 .v2-polaroid-card:hover .v2-polaroid-photo img {
+  transform: scale(1.06);
+}
+
+#landingViewV2 .v2-polaroids-wall .v2-polaroid-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 10px;
+  gap: 3px;
+}
+
+@media (max-width: 640px) {
+  #landingViewV2 .v2-polaroids-wall .v2-polaroid-meta {
+    margin-top: 6px;
+    gap: 1px;
+  }
+}
+
+#landingViewV2 .v2-polaroids-wall .v2-polaroid-note {
+  font-family: 'Caveat', cursive, serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e1215;
+  line-height: 1.2;
+}
+
+@media (max-width: 640px) {
+  #landingViewV2 .v2-polaroids-wall .v2-polaroid-note {
+    font-size: 14px;
+  }
+}
+
+#landingViewV2 .v2-polaroids-wall .v2-polaroid-date {
+  font-size: 10px;
+  font-weight: 600;
+  color: #8c7379;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#landingViewV2 .v2-photo-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(244, 63, 94, 0.22);
+  border-radius: 16px;
+  padding: 16px 24px;
+  backdrop-filter: blur(12px);
+  margin-top: 24px;
+}
+
+#landingViewV2 .v2-photo-action-text {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14.5px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+#landingViewV2 .v2-photo-sparkle {
+  font-size: 18px;
+}
+
+#landingViewV2 .v2-btn-photo-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  text-decoration: none;
+  box-shadow: 0 8px 20px rgba(244, 63, 94, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#landingViewV2 .v2-btn-photo-start:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(244, 63, 94, 0.48);
+}
+
+@media (max-width: 640px) {
+  #landingViewV2 .v2-photo-action-bar {
+    flex-direction: column;
+    text-align: center;
+    padding: 16px;
+  }
+  #landingViewV2 .v2-btn-photo-start {
+    width: 100%;
+    justify-content: center;
   }
 }

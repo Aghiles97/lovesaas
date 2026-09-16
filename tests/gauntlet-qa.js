@@ -88,15 +88,13 @@ async function runStaticChecks() {
   const css = fs.readFileSync(v2CssPath, 'utf8');
 
   const checks = [
-    { label: 'Switcher container', pass: html.includes('id="landingDesignSwitcher"') },
-    { label: 'Switch button V1 & V2', pass: html.includes('btnSwitchV1') && html.includes('btnSwitchV2') },
-    { label: 'Design 1 & 2 containers', pass: html.includes('id="landingViewV1"') && html.includes('id="landingViewV2"') },
+    { label: 'Design 2 sole container', pass: html.includes('id="landingViewV2"') && !html.includes('id="landingViewV1"') },
+    { label: 'Design switcher completely removed', pass: !html.includes('id="landingDesignSwitcher"') && !html.includes('btnSwitchV1') && !html.includes('btnSwitchV2') },
     { label: 'Landing v2 CSS linked', pass: html.includes('landing-v2.css') },
     { label: 'Desktop navigation links', pass: html.includes('v2-desktop-nav-links') && css.includes('.v2-desktop-nav-links') },
     { label: 'Mobile slide-out menu', pass: html.includes('v2-mobile-menu') && css.includes('.v2-mobile-menu') },
     { label: 'Promo banner 50% OFF', pass: html.includes('50% OFF') && html.includes('Private Couple Keepsake') },
-    { label: 'Hero eyebrow & headline', pass: html.includes('PRIVATE COUPLE KEEPSAKE') && html.includes('Love Story') },
-    { label: 'Hero 3 CTAs', pass: html.includes('Go to Builder') && html.includes('Builder Demo') && html.includes('Website Demo') },
+    { label: 'Hero Primary CTA', pass: html.includes('Start Building Your Website') || html.includes('Go to Builder') },
     { label: '5 Feature quick tags', pass: html.includes('Wax-Sealed Letters') && html.includes('Travel Maps') },
     { label: '4 Stats counters with dividers', pass: html.includes('1,280+') && css.includes('.v2-stat-item:not(:last-child)::after') },
     { label: 'Review pill', pass: html.includes('4.9/5 from 1,200+ happy couples') },
@@ -107,6 +105,9 @@ async function runStaticChecks() {
     { label: 'Live device demo frame', pass: html.includes('v2-iphone-frame') && css.includes('.v2-iphone-frame') },
     { label: 'Real couple reviews wall', pass: html.includes('v2-reviews-grid') && css.includes('.v2-review-card') },
     { label: 'Complete 2-tier pricing suite', pass: html.includes('Story Starter') && html.includes('Forever VIP Keepsake') },
+    { label: 'Photo Keepsake Gallery section', pass: html.includes('v2-photo-gallery-section') && css.includes('.v2-photo-gallery-section') },
+    { label: 'Hero demo buttons removed', pass: !html.includes('btnV2BuilderDemo') && !html.includes('btnV2WebsiteDemo') },
+    { label: 'Quick starter inputs removed', pass: !html.includes('v2QuickStarter') && !html.includes('v1QuickStarter') },
     { label: 'FAQ Accordion', pass: html.includes('v2-faq-list') && css.includes('.v2-faq-question') },
     { label: 'Luxe footer with badges', pass: html.includes('v2-footer-top') && html.includes('256-Bit SSL Encrypted') }
   ];
@@ -160,50 +161,22 @@ async function runBrowserTests() {
       } catch (e) {}
     });
 
-    // TEST 1: URL PARAM ?design=v2
-    console.log('\n[TEST 1] Loading ?design=v2 ...');
-    await cdp.send('Page.navigate', { url: `${SERVER_URL}/?design=v2` });
+    // TEST 1: Load Root Landing Page
+    console.log('\n[TEST 1] Loading root landing page ...');
+    await cdp.send('Page.navigate', { url: `${SERVER_URL}/` });
     await sleep(2000);
 
-    let v1Visible = await cdp.evaluate(`(() => {
-      const el = document.getElementById('landingViewV1');
-      if (!el) return false;
-      const s = window.getComputedStyle(el);
-      return s.display !== 'none' && !el.classList.contains('hidden');
-    })()`);
-
-    let v2Visible = await cdp.evaluate(`(() => {
+    const v1Exists = await cdp.evaluate(`!!document.getElementById('landingViewV1')`);
+    const v2Visible = await cdp.evaluate(`(() => {
       const el = document.getElementById('landingViewV2');
       if (!el) return false;
       const s = window.getComputedStyle(el);
-      return s.display !== 'none' && !el.classList.contains('hidden');
+      return s.display !== 'none';
     })()`);
 
-    console.log(`Initial ?design=v2 state: V1 visible: ${v1Visible}, V2 visible: ${v2Visible}`);
-    if (!v2Visible || v1Visible) console.warn('WARN: Initial ?design=v2 failed expected visibility');
-    else console.log('PASS: ?design=v2 activates Design 2 and hides Design 1');
-
-    // TEST 2: Switch to Design 1
-    console.log('\n[TEST 2] Clicking Design 1 switcher button ...');
-    await cdp.evaluate(`document.getElementById('btnSwitchV1').click()`);
-    await sleep(500);
-
-    v1Visible = await cdp.evaluate(`document.getElementById('landingViewV1').style.display !== 'none' && !document.getElementById('landingViewV1').classList.contains('hidden')`);
-    v2Visible = await cdp.evaluate(`document.getElementById('landingViewV2').style.display !== 'none' && !document.getElementById('landingViewV2').classList.contains('hidden')`);
-    let storageVal = await cdp.evaluate(`localStorage.getItem('lovesaas_landing_version')`);
-    console.log(`After switch to V1: V1 visible: ${v1Visible}, V2 visible: ${v2Visible}, localStorage: ${storageVal}`);
-    console.log(v1Visible && !v2Visible && storageVal === 'v1' ? 'PASS: Switcher activated Design 1' : 'FAIL: Switcher to Design 1 failed');
-
-    // TEST 3: Switch back to Design 2
-    console.log('\n[TEST 3] Clicking Design 2 switcher button ...');
-    await cdp.evaluate(`document.getElementById('btnSwitchV2').click()`);
-    await sleep(500);
-
-    v1Visible = await cdp.evaluate(`document.getElementById('landingViewV1').style.display !== 'none' && !document.getElementById('landingViewV1').classList.contains('hidden')`);
-    v2Visible = await cdp.evaluate(`document.getElementById('landingViewV2').style.display !== 'none' && !document.getElementById('landingViewV2').classList.contains('hidden')`);
-    storageVal = await cdp.evaluate(`localStorage.getItem('lovesaas_landing_version')`);
-    console.log(`After switch to V2: V1 visible: ${v1Visible}, V2 visible: ${v2Visible}, localStorage: ${storageVal}`);
-    console.log(!v1Visible && v2Visible && storageVal === 'v2' ? 'PASS: Switcher activated Design 2' : 'FAIL: Switcher to Design 2 failed');
+    console.log(`Root page state: V1 exists: ${v1Exists}, V2 visible: ${v2Visible}`);
+    if (v1Exists || !v2Visible) console.warn('WARN: Root page should render Design 2 exclusively without Design 1');
+    else console.log('PASS: Root page exclusively renders Design 2');
 
     // TEST 4: Verify All Expanded Sections Rendered
     console.log('\n[TEST 4] Verifying expanded section elements ...');
@@ -213,6 +186,7 @@ async function runBrowserTests() {
         desktopNav: !!v2.querySelector('.v2-desktop-nav-links'),
         mobileMenu: !!v2.querySelector('#v2MobileMenu'),
         heroCtas: v2.querySelectorAll('.v2-hero-ctas a, .v2-hero-ctas button').length,
+        polaroidCards: v2.querySelectorAll('.v2-polaroid-card').length,
         templateCards: v2.querySelectorAll('.v2-template-card').length,
         widgetCards: v2.querySelectorAll('.v2-widget-card').length,
         filterTabs: v2.querySelectorAll('.v2-filter-btn').length,
@@ -372,6 +346,20 @@ async function runBrowserTests() {
       }
       console.log(`Captured /tmp/qa-${vp.name}.png`);
     }
+
+    // Capture photo gallery section
+    await cdp.send('Emulation.setDeviceMetricsOverride', {
+      width: 1280,
+      height: 900,
+      deviceScaleFactor: 2,
+      mobile: false
+    });
+    await cdp.evaluate(`document.getElementById('v2PhotoMoments').scrollIntoView({ block: 'start' })`);
+    await sleep(400);
+    const galleryShot = await cdp.send('Page.captureScreenshot', { format: 'png' });
+    const galleryPath = path.join(ARTIFACTS_DIR, 'qa-v2-gallery-section.png');
+    fs.writeFileSync(galleryPath, Buffer.from(galleryShot.data, 'base64'));
+    console.log(`Captured ${galleryPath}`);
 
     // Console errors summary
     console.log(`\nConsole Errors detected: ${consoleErrors.length}`);

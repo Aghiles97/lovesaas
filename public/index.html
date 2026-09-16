@@ -7,7 +7,7 @@
   <meta name="description" content="Surprise your partner with an intimate digital keepsake. Share your favorite photos, wax-sealed love letters with voice notes, romantic songs, and sweet memories.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/landing.css?v=2.7.2">
   <link rel="stylesheet" href="/css/landing-v2.css?v=2.0.0">
   <link rel="icon" type="image/png" href="/assets/logo.png">
@@ -20,1651 +20,11 @@
 </head>
 <body>
 
-  <!-- Ambient Particles Canvas -->
-  <canvas id="ambientCanvas"></canvas>
+<!-- ==========================================================================
+     LANDING PAGE: LUXE DARK / CINEMATIC EDITION
+     ========================================================================== -->
+  <div id="landingViewV2" class="v2-theme">
 
-  <!-- Glowing Aurora Orbs -->
-  <div class="aurora-orb orb-1"></div>
-  <div class="aurora-orb orb-2"></div>
-
-  <div id="landingViewV1" class="landing-version-view">
-  <!-- Romantic Announcement Top Banner -->
-  <div class="urgent-announcement-bar">
-    <span>🌸</span>
-    <span><strong>50% OFF:</strong> Private Couple Keepsake &amp; Visual Builder</span>
-    <a href="#pricing" class="badge badge-gold" style="font-size: 0.74rem; padding: 3px 12px; text-decoration: none; font-weight: 700; border-radius: 9999px;">VIEW PLANS</a>
-  </div>
-
-  <!-- Sticky Navbar -->
-  <header class="landing-nav" id="mainNav">
-    <div class="container nav-inner">
-      <a href="/welcome" class="nav-brand">
-        <img src="/assets/logo.png" alt="LoveSaas" class="nav-brand-logo" width="34" height="34">
-        <span class="nav-brand-text">LoveSaas <span class="nav-brand-badge">KEEPSAKE</span></span>
-      </a>
-
-      <nav class="desktop-nav-links" aria-label="Main Navigation">
-        <a href="#demo-preview" class="nav-link">Website Demo</a>
-        <a href="#builder" class="nav-link">Builder</a>
-        <a href="#features" class="nav-link">16 Widgets</a>
-        <a href="#presets" class="nav-link">Styles</a>
-        <a href="#pricing" class="nav-link">Pricing</a>
-        <a href="#faq" class="nav-link">FAQ</a>
-      </nav>
-
-      <div class="nav-actions">
-        <div id="navAuthLoggedOut" style="display: flex; align-items: center; gap: 8px;">
-          <button type="button" class="btn btn-ghost btn-sm" id="btnOpenSignInModal">
-            <span>🔑</span> Sign In
-          </button>
-        </div>
-        <div id="navAuthLoggedIn" style="display: none; align-items: center; gap: 14px;">
-          <a href="/builder" class="btn-header-builder" id="btnNavHeaderBuilder">
-            <span class="builder-dot"></span>
-            <span>Builder</span>
-            <span class="builder-arrow">›</span>
-          </a>
-          <div class="nav-user-dropdown" id="navUserDropdownWrap">
-            <button type="button" class="nav-user-avatar-btn" id="btnNavUserAvatar" title="Account menu">
-              <span class="nav-user-avatar-letter" id="navUserAvatarLetter">A</span>
-            </button>
-            <div class="nav-user-dropdown-menu hidden" id="navUserDropdownMenu">
-              <div class="nav-dropdown-user-card">
-                <div class="nav-dropdown-user-avatar" id="dropdownAvatarLetter">A</div>
-                <div class="nav-dropdown-user-info">
-                  <div class="nav-dropdown-name-line">
-                    <span class="nav-dropdown-user-name" id="dropdownUserName">Admin</span>
-                    <span class="nav-dropdown-user-badge">VIP</span>
-                  </div>
-                  <span class="nav-dropdown-user-email" id="dropdownUserEmail">admin@admin.com</span>
-                </div>
-              </div>
-              <div class="nav-dropdown-divider"></div>
-              <button type="button" class="nav-dropdown-item" id="btnDropdownMyWebsites">
-                <span class="dropdown-item-icon">💖</span>
-                <span class="dropdown-item-label">My Projects</span>
-                <span class="dropdown-item-badge" id="dropdownBadgeSitesCount">0</span>
-              </button>
-              <button type="button" class="nav-dropdown-item" id="btnDesktopAccountSettings">
-                <span class="dropdown-item-icon">⚙️</span>
-                <span class="dropdown-item-label">Account Settings</span>
-              </button>
-              <button type="button" class="nav-dropdown-item" id="btnDropdownReceipts">
-                <span class="dropdown-item-icon">🧾</span>
-                <span class="dropdown-item-label">Order Receipts</span>
-              </button>
-              <a href="/builder" class="nav-dropdown-item nav-dropdown-item--builder" id="btnDropdownGoToBuilder">
-                <span class="dropdown-item-icon">🚀</span>
-                <span class="dropdown-item-label">Open Builder →</span>
-              </a>
-              <div class="nav-dropdown-divider"></div>
-              <button type="button" class="nav-dropdown-item nav-dropdown-item--danger" id="btnDesktopLogout">
-                <span class="dropdown-item-icon">🚪</span>
-                <span class="dropdown-item-label">Log Out</span>
-              </button>
-            </div>
-          </div>
-        </div>
-        <a href="/builder?slug=demo" class="btn btn-primary btn-sm desktop-only hero-btn-start" id="btnNavGetStarted">
-          <span>✨</span> Start Building Free →
-        </a>
-        <button type="button" class="mobile-menu-btn" id="btnMobileMenuToggle" aria-label="Toggle navigation">☰</button>
-      </div>
-    </div>
-
-    <!-- Mobile Navigation Full-Height Drawer -->
-    <div class="mobile-nav-drawer nav-links" id="navLinks" aria-label="Mobile Navigation">
-      <!-- Top bar inside full-height mobile drawer -->
-      <div class="mobile-drawer-topbar">
-        <div class="nav-brand">
-          <img src="/assets/logo.png" alt="LoveSaas" class="nav-brand-logo" width="28" height="28">
-          <span class="nav-brand-text">LoveSaas</span>
-        </div>
-        <button type="button" class="mobile-drawer-close-btn" id="btnCloseMobileDrawer" aria-label="Close menu">✕</button>
-      </div>
-
-      <!-- 1. LOGGED-IN VIEW: ONLY ACCOUNT RELATED STUFF -->
-      <div id="drawerAccountSection" style="display: none; flex-direction: column; gap: 14px; width: 100%;">
-        <div class="mobile-user-card" id="mobileUserCard">
-          <div class="mobile-user-profile">
-            <div class="mobile-user-avatar" id="mobileUserAvatar">A</div>
-            <div class="mobile-user-details">
-              <div class="mobile-user-name-line">
-                <span class="mobile-user-name" id="mobileUserName">Admin</span>
-                <span class="mobile-user-badge">VIP</span>
-              </div>
-              <span class="mobile-user-email" id="mobileUserEmail">admin@admin.com</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="mobile-account-menu-list">
-          <button type="button" class="mobile-menu-row-btn" id="btnDrawerOpenProjects">
-            <span class="row-btn-icon">💖</span>
-            <span class="row-btn-text">My Projects</span>
-            <span class="row-btn-badge" id="mobileBadgeSitesCount">0</span>
-            <span class="row-btn-chevron">›</span>
-          </button>
-          <button type="button" class="mobile-menu-row-btn" id="btnDrawerOpenSettings">
-            <span class="row-btn-icon">⚙️</span>
-            <span class="row-btn-text">Account Settings</span>
-            <span class="row-btn-chevron">›</span>
-          </button>
-          <button type="button" class="mobile-menu-row-btn" id="btnDrawerOpenReceipts">
-            <span class="row-btn-icon">🧾</span>
-            <span class="row-btn-text">Order Receipts</span>
-            <span class="row-btn-chevron">›</span>
-          </button>
-        </div>
-
-        <a href="/builder" class="btn btn-primary btn-lg mobile-cta-btn" id="btnMobileGoToBuilder" style="text-decoration: none; justify-content: center; margin-top: 8px;">
-          <span>🚀</span> Open Builder →
-        </a>
-
-        <button type="button" class="mobile-drawer-logout-btn" id="btnDrawerLogout">
-          <span>🚪</span> Log Out
-        </button>
-      </div>
-
-      <!-- 2. LOGGED-OUT VIEW: MARKETING LINKS -->
-      <div id="drawerGuestSection" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
-        <div class="mobile-nav-list">
-          <a href="#demo-preview" class="nav-link">
-            <span class="nav-link-icon">✨</span>
-            <span class="nav-link-text">Website Demo</span>
-            <span class="nav-link-chevron">›</span>
-          </a>
-          <a href="#builder" class="nav-link">
-            <span class="nav-link-icon">🛠️</span>
-            <span class="nav-link-text">Builder</span>
-            <span class="nav-link-chevron">›</span>
-          </a>
-          <a href="#features" class="nav-link">
-            <span class="nav-link-icon">💎</span>
-            <span class="nav-link-text">16 Modular Widgets</span>
-            <span class="nav-link-chevron">›</span>
-          </a>
-          <a href="#presets" class="nav-link">
-            <span class="nav-link-icon">🎨</span>
-            <span class="nav-link-text">Styles &amp; Themes</span>
-            <span class="nav-link-chevron">›</span>
-          </a>
-          <a href="#pricing" class="nav-link">
-            <span class="nav-link-icon">🏷️</span>
-            <span class="nav-link-text">Pricing &amp; Plans</span>
-            <span class="nav-link-chevron">›</span>
-          </a>
-          <a href="#faq" class="nav-link">
-            <span class="nav-link-icon">❓</span>
-            <span class="nav-link-text">Help &amp; FAQ</span>
-            <span class="nav-link-chevron">›</span>
-          </a>
-        </div>
-
-        <div class="mobile-nav-ctas">
-          <button type="button" class="btn btn-primary btn-lg mobile-cta-btn" id="btnMobileGetStarted">
-            <span>💖</span> Create Couple Keepsake
-          </button>
-          <button type="button" class="btn btn-secondary btn-sm mobile-cta-btn" id="btnMobileSignIn">
-            <span>🔑</span> Sign In / Register
-          </button>
-        </div>
-      </div>
-    </div>
-  </header>
-  <div class="mobile-nav-backdrop" id="mobileNavBackdrop"></div>
-
-  <!-- Hero Section -->
-  <section class="hero-section">
-    <div class="container">
-      <div class="hero-badge-wrap">
-        <span class="badge-luxury">🌸 Private Couple Keepsake</span>
-      </div>
-
-      <h1 class="hero-title">
-        A Private Website for <span class="text-shimmer">Your Love Story</span> 💌
-      </h1>
-
-      <p class="hero-subtitle">
-        Photos, wax-sealed letters, travel maps, and milestone countdowns — ready in 2 minutes.
-      </p>
-
-      <div class="hero-ctas-container">
-        <div class="hero-ctas">
-          <a href="/builder?slug=demo" class="btn btn-primary btn-lg hero-btn-start" id="btnHeroBuy">
-            <span class="hero-btn-badge">FREE</span>
-            <span>✨</span> Start Building Your Website →
-          </a>
-          <a href="/builder?slug=demo" class="btn btn-secondary btn-lg" id="btnHeroTryBuilder">
-            <span>🎨</span> Builder Demo
-          </a>
-          <button type="button" class="btn btn-ghost btn-lg" id="btnHeroDemo">
-            <span>👁️</span> Website Demo
-          </button>
-        </div>
-        <div class="hero-cta-guarantee">
-          <span>⚡ No credit card required</span>
-          <span class="dot">•</span>
-          <span>Instant live preview</span>
-          <span class="dot">•</span>
-          <span>Ready in 2 mins</span>
-        </div>
-        <!-- 1-Click Interactive Name Personalizer -->
-        <div class="welcome-quick-starter" id="v1QuickStarter">
-          <div class="quick-starter-header">
-            <span class="quick-sparkle">💖</span>
-            <span class="quick-title">Or customize with your names right now:</span>
-          </div>
-          <div class="quick-starter-row">
-            <input type="text" id="v1QuickP1" placeholder="Your Name (e.g. Ella)" class="quick-starter-input" maxlength="28" autocomplete="off">
-            <span class="quick-amp">&amp;</span>
-            <input type="text" id="v1QuickP2" placeholder="Partner's Name (e.g. Alex)" class="quick-starter-input" maxlength="28" autocomplete="off">
-            <button type="button" id="btnV1QuickStart" class="quick-starter-btn">
-              <span>✨</span> Customize →
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Live Metric Stats -->
-      <div class="hero-stats-row">
-        <div class="stat-item">
-          <div class="stat-number text-shimmer">1,280+</div>
-          <div class="stat-label">Couples</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number text-gold">Forever</div>
-          <div class="stat-label">Lifetime Access</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number" style="color: #fda4af;">2 Mins</div>
-          <div class="stat-label">Fast Setup</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number text-shimmer">100%</div>
-          <div class="stat-label">Private &amp; Intimate</div>
-        </div>
-      </div>
-
-      <!-- Press & Media As Seen In -->
-      <div class="press-marquee-wrap">
-        <div class="press-label">Featured in romantic bridal, wedding & anniversary gift guides</div>
-        <div class="press-logos">
-          <span class="press-logo-text">VOGUE</span>
-          <span class="press-logo-text">THE KNOT</span>
-          <span class="press-logo-text">BRIDES</span>
-          <span class="press-logo-text">GLAMOUR</span>
-          <span class="press-logo-text">COSMOPOLITAN</span>
-          <span class="press-logo-text">HARPER'S BAZAAR</span>
-        </div>
-      </div>
-
-      <!-- 3D DUAL-DEVICE SHOWCASE WITH ORBITING BADGES -->
-      <div class="hero-devices-stage" id="demo-preview">
-        <!-- Floating Orbit Badges -->
-        <div class="orbit-badge orbit-top-right">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 1.5rem;">💌</span>
-            <div style="text-align: left;">
-              <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">WAX-SEALED LETTER</div>
-              <div style="font-size: 0.95rem; font-weight: 800; color: #f43f5e;">"My heart is yours forever" ❤️</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="orbit-badge orbit-bottom-left">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 1.5rem;">✈️</span>
-            <div style="text-align: left;">
-              <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">REUNION COUNTDOWN</div>
-              <div style="font-size: 0.95rem; font-weight: 800; color: #fb7185;">12 Days Until Paris • Soon 💕</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="macbook-glass-frame" id="heroMockupFrame">
-          <div class="browser-bar">
-            <div class="browser-dots">
-              <span class="browser-dot dot-red"></span>
-              <span class="browser-dot dot-yellow"></span>
-              <span class="browser-dot dot-green"></span>
-            </div>
-            <div class="browser-address">
-              <span>🔒</span> https://lovesaas.com/sites/alex-and-sam
-            </div>
-            <div style="font-size: 0.8rem; color: #f43f5e; font-weight: 800; letter-spacing: 0.4px;">
-              ✨ LIVE WEBSITE DEMO
-            </div>
-          </div>
-
-          <!-- Mockup Tab Bar -->
-          <div class="mockup-tabs">
-            <button type="button" class="mockup-tab-btn active" data-mockup-tab="clocks">👑 Our Story & Clocks</button>
-            <button type="button" class="mockup-tab-btn" data-mockup-tab="meter">📈 Sweet Love Meter</button>
-            <button type="button" class="mockup-tab-btn" data-mockup-tab="letter">💌 Wax Love Letter (Click Seal)</button>
-            <button type="button" class="mockup-tab-btn" data-mockup-tab="bottle">🍾 Truth or Dare (Spin!)</button>
-          </div>
-
-          <div class="browser-content">
-            <!-- TAB 1: CLOCKS & HERO -->
-            <div class="mockup-tab-pane active" id="paneClocks">
-              <div class="clocks-pane-grid">
-                <div class="mockup-hero-card">
-                  <div class="mockup-names">Alex & Sam 💍</div>
-                  <div class="mockup-subtitle">Our Forever Adventure • Happy Anniversary! ❤️</div>
-
-                  <div class="mockup-clocks">
-                    <div class="clock-item">
-                      <div class="city">Paris 🇫🇷 (Alex)</div>
-                      <div class="time" id="mockParisTime">22:45</div>
-                    </div>
-                    <div class="clock-item">
-                      <div class="city">Tokyo 🇯🇵 (Sam)</div>
-                      <div class="time" id="mockTokyoTime">06:45</div>
-                    </div>
-                  </div>
-
-                  <div class="mockup-flight-pass">
-                    <div>✈️ <strong>Reunion Flight & Countdown</strong> (Paris ✈️ Tokyo)</div>
-                    <span class="badge" style="padding: 3px 10px; font-size: 0.74rem;">COUNTING DOWN</span>
-                  </div>
-                </div>
-
-                <div class="mockup-widgets-grid">
-                  <div class="mockup-mini-card">
-                    <div class="card-icon">🗺️</div>
-                    <div class="card-label" style="color: var(--text-muted);">Travel Map</div>
-                    <div class="card-val">8 Cities Visited</div>
-                  </div>
-                  <div class="mockup-mini-card">
-                    <div class="card-icon">📸</div>
-                    <div class="card-label" style="color: var(--text-muted);">Memories</div>
-                    <div class="card-val">128 Polaroids</div>
-                  </div>
-                  <div class="mockup-mini-card">
-                    <div class="card-icon">🎵</div>
-                    <div class="card-label" style="color: var(--text-muted);">Soundtrack</div>
-                    <div class="card-val">Taylor Swift ✨</div>
-                  </div>
-                  <div class="mockup-mini-card">
-                    <div class="card-icon">🎟️</div>
-                    <div class="card-label" style="color: var(--text-muted);">Coupons</div>
-                    <div class="card-val">10 Unclaimed</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- TAB 2: INTERACTIVE LOF-O-METER -->
-            <div class="mockup-tab-pane" id="paneMeter">
-              <div class="interactive-meter-box">
-                <span class="badge-luxury" style="margin-bottom: 10px;">✨ Pure Affection</span>
-                <h3 style="font-size: 1.5rem; font-family: var(--font-serif);">The Sweet Love-O-Meter 📈</h3>
-                <p style="font-size: 0.92rem; color: var(--text-secondary);">Tap the buttons below to send sweet kisses, warm hugs, and pure affection!</p>
-
-                <div class="meter-counter-display" id="mockMeterDisplay">9,847,293,847,192,840,320</div>
-                <div class="meter-bar-track">
-                  <div class="meter-bar-fill" id="mockMeterFill"></div>
-                </div>
-
-                <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-                  <button type="button" class="btn btn-primary btn-sm" id="btnMockPump">
-                    💖 Send Love (+500k)
-                  </button>
-                  <button type="button" class="btn btn-secondary btn-sm" id="btnMockKiss">
-                    💋 Send Sweet Kiss
-                  </button>
-                  <button type="button" class="btn btn-secondary btn-sm" id="btnMockHug">
-                    🤗 Send Warm Hug
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- TAB 3: WAX LOVE LETTER -->
-            <div class="mockup-tab-pane" id="paneLetter">
-              <div class="wax-letter-box">
-                <div class="wax-seal-btn" id="btnBreakWaxSeal" title="Click to break the wax seal!">
-                  <span>💌</span>
-                </div>
-                <div id="waxPromptText" style="font-weight: 800; color: #991b1b; font-size: 1rem; margin-bottom: 6px;">
-                  Tap the royal wax seal to open and unfold the letter!
-                </div>
-                <div class="wax-letter-text" id="waxLetterContent">
-                  <p style="margin-bottom: 12px; font-weight: 800;">My Dearest Ella,</p>
-                  <p style="margin-bottom: 12px;">
-                    From our late-night walks under city lights to quiet morning coffee together, every single moment with you is pure magic. No distance, no busy week, and no time apart could ever weaken how fiercely and endlessly I love you.
-                  </p>
-                  <p style="text-align: right; font-weight: 800; margin-top: 16px;">Forever Yours, Aghiles ❤️</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- TAB 4: TRUTH OR DARE -->
-            <div class="mockup-tab-pane" id="paneBottle">
-              <div class="bottle-spin-box">
-                <div style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 14px;">
-                  Tap the champagne bottle below to spin and draw a sweet couple challenge!
-                </div>
-                <div class="bottle-spin-icon" id="mockSpinBottle" title="Tap to spin!">🍾</div>
-                <div class="bottle-prompt-card" id="mockPromptCard">
-                  Tap the champagne bottle above to spin! ✨
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- Builder Showcase Section -->
-  <section class="section builder-showcase-section" id="builder">
-    <div class="container">
-      <div class="section-header">
-        <span class="badge-luxury" style="margin-bottom: 12px;">🛠️ The Builder Experience</span>
-        <h2>Built for Simplicity. Designed to Delight.</h2>
-        <p>A real-time split-screen builder. No code, no stress — just pure romantic creativity.</p>
-      </div>
-
-      <div class="builder-showcase-layout">
-        <!-- Left: 4 Crisp Feature Cards -->
-        <div class="builder-features-col">
-          <div class="builder-card">
-            <div class="builder-card-icon">⚡</div>
-            <div class="builder-card-content">
-              <h3 class="builder-card-title">Live Split-Screen Builder</h3>
-              <p class="builder-card-desc">Edit text and settings on the left, watch your couple website update instantly on the right.</p>
-            </div>
-          </div>
-
-          <div class="builder-card">
-            <div class="builder-card-icon">🧩</div>
-            <div class="builder-card-content">
-              <h3 class="builder-card-title">26 Drag-and-Drop Widgets</h3>
-              <p class="builder-card-desc">Toggle clocks, wax letters, quizzes, maps, and countdowns in 1 click. Reorder with ease.</p>
-            </div>
-          </div>
-
-          <div class="builder-card">
-            <div class="builder-card-icon">☁️</div>
-            <div class="builder-card-content">
-              <h3 class="builder-card-title">Cloud Media &amp; Voice Vault</h3>
-              <p class="builder-card-desc">Drag &amp; drop high-res polaroids, upload romantic background songs, and record voice notes.</p>
-            </div>
-          </div>
-
-          <div class="builder-card">
-            <div class="builder-card-icon">🔒</div>
-            <div class="builder-card-content">
-              <h3 class="builder-card-title">Private Password &amp; Auto-Save</h3>
-              <p class="builder-card-desc">Changes auto-save continuously (⌘S). Protected with your private password and custom link.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right: Interactive Mini Demo of the Builder -->
-        <div class="builder-workspace-mockup mini-builder-demo" id="miniBuilderDemo">
-          <div class="builder-workspace-header">
-            <div class="browser-dots" style="margin-right: 8px;">
-              <span class="browser-dot dot-red"></span>
-              <span class="browser-dot dot-yellow"></span>
-              <span class="browser-dot dot-green"></span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
-              <span style="font-size: 0.95rem;">🛠️</span>
-              <strong style="font-size: 0.88rem; color: #fff;">Interactive Builder Demo</strong>
-              <span class="badge" id="miniBuilderThemeBadge" style="padding: 2px 7px; font-size: 0.68rem; background: rgba(244, 63, 94, 0.2); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.4);">Theme: Rose</span>
-            </div>
-            <a href="/builder?slug=demo" class="btn btn-primary btn-sm" id="btnOpenFullBuilder" style="padding: 5px 12px; font-size: 0.76rem; text-decoration: none;">
-              <span>🚀</span> Full Builder ↗
-            </a>
-          </div>
-
-          <div class="builder-workspace-body mini-builder-body">
-            <!-- Left Panel: Controls (Themes & Widgets) -->
-            <div class="mini-builder-controls">
-              <!-- 1. Theme Picker -->
-              <div class="mini-control-group">
-                <div class="mini-control-label">SELECT REAL THEME</div>
-                <div class="mini-theme-chips">
-                  <button type="button" class="mini-theme-btn active" data-mini-theme="pink" title="Romantic Rose">
-                    <span class="mini-theme-dot" style="background: #ff4d6d;"></span> Rose
-                  </button>
-                  <button type="button" class="mini-theme-btn" data-mini-theme="midnight" title="Starry Night">
-                    <span class="mini-theme-dot" style="background: #3b82f6;"></span> Night
-                  </button>
-                  <button type="button" class="mini-theme-btn" data-mini-theme="purple" title="Lavender Dream">
-                    <span class="mini-theme-dot" style="background: #9b5de5;"></span> Lilac
-                  </button>
-                  <button type="button" class="mini-theme-btn" data-mini-theme="gold" title="Sunset Gold">
-                    <span class="mini-theme-dot" style="background: #f77f00;"></span> Sunset
-                  </button>
-                  <button type="button" class="mini-theme-btn" data-mini-theme="emerald" title="Emerald Garden">
-                    <span class="mini-theme-dot" style="background: #10b981;"></span> Emerald
-                  </button>
-                </div>
-              </div>
-
-              <!-- 2. Widgets Toggle List -->
-              <div class="mini-control-group">
-                <div class="mini-control-header-row">
-                  <span class="mini-control-label">ADD / REMOVE WIDGETS</span>
-                  <span class="mini-widgets-count" id="miniWidgetsCount">4 Active</span>
-                </div>
-                <div class="mini-widgets-list">
-                  <label class="mini-widget-toggle">
-                    <input type="checkbox" data-mini-toggle="clocks" checked>
-                    <span class="toggle-icon">👑</span>
-                    <span class="toggle-text">Hero &amp; Clocks</span>
-                  </label>
-                  <label class="mini-widget-toggle">
-                    <input type="checkbox" data-mini-toggle="letter" checked>
-                    <span class="toggle-icon">💌</span>
-                    <span class="toggle-text">Love Letter</span>
-                  </label>
-                  <label class="mini-widget-toggle">
-                    <input type="checkbox" data-mini-toggle="polaroids" checked>
-                    <span class="toggle-icon">📸</span>
-                    <span class="toggle-text">Polaroid Photos</span>
-                  </label>
-                  <label class="mini-widget-toggle">
-                    <input type="checkbox" data-mini-toggle="meter" checked>
-                    <span class="toggle-icon">📈</span>
-                    <span class="toggle-text">Sweet Love Meter</span>
-                  </label>
-                  <label class="mini-widget-toggle">
-                    <input type="checkbox" data-mini-toggle="map">
-                    <span class="toggle-icon">🗺️</span>
-                    <span class="toggle-text">Travel Map</span>
-                  </label>
-                  <label class="mini-widget-toggle">
-                    <input type="checkbox" data-mini-toggle="bottle">
-                    <span class="toggle-icon">🍾</span>
-                    <span class="toggle-text">Truth or Dare</span>
-                  </label>
-                  <label class="mini-widget-toggle">
-                    <input type="checkbox" data-mini-toggle="candle">
-                    <span class="toggle-icon">🎂</span>
-                    <span class="toggle-text">Birthday Wish</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right Panel: Live Preview Canvas -->
-            <div class="mini-builder-preview-stage" id="miniPreviewStage">
-              <div class="builder-preview-browser-bar">
-                <span>🔒</span> lovesaas.com/alex-and-sam
-              </div>
-
-              <div class="mini-preview-content" id="miniPreviewContent">
-                <!-- Dumb Widget 1: Clocks -->
-                <div class="mini-dumb-widget" id="miniWidget_clocks">
-                  <div class="mini-widget-bar">
-                    <span>👑 OUR STORY</span>
-                    <span style="font-size: 0.65rem; opacity: 0.7;">PARIS ✈️ TOKYO</span>
-                  </div>
-                  <div class="mini-couple-title">Alex &amp; Sam 💍</div>
-                  <div class="mini-clocks-row">
-                    <div class="mini-clock-chip">🇫🇷 Paris: 22:45</div>
-                    <div class="mini-clock-chip">🇯🇵 Tokyo: 06:45</div>
-                  </div>
-                </div>
-
-                <!-- Dumb Widget 2: Love Letter -->
-                <div class="mini-dumb-widget" id="miniWidget_letter">
-                  <div class="mini-widget-bar">
-                    <span>💌 WAX LOVE LETTER</span>
-                    <span style="color: #fda4af;">SEAL INTACT</span>
-                  </div>
-                  <p class="mini-letter-excerpt">"Every day with you is my favorite adventure..."</p>
-                  <span class="mini-badge-pill">🎙️ Voice Note Attached</span>
-                </div>
-
-                <!-- Dumb Widget 3: Polaroids -->
-                <div class="mini-dumb-widget" id="miniWidget_polaroids">
-                  <div class="mini-widget-bar">
-                    <span>📸 POLAROIDS</span>
-                    <span>3 PHOTOS</span>
-                  </div>
-                  <div class="mini-polaroids-row">
-                    <div class="mini-photo-thumb">🌸 First Date</div>
-                    <div class="mini-photo-thumb">✈️ Paris Trip</div>
-                    <div class="mini-photo-thumb">💍 Forever</div>
-                  </div>
-                </div>
-
-                <!-- Dumb Widget 4: Love Meter -->
-                <div class="mini-dumb-widget" id="miniWidget_meter">
-                  <div class="mini-widget-bar">
-                    <span>📈 LOF-O-METER</span>
-                    <span style="color: #ff4d6d;">99.9% MAX</span>
-                  </div>
-                  <div class="mini-meter-bar"><div class="mini-meter-fill"></div></div>
-                  <button type="button" class="mini-pump-btn" id="btnMiniPumpLove">Send Kiss 💋</button>
-                </div>
-
-                <!-- Dumb Widget 5: Travel Map -->
-                <div class="mini-dumb-widget" id="miniWidget_map" style="display: none;">
-                  <div class="mini-widget-bar">
-                    <span>🗺️ TRAVEL MAP</span>
-                    <span>8 CITIES</span>
-                  </div>
-                  <div class="mini-map-visual">📍 Paris ──✈️── 📍 Tokyo ──✈️── 📍 Rome</div>
-                </div>
-
-                <!-- Dumb Widget 6: Truth or Dare -->
-                <div class="mini-dumb-widget" id="miniWidget_bottle" style="display: none;">
-                  <div class="mini-widget-bar">
-                    <span>🍾 TRUTH OR DARE</span>
-                    <span>SPINNER</span>
-                  </div>
-                  <div style="font-size: 0.78rem; text-align: center; color: #fff;">🍾 "Dare: Whisper your favorite memory of us!"</div>
-                </div>
-
-                <!-- Dumb Widget 7: Birthday Candle -->
-                <div class="mini-dumb-widget" id="miniWidget_candle" style="display: none;">
-                  <div class="mini-widget-bar">
-                    <span>🎂 BIRTHDAY WISH</span>
-                    <span>SECRET WISH</span>
-                  </div>
-                  <div style="font-size: 0.78rem; text-align: center; color: #fff;">🎂 🕯️ Flame burning • Make a wish! ✨</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- 26 Handcrafted Modular Widgets Grid -->
-  <section class="section" id="features">
-    <div class="container">
-      <div class="section-header">
-        <span class="badge-luxury" style="margin-bottom: 12px;">💎 26 Modular Widgets</span>
-        <h2>Everything You Need to Tell Your Story</h2>
-        <p>Interactive, handcrafted modules. Toggle on or off anytime inside the Builder.</p>
-      </div>
-
-      <!-- Filter Tabs -->
-      <div class="widget-filter-bar">
-        <button type="button" class="widget-filter-btn active" data-cat="all">All Modules (26)</button>
-        <button type="button" class="widget-filter-btn" data-cat="story">💌 Letters &amp; Story</button>
-        <button type="button" class="widget-filter-btn" data-cat="memories">📸 Photos &amp; Travel</button>
-        <button type="button" class="widget-filter-btn" data-cat="games">🎮 Couple Games</button>
-        <button type="button" class="widget-filter-btn" data-cat="occasions">🎂 Birthday &amp; Occasions</button>
-      </div>
-
-      <div class="widgets-grid collapsed-widgets" id="widgetsGrid">
-        <!-- 1. Hero Header -->
-        <div class="widget-card" data-category="story">
-          <div class="widget-card-header">
-            <div class="widget-icon">👑</div>
-            <span class="widget-tag">Story</span>
-          </div>
-          <h3 class="widget-title">Hero Header &amp; LDR Clocks</h3>
-          <p class="widget-desc">Dual timezone clocks, reunion flight countdown, and romantic music bar.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="hero">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 2. Wax-Sealed Letter -->
-        <div class="widget-card" data-category="story">
-          <div class="widget-card-header">
-            <div class="widget-icon">💌</div>
-            <span class="widget-tag">Story</span>
-          </div>
-          <h3 class="widget-title">Wax-Sealed Audio Letter</h3>
-          <p class="widget-desc">Break the 3D wax seal to reveal your handwritten note and recorded voice note.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="letter">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 3. Interactive Map -->
-        <div class="widget-card" data-category="memories">
-          <div class="widget-card-header">
-            <div class="widget-icon">🗺️</div>
-            <span class="widget-tag">Travel</span>
-          </div>
-          <h3 class="widget-title">Interactive Love Map</h3>
-          <p class="widget-desc">Interactive world map with custom destination pins, flight arcs, and memories.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="map">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 4. Timeline Chapters -->
-        <div class="widget-card" data-category="story">
-          <div class="widget-card-header">
-            <div class="widget-icon">📖</div>
-            <span class="widget-tag">Story</span>
-          </div>
-          <h3 class="widget-title">Journey Chapters Timeline</h3>
-          <p class="widget-desc">Chronological relationship milestones with photo carousels and highlight cards.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="timeline">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 5. Polaroid Memories -->
-        <div class="widget-card" data-category="memories">
-          <div class="widget-card-header">
-            <div class="widget-icon">📸</div>
-            <span class="widget-tag">Photos</span>
-          </div>
-          <h3 class="widget-title">Polaroid Memories Gallery</h3>
-          <p class="widget-desc">Vintage photo cards with authentic 3D tilt physics and fullscreen lightbox.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="memories">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 6. Love Meter -->
-        <div class="widget-card" data-category="games">
-          <div class="widget-card-header">
-            <div class="widget-icon">📈</div>
-            <span class="widget-tag">Games</span>
-          </div>
-          <h3 class="widget-title">The Real-Time Lof-O-Meter</h3>
-          <p class="widget-desc">Playful affection gauge with kisses, warm hugs, and particle sparkles.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="love_meter">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 7. Boarding Pass -->
-        <div class="widget-card" data-category="story">
-          <div class="widget-card-header">
-            <div class="widget-icon">✈️</div>
-            <span class="widget-tag">Story</span>
-          </div>
-          <h3 class="widget-title">VIP Reunion Boarding Pass</h3>
-          <p class="widget-desc">Personalized first-class flight ticket with barcodes and PNG download.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="boarding_pass">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 8. Truth or Dare -->
-        <div class="widget-card" data-category="games">
-          <div class="widget-card-header">
-            <div class="widget-icon">🍾</div>
-            <span class="widget-tag">Games</span>
-          </div>
-          <h3 class="widget-title">Truth or Dare Bottle Spin</h3>
-          <p class="widget-desc">Spinning champagne bottle with romantic and spicy date challenges.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="truth_dare">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 9. Date Spinner -->
-        <div class="widget-card" data-category="games">
-          <div class="widget-card-header">
-            <div class="widget-icon">🎡</div>
-            <span class="widget-tag">Games</span>
-          </div>
-          <h3 class="widget-title">Date Night Decision Spinner</h3>
-          <p class="widget-desc">Roulette slot reels for spontaneous dinners, activities, and sweet treats.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="spinner">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 10. Love Coupons -->
-        <div class="widget-card" data-category="games">
-          <div class="widget-card-header">
-            <div class="widget-icon">🎟️</div>
-            <span class="widget-tag">Games</span>
-          </div>
-          <h3 class="widget-title">Scratch-Off Love Coupons</h3>
-          <p class="widget-desc">Silver scratch-to-reveal canvas coupons for massages, dinners, and favors.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="coupons">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 11. Love Quiz -->
-        <div class="widget-card" data-category="games">
-          <div class="widget-card-header">
-            <div class="widget-icon">🧠</div>
-            <span class="widget-tag">Games</span>
-          </div>
-          <h3 class="widget-title">Couples Trivia Challenge</h3>
-          <p class="widget-desc">Interactive relationship trivia quiz with score badges and love certificate.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="quiz">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 12. Reasons Why -->
-        <div class="widget-card" data-category="story">
-          <div class="widget-card-header">
-            <div class="widget-icon">💌</div>
-            <span class="widget-tag">Story</span>
-          </div>
-          <h3 class="widget-title">Reasons Why I Love You</h3>
-          <p class="widget-desc">Flippable card deck sorted by Romance, Adventures, Humor, and Food.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="reasons">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 13. Candle Blow-Out -->
-        <div class="widget-card widget-card-more" data-category="occasions">
-          <div class="widget-card-header">
-            <div class="widget-icon">🎂</div>
-            <span class="widget-tag">Birthday</span>
-          </div>
-          <h3 class="widget-title">Candle Blow-Out &amp; Secret Wish</h3>
-          <p class="widget-desc">Blow out SVG candles with mic or tap, flame smoke, and confetti celebration.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="candle_blowout">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 14. Milestone Stats -->
-        <div class="widget-card widget-card-more" data-category="memories">
-          <div class="widget-card-header">
-            <div class="widget-icon">⏳</div>
-            <span class="widget-tag">Milestones</span>
-          </div>
-          <h3 class="widget-title">Milestone Life Stats</h3>
-          <p class="widget-desc">Live seconds alive ticker with heartbeat counters, cups of coffee, and solar trips.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="milestone_stats">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 15. Gift Unboxer -->
-        <div class="widget-card widget-card-more" data-category="occasions">
-          <div class="widget-card-header">
-            <div class="widget-icon">🎁</div>
-            <span class="widget-tag">Surprise</span>
-          </div>
-          <h3 class="widget-title">3D Surprise Gift Unboxer</h3>
-          <p class="widget-desc">Multi-stage 3D box unwrapping animation with ribbon, glowing lid, and surprise reveal.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="gift_unboxer">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 16. Playful Question -->
-        <div class="widget-card widget-card-more" data-category="games">
-          <div class="widget-card-header">
-            <div class="widget-icon">🙈</div>
-            <span class="widget-tag">Games</span>
-          </div>
-          <h3 class="widget-title">Playful Runaway Button</h3>
-          <p class="widget-desc">A sweet 'Do you love me?' question with an elusive 'No' button that flees.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="playful">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 17. Guestbook Wall -->
-        <div class="widget-card widget-card-more" data-category="occasions">
-          <div class="widget-card-header">
-            <div class="widget-icon">📌</div>
-            <span class="widget-tag">Guestbook</span>
-          </div>
-          <h3 class="widget-title">Guestbook Wish Wall</h3>
-          <p class="widget-desc">Warm corkboard sticky-note wall for friends, family, and wedding guests to post love notes.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="guestbook">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 18. Party Jukebox -->
-        <div class="widget-card widget-card-more" data-category="occasions">
-          <div class="widget-card-header">
-            <div class="widget-icon">📻</div>
-            <span class="widget-tag">Music</span>
-          </div>
-          <h3 class="widget-title">Party Jukebox &amp; Playlist</h3>
-          <p class="widget-desc">Vintage turntable vinyl player with rotating disc and live animated sound equalizer.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="party_jukebox">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 19. Precision Tenure Ticker -->
-        <div class="widget-card widget-card-more" data-category="memories">
-          <div class="widget-card-header">
-            <div class="widget-icon">⏳</div>
-            <span class="widget-tag">Stats</span>
-          </div>
-          <h3 class="widget-title">Precision Tenure Ticker</h3>
-          <p class="widget-desc">Live millisecond-precise counter showing exact years, days, hours, and seconds together.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="tenure_ticker">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 20. Night Sky Star Map -->
-        <div class="widget-card widget-card-more" data-category="story">
-          <div class="widget-card-header">
-            <div class="widget-icon">✨</div>
-            <span class="widget-tag">Romance</span>
-          </div>
-          <h3 class="widget-title">Night Sky Star Map</h3>
-          <p class="widget-desc">Real celestial constellation alignment rendered on the exact night and city you first met.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="star_map">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 21. Then vs Now Photo Slider -->
-        <div class="widget-card widget-card-more" data-category="memories">
-          <div class="widget-card-header">
-            <div class="widget-icon">🌗</div>
-            <span class="widget-tag">Photos</span>
-          </div>
-          <h3 class="widget-title">Then vs. Now Photo Slider</h3>
-          <p class="widget-desc">Interactive split-handle comparison slider contrasting your first date against today.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="then_now_slider">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 22. Couple Bucket List -->
-        <div class="widget-card widget-card-more" data-category="story">
-          <div class="widget-card-header">
-            <div class="widget-icon">🎯</div>
-            <span class="widget-tag">Goals</span>
-          </div>
-          <h3 class="widget-title">Couple Life Bucket List</h3>
-          <p class="widget-desc">Shared aspirations and travel goals checklist with live progress celebration bar.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="bucket_list">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 23. Audio Voice Capsule -->
-        <div class="widget-card widget-card-more" data-category="story">
-          <div class="widget-card-header">
-            <div class="widget-icon">🎙️</div>
-            <span class="widget-tag">Audio</span>
-          </div>
-          <h3 class="widget-title">Audio Time Capsule</h3>
-          <p class="widget-desc">Pulsing waveform player archiving recorded whispers and love voicemails across years.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="audio_capsule">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 24. Milestone Odyssey -->
-        <div class="widget-card widget-card-more" data-category="memories">
-          <div class="widget-card-header">
-            <div class="widget-icon">🚀</div>
-            <span class="widget-tag">Story</span>
-          </div>
-          <h3 class="widget-title">Milestone Odyssey Map</h3>
-          <p class="widget-desc">Horizontal line journey map charting major relationship milestones together.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="milestone_odyssey">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 25. Valentine Scratchcard -->
-        <div class="widget-card widget-card-more" data-category="occasions">
-          <div class="widget-card-header">
-            <div class="widget-icon">💝</div>
-            <span class="widget-tag">Valentine</span>
-          </div>
-          <h3 class="widget-title">Valentine Date Scratchcard</h3>
-          <p class="widget-desc">Interactive scratch-off card revealing secret date itinerary, dress code, and note.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="valentine_scratch">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 26. Roast & Toast -->
-        <div class="widget-card widget-card-more" data-category="games">
-          <div class="widget-card-header">
-            <div class="widget-icon">🥂</div>
-            <span class="widget-tag">Games</span>
-          </div>
-          <h3 class="widget-title">Roast &amp; Toast Spinner</h3>
-          <p class="widget-desc">Decelerating wheel spinner alternating playful roasts and heartfelt sweet toasts.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="roast_toast">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 27. Forgiveness Meter -->
-        <div class="widget-card widget-card-more" data-category="reconciliation">
-          <div class="widget-card-header">
-            <div class="widget-icon">🕊️</div>
-            <span class="widget-tag">Reconciliation</span>
-          </div>
-          <h3 class="widget-title">Forgiveness Meter</h3>
-          <p class="widget-desc">Interactive slider with real-time mood aura, celebratory chime &amp; reward unlock.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="forgiveness_meter">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 28. Truce Agreement -->
-        <div class="widget-card widget-card-more" data-category="reconciliation">
-          <div class="widget-card-header">
-            <div class="widget-icon">📜</div>
-            <span class="widget-tag">Treaty</span>
-          </div>
-          <h3 class="widget-title">Bilateral Truce Treaty</h3>
-          <p class="widget-desc">Formal peace treaty with hold-to-sign progress ring &amp; downloadable keepsake.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="truce_agreement">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 29. Reform Deck -->
-        <div class="widget-card widget-card-more" data-category="reconciliation">
-          <div class="widget-card-header">
-            <div class="widget-icon">🃏</div>
-            <span class="widget-tag">Promises</span>
-          </div>
-          <h3 class="widget-title">The Honest Reform Deck</h3>
-          <p class="widget-desc">3D flippable card deck with sincere apology, ownership, and actionable commitments.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="reform_deck">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 30. Reparation Coupons -->
-        <div class="widget-card widget-card-more" data-category="reconciliation">
-          <div class="widget-card-header">
-            <div class="widget-icon">🎟️</div>
-            <span class="widget-tag">Coupons</span>
-          </div>
-          <h3 class="widget-title">Reparation &amp; Peace Coupons</h3>
-          <p class="widget-desc">Scratchable gold foil vouchers for massage, argument pass, and breakfast in bed.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="reparation_coupons">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-
-        <!-- 31. Comfort Soundboard -->
-        <div class="widget-card widget-card-more" data-category="audio">
-          <div class="widget-card-header">
-            <div class="widget-icon">🎧</div>
-            <span class="widget-tag">Audio</span>
-          </div>
-          <h3 class="widget-title">Comfort Soundboard</h3>
-          <p class="widget-desc">Ambient sound mixer (rain, hearth, waves) with equalizer and serene photo stream.</p>
-          <div style="margin-top: auto; padding-top: 10px;">
-            <button type="button" class="btn-preview-widget" data-preview-id="comfort_soundboard">
-              <span>👁️</span> Preview
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- More Widgets Expand Toggle -->
-      <div class="more-widgets-wrap">
-        <button type="button" class="btn-more-toggle" id="btnToggleMoreWidgets">
-          <span>✨ Show All 31 Widgets (+19 More)</span>
-          <span id="moreWidgetsArrow">▾</span>
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Presets & Themes Section -->
-  <section class="section" id="presets" style="background: rgba(11, 17, 32, 0.5);">
-    <div class="container">
-      <div class="section-header">
-        <span class="badge-luxury" style="margin-bottom: 12px;">🎨 Real Themes &amp; Layout Styles</span>
-        <h2>Choose a Theme, or Style Your Own</h2>
-        <p>Preview genuine color palettes and illustrated art backdrops live. Zero coding required.</p>
-      </div>
-
-      <!-- Presets & Themes Showcase -->
-      <div class="presets-showcase">
-        <!-- Preset Styles Tabs -->
-        <div class="presets-nav">
-          <button type="button" class="preset-tab-btn active" data-preset="complete">✨ Complete Suite (All 26)</button>
-          <button type="button" class="preset-tab-btn" data-preset="storyteller">📖 Storyteller</button>
-          <button type="button" class="preset-tab-btn" data-preset="playful">🎮 Playful &amp; Fun</button>
-          <button type="button" class="preset-tab-btn" data-preset="birthday">🎂 Birthday Bash</button>
-          <button type="button" class="preset-tab-btn" data-preset="anniversary">💍 Anniversary</button>
-          <button type="button" class="preset-tab-btn" data-preset="minimal">📸 Minimal</button>
-        </div>
-
-        <div class="preset-preview-content">
-          <div class="preset-details">
-            <h3 id="presetTitle">Complete Romance Suite</h3>
-            <p id="presetDesc">The full production experience with all 26 interactive modules. Perfect for anniversaries, milestones, and lifelong memory preservation.</p>
-            <div class="preset-widget-badges" id="presetBadges">
-              <span class="preset-widget-badge">👑 Hero &amp; Clocks</span>
-              <span class="preset-widget-badge">💌 Audio Letter</span>
-              <span class="preset-widget-badge">🗺️ Travel Map</span>
-              <span class="preset-widget-badge">📖 Timeline</span>
-              <span class="preset-widget-badge">📸 Polaroids</span>
-              <span class="preset-widget-badge">📈 Lof-O-Meter</span>
-              <span class="preset-widget-badge">✈️ Boarding Pass</span>
-              <span class="preset-widget-badge">🍾 Truth / Dare</span>
-              <span class="preset-widget-badge">🎡 Spinner</span>
-              <span class="preset-widget-badge">🎟️ Coupons</span>
-              <span class="preset-widget-badge">🧠 Love Quiz</span>
-              <span class="preset-widget-badge">🎂 Candle Wish</span>
-              <span class="preset-widget-badge">⏳ Life Stats</span>
-              <span class="preset-widget-badge">🎁 Gift Unboxer</span>
-            </div>
-
-            <!-- Real Themes Picker Tray -->
-            <div style="margin-top: 20px;">
-              <div style="font-size: 0.74rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px;">
-                SELECT REAL THEME TO PREVIEW:
-              </div>
-              <div class="theme-pills-list">
-                <button type="button" class="theme-pill-btn active" data-real-theme="theme-pink">
-                  <span class="theme-pill-dot" style="background: #ff4d6d;"></span>
-                  <span>Romantic Rose</span>
-                </button>
-                <button type="button" class="theme-pill-btn" data-real-theme="theme-midnight">
-                  <span class="theme-pill-dot" style="background: #3b82f6;"></span>
-                  <span>Starry Night</span>
-                </button>
-                <button type="button" class="theme-pill-btn" data-real-theme="theme-purple">
-                  <span class="theme-pill-dot" style="background: #9b5de5;"></span>
-                  <span>Lavender Dream</span>
-                </button>
-                <button type="button" class="theme-pill-btn" data-real-theme="theme-gold">
-                  <span class="theme-pill-dot" style="background: #f77f00;"></span>
-                  <span>Sunset Gold</span>
-                </button>
-                <button type="button" class="theme-pill-btn" data-real-theme="theme-emerald">
-                  <span class="theme-pill-dot" style="background: #10b981;"></span>
-                  <span>Emerald Garden</span>
-                </button>
-                <button type="button" class="theme-pill-btn" data-real-theme="theme-img-watercolor-frame">
-                  <span class="theme-pill-dot" style="background: #fb7185;"></span>
-                  <span>Watercolor 🎨</span>
-                </button>
-                <button type="button" class="theme-pill-btn" data-real-theme="theme-img-pop-stickers">
-                  <span class="theme-pill-dot" style="background: #ff007f;"></span>
-                  <span>Pop Stickers 💋</span>
-                </button>
-                <button type="button" class="theme-pill-btn" data-real-theme="theme-birthday">
-                  <span class="theme-pill-dot" style="background: #ff2e93;"></span>
-                  <span>Birthday Party 🎂</span>
-                </button>
-                <button type="button" class="theme-pill-btn" data-real-theme="theme-anniversary">
-                  <span class="theme-pill-dot" style="background: #c9184a;"></span>
-                  <span>Anniversary 💍</span>
-                </button>
-              </div>
-            </div>
-
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px;">
-              <button type="button" class="btn btn-primary" id="btnChoosePreset">
-                <span>🚀</span> Start With This Layout
-              </button>
-              <a href="/builder?slug=demo" class="btn btn-secondary" id="btnTryThemeInBuilder">
-                <span>🎨</span> Test in Builder →
-              </a>
-            </div>
-          </div>
-
-          <!-- Real Interactive Theme Live Sample Card -->
-          <div class="real-theme-live-card" id="themePreviewCard">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 1.8rem;" id="realThemeIcon">🌸</span>
-                <div>
-                  <h4 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0;" id="realThemeName">Romantic Rose</h4>
-                  <span style="font-size: 0.72rem; color: var(--text-muted);" id="realThemeCategory">PALETTE SAMPLE</span>
-                </div>
-              </div>
-              <span class="badge" id="realThemeBadge" style="background: rgba(244,63,94,0.2); color: #f43f5e; font-size: 0.7rem; padding: 2px 8px;">FOREVER LOVE</span>
-            </div>
-
-            <p style="font-size: 0.82rem; color: #cbd5e1; margin-bottom: 12px; line-height: 1.4;" id="realThemeDesc">
-              Soft romantic blush with champagne gold accents and warm rose tones.
-            </p>
-
-            <!-- Mini Live Interactive Component Sandbox -->
-            <div class="real-theme-sample-box" id="realThemeSampleBox">
-              <div class="sample-row-mini">
-                <span style="font-weight: 700; color: #fff;">Alex &amp; Sam 💍</span>
-                <span style="font-size: 0.74rem; color: var(--text-muted);">Paris ✈️ Tokyo</span>
-              </div>
-              <div class="sample-row-mini">
-                <span style="font-size: 0.78rem; color: #fda4af;">💌 Wax Seal: Broken</span>
-                <span style="font-size: 0.74rem; color: #10b981;">● Synchronized Audio</span>
-              </div>
-              <div style="display: flex; gap: 8px; margin-top: 4px;">
-                <button type="button" class="btn btn-primary btn-sm" id="realThemeSampleBtn" style="flex: 1; padding: 5px 10px; font-size: 0.76rem;">
-                  Send Kiss 💋
-                </button>
-                <button type="button" class="btn btn-secondary btn-sm" id="realThemeSampleAction" style="padding: 5px 10px; font-size: 0.76rem;">
-                  Play 🎵
-                </button>
-              </div>
-            </div>
-
-            <div style="text-align: center; margin-top: 14px; font-size: 0.76rem; color: var(--text-muted);">
-              Tap any theme above to transform this live sample card in real time ✨
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Why Couples Love It Section -->
-  <section class="section" id="why-us">
-    <div class="container">
-      <div class="section-header">
-        <span class="badge-luxury" style="margin-bottom: 12px;">✨ Pure Romantic Delight</span>
-        <h2>Why Couples Cherish LoveSaas</h2>
-        <p>A digital keepsake that makes them smile, cry happy tears, and keep forever.</p>
-      </div>
-
-      <div class="why-us-grid">
-        <div class="why-card">
-          <div class="why-icon">💐</div>
-          <h3>More Thoughtful Than Flowers</h3>
-          <p>Bouquets wilt in 4 days. Your couple website is a living digital heirloom you'll revisit on every anniversary for decades to come.</p>
-        </div>
-        <div class="why-card highlight">
-          <div class="why-icon">🔒</div>
-          <h3>100% Private &amp; Intimate</h3>
-          <p>Protected by your private password. No ads, algorithms, or public feeds — just a quiet sanctuary for the two of you.</p>
-        </div>
-        <div class="why-card">
-          <div class="why-icon">♾️</div>
-          <h3>One Payment, Yours Forever</h3>
-          <p>Pay once, keep it forever. Update photos, add new trips, and preserve memories anytime with zero subscription fees.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- How It Works Section -->
-  <section class="section" id="how-it-works" style="background: rgba(11, 17, 32, 0.5);">
-    <div class="container">
-      <div class="section-header">
-        <span class="badge-luxury" style="margin-bottom: 12px;">⚡ Effortless 3-Step Setup</span>
-        <h2>Ready in Under 2 Minutes</h2>
-        <p>From blank canvas to a published romantic keepsake in 3 simple steps.</p>
-      </div>
-
-      <div class="steps-grid">
-        <div class="step-card">
-          <div class="step-number">1</div>
-          <h3 class="step-title">Choose Your Private URL</h3>
-          <p class="step-desc">Pick your couple link (e.g., <code>lovesaas.com/sites/alex-and-sam</code>) in 30 seconds.</p>
-        </div>
-
-        <div class="step-card">
-          <div class="step-number">2</div>
-          <h3 class="step-title">Add Photos &amp; Music</h3>
-          <p class="step-desc">Upload photos, write your letter, and pick your song in the real-time split-screen Builder.</p>
-        </div>
-
-        <div class="step-card">
-          <div class="step-number">3</div>
-          <h3 class="step-title">Surprise Your Partner</h3>
-          <p class="step-desc">Send them the private link on your special day and watch them smile with joy!</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Testimonials Section -->
-  <section class="section">
-    <div class="container">
-      <div class="section-header">
-        <span class="badge-luxury" style="margin-bottom: 14px;">Verified Love Stories</span>
-        <h2>Loved by Couples All Over the World</h2>
-        <p>See how real couples used LoveSaas for anniversaries, proposals, and distance.</p>
-      </div>
-
-      <div class="testimonials-grid">
-        <div class="testimonial-card">
-          <div class="test-stars">★★★★★</div>
-          <p class="test-quote">
-            "I sent this to my girlfriend on our 2nd anniversary while we were in an LDR between Paris and Tokyo. When she broke open the wax letter and heard my voice note, she burst into happy tears!"
-          </p>
-          <div class="test-author">
-            <div class="test-avatar">💑</div>
-            <div>
-              <div class="test-author-name">Lucas & Maya</div>
-              <div class="test-author-meta">Paris 🇫🇷 ✈️ Tokyo 🇯🇵 • 2nd Anniversary</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="testimonial-card">
-          <div class="test-stars">★★★★★</div>
-          <p class="test-quote">
-            "The interactive travel map and chapter timeline allowed us to document all 6 countries we backpacked together. The builder made uploading our photos and custom audio tracks so effortless."
-          </p>
-          <div class="test-author">
-            <div class="test-avatar">💍</div>
-            <div>
-              <div class="test-author-name">David & Sarah</div>
-              <div class="test-author-meta">New York, USA • Wedding Proposal Surprise</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="testimonial-card">
-          <div class="test-stars">★★★★★</div>
-          <p class="test-quote">
-            "We played Truth or Dare and the Love Quiz on date night directly from our phones on the couch. It is hilarious, beautifully designed, and feels like a luxury personalized app."
-          </p>
-          <div class="test-author">
-            <div class="test-avatar">✨</div>
-            <div>
-              <div class="test-author-name">Amina & Tariq</div>
-              <div class="test-author-meta">London, UK • Anniversary Date Night</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Pricing Section -->
-  <section class="section" id="pricing" style="background: rgba(11, 17, 32, 0.5);">
-    <div class="container">
-      <div class="section-header">
-        <span class="badge-luxury" style="margin-bottom: 14px;">✨ Lifetime Keepsake Guarantee</span>
-        <h2>Simple, One-Time Keepsake Pricing</h2>
-        <p>No subscriptions. Pay once, own your private couple keepsake forever.</p>
-      </div>
-
-      <div class="pricing-grid">
-        <!-- Starter Plan -->
-        <div class="pricing-card">
-          <h3 class="pricing-title">Love Story Starter</h3>
-          <p class="pricing-desc">Essential romantic keepsake with core story chapters, interactive map, and photo memories.</p>
-
-          <div class="pricing-price-wrap">
-            <span class="pricing-currency">$</span>
-            <span class="pricing-amount">19</span>
-            <span class="pricing-period">one-time / lifetime</span>
-          </div>
-
-          <ul class="pricing-features-list">
-            <li><span class="feat-check">✓</span> <strong>Full Access to Builder</strong></li>
-            <li><span class="feat-check">✓</span> 6 Core Story Modules (Hero, Timeline, Map, Polaroids, Letter, Boarding Pass)</li>
-            <li><span class="feat-check">✓</span> Custom Couple Website URL</li>
-            <li><span class="feat-check">✓</span> 50 Photo Upload Storage</li>
-            <li><span class="feat-check">✓</span> Private Password Protection</li>
-            <li><span class="feat-check">✓</span> Lifetime Keepsake Hosting (No Monthly Fees)</li>
-            <li class="disabled"><span class="feat-check">✕</span> Interactive Games (Truth/Dare, Date Spinner, Scratch Coupons, Love Quiz)</li>
-            <li class="disabled"><span class="feat-check">✕</span> Occasions (Candle Blow-Out, Milestone Stats, 3D Gift Unboxer)</li>
-            <li class="disabled"><span class="feat-check">✕</span> Wax-Sealed Audio Voice Recording &amp; Music</li>
-          </ul>
-
-          <button type="button" class="btn btn-secondary btn-lg" data-plan-trigger="starter">
-            Select Starter — $19
-          </button>
-        </div>
-
-        <!-- VIP Suite Plan (Popular) -->
-        <div class="pricing-card popular">
-          <div class="pricing-popular-pill">✨ Most Loved • Complete Keepsake</div>
-          <h3 class="pricing-title">Forever VIP Keepsake</h3>
-          <p class="pricing-desc">The complete luxury experience with all 16+ modular widgets, custom voice letters, couple games, and unlimited media.</p>
-
-          <div class="pricing-price-wrap">
-            <span class="pricing-currency">$</span>
-            <span class="pricing-amount">39</span>
-            <span class="pricing-strike">$99</span>
-            <span class="pricing-period">one-time / lifetime</span>
-          </div>
-
-          <ul class="pricing-features-list">
-            <li><span class="feat-check">✓</span> <strong>Full Builder Access (Instant Unlock)</strong></li>
-            <li><span class="feat-check">✓</span> <strong>All 16+ Modular Widgets &amp; Sections</strong></li>
-            <li><span class="feat-check">✓</span> Couple Games (Truth/Dare, Date Spinner, Love Coupons, Love Quiz, Playful Button)</li>
-            <li><span class="feat-check">✓</span> Occasions (Candle Blow-Out &amp; Wish, Life Stats, 3D Gift Unboxer)</li>
-            <li><span class="feat-check">✓</span> Wax-Sealed Audio Voice Recording Player</li>
-            <li><span class="feat-check">✓</span> Romantic Background Music Player &amp; Soundtracks</li>
-            <li><span class="feat-check">✓</span> <strong>Unlimited High-Resolution Photos &amp; Audio Storage</strong></li>
-            <li><span class="feat-check">✓</span> All 5 Luxury Romantic Themes &amp; Custom Palettes</li>
-            <li><span class="feat-check">✓</span> Custom Couple URL &amp; Password Gate</li>
-            <li><span class="feat-check">✓</span> Lifetime Hosting &amp; Priority VIP Support</li>
-          </ul>
-
-          <button type="button" class="btn btn-primary btn-lg" data-plan-trigger="vip">
-            <span>💖</span> Get Forever VIP — $39
-          </button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ Section -->
-  <section class="section" id="faq">
-    <div class="container">
-      <div class="section-header">
-        <span class="badge-luxury" style="margin-bottom: 14px;">Help & Support</span>
-        <h2>Frequently Asked Questions</h2>
-      </div>
-
-      <div class="faq-wrap">
-        <div class="faq-item open">
-          <button type="button" class="faq-question">
-            <span>How do I access the Builder after purchasing?</span>
-            <span class="faq-chevron">▾</span>
-          </button>
-          <div class="faq-answer">
-            Immediately after checkout, you receive instant access to your private Builder link (<code>/builder?slug=your-names&token=...</code>). You can also sign in anytime with your email credentials.
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <button type="button" class="faq-question">
-            <span>Do I need any design or coding skills?</span>
-            <span class="faq-chevron">▾</span>
-          </button>
-          <div class="faq-answer">
-            Zero technical knowledge required! The Builder is 100% visual with live real-time preview. Type your partner's name, upload your sweetest photos, and click Save. It takes under 2 minutes.
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <button type="button" class="faq-question">
-            <span>How long will our couple website stay active online?</span>
-            <span class="faq-chevron">▾</span>
-          </button>
-          <div class="faq-answer">
-            Forever! Both plans include lifetime hosting with no recurring monthly fees or unexpected renewal charges.
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <button type="button" class="faq-question">
-            <span>Can my partner and I view the website on our phones?</span>
-            <span class="faq-chevron">▾</span>
-          </button>
-          <div class="faq-answer">
-            Yes, every single memory is designed to look magnificent and perform fluidly across iPhones, Android devices, iPads, and desktop computers.
-          </div>
-        </div>
-
-        <div class="faq-item">
-          <button type="button" class="faq-question">
-            <span>Can we add our own personal music and recorded voice letters?</span>
-            <span class="faq-chevron">▾</span>
-          </button>
-          <div class="faq-answer">
-            Yes! With the Forever VIP Suite, you can upload your favorite song or record a custom voice memo that plays when your partner breaks open the wax-sealed letter.
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Sticky Floating Bottom CTA Bar -->
-  <div class="sticky-cta-bar" id="stickyCtaBar">
-    <div class="container sticky-cta-inner">
-      <div class="sticky-cta-text">
-        <strong style="color: #fff;">💍 Create Your Forever Couple Keepsake</strong>
-        <span style="color: var(--text-secondary); font-size: 0.86rem; margin-left: 8px;">— 50% Off • Ready in 2 mins</span>
-      </div>
-      <div style="display: flex; gap: 12px;">
-        <button type="button" class="btn btn-secondary btn-sm" id="btnStickyDemo">Website Demo</button>
-        <button type="button" class="btn btn-primary btn-sm" id="btnStickyBuy">Create Keepsake 💖</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Upgraded Luxury Footer -->
-  <footer class="landing-footer">
-    <div class="container">
-      <div class="footer-grid">
-        <!-- Col 1: Brand & Promise -->
-        <div class="footer-col footer-col-brand">
-          <div class="footer-brand">
-            <span style="font-size: 1.6rem;">💍</span>
-            <span>LoveSaas</span>
-          </div>
-          <p class="footer-brand-desc">
-            The private digital sanctuary for couple keepsakes, anniversaries, and lifelong romantic milestones.
-          </p>
-          <div class="footer-trust-badge">
-            <span>🔒 256-Bit SSL Encrypted</span>
-            <span class="trust-dot">•</span>
-            <span>Lifetime Ownership</span>
-          </div>
-          <div style="margin-top: 16px;">
-            <button type="button" class="btn btn-primary btn-sm" id="btnFooterStart">
-              <span>💖</span> Create Keepsake — $19
-            </button>
-          </div>
-        </div>
-
-        <!-- Col 2: Builder & Features -->
-        <div class="footer-col">
-          <h4 class="footer-col-title">Builder &amp; Widgets</h4>
-          <ul class="footer-links-list">
-            <li><a href="/builder?slug=demo">Try Builder Demo</a></li>
-            <li><a href="#features">All 26 Modular Widgets</a></li>
-            <li><a href="#presets">Real Themes &amp; Art</a></li>
-            <li><a href="#demo-preview">Website Demo</a></li>
-            <li><a href="#builder">Split-Screen Builder</a></li>
-            <li><a href="#pricing">Lifetime Pricing</a></li>
-          </ul>
-        </div>
-
-        <!-- Col 3: Romantic Keepsakes -->
-        <div class="footer-col">
-          <h4 class="footer-col-title">Keepsakes</h4>
-          <ul class="footer-links-list">
-            <li><a href="#presets">Anniversary Keepsake</a></li>
-            <li><a href="#features">Long-Distance Clocks</a></li>
-            <li><a href="#features">Wax-Sealed Love Letter</a></li>
-            <li><a href="#features">Interactive Travel Map</a></li>
-            <li><a href="#features">Birthday Cake Candle</a></li>
-            <li><a href="#features">Couples Games &amp; Quiz</a></li>
-          </ul>
-        </div>
-
-        <!-- Col 4: Account & Guarantees -->
-        <div class="footer-col">
-          <h4 class="footer-col-title">Account &amp; Trust</h4>
-          <ul class="footer-links-list">
-            <li><a href="#" id="footerSignInBtn">Sign In to Builder</a></li>
-            <li><a href="#faq">Frequently Asked Questions</a></li>
-            <li><a href="#pricing">30-Day Money-Back Guarantee</a></li>
-            <li><a href="#why-us">100% Privacy Guarantee</a></li>
-            <li><a href="mailto:support@lovesaas.com">support@lovesaas.com</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Footer Bottom Bar -->
-      <div class="footer-bottom-bar">
-        <div class="footer-bottom-left">
-          &copy; 2026 LoveSaas. All rights reserved. Crafted with love for couples worldwide ❤️
-        </div>
-        <div class="footer-bottom-status">
-          <span class="status-indicator"></span> All Systems Operational
-        </div>
-        <div class="footer-bottom-links">
-          <a href="#top">Back to top ↑</a>
-        </div>
-      </div>
-    </div>
-  </footer>
-</div><!-- /#landingViewV1 -->
-
-<!-- ========================================================================== -->
-<!-- LANDING PAGE DESIGN 2: LUXE DARK / CINEMATIC EDITION (User Screenshot 1:1) -->
-<!-- ========================================================================== -->
-<div id="landingViewV2" class="landing-version-view v2-theme hidden">
 
   <!-- Mobile Drawer Menu Overlay -->
   <div class="v2-mobile-menu-overlay" id="v2MobileMenuOverlay"></div>
@@ -1686,6 +46,7 @@
       <button type="button" class="v2-btn-close-menu" id="btnV2CloseMenu" aria-label="Close menu">✕</button>
     </div>
     <nav class="v2-mobile-nav-links">
+      <a href="#v2PhotoMoments" class="v2-mobile-nav-link">📸 Photo Keepsakes</a>
       <a href="#v2Templates" class="v2-mobile-nav-link">🎨 Romantic Templates</a>
       <a href="#v2Features" class="v2-mobile-nav-link">🧩 16+ Modular Widgets</a>
       <a href="#v2HowItWorks" class="v2-mobile-nav-link">✨ How It Works</a>
@@ -1725,6 +86,7 @@
 
         <!-- Desktop Navigation Links (Visible on Tablet & Desktop) -->
         <div class="v2-desktop-nav-links" role="navigation" aria-label="Desktop Navigation">
+          <a href="#v2PhotoMoments" class="v2-desktop-nav-link">Moments</a>
           <a href="#v2Templates" class="v2-desktop-nav-link">Templates</a>
           <a href="#v2Features" class="v2-desktop-nav-link">16+ Widgets</a>
           <a href="#v2HowItWorks" class="v2-desktop-nav-link">How It Works</a>
@@ -1783,21 +145,12 @@
           </p>
 
           <div class="v2-hero-ctas">
-            <a href="/builder?slug=demo" class="v2-btn-primary v2-btn-hero-main" id="btnV2HeroBuilder" title="Go to Builder — Start Building Free">
+            <a href="/builder?slug=demo" class="v2-btn-primary v2-btn-hero-main" id="btnV2HeroBuilder" title="Start Building Your Website">
               <span class="v2-btn-badge">FREE</span>
               <span>✨</span>
               <span class="v2-btn-title">Start Building Your Website</span>
-              <span class="v2-btn-sublabel">(Go to Builder)</span>
               <span class="v2-btn-arrow">→</span>
             </a>
-            <div class="v2-hero-secondary-ctas">
-              <a href="/builder?slug=demo" class="v2-btn-secondary" id="btnV2BuilderDemo" title="Open Builder Demo">
-                <span>🎨</span> Builder Demo
-              </a>
-              <button type="button" class="v2-btn-tertiary" id="btnV2WebsiteDemo" title="Watch Website Demo">
-                <span>▶</span> Website Demo
-              </button>
-            </div>
           </div>
 
           <div class="v2-hero-cta-guarantee">
@@ -1807,27 +160,34 @@
             <span class="v2-dot">•</span>
             <span>Ready in 2 mins</span>
           </div>
-
-          <!-- Instant 1-Click Name Starter -->
-          <div class="welcome-quick-starter" id="v2QuickStarter">
-            <div class="quick-starter-header">
-              <span class="quick-starter-sparkle">💖</span>
-              <span class="quick-starter-title">Or customize with your names right now:</span>
-            </div>
-            <div class="quick-starter-row">
-              <input type="text" id="v2QuickP1" placeholder="Your Name (e.g. Ella)" class="quick-starter-input" maxlength="28" autocomplete="off">
-              <span class="quick-starter-amp">&amp;</span>
-              <input type="text" id="v2QuickP2" placeholder="Partner's Name (e.g. Alex)" class="quick-starter-input" maxlength="28" autocomplete="off">
-              <button type="button" id="btnV2QuickStart" class="quick-starter-btn">
-                <span>✨</span> Customize →
-              </button>
-            </div>
-          </div>
         </div>
 
-        <!-- Right Visual (Seamless Sunset Couple + Script Note Composition) -->
-        <div class="v2-hero-visual">
-          <img class="v2-hero-art-img" src="/images/landing-v2/hero-right-composition.png" alt="Couple watching city lights at sunset" loading="eager" width="236" height="350">
+        <!-- Right Visual (Couple Photo + Layered Romantic Polaroids) -->
+        <div class="v2-hero-visual v2-hero-photo-cluster">
+          <div class="v2-hero-main-photo-frame">
+            <img class="v2-hero-art-img" src="/images/landing-v2/hero-right-composition.png" alt="Couple watching city lights at sunset" loading="eager" width="236" height="350">
+          </div>
+          <!-- Floating Polaroid 1: Cafe Morning -->
+          <div class="v2-hero-polaroid v2-polaroid-float-1">
+            <div class="v2-polaroid-pin">📌</div>
+            <div class="v2-polaroid-img-box">
+              <img src="/images/landing-v2/photo-coffee-date.jpg" alt="Morning coffee in Paris" loading="lazy">
+            </div>
+            <div class="v2-polaroid-caption">Paris mornings ☕</div>
+          </div>
+          <!-- Floating Polaroid 2: Coastline Walk -->
+          <div class="v2-hero-polaroid v2-polaroid-float-2">
+            <div class="v2-polaroid-tape"></div>
+            <div class="v2-polaroid-img-box">
+              <img src="/images/landing-v2/photo-travel-coast.jpg" alt="Coastal cliff walk" loading="lazy">
+            </div>
+            <div class="v2-polaroid-caption">Big Sur road trip 🌊</div>
+          </div>
+          <!-- Photo Counter Pill -->
+          <div class="v2-hero-photo-badge">
+            <span class="v2-badge-heart">💖</span>
+            <span><strong>3,400+</strong> Photos Cherished</span>
+          </div>
         </div>
       </div>
     </div>
@@ -1932,6 +292,103 @@
       <span class="v2-review-arrow">›</span>
     </a>
   </div>
+
+  <!-- Photo Keepsake Gallery: Moments That Live Forever -->
+  <section class="v2-photo-gallery-section" id="v2PhotoMoments">
+    <div class="v2-container">
+      <div class="v2-section-eyebrow">CAPTURED MEMORIES</div>
+      <h2 class="v2-section-title">Moments That Live Forever</h2>
+      <div class="v2-section-rule"></div>
+      <p class="v2-section-desc">
+        Not just buttons and cards — your website is an intimate, living home for the smiles, trips, and stolen glances you never want to fade.
+      </p>
+
+      <div class="v2-polaroids-wall">
+        <!-- Polaroid 1: Paris Morning -->
+        <div class="v2-polaroid-card v2-rot-neg-2">
+          <div class="v2-polaroid-pin">📌</div>
+          <div class="v2-polaroid-photo">
+            <img src="/images/landing-v2/photo-coffee-date.jpg" alt="Sunday morning coffee in Paris" loading="lazy">
+          </div>
+          <div class="v2-polaroid-meta">
+            <span class="v2-polaroid-note">Sunday morning laughter ☕</span>
+            <span class="v2-polaroid-date">Montmartre, Paris • Oct 14</span>
+          </div>
+        </div>
+
+        <!-- Polaroid 2: Coastline Walk -->
+        <div class="v2-polaroid-card v2-rot-pos-3">
+          <div class="v2-polaroid-tape"></div>
+          <div class="v2-polaroid-photo">
+            <img src="/images/landing-v2/photo-travel-coast.jpg" alt="Coastline road trip at sunset" loading="lazy">
+          </div>
+          <div class="v2-polaroid-meta">
+            <span class="v2-polaroid-note">Chasing coastlines together 🌊</span>
+            <span class="v2-polaroid-date">Big Sur, California • May 22</span>
+          </div>
+        </div>
+
+        <!-- Polaroid 3: Cabin Stars -->
+        <div class="v2-polaroid-card v2-rot-neg-1">
+          <div class="v2-polaroid-heart-clip">💖</div>
+          <div class="v2-polaroid-photo">
+            <img src="/images/landing-v2/photo-cozy-night.jpg" alt="Cozy cabin night under starry skies" loading="lazy">
+          </div>
+          <div class="v2-polaroid-meta">
+            <span class="v2-polaroid-note">Under midnight stars ✨</span>
+            <span class="v2-polaroid-date">Aspen Cabin • Dec 31</span>
+          </div>
+        </div>
+
+        <!-- Polaroid 4: Golden Hour Sunset -->
+        <div class="v2-polaroid-card v2-rot-pos-2">
+          <div class="v2-polaroid-pin">📌</div>
+          <div class="v2-polaroid-photo">
+            <img src="/images/landing-v2/template-our-story.png" alt="Golden hour beach walk" loading="lazy">
+          </div>
+          <div class="v2-polaroid-meta">
+            <span class="v2-polaroid-note">The day you said yes 💍</span>
+            <span class="v2-polaroid-date">Maui Sunset • Aug 08</span>
+          </div>
+        </div>
+
+        <!-- Polaroid 5: Twilight Lights -->
+        <div class="v2-polaroid-card v2-rot-neg-3">
+          <div class="v2-polaroid-tape"></div>
+          <div class="v2-polaroid-photo">
+            <img src="/images/landing-v2/template-you-and-me.png" alt="Boardwalk twilight lanterns" loading="lazy">
+          </div>
+          <div class="v2-polaroid-meta">
+            <span class="v2-polaroid-note">Boardwalk lanterns &amp; tea 🏮</span>
+            <span class="v2-polaroid-date">Kyoto Evening • Apr 18</span>
+          </div>
+        </div>
+
+        <!-- Polaroid 6: Wildflowers & Love Letters -->
+        <div class="v2-polaroid-card v2-rot-pos-1">
+          <div class="v2-polaroid-heart-clip">🌸</div>
+          <div class="v2-polaroid-photo">
+            <img src="/images/landing-v2/template-love-grows.png" alt="Pressed botanicals and handwritten letters" loading="lazy">
+          </div>
+          <div class="v2-polaroid-meta">
+            <span class="v2-polaroid-note">First anniversary florals 💌</span>
+            <span class="v2-polaroid-date">Botanical Gardens • Jun 02</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Photo Keepsake Action Bar -->
+      <div class="v2-photo-action-bar">
+        <div class="v2-photo-action-text">
+          <span class="v2-photo-sparkle">✨</span>
+          <span>Upload unlimited couple photos, private albums, and voice memories in 1 click.</span>
+        </div>
+        <a href="/builder?slug=demo" class="v2-btn-photo-start">
+          <span>📸</span> Add Your Photos Now →
+        </a>
+      </div>
+    </div>
+  </section>
 
   <!-- Templates Showcase Section (Exact Match to Screenshot) -->
   <section class="v2-templates-section" id="v2Templates">
@@ -2865,81 +1322,9 @@
   <script src="/builder/widget-previews.js"></script>
   <script src="/js/landing.js?v=2.6.2"></script>
 
-  <!-- Floating 2-Button Design Switcher -->
-  <div id="landingDesignSwitcher" aria-label="Landing Page Design Switcher">
-    <button type="button" class="switcher-btn active" id="btnSwitchV1" data-version="v1" title="Switch to Design 1 (Classic)">
-      <span>✨</span> Design 1
-    </button>
-    <button type="button" class="switcher-btn" id="btnSwitchV2" data-version="v2" title="Switch to Design 2 (New Luxury)">
-      <span>💎</span> Design 2 (New)
-    </button>
-  </div>
-
   <script>
-    // Dual-Landing Page Version Switcher Engine
+    // Landing Page Interactive Engine
     (function() {
-      const btnV1 = document.getElementById('btnSwitchV1');
-      const btnV2 = document.getElementById('btnSwitchV2');
-      const viewV1 = document.getElementById('landingViewV1');
-      const viewV2 = document.getElementById('landingViewV2');
-
-      function applyLandingVersion(ver, syncUrl = true) {
-        const isV2 = (ver === 'v2');
-        if (viewV1) viewV1.classList.toggle('hidden', isV2);
-        if (viewV2) viewV2.classList.toggle('hidden', !isV2);
-        if (btnV1) btnV1.classList.toggle('active', !isV2);
-        if (btnV2) btnV2.classList.toggle('active', isV2);
-        document.body.classList.toggle('v2-active', isV2);
-
-        try {
-          localStorage.setItem('lovesaas_landing_version', isV2 ? 'v2' : 'v1');
-        } catch (err) {}
-
-        if (syncUrl) {
-          const url = new URL(window.location.href);
-          url.searchParams.set('design', isV2 ? 'v2' : 'v1');
-          window.history.replaceState(null, '', url.toString());
-        }
-      }
-
-      if (btnV1) btnV1.addEventListener('click', () => applyLandingVersion('v1'));
-      if (btnV2) btnV2.addEventListener('click', () => applyLandingVersion('v2'));
-
-      // Check URL search parameter or localStorage on initial load
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlDesign = urlParams.get('design');
-      let savedDesign = null;
-      try {
-        savedDesign = localStorage.getItem('lovesaas_landing_version');
-      } catch (e) {}
-
-      if (urlDesign === 'v2' || (!urlDesign && savedDesign === 'v2')) {
-        applyLandingVersion('v2', false);
-      } else {
-        applyLandingVersion('v1', false);
-      }
-
-      // Delegate V2 Demo Buttons
-      const v2BuilderDemo = document.getElementById('btnV2BuilderDemo');
-      if (v2BuilderDemo) {
-        v2BuilderDemo.addEventListener('click', (e) => {
-          e.preventDefault();
-          window.location.href = '/builder?slug=demo';
-        });
-      }
-
-      const v2WebsiteDemo = document.getElementById('btnV2WebsiteDemo');
-      if (v2WebsiteDemo) {
-        v2WebsiteDemo.addEventListener('click', () => {
-          const demoSec = document.getElementById('v2Demo');
-          if (demoSec) {
-            demoSec.scrollIntoView({ behavior: 'smooth' });
-          } else {
-            window.location.href = '/sites/demo';
-          }
-        });
-      }
-
       // V2 Sign In Modal Triggers
       document.querySelectorAll('.btn-open-signin-v2').forEach(btn => {
         btn.addEventListener('click', () => {

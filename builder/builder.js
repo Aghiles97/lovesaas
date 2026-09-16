@@ -1589,10 +1589,8 @@ function renderAddSectionModal() {
         </div>
       </div>
       <div class="add-widget-card-bottom">
-        <span class="add-widget-status ${isActive ? 'active' : ''}">
-          ${isActive ? `✓ Added (#${activePos + 1})` : '• Available'}
-        </span>
-        <div style="display: flex; gap: 6px; align-items: center;">
+        ${isActive ? `<span class="add-widget-status active">✓ Added (#${activePos + 1})</span>` : '<span></span>'}
+        <div class="add-widget-card-actions">
           <button type="button" class="btn-add-widget-action preview-btn" data-preview-id="${id}" title="Preview full widget">
             👁️ Preview
           </button>
@@ -1602,13 +1600,10 @@ function renderAddSectionModal() {
             <button type="button" class="btn-add-widget-action remove-btn" data-remove-id="${id}" title="Remove this widget from website">
               ✕ Remove
             </button>
-            <button type="button" class="btn-add-widget-action move-btn" data-add-id="${id}" title="Move widget to this position">
-              ↕ Move
-            </button>
           `
               : `
-            <button type="button" class="btn-add-widget-action" data-add-id="${id}">
-              + Add Widget
+            <button type="button" class="btn-add-widget-action add-btn" data-add-id="${id}">
+              + Add
             </button>
           `
           }
@@ -1705,12 +1700,27 @@ function openWidgetPreviewModal(widgetId) {
 
   const isActive = state.layoutOrder.includes(widgetId);
   if (addBtn) {
-    addBtn.innerHTML = isActive ? '↕ Move Widget Here' : '+ Add This Widget';
-    addBtn.onclick = () => {
-      addWidgetAtPosition(widgetId, currentAddSectionTargetIndex);
-      closeWidgetPreviewModal();
-      closeAddSectionModal();
-    };
+    if (isActive) {
+      addBtn.innerHTML = '✕ Remove';
+      addBtn.style.background = '#dc2626';
+      addBtn.style.borderColor = '#dc2626';
+      addBtn.style.color = '#ffffff';
+      addBtn.onclick = () => {
+        removeWidgetFromLayout(widgetId);
+        closeWidgetPreviewModal();
+        renderAddSectionModal();
+      };
+    } else {
+      addBtn.innerHTML = '+ Add';
+      addBtn.style.background = '';
+      addBtn.style.borderColor = '';
+      addBtn.style.color = '';
+      addBtn.onclick = () => {
+        addWidgetAtPosition(widgetId, currentAddSectionTargetIndex);
+        closeWidgetPreviewModal();
+        closeAddSectionModal();
+      };
+    }
   }
 
   modal.classList.remove('hidden');
