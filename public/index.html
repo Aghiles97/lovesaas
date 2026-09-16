@@ -35,13 +35,13 @@
       </a>
 
       <nav class="desktop-nav-links" aria-label="Main Navigation">
+        <a href="#v2Demo" class="nav-link">Live Demo</a>
         <a href="#v2PhotoMoments" class="nav-link">Moments</a>
         <a href="#v2Templates" class="nav-link">Templates</a>
         <a href="#v2Features" class="nav-link">16+ Widgets</a>
         <a href="#v2HowItWorks" class="nav-link">How It Works</a>
-        <a href="#v2Demo" class="nav-link">Demo</a>
-        <a href="#v2Reviews" class="nav-link">Reviews</a>
         <a href="#v2Pricing" class="nav-link">Pricing</a>
+        <a href="#v2Reviews" class="nav-link">Reviews</a>
         <a href="#v2Faq" class="nav-link">FAQ</a>
       </nav>
 
@@ -59,7 +59,7 @@
         <div id="navAuthLoggedIn" style="display: none; align-items: center; gap: 14px;">
           <a href="/builder" class="btn-header-builder" id="btnNavHeaderBuilder">
             <span class="builder-dot"></span>
-            <span>Builder</span>
+            <span>Studio</span>
             <span class="builder-arrow">›</span>
           </a>
           <div class="nav-user-dropdown" id="navUserDropdownWrap">
@@ -93,7 +93,7 @@
               </button>
               <a href="/builder" class="nav-dropdown-item nav-dropdown-item--builder" id="btnDropdownGoToBuilder">
                 <span class="dropdown-item-icon">🚀</span>
-                <span class="dropdown-item-label">Open Builder →</span>
+                <span class="dropdown-item-label">Open Studio →</span>
               </a>
               <div class="nav-dropdown-divider"></div>
               <button type="button" class="nav-dropdown-item nav-dropdown-item--danger" id="btnDesktopLogout">
@@ -153,7 +153,7 @@
         </div>
 
         <a href="/builder" class="btn btn-primary btn-lg mobile-cta-btn" id="btnMobileGoToBuilder" style="text-decoration: none; justify-content: center; margin-top: 8px;">
-          <span>🚀</span> Open Builder →
+          <span>🚀</span> Open Studio →
         </a>
 
         <button type="button" class="mobile-drawer-logout-btn" id="btnDrawerLogout">
@@ -164,6 +164,11 @@
       <!-- 2. LOGGED-OUT VIEW: MARKETING LINKS -->
       <div id="drawerGuestSection" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
         <div class="mobile-nav-list">
+          <a href="#v2Demo" class="nav-link">
+            <span class="nav-link-icon">📱</span>
+            <span class="nav-link-text">Device Demo</span>
+            <span class="nav-link-chevron">›</span>
+          </a>
           <a href="#v2PhotoMoments" class="nav-link">
             <span class="nav-link-icon">📸</span>
             <span class="nav-link-text">Moments</span>
@@ -184,19 +189,14 @@
             <span class="nav-link-text">How It Works</span>
             <span class="nav-link-chevron">›</span>
           </a>
-          <a href="#v2Demo" class="nav-link">
-            <span class="nav-link-icon">📱</span>
-            <span class="nav-link-text">Device Demo</span>
+          <a href="#v2Pricing" class="nav-link">
+            <span class="nav-link-icon">💎</span>
+            <span class="nav-link-text">Pricing</span>
             <span class="nav-link-chevron">›</span>
           </a>
           <a href="#v2Reviews" class="nav-link">
             <span class="nav-link-icon">💖</span>
             <span class="nav-link-text">Couple Reviews</span>
-            <span class="nav-link-chevron">›</span>
-          </a>
-          <a href="#v2Pricing" class="nav-link">
-            <span class="nav-link-icon">💎</span>
-            <span class="nav-link-text">Pricing</span>
             <span class="nav-link-chevron">›</span>
           </a>
           <a href="#v2Faq" class="nav-link">
@@ -232,7 +232,7 @@
         <div class="v2-hero-content">
           <div class="v2-hero-eyebrow">CELEBRATE EVERY MOMENT OF LOVE</div>
           <h1 class="v2-hero-title">
-            A Private Website<br>for Your <em>Love Story</em>
+            A Private Gift<br>for Your <em>Love Story</em>
           </h1>
           <p class="v2-hero-desc">
             Celebrate birthdays, make heartfelt apologies, map your world travels, or preserve romantic anniversaries.
@@ -328,13 +328,51 @@
   <div class="v2-container">
     <a href="#v2Reviews" class="v2-review-pill">
       <div class="v2-review-avatars">
-        <img src="/images/landing-v2/couple-avatars-clean.png" alt="Happy Couples" width="67" height="30">
+        <img src="/images/landing-v2/review-natural-1.jpg" alt="Reviewer" class="v2-pill-avatar" style="z-index: 3;">
+        <img src="/images/landing-v2/review-natural-2.png" alt="Reviewer" class="v2-pill-avatar" style="z-index: 2; margin-left: -10px;">
+        <img src="/images/landing-v2/review-natural-3.jpg" alt="Reviewer" class="v2-pill-avatar" style="z-index: 1; margin-left: -10px;">
       </div>
       <div class="v2-stars">★★★★★</div>
       <span class="v2-review-text">4.9/5 from 1,200+ happy couples</span>
       <span class="v2-review-arrow">›</span>
     </a>
   </div>
+
+  <!-- ================================================================ -->
+  <!-- POSITION 2: LIVE INTERACTIVE DEVICE PREVIEW                      -->
+  <!-- ================================================================ -->
+  <section class="v2-demo-section" id="v2Demo">
+    <div class="v2-container">
+      <div class="v2-demo-card">
+        <div class="v2-demo-header">
+          <div>
+            <span class="v2-section-eyebrow">INTERACTIVE PREVIEW</span>
+            <h3 class="v2-demo-title">Test-Drive a Real Couple Keepsake</h3>
+            <p class="v2-demo-desc">Tap through photos, play music, open wax letters, and test the travel map right now.</p>
+          </div>
+          <div class="v2-demo-actions">
+            <a href="/sites/demo" target="_blank" class="v2-btn-primary" style="width: auto; padding: 11px 24px; font-size: 14.5px;">
+              <span>🌐</span> Open Fullscreen Demo ↗
+            </a>
+            <a href="/builder" class="v2-btn-secondary" style="width: auto; padding: 11px 22px; font-size: 14px;">
+              <span>🛠️</span> Open Visual Builder
+            </a>
+          </div>
+        </div>
+
+        <!-- Device Mockup Frame -->
+        <div class="v2-device-mockup-wrap">
+          <div class="v2-iphone-frame">
+            <div class="v2-iphone-notch">
+              <span class="v2-iphone-camera"></span>
+              <span class="v2-iphone-speaker"></span>
+            </div>
+            <iframe src="/sites/demo" title="LoveSaas Live Demo Site" loading="lazy" class="v2-demo-iframe"></iframe>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- Photo Keepsake Gallery: Moments That Live Forever -->
   <section class="v2-photo-gallery-section" id="v2PhotoMoments">
@@ -540,7 +578,7 @@
           <h3 class="v2-widget-name">Candle Blow-Out &amp; Wish</h3>
           <p class="v2-widget-summary">Blow out candles via microphone with audio &amp; confetti.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=candle_blowout" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=candle_blowout" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -553,7 +591,7 @@
           <h3 class="v2-widget-name">3D Ribbon Gift Unboxer</h3>
           <p class="v2-widget-summary">Unwrap satin ribbon to reveal hidden keepsakes.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=gift_unboxer" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=gift_unboxer" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -566,7 +604,7 @@
           <h3 class="v2-widget-name">Milestone Life Stats</h3>
           <p class="v2-widget-summary">Live counter tracking shared seconds, heartbeats &amp; orbits.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=milestone_stats" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=milestone_stats" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -579,7 +617,7 @@
           <h3 class="v2-widget-name">Roast &amp; Toast Spinner</h3>
           <p class="v2-widget-summary">Spinning roulette alternating between playful roasts &amp; toasts.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=roast_toast" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=roast_toast" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -592,7 +630,7 @@
           <h3 class="v2-widget-name">Party Jukebox Turntable</h3>
           <p class="v2-widget-summary">Vintage vinyl turntable with custom celebration playlist.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=party_jukebox" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=party_jukebox" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -605,7 +643,7 @@
           <h3 class="v2-widget-name">Interactive Forgiveness Meter</h3>
           <p class="v2-widget-summary">Sliding reconciliation gauge with bell &amp; cuddle reward.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=forgiveness_meter" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=forgiveness_meter" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -618,7 +656,7 @@
           <h3 class="v2-widget-name">Hold-to-Sign Truce Treaty</h3>
           <p class="v2-widget-summary">Romantic peace pact with wax seal &amp; PNG download.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=truce_agreement" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=truce_agreement" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -631,7 +669,7 @@
           <h3 class="v2-widget-name">Apology Reparation Coupons</h3>
           <p class="v2-widget-summary">Scratch-off love vouchers for favors &amp; sweet treats.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=reparation_coupons" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=reparation_coupons" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -644,7 +682,7 @@
           <h3 class="v2-widget-name">Reform Pledge Deck</h3>
           <p class="v2-widget-summary">Interactive cards for promises and steps forward.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=reform_deck" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=reform_deck" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -657,7 +695,7 @@
           <h3 class="v2-widget-name">Interactive Love Travel Map</h3>
           <p class="v2-widget-summary">Pin shared cities, flight paths &amp; road trip memories.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=map" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=map" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -670,7 +708,7 @@
           <h3 class="v2-widget-name">Dual LDR Clocks &amp; Reunion</h3>
           <p class="v2-widget-summary">Dual timezones &amp; live countdown to your reunion.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=hero" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=hero" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -683,7 +721,7 @@
           <h3 class="v2-widget-name">VIP First-Class Boarding Pass</h3>
           <p class="v2-widget-summary">Custom flight ticket keepsake with exportable PNG.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=boarding_pass" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=boarding_pass" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -696,7 +734,7 @@
           <h3 class="v2-widget-name">Polaroid Memories Wall</h3>
           <p class="v2-widget-summary">Washi-taped photo cards with captions &amp; lightbox.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=memories" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=memories" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -709,7 +747,7 @@
           <h3 class="v2-widget-name">Wax-Sealed Audio Letter</h3>
           <p class="v2-widget-summary">Crack open 3D wax seal to hear audio &amp; read note.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=letter" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=letter" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -722,7 +760,7 @@
           <h3 class="v2-widget-name">Celestial Star Map</h3>
           <p class="v2-widget-summary">Night sky constellations for the night you first met.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=star_map" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=star_map" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -735,7 +773,7 @@
           <h3 class="v2-widget-name">Reasons Why I Love You</h3>
           <p class="v2-widget-summary">Playful cards revealing reasons your partner is the one.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=reasons" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=reasons" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
 
@@ -748,7 +786,7 @@
           <h3 class="v2-widget-name">Couple Truth or Dare &amp; Spinner</h3>
           <p class="v2-widget-summary">Interactive dares, intimate questions &amp; date spinner.</p>
           <div class="v2-widget-action">
-            <a href="/builder?widget=truth_dare" class="v2-btn-card-link">Customize in Builder →</a>
+            <a href="/builder?widget=truth_dare" class="v2-btn-card-link">Customize in Studio →</a>
           </div>
         </div>
       </div>
@@ -804,121 +842,7 @@
   </section>
 
   <!-- ================================================================ -->
-  <!-- EXPANDED CONTENT SECTION 3: LIVE INTERACTIVE DEVICE SHOWCASE     -->
-  <!-- ================================================================ -->
-  <section class="v2-demo-section" id="v2Demo">
-    <div class="v2-container">
-      <div class="v2-demo-card">
-        <div class="v2-demo-header">
-          <div>
-            <span class="v2-section-eyebrow">INTERACTIVE PREVIEW</span>
-            <h3 class="v2-demo-title">Test-Drive a Real Couple Keepsake</h3>
-            <p class="v2-demo-desc">Tap through photos, play music, open wax letters, and test the travel map right now.</p>
-          </div>
-          <div class="v2-demo-actions">
-            <a href="/sites/demo" target="_blank" class="v2-btn-primary" style="width: auto; padding: 11px 24px; font-size: 14.5px;">
-              <span>🌐</span> Open Fullscreen Demo ↗
-            </a>
-            <a href="/builder" class="v2-btn-secondary" style="width: auto; padding: 11px 22px; font-size: 14px;">
-              <span>🛠️</span> Open Visual Builder
-            </a>
-          </div>
-        </div>
-
-        <!-- Device Mockup Frame -->
-        <div class="v2-device-mockup-wrap">
-          <div class="v2-iphone-frame">
-            <div class="v2-iphone-notch">
-              <span class="v2-iphone-camera"></span>
-              <span class="v2-iphone-speaker"></span>
-            </div>
-            <iframe src="/sites/demo" title="LoveSaas Live Demo Site" loading="lazy" class="v2-demo-iframe"></iframe>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================================================================ -->
-  <!-- EXPANDED CONTENT SECTION 4: REAL COUPLE STORIES & REVIEWS        -->
-  <!-- ================================================================ -->
-  <section class="v2-reviews-section" id="v2Reviews">
-    <div class="v2-container">
-      <div class="v2-section-eyebrow">HEARTFELT STORIES</div>
-      <h2 class="v2-section-title">Loved by 1,200+ Couples Worldwide</h2>
-      <div class="v2-section-rule"></div>
-      <p class="v2-section-desc">
-        From anniversary surprises to long-distance reunions and wedding vows, here is what couples say:
-      </p>
-
-      <div class="v2-slider-toolbar v2-slider-toolbar-showcase">
-        <div class="v2-slider-dots" id="dots-reviews"></div>
-        <div class="v2-slider-arrows">
-          <button type="button" class="v2-slider-btn v2-slider-prev" data-slider="reviews" aria-label="Previous review"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-          <button type="button" class="v2-slider-btn v2-slider-next" data-slider="reviews" aria-label="Next review"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
-        </div>
-      </div>
-
-      <div class="v2-reviews-grid v2-slider-track" id="slider-reviews">
-        <!-- Review 1: Birthday -->
-        <div class="v2-review-card">
-          <div class="v2-review-card-header">
-            <div class="v2-review-card-stars">★★★★★</div>
-            <span class="v2-review-badge">🎂 25th Birthday Surprise</span>
-          </div>
-          <p class="v2-review-quote">
-            "I created a birthday website for Sarah with the interactive candle blow-out and photo timeline. When she blew into her phone mic and the candles extinguished with confetti, she burst into happy tears!"
-          </p>
-          <div class="v2-review-author">
-            <div class="v2-author-avatar">MS</div>
-            <div class="v2-author-meta">
-              <strong>Marcus &amp; Sarah</strong>
-              <span>Chicago, USA • 25th Birthday Surprise</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Review 2: Apology -->
-        <div class="v2-review-card">
-          <div class="v2-review-card-header">
-            <div class="v2-review-card-stars">★★★★★</div>
-            <span class="v2-review-badge">🕊️ Sincere Apology &amp; Truce</span>
-          </div>
-          <p class="v2-review-quote">
-            "We had our worst fight in 3 years and were barely talking. I sent her the 'Forgive Me' site with our memories and the hold-to-sign truce treaty. She called me 10 minutes later crying and we made peace that night."
-          </p>
-          <div class="v2-review-author">
-            <div class="v2-author-avatar">LC</div>
-            <div class="v2-author-meta">
-              <strong>Liam &amp; Chloe</strong>
-              <span>Vancouver, Canada • Forgiveness &amp; Truce</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Review 3: Travel & LDR -->
-        <div class="v2-review-card">
-          <div class="v2-review-card-header">
-            <div class="v2-review-card-stars">★★★★★</div>
-            <span class="v2-review-badge">🌍 World Travel &amp; LDR</span>
-          </div>
-          <p class="v2-review-quote">
-            "We've been long-distance between Tokyo and London for 18 months. Having our dual LDR clocks and our interactive world travel map pinned with all our trips keeps us feeling close every single day."
-          </p>
-          <div class="v2-review-author">
-            <div class="v2-author-avatar">KE</div>
-            <div class="v2-author-meta">
-              <strong>Kenji &amp; Elena</strong>
-              <span>Tokyo ⇄ London • Long-Distance Keepsake</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================================================================ -->
-  <!-- EXPANDED CONTENT SECTION 5: COMPREHENSIVE PRICING SUITE          -->
+  <!-- EXPANDED CONTENT SECTION 4: COMPREHENSIVE PRICING SUITE          -->
   <!-- ================================================================ -->
   <section class="v2-pricing-section" id="v2Pricing">
     <div class="v2-container">
@@ -949,7 +873,7 @@
             <span class="v2-price-lifetime">one-time / lifetime</span>
           </div>
           <ul class="v2-pricing-features-list">
-            <li><span class="v2-check">✓</span> <strong>Full Access to Drag-and-Drop Builder</strong></li>
+            <li><span class="v2-check">✓</span> <strong>Full Access to Drag-and-Drop Studio</strong></li>
             <li><span class="v2-check">✓</span> 6 Core Keepsake Modules</li>
             <li><span class="v2-check">✓</span> Custom Couple Private URL &amp; Password Lock</li>
             <li><span class="v2-check">✓</span> 50 Photo Storage with Lightbox</li>
@@ -976,7 +900,7 @@
             <span class="v2-price-lifetime">one-time / lifetime</span>
           </div>
           <ul class="v2-pricing-features-list">
-            <li><span class="v2-check">✓</span> <strong>Instant VIP Builder Unlock</strong></li>
+            <li><span class="v2-check">✓</span> <strong>Instant VIP Studio Unlock</strong></li>
             <li><span class="v2-check">✓</span> <strong>All 17 Modular Widgets &amp; Mini-Games</strong></li>
             <li><span class="v2-check">✓</span> <strong>🎂 Birthday Suite:</strong> Celebrations &amp; Gifts</li>
             <li><span class="v2-check">✓</span> <strong>🕊️ Apology Suite:</strong> Reconciliation &amp; Peace</li>
@@ -990,6 +914,93 @@
           <button type="button" class="v2-btn-primary btn-open-checkout" data-plan="vip" style="width: 100%; margin-top: 24px;">
             <span>💖</span> Get Forever VIP Keepsake — $39
           </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- EXPANDED CONTENT SECTION 5: REAL COUPLE STORIES & REVIEWS        -->
+  <!-- ================================================================ -->
+  <section class="v2-reviews-section" id="v2Reviews">
+    <div class="v2-container">
+      <div class="v2-section-eyebrow">HEARTFELT STORIES</div>
+      <h2 class="v2-section-title">Loved by 1,200+ Couples Worldwide</h2>
+      <div class="v2-section-rule"></div>
+      <p class="v2-section-desc">
+        From anniversary surprises to long-distance reunions and wedding vows, here is what couples say:
+      </p>
+
+      <div class="v2-slider-toolbar v2-slider-toolbar-showcase">
+        <div class="v2-slider-dots" id="dots-reviews"></div>
+        <div class="v2-slider-arrows">
+          <button type="button" class="v2-slider-btn v2-slider-prev" data-slider="reviews" aria-label="Previous review"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <button type="button" class="v2-slider-btn v2-slider-next" data-slider="reviews" aria-label="Next review"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+        </div>
+      </div>
+
+      <div class="v2-reviews-grid v2-slider-track" id="slider-reviews">
+        <!-- Review 1: Birthday -->
+        <div class="v2-review-card">
+          <div class="v2-review-photo-wrap">
+            <img src="/images/landing-v2/review-natural-1.jpg" alt="Marcus & Sarah" class="v2-review-photo">
+          </div>
+          <div class="v2-review-card-header">
+            <div class="v2-review-card-stars">★★★★★</div>
+            <span class="v2-review-badge">🎂 25th Birthday Surprise</span>
+          </div>
+          <p class="v2-review-quote">
+            "I created a birthday gift for Sarah with the interactive candle blow-out and photo timeline. When she blew into her phone mic and the candles extinguished with confetti, she burst into happy tears!"
+          </p>
+          <div class="v2-review-author">
+            <img src="/images/landing-v2/review-natural-1.jpg" alt="Marcus & Sarah" class="v2-author-avatar-img">
+            <div class="v2-author-meta">
+              <strong>Marcus &amp; Sarah</strong>
+              <span>Chicago, USA • 25th Birthday Surprise</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review 2: Apology -->
+        <div class="v2-review-card">
+          <div class="v2-review-photo-wrap">
+            <img src="/images/landing-v2/review-natural-2.png" alt="Liam & Chloe" class="v2-review-photo">
+          </div>
+          <div class="v2-review-card-header">
+            <div class="v2-review-card-stars">★★★★★</div>
+            <span class="v2-review-badge">🕊️ Sincere Apology &amp; Truce</span>
+          </div>
+          <p class="v2-review-quote">
+            "We had our worst fight in 3 years and were barely talking. I sent her the 'Forgive Me' site with our memories and the hold-to-sign truce treaty. She called me 10 minutes later crying and we made peace that night."
+          </p>
+          <div class="v2-review-author">
+            <img src="/images/landing-v2/review-natural-2.png" alt="Liam & Chloe" class="v2-author-avatar-img">
+            <div class="v2-author-meta">
+              <strong>Liam &amp; Chloe</strong>
+              <span>Vancouver, Canada • Forgiveness &amp; Truce</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review 3: Travel & LDR -->
+        <div class="v2-review-card">
+          <div class="v2-review-photo-wrap">
+            <img src="/images/landing-v2/review-natural-3.jpg" alt="Kenji & Elena" class="v2-review-photo">
+          </div>
+          <div class="v2-review-card-header">
+            <div class="v2-review-card-stars">★★★★★</div>
+            <span class="v2-review-badge">🌍 World Travel &amp; LDR</span>
+          </div>
+          <p class="v2-review-quote">
+            "We've been long-distance between Tokyo and London for 18 months. Having our dual LDR clocks and our interactive world travel map pinned with all our trips keeps us feeling close every single day."
+          </p>
+          <div class="v2-review-author">
+            <img src="/images/landing-v2/review-natural-3.jpg" alt="Kenji & Elena" class="v2-author-avatar-img">
+            <div class="v2-author-meta">
+              <strong>Kenji &amp; Elena</strong>
+              <span>Tokyo ⇄ London • Long-Distance Keepsake</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1011,11 +1022,11 @@
         <!-- Item 1 -->
         <div class="v2-faq-item open">
           <button type="button" class="v2-faq-question">
-            <span>How do I access the Builder after getting a plan?</span>
+            <span>How do I access the Studio after getting a plan?</span>
             <span class="v2-faq-chevron">▾</span>
           </button>
           <div class="v2-faq-answer">
-            Immediately after checkout, you get instant access to your private builder link. You can also sign in anytime with your email credentials to edit, add new milestones, or upload new memories whenever you wish.
+            Immediately after checkout, you get instant access to your private studio link. You can also sign in anytime with your email credentials to edit, add new milestones, or upload new memories whenever you wish.
           </div>
         </div>
 
@@ -1026,7 +1037,7 @@
             <span class="v2-faq-chevron">▾</span>
           </button>
           <div class="v2-faq-answer">
-            None at all! The builder is 100% visual with live side-by-side preview. Simply choose your preset, type your names, upload your photos, and click Save. It takes under 2 minutes.
+            None at all! The studio is 100% visual with live side-by-side preview. Simply choose your preset, type your names, upload your photos, and click Save. It takes under 2 minutes.
           </div>
         </div>
 
@@ -1082,17 +1093,18 @@
 
         <div class="v2-footer-links-group">
           <h4>Explore</h4>
+          <a href="#v2Demo">Live Demo</a>
+          <a href="#v2PhotoMoments">Moments</a>
           <a href="#v2Templates">Templates</a>
           <a href="#v2Features">16+ Widgets</a>
           <a href="#v2HowItWorks">How It Works</a>
-          <a href="#v2Demo">Live Demo</a>
         </div>
 
         <div class="v2-footer-links-group">
           <h4>Keepsake</h4>
           <a href="#v2Pricing">Pricing &amp; Plans</a>
-          <a href="/builder">Visual Builder</a>
           <a href="#v2Reviews">Love Stories</a>
+          <a href="/builder">Studio</a>
           <a href="#v2Faq">FAQ</a>
         </div>
 
@@ -1128,7 +1140,7 @@
       <div class="modal-header">
         <div class="modal-title-group">
           <h3 id="checkoutModalTitle">💖 Create Your Couple Keepsake</h3>
-          <p id="checkoutModalSubtitle">One-time payment • Lifetime access • Instant Builder unlock</p>
+          <p id="checkoutModalSubtitle">One-time payment • Lifetime access • Instant Studio unlock</p>
         </div>
         <button type="button" class="modal-close-btn" id="btnCloseCheckoutModal">✕</button>
       </div>
@@ -1204,7 +1216,7 @@
         <div id="checkoutStep3" class="success-screen" style="display: none;">
           <div class="success-icon">🎉</div>
           <h3 class="success-title">Congratulations! Your Project is Ready</h3>
-          <p class="success-desc">Your couple website has been created and your Builder is unlocked!</p>
+          <p class="success-desc">Your couple website has been created and your Studio is unlocked!</p>
 
           <div class="access-credential-box">
             <div class="cred-row">
@@ -1219,7 +1231,7 @@
 
           <div class="success-actions">
             <a href="#" class="btn btn-primary btn-lg" id="btnLaunchBuilder">
-              <span>🚀</span> Launch Builder Now
+              <span>🚀</span> Launch Studio Now
             </a>
             <a href="#" class="btn btn-secondary" id="btnViewLiveSite" target="_blank">
               <span>↗</span> View Public Website
@@ -1231,7 +1243,7 @@
       <div class="modal-footer" id="checkoutModalFooter">
         <button type="button" class="btn btn-secondary" id="btnCancelCheckout">Cancel</button>
         <button type="button" class="btn btn-primary btn-lg" id="btnCheckoutNext" style="flex: 1;">
-          <span>💖 Claim Keepsake & Launch Builder ($39)</span> <span>🚀</span>
+          <span>💖 Claim Keepsake & Launch Studio ($39)</span> <span>🚀</span>
         </button>
       </div>
     </div>
@@ -1462,11 +1474,11 @@
           <div>
             <span class="badge-luxury" id="widgetLightboxCatBadge">FEATURE</span>
             <span style="font-size: 0.92rem; color: var(--text-secondary); margin-left: 10px;" id="widgetLightboxHint">
-              Fully customizable in the builder
+              Fully customizable in the studio
             </span>
           </div>
           <button type="button" class="btn btn-primary" id="btnLightboxGetStarted">
-            <span>💖</span> Get This Widget with Builder
+            <span>💖</span> Get This Widget with Studio
           </button>
         </div>
       </div>
@@ -1584,6 +1596,90 @@
       setupSliderDots('slider-templates', 'dots-templates');
       setupSliderDots('slider-reviews', 'dots-reviews');
       setupSliderDots('slider-pricing', 'dots-pricing');
+
+      // V2 Drag & Finger Gesture Engine for All Sliders
+      function enableSliderDrag(track) {
+        if (!track) return;
+        let isDown = false;
+        let startX = 0;
+        let startY = 0;
+        let scrollStart = 0;
+        let hasMoved = false;
+        let lastX = 0;
+        let velocity = 0;
+        let isHorizontal = null;
+
+        track.addEventListener('pointerdown', (e) => {
+          if (e.pointerType === 'mouse' && e.button !== 0) return;
+          isDown = true;
+          hasMoved = false;
+          isHorizontal = null;
+          startX = e.clientX;
+          startY = e.clientY;
+          lastX = e.clientX;
+          scrollStart = track.scrollLeft;
+          velocity = 0;
+          track.classList.add('is-dragging');
+        });
+
+        track.addEventListener('pointermove', (e) => {
+          if (!isDown) return;
+          const currentX = e.clientX;
+          const currentY = e.clientY;
+          const dx = currentX - startX;
+          const dy = currentY - startY;
+
+          if (isHorizontal === null && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
+            isHorizontal = Math.abs(dx) >= Math.abs(dy);
+            if (isHorizontal) {
+              try { track.setPointerCapture(e.pointerId); } catch (_) {}
+              track.style.scrollSnapType = 'none';
+              track.style.scrollBehavior = 'auto';
+            }
+          }
+
+          if (!isHorizontal) return;
+
+          if (Math.abs(dx) > 6) {
+            hasMoved = true;
+          }
+          velocity = currentX - lastX;
+          lastX = currentX;
+          track.scrollLeft = scrollStart - dx;
+        });
+
+        function handlePointerEnd(e) {
+          if (!isDown) return;
+          isDown = false;
+          track.classList.remove('is-dragging');
+          track.style.scrollSnapType = 'x mandatory';
+          track.style.scrollBehavior = 'smooth';
+
+          if (isHorizontal) {
+            try { track.releasePointerCapture(e.pointerId); } catch (_) {}
+
+            if (Math.abs(velocity) > 4) {
+              track.scrollBy({ left: -velocity * 12, behavior: 'smooth' });
+            }
+
+            if (hasMoved) {
+              const suppressClick = (ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                track.removeEventListener('click', suppressClick, true);
+              };
+              track.addEventListener('click', suppressClick, true);
+              setTimeout(() => track.removeEventListener('click', suppressClick, true), 300);
+            }
+          }
+          isHorizontal = null;
+        }
+
+        track.addEventListener('pointerup', handlePointerEnd);
+        track.addEventListener('pointercancel', handlePointerEnd);
+      }
+
+      document.querySelectorAll('#landingViewV2 .v2-slider-track').forEach(enableSliderDrag);
 
       // V2 Quick Squircles Filter Linking
       document.querySelectorAll('#landingViewV2 .v2-feature-item[data-filter]').forEach(item => {

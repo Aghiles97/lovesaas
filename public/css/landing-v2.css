@@ -2026,24 +2026,53 @@ body {
   flex: 1;
 }
 
+#landingViewV2 .v2-review-photo-wrap {
+  width: 100%;
+  height: 180px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+#landingViewV2 .v2-review-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
+}
+
+#landingViewV2 .v2-review-card:hover .v2-review-photo {
+  transform: scale(1.05);
+}
+
 #landingViewV2 .v2-review-author {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-#landingViewV2 .v2-author-avatar {
-  width: 38px;
-  height: 38px;
+#landingViewV2 .v2-author-avatar-img {
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #df9a92 0%, #c4766e 100%);
-  color: #261412;
-  font-weight: 700;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  object-fit: cover;
   flex-shrink: 0;
+  border: 2px solid rgba(251, 113, 133, 0.85);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+#landingViewV2 .v2-pill-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #1a1518;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 #landingViewV2 .v2-author-meta {
@@ -3452,6 +3481,21 @@ body {
   max-width: 100%;
   padding-bottom: 16px;
   margin: 0 auto;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y pinch-zoom;
+}
+
+#landingViewV2 .v2-slider-track.is-dragging {
+  cursor: grabbing !important;
+  scroll-snap-type: none !important;
+  scroll-behavior: auto !important;
+}
+
+#landingViewV2 .v2-slider-track img {
+  -webkit-user-drag: none;
+  user-drag: none;
 }
 
 #landingViewV2 .v2-slider-track::-webkit-scrollbar {
