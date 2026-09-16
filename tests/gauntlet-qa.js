@@ -94,7 +94,7 @@ async function runStaticChecks() {
     { label: 'Mobile slide-out menu', pass: html.includes('mobile-nav-drawer') || html.includes('v2-mobile-menu') },
     { label: '50% OFF promo banner removed', pass: !html.includes('v2-promo-pill') },
     { label: 'Hero Primary CTA', pass: html.includes('Start Building Your Website') || html.includes('Go to Builder') },
-    { label: '5 Feature quick tags', pass: html.includes('Wax-Sealed Letters') && html.includes('Travel Maps') },
+    { label: '5 Feature quick tags removed', pass: !html.includes('v2-features-quick-section') },
     { label: '4 Stats counters with dividers', pass: html.includes('1,280+') && css.includes('.v2-stat-item:not(:last-child)::after') },
     { label: 'Review pill', pass: html.includes('4.9/5 from 1,200+ happy couples') },
     { label: '3 Romantic template cards', pass: html.includes('v2-template-card') && html.includes('Our Story') },
