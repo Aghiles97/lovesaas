@@ -10,7 +10,7 @@ body {
   padding: 0;
   background-color: #0a090c;
   color: #ffffff;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* ==========================================================================
@@ -56,7 +56,7 @@ body {
   color: var(--v2-text-white);
   font-family: var(--v2-font-sans);
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
