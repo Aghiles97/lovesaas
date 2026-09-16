@@ -5871,7 +5871,7 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding: 2px 2px 8px 2px;
+  padding: 2px 24px 8px 2px;
   margin-bottom: 8px;
 }
 
@@ -5916,8 +5916,8 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 12px;
-  padding: 4px 2px 12px;
-  max-height: 52vh;
+  padding: 4px 4px 20px;
+  max-height: 56vh;
 }
 
 .add-widget-card {
@@ -6001,12 +6001,14 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  min-height: 2.1em;
 }
 
 .add-widget-card-bottom {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   margin-top: 10px;
   padding-top: 8px;
   border-top: 1px solid #f8fafc;
@@ -6019,6 +6021,8 @@ input:disabled + .slider { opacity: 0.4; cursor: not-allowed; }
   display: flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .add-widget-status.active {

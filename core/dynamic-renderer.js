@@ -403,9 +403,9 @@ class DynamicRenderer {
       divider.dataset.insertIndex = insertIndex;
       divider.innerHTML = `
         <div class="site-add-section-line"></div>
-        <button type="button" class="btn-site-add-section" data-insert-index="${insertIndex}" title="Add section here">
+        <button type="button" class="btn-site-add-section" data-insert-index="${insertIndex}" title="Add widget here">
           <span class="btn-site-add-plus">+</span>
-          <span class="btn-site-add-label">Add Section</span>
+          <span class="btn-site-add-label">Add Widget</span>
         </button>
         <div class="site-add-section-line"></div>
       `;
@@ -446,10 +446,10 @@ class DynamicRenderer {
           toolbar.className = "site-section-admin-toolbar";
           toolbar.innerHTML = `
             <span class="site-section-badge">${reg.icon || "🧩"} ${escapeHtml(reg.title || widgetId)}</span>
-            <button type="button" class="btn-site-edit-section" data-edit-widget="${widgetId}" title="Edit this section">
+            <button type="button" class="btn-site-edit-section" data-edit-widget="${widgetId}" title="Edit this widget">
               <span>✏️</span> Edit
             </button>
-            <button type="button" class="btn-site-remove-section" data-remove-widget="${widgetId}" title="Remove this section from website">
+            <button type="button" class="btn-site-remove-section" data-remove-widget="${widgetId}" title="Remove this widget from website">
               <span>✕</span> Remove
             </button>
           `;

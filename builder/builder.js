@@ -1545,6 +1545,7 @@ function renderAddSectionModal() {
   });
 
   const filtered = sortedIds.filter((id) => {
+    if (id === 'intro') return false;
     const meta = WIDGET_REGISTRY[id];
     if (!meta) return false;
     if (cat !== 'all' && meta.category !== cat) return false;
@@ -1597,16 +1598,16 @@ function renderAddSectionModal() {
           ${
             isActive
               ? `
-            <button type="button" class="btn-add-widget-action remove-btn" data-remove-id="${id}" title="Remove this section from website">
+            <button type="button" class="btn-add-widget-action remove-btn" data-remove-id="${id}" title="Remove this widget from website">
               ✕ Remove
             </button>
-            <button type="button" class="btn-add-widget-action move-btn" data-add-id="${id}" title="Move section to this position">
+            <button type="button" class="btn-add-widget-action move-btn" data-add-id="${id}" title="Move widget to this position">
               ↕ Move
             </button>
           `
               : `
             <button type="button" class="btn-add-widget-action" data-add-id="${id}">
-              + Add Section
+              + Add Widget
             </button>
           `
           }
@@ -1703,7 +1704,7 @@ function openWidgetPreviewModal(widgetId) {
 
   const isActive = state.layoutOrder.includes(widgetId);
   if (addBtn) {
-    addBtn.innerHTML = isActive ? '↕ Move Section Here' : '+ Add This Section';
+    addBtn.innerHTML = isActive ? '↕ Move Widget Here' : '+ Add This Widget';
     addBtn.onclick = () => {
       addWidgetAtPosition(widgetId, currentAddSectionTargetIndex);
       closeWidgetPreviewModal();

@@ -16,13 +16,10 @@ const INDIVIDUAL_FLOWER_VARIETIES = [
   { url: "/images/flowers/flower_mini_rose.png", baseSize: 135, tier: "small" },
   { url: "/images/flowers/flower_rosebud.png", baseSize: 120, tier: "small" },
   // Sakura Cherry Blossoms
-  { url: "/images/flowers/flower_sakura_1.png", baseSize: 310, tier: "large" },
-  { url: "/images/flowers/flower_sakura_2.png", baseSize: 285, tier: "medium-large" },
+  { url: "/images/flowers/flower_sakura_2.png", baseSize: 295, tier: "large" },
   { url: "/images/flowers/flower_sakura_branch.png", baseSize: 340, tier: "huge" },
   // Golden Sunflowers & Daisies
-  { url: "/images/flowers/flower_sunflower_1.png", baseSize: 350, tier: "huge" },
-  { url: "/images/flowers/flower_sunflower_2.png", baseSize: 320, tier: "huge" },
-  { url: "/images/flowers/flower_sunflower_bloom.png", baseSize: 300, tier: "large" },
+  { url: "/images/flowers/flower_sunflower_2.png", baseSize: 340, tier: "huge" },
   { url: "/images/flowers/flower_daisy_1.png", baseSize: 240, tier: "medium" },
   { url: "/images/flowers/flower_daisy_2.png", baseSize: 220, tier: "medium" },
   // Spring Tulips & Poppies
@@ -32,7 +29,6 @@ const INDIVIDUAL_FLOWER_VARIETIES = [
   { url: "/images/flowers/flower_poppy_2.png", baseSize: 260, tier: "medium-large" },
   // Purple Lilacs & Violas
   { url: "/images/flowers/flower_lilac_1.png", baseSize: 330, tier: "huge" },
-  { url: "/images/flowers/flower_lilac_2.png", baseSize: 310, tier: "large" },
   { url: "/images/flowers/flower_viola_purple.png", baseSize: 260, tier: "medium-large" },
   // Foliage & Petals
   { url: "/images/flowers/flower_eucalyptus.png", baseSize: 190, tier: "foliage" },
@@ -55,9 +51,13 @@ const FLOWER_THEMES = {
   "royal-blend": INDIVIDUAL_FLOWER_VARIETIES,
   "garden-roses": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("rose") || f.tier === "petal"),
   "sakura-dream": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("sakura") || f.url.includes("pink_peony") || f.tier === "petal"),
-  "golden-sunflower": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("sunflower") || f.url.includes("daisy") || f.url.includes("peach_rose")),
-  "spring-tulips": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("tulip") || f.url.includes("daisy") || f.url.includes("poppy") || f.url.includes("eucalyptus")),
-  "lavender-lilac": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("lilac") || f.url.includes("viola") || f.url.includes("hydrangea") || f.url.includes("peony"))
+  "golden-sunflower": [
+    ...INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("sunflower")),
+    ...INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("sunflower")),
+    ...INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("daisy") || f.url.includes("peach_rose") || f.tier === "petal")
+  ],
+  "spring-tulips": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("tulip") || f.url.includes("daisy") || f.url.includes("poppy") || f.url.includes("eucalyptus") || f.tier === "petal"),
+  "lavender-lilac": INDIVIDUAL_FLOWER_VARIETIES.filter(f => f.url.includes("lilac") || f.url.includes("viola") || f.url.includes("hydrangea") || f.url.includes("peony") || f.tier === "petal")
 };
 
 const initFlowerSelector = () => {
@@ -152,8 +152,14 @@ const spawnRealisticFloralScreenBurst = (originX, originY) => {
   const totalCount = targets.length;
   const baseMult = isMobile ? 1.05 : 1.34;
 
+  const shuffledPool = [];
+  while (shuffledPool.length < totalCount) {
+    const copy = [...pool].sort(() => Math.random() - 0.5);
+    shuffledPool.push(...copy);
+  }
+
   for (let i = 0; i < totalCount; i++) {
-    const item = pool[i % pool.length];
+    const item = shuffledPool[i];
     const target = targets[i];
     const el = document.createElement("div");
     el.className = "screen-flower-cell";
