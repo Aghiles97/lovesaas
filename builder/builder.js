@@ -131,6 +131,58 @@ function showToast(msg, type = 'info', duration = 3000) {
   }, duration);
 }
 
+function showAppConfirm({
+  title = 'Confirmation',
+  message = 'Are you sure you want to proceed?',
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
+  danger = false,
+  icon = '⚠️',
+} = {}) {
+  return new Promise((resolve) => {
+    let modal = document.getElementById('builderAppConfirmModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'builderAppConfirmModal';
+      modal.className = 'tenant-modal-overlay';
+      modal.style.zIndex = '10300';
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `
+      <div class="tenant-modal-card app-confirm-card" role="dialog" aria-modal="true">
+        <div class="app-confirm-header">
+          <span class="app-confirm-icon">${icon}</span>
+          <h3 class="app-confirm-title">${escapeHtml(title)}</h3>
+        </div>
+        <p class="app-confirm-body">${escapeHtml(message)}</p>
+        <div class="app-confirm-actions">
+          <button type="button" class="btn-app-confirm-cancel" id="btnAppConfirmCancel">${escapeHtml(cancelText)}</button>
+          <button type="button" class="btn-app-confirm-ok ${danger ? 'danger' : ''}" id="btnAppConfirmOk">${escapeHtml(confirmText)}</button>
+        </div>
+      </div>
+    `;
+    modal.classList.remove('hidden');
+
+    const cleanUp = (result) => {
+      modal.classList.add('hidden');
+      document.removeEventListener('keydown', onKeyDown);
+      resolve(result);
+    };
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') cleanUp(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+
+    modal.querySelector('#btnAppConfirmCancel').onclick = () => cleanUp(false);
+    modal.querySelector('#btnAppConfirmOk').onclick = () => cleanUp(true);
+    modal.onclick = (e) => {
+      if (e.target === modal) cleanUp(false);
+    };
+  });
+}
+window.showAppConfirm = showAppConfirm;
+
 // Auto-save debouncer for layout order & configs
 let autoSaveTimeout = null;
 function getAuthHeaders(extra = {}) {
@@ -830,7 +882,17 @@ function renderPresetsUI() {
       <p class="preset-desc">${escapeHtml(preset.desc)}</p>
       ${isActive ? `<div class="preset-active-indicator">✓ Active Preset</div>` : ''}
     `;
-    card.onclick = () => applyPreset(key);
+    card.onclick = async () => {
+      if (key === state.templatePreset) return;
+      const ok = await showAppConfirm({
+        title: `Apply "${preset.name}" Preset?`,
+        message: `Are you sure you want to apply the "${preset.name}" template order (${preset.widgets.length} sections)? This will reorganize your active sections. Your configured content will be preserved.`,
+        confirmText: 'Apply Template',
+        cancelText: 'Cancel',
+        icon: '🎨',
+      });
+      if (ok) applyPreset(key);
+    };
     presetGrid.appendChild(card);
   });
 }
@@ -1257,8 +1319,16 @@ function initWidgetTrayControls() {
 
   const btnDisableAll = document.getElementById('btnDisableAllWidgets');
   if (btnDisableAll) {
-    btnDisableAll.onclick = () => {
-      if (!confirm('Are you sure you want to disable all optional sections? You can re-enable them at any time.')) return;
+    btnDisableAll.onclick = async () => {
+      const ok = await showAppConfirm({
+        title: 'Disable Optional Sections?',
+        message: 'Are you sure you want to disable all optional sections? You can re-enable them at any time.',
+        confirmText: 'Disable All',
+        cancelText: 'Cancel',
+        danger: true,
+        icon: '⚠️',
+      });
+      if (!ok) return;
       const required = state.allWidgetIds.filter(
         (id) => WIDGET_REGISTRY[id] && WIDGET_REGISTRY[id].required,
       );
@@ -2099,9 +2169,18 @@ function selectWidgetForInspector(widgetId) {
   const btnRemoveCur = document.getElementById('btnRemoveCurrentWidget');
   if (btnRemoveCur) {
     btnRemoveCur.disabled = widgetId === 'intro';
-    btnRemoveCur.onclick = () => {
+    btnRemoveCur.onclick = async () => {
       closeMore();
-      removeWidgetFromLayout(widgetId);
+      const meta = WIDGET_REGISTRY[widgetId] || { title: widgetId };
+      const ok = await showAppConfirm({
+        title: `Remove ${meta.title}?`,
+        message: `Are you sure you want to remove "${meta.title}" from your website? You can re-enable it at any time.`,
+        confirmText: 'Remove',
+        cancelText: 'Cancel',
+        danger: true,
+        icon: '🗑️',
+      });
+      if (ok) removeWidgetFromLayout(widgetId);
     };
   }
 
@@ -2110,11 +2189,15 @@ function selectWidgetForInspector(widgetId) {
     btnReset.onclick = async () => {
       const meta = WIDGET_REGISTRY[widgetId] || { title: widgetId };
       closeMore();
-      if (
-        confirm(
-          `Reset "${meta.title}" to template default content? Custom changes in this section will be replaced.`,
-        )
-      ) {
+      const ok = await showAppConfirm({
+        title: `Reset ${meta.title}?`,
+        message: `Reset "${meta.title}" to template default content? Custom changes in this section will be replaced.`,
+        confirmText: 'Reset Content',
+        cancelText: 'Cancel',
+        danger: true,
+        icon: '🔄',
+      });
+      if (ok) {
         await resetWidgetData(widgetId);
         renderWidgetInspector(widgetId);
         debouncedLiveUpdate(true);
@@ -2781,7 +2864,15 @@ async function renderMediaLibraryUI(refresh = false) {
     btn.onclick = async (e) => {
       e.stopPropagation();
       const key = btn.getAttribute('data-key');
-      if (!confirm(`Delete "${key}" from storage?`)) return;
+      const ok = await showAppConfirm({
+        title: 'Delete Media Asset?',
+        message: `Are you sure you want to permanently delete "${key}" from storage?`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        danger: true,
+        icon: '🗑️',
+      });
+      if (!ok) return;
       try {
         const res = await fetch(
           `/api/tenants/${encodeURIComponent(state.slug)}/media/${encodeURIComponent(key)}`,
@@ -4706,8 +4797,15 @@ function renderSiteSettingsUI() {
       }
       const themeId = btn.getAttribute('data-theme-id');
       if (!themeId) return;
-      if (!confirm('Are you sure you want to delete this custom theme?'))
-        return;
+      const ok = await showAppConfirm({
+        title: 'Delete Custom Theme?',
+        message: 'Are you sure you want to delete this custom theme?',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        danger: true,
+        icon: '🗑️',
+      });
+      if (!ok) return;
 
       try {
         btn.disabled = true;
