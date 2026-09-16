@@ -1161,6 +1161,18 @@ body.is-resizing-sidebar .builder-sidebar,
   flex-direction: column;
 }
 
+/* WIDGET SUBVIEWS (LIST vs EDIT / INSPECTOR) */
+.widgets-subview {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex-grow: 1;
+  box-sizing: border-box;
+}
+.widgets-subview.hidden {
+  display: none !important;
+}
+
 /* UNIFIED INSPECTOR HEADER */
 .inspector-sticky-header {
   position: sticky;

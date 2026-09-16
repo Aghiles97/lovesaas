@@ -239,15 +239,10 @@
       
       <!-- TOP TAB BAR -->
       <nav class="sidebar-tab-bar" aria-label="Builder Navigation">
-        <button type="button" class="sidebar-tab-btn active" data-tab="tab-widgets">
+        <button type="button" class="sidebar-tab-btn active" data-tab="tab-widgets" id="btnTabWidgets">
           <span class="tab-icon">🧩</span>
-          <span class="tab-text">Sections</span>
+          <span class="tab-text">Widgets</span>
           <span class="tab-badge-count" id="tabWidgetCountBadge">0</span>
-        </button>
-        <button type="button" class="sidebar-tab-btn" data-tab="tab-inspector" id="btnTabInspector">
-          <span class="tab-icon">🎛️</span>
-          <span class="tab-text">Customize</span>
-          <span class="tab-pill" id="tabActiveWidgetPill" style="display: none;"></span>
         </button>
         <button type="button" class="sidebar-tab-btn" data-tab="tab-website">
           <span class="tab-icon">⚙️</span>
@@ -262,95 +257,97 @@
 
       <!-- TAB 1: WIDGETS & ORDER -->
       <div class="sidebar-tab-pane active" id="tab-widgets">
-        <div class="sections-header-panel">
-          <!-- Main Control Bar -->
-          <div class="sections-control-bar">
-            <div class="sections-control-actions" style="width: 100%; justify-content: space-between;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <button type="button" class="btn-preset-pill" id="btnTogglePresets" title="Change layout preset">
-                  <span class="preset-icon">🎨</span>
-                  <span class="active-preset-name" id="currentPresetNameBadge">Storyteller</span>
-                  <span class="preset-arrow" id="btnPresetToggleText">▾</span>
-                </button>
-                <button type="button" class="btn-add-section-pill" id="btnSidebarAddSection" title="Add a new section">
-                  <span>+</span> Widget
-                </button>
+        <!-- SUBVIEW A: WIDGETS LIST -->
+        <div class="widgets-subview" id="widgetsListView">
+          <div class="sections-header-panel">
+            <!-- Main Control Bar -->
+            <div class="sections-control-bar">
+              <div class="sections-control-actions" style="width: 100%; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <button type="button" class="btn-preset-pill" id="btnTogglePresets" title="Change layout preset">
+                    <span class="preset-icon">🎨</span>
+                    <span class="active-preset-name" id="currentPresetNameBadge">Storyteller</span>
+                    <span class="preset-arrow" id="btnPresetToggleText">▾</span>
+                  </button>
+                  <button type="button" class="btn-add-section-pill" id="btnSidebarAddSection" title="Add a new widget">
+                    <span>+</span> Widget
+                  </button>
+                </div>
+                <div class="sections-quick-actions">
+                  <button type="button" class="btn-quick-action" id="btnEnableAllWidgets" title="Enable all widgets">All</button>
+                  <button type="button" class="btn-quick-action" id="btnDisableAllWidgets" title="Disable optional widgets (prompts confirmation)">None</button>
+                </div>
               </div>
-              <div class="sections-quick-actions">
-                <button type="button" class="btn-quick-action" id="btnEnableAllWidgets" title="Enable all sections">All</button>
-                <button type="button" class="btn-quick-action" id="btnDisableAllWidgets" title="Disable optional sections (prompts confirmation)">None</button>
+            </div>
+
+            <!-- Preset Selection Tray (toggled) -->
+            <div class="preset-grid-wrapper hidden" id="presetGridWrapper">
+              <p class="preset-grid-desc">Choose a pre-configured template order:</p>
+              <div class="preset-grid" id="presetGrid"></div>
+            </div>
+
+            <!-- Search & Filter Row -->
+            <div class="sections-toolbar-row">
+              <div class="widget-search-wrap">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="widgetSearchInput" class="widget-search-input" placeholder="Search widgets...">
+                <button type="button" id="btnClearWidgetSearch" class="btn-clear-search hidden" title="Clear search">✕</button>
+              </div>
+              <div class="widget-filter-chips">
+                <button type="button" class="filter-chip active" data-filter="all">All <span id="filterCountAll">26</span></button>
+                <button type="button" class="filter-chip" data-filter="active">Active <span id="filterCountActive">0</span></button>
+                <button type="button" class="filter-chip" data-filter="birthday">🎂 Birthday</button>
+                <button type="button" class="filter-chip" data-filter="valentine">💝 Valentine</button>
+                <button type="button" class="filter-chip" data-filter="anniversary">💍 Anniversary</button>
+                <button type="button" class="filter-chip" data-filter="inactive">Off <span id="filterCountInactive">0</span></button>
               </div>
             </div>
           </div>
 
-          <!-- Preset Selection Tray (toggled) -->
-          <div class="preset-grid-wrapper hidden" id="presetGridWrapper">
-            <p class="preset-grid-desc">Choose a pre-configured template order:</p>
-            <div class="preset-grid" id="presetGrid"></div>
-          </div>
-
-          <!-- Search & Filter Row -->
-          <div class="sections-toolbar-row">
-            <div class="widget-search-wrap">
-              <span class="search-icon">🔍</span>
-              <input type="text" id="widgetSearchInput" class="widget-search-input" placeholder="Search sections...">
-              <button type="button" id="btnClearWidgetSearch" class="btn-clear-search hidden" title="Clear search">✕</button>
-            </div>
-            <div class="widget-filter-chips">
-              <button type="button" class="filter-chip active" data-filter="all">All <span id="filterCountAll">26</span></button>
-              <button type="button" class="filter-chip" data-filter="active">Active <span id="filterCountActive">0</span></button>
-              <button type="button" class="filter-chip" data-filter="birthday">🎂 Birthday</button>
-              <button type="button" class="filter-chip" data-filter="valentine">💝 Valentine</button>
-              <button type="button" class="filter-chip" data-filter="anniversary">💍 Anniversary</button>
-              <button type="button" class="filter-chip" data-filter="inactive">Off <span id="filterCountInactive">0</span></button>
-            </div>
-          </div>
+          <div class="widget-tray" id="widgetTray"></div>
         </div>
 
-        <div class="widget-tray" id="widgetTray"></div>
-      </div>
-
-      <!-- TAB 2: WIDGET CONTENT INSPECTOR -->
-      <div class="sidebar-tab-pane" id="tab-inspector">
-        <div class="inspector-sticky-header">
-          <div class="inspector-header-bar">
-            <button type="button" class="btn-inspector-back" id="btnBackToWidgets" title="Back to All Widgets">
-              ← Sections
-            </button>
-            <div class="inspector-select-container">
-              <select id="inspectorWidgetSelect" class="inspector-select-clean" title="Select Widget to Edit"></select>
-            </div>
-            <div class="inspector-header-tools">
-              <label class="toggle-switch-sm" title="Enable or Disable Widget on Website">
-                <input type="checkbox" id="inspectorWidgetActiveToggle">
-                <span class="slider-sm"></span>
-              </label>
-              <div class="inspector-actions-dropdown">
-                <button type="button" class="btn-inspector-more" id="btnInspectorMore" title="Widget Options">⋯</button>
-                <div class="inspector-actions-menu hidden" id="inspectorMoreMenu">
-                  <button type="button" class="menu-action-item" id="btnLocateInPreview">
-                    <span>👁️</span> Locate in Preview
-                  </button>
-                  <button type="button" class="menu-action-item" id="btnInspectorMoveUp">
-                    <span>▲</span> Move Up <span id="inspectorOrderBadge" class="menu-item-badge">#1</span>
-                  </button>
-                  <button type="button" class="menu-action-item" id="btnInspectorMoveDown">
-                    <span>▼</span> Move Down
-                  </button>
-                  <div class="menu-action-sep"></div>
-                  <button type="button" class="menu-action-item danger" id="btnRemoveCurrentWidget">
-                    <span>🗑️</span> Remove from Website
-                  </button>
-                  <button type="button" class="menu-action-item danger" id="btnResetWidgetContent">
-                    <span>↺</span> Reset to Defaults
-                  </button>
+        <!-- SUBVIEW B: WIDGET CONTENT INSPECTOR / EDIT MODE -->
+        <div class="widgets-subview hidden" id="tab-inspector">
+          <div class="inspector-sticky-header">
+            <div class="inspector-header-bar">
+              <button type="button" class="btn-inspector-back" id="btnBackToWidgets" title="Back to All Widgets">
+                ← Widgets
+              </button>
+              <div class="inspector-select-container">
+                <select id="inspectorWidgetSelect" class="inspector-select-clean" title="Select Widget to Edit"></select>
+              </div>
+              <div class="inspector-header-tools">
+                <label class="toggle-switch-sm" title="Enable or Disable Widget on Website">
+                  <input type="checkbox" id="inspectorWidgetActiveToggle">
+                  <span class="slider-sm"></span>
+                </label>
+                <div class="inspector-actions-dropdown">
+                  <button type="button" class="btn-inspector-more" id="btnInspectorMore" title="Widget Options">⋯</button>
+                  <div class="inspector-actions-menu hidden" id="inspectorMoreMenu">
+                    <button type="button" class="menu-action-item" id="btnLocateInPreview">
+                      <span>👁️</span> Locate in Preview
+                    </button>
+                    <button type="button" class="menu-action-item" id="btnInspectorMoveUp">
+                      <span>▲</span> Move Up <span id="inspectorOrderBadge" class="menu-item-badge">#1</span>
+                    </button>
+                    <button type="button" class="menu-action-item" id="btnInspectorMoveDown">
+                      <span>▼</span> Move Down
+                    </button>
+                    <div class="menu-action-sep"></div>
+                    <button type="button" class="menu-action-item danger" id="btnRemoveCurrentWidget">
+                      <span>🗑️</span> Remove from Website
+                    </button>
+                    <button type="button" class="menu-action-item danger" id="btnResetWidgetContent">
+                      <span>↺</span> Reset to Defaults
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-
+          <div id="inspectorFormContainer" class="inspector-form-pane"></div>
         </div>
-        <div id="inspectorFormContainer" class="inspector-form-pane"></div>
       </div>
 
       <!-- TAB 3: WEBSITE SETTINGS & THEME -->
@@ -634,7 +631,7 @@
               <span class="mode-card-icon">✨</span>
               <span class="mode-card-title">Blank Canvas</span>
             </div>
-            <p class="mode-card-desc">Clean slate (0 widgets). Add sections exactly as you want.</p>
+            <p class="mode-card-desc">Clean slate (0 widgets). Add widgets exactly as you want.</p>
           </div>
           <div class="project-mode-card" id="modeCardTemplate">
             <div class="mode-card-header">
@@ -651,7 +648,7 @@
         <label class="np-preset-label">Select Starting Template:</label>
         <div class="np-preset-grid" id="npPresetChips">
           <button type="button" class="np-preset-chip active" data-preset="blank">
-            <span class="chip-icon">✨</span> Blank (0 Sections)
+            <span class="chip-icon">✨</span> Blank (0 Widgets)
           </button>
           <button type="button" class="np-preset-chip" data-preset="birthday">
             <span class="chip-icon">🎂</span> Birthday Bash
@@ -833,7 +830,7 @@
     <div class="tenant-modal-card add-section-modal-card">
       <div class="add-section-modal-header">
         <div>
-          <h3 id="addSectionModalTitle" class="add-section-modal-title">✨ Add Section</h3>
+          <h3 id="addSectionModalTitle" class="add-section-modal-title">✨ Add Widget</h3>
           <p id="addSectionModalSubtitle" class="add-section-modal-subtitle">Choose a widget to insert into your website</p>
         </div>
         <button type="button" id="btnCloseAddSectionModal" class="btn-modal-close" title="Close">✕</button>
@@ -890,7 +887,7 @@
       <div class="widget-preview-footer">
         <button type="button" class="btn-secondary" id="btnCancelWidgetPreview">Close</button>
         <button type="button" class="btn-primary" id="btnAddFromPreviewBtn">
-          <span>+</span> Add This Section
+          <span>+</span> Add This Widget
         </button>
       </div>
     </div>

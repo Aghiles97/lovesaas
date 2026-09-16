@@ -824,6 +824,7 @@ async function loadTenantData(slug) {
 
     updateNavbarUI();
     updateRoleUI();
+    closeWidgetEditMode();
     renderPresetsUI();
     renderWidgetTray();
     if (state.layoutOrder.length === 0 || !state.activeInspectorWidget) {
@@ -877,7 +878,7 @@ function renderPresetsUI() {
           <span class="preset-indicator-dot">${isActive ? '✓' : ''}</span>
           <h4 class="preset-title">${escapeHtml(preset.name)}</h4>
         </div>
-        <span class="preset-badge">${preset.widgets.length} sections</span>
+        <span class="preset-badge">${preset.widgets.length} widgets</span>
       </div>
       <p class="preset-desc">${escapeHtml(preset.desc)}</p>
       ${isActive ? `<div class="preset-active-indicator">✓ Active Preset</div>` : ''}
@@ -886,7 +887,7 @@ function renderPresetsUI() {
       if (key === state.templatePreset) return;
       const ok = await showAppConfirm({
         title: `Apply "${preset.name}" Preset?`,
-        message: `Are you sure you want to apply the "${preset.name}" template order (${preset.widgets.length} sections)? This will reorganize your active sections. Your configured content will be preserved.`,
+        message: `Are you sure you want to apply the "${preset.name}" template order (${preset.widgets.length} widgets)? This will reorganize your active widgets. Your configured content will be preserved.`,
         confirmText: 'Apply Template',
         cancelText: 'Cancel',
         icon: '🎨',
@@ -955,7 +956,7 @@ function renderWidgetTray() {
     const screen1Card = document.createElement('div');
     screen1Card.className = `tray-item screen1-pinned-card active-widget ${state.activeInspectorWidget === 'intro' ? 'selected-for-edit' : ''}`;
     screen1Card.dataset.widgetId = 'intro';
-    screen1Card.title = 'Customize Screen 1: Wax Sealed Letter';
+    screen1Card.title = 'Edit Screen 1: Wax Sealed Letter';
     screen1Card.style.cursor = 'pointer';
     screen1Card.style.marginBottom = '14px';
     screen1Card.innerHTML = `
@@ -970,8 +971,8 @@ function renderWidgetTray() {
         </div>
       </div>
       <div class="screen1-actions">
-        <button type="button" class="btn-customize-intro" title="Customize First Screen">
-          <span>Customize</span>
+        <button type="button" class="btn-customize-intro" title="Edit First Screen">
+          <span>Edit</span>
         </button>
         <span class="screen1-chevron">›</span>
       </div>
@@ -979,11 +980,10 @@ function renderWidgetTray() {
 
     const openIntroCustomize = (e) => {
       if (e) e.stopPropagation();
-      selectWidgetForInspector('intro');
       if (typeof window.setPreviewScreen === 'function') {
         window.setPreviewScreen('intro');
       }
-      if (typeof switchToTab === 'function') switchToTab('tab-inspector', true);
+      openWidgetEditMode('intro');
     };
 
     screen1Card.onclick = openIntroCustomize;
@@ -1036,8 +1036,8 @@ function renderWidgetTray() {
     emptyState.className = 'widget-empty-state';
     emptyState.innerHTML = `
       <span class="empty-icon">🔍</span>
-      <div class="empty-title">No sections found</div>
-      <p class="empty-text">No section matching "<strong>${escapeHtml(currentWidgetSearchQuery)}</strong>"</p>
+      <div class="empty-title">No widgets found</div>
+      <p class="empty-text">No widget matching "<strong>${escapeHtml(currentWidgetSearchQuery)}</strong>"</p>
       <button type="button" class="btn-clear-search-pill" id="btnEmptyClearSearch">Reset Filter</button>
     `;
     widgetTray.appendChild(emptyState);
@@ -1072,7 +1072,7 @@ function renderWidgetTray() {
         <span class="screen-banner-hint">Scrollable website after opening letter</span>
       </div>
     </div>
-    <span class="screen-banner-badge">${filteredList.length} Sections</span>
+    <span class="screen-banner-badge">${filteredList.length} Widgets</span>
   `;
   widgetTray.appendChild(screen2Header);
 
@@ -1087,7 +1087,7 @@ function renderWidgetTray() {
     item.className = `tray-item ${isActive ? 'active-widget' : 'inactive-widget'} ${isSelected ? 'selected-for-edit' : ''}`;
     item.draggable = isActive;
     item.dataset.widgetId = id;
-    item.title = `Customize ${meta.title}`;
+    item.title = `Edit ${meta.title}`;
 
     item.innerHTML = `
       <div class="tray-lead">
@@ -1099,24 +1099,23 @@ function renderWidgetTray() {
         <div class="tray-title-row">
           <span class="tray-title">${escapeHtml(meta.title)}</span>
           ${!inChapter ? `<span class="tray-cat-tag cat-${escapeHtml(meta.category || 'modular')}">${escapeHtml(meta.category || 'modular')}</span>` : ''}
-          ${meta.required ? `<span class="tray-req-pill" title="Required section">Req</span>` : ''}
+          ${meta.required ? `<span class="tray-req-pill" title="Required widget">Req</span>` : ''}
         </div>
       </div>
       <div class="tray-actions">
-        <label class="toggle-switch" title="${meta.required ? 'Required section' : isActive ? 'Hide section' : 'Show section'}">
+        <label class="toggle-switch" title="${meta.required ? 'Required widget' : isActive ? 'Hide widget' : 'Show widget'}">
           <input type="checkbox" ${isActive ? 'checked' : ''} data-toggle="${id}" ${meta.required ? 'disabled' : ''}>
           <span class="slider"></span>
         </label>
-        <span class="tray-chevron" title="Customize">›</span>
+        <span class="tray-chevron" title="Edit">›</span>
       </div>
     `;
 
     item.onclick = () => {
-      selectWidgetForInspector(id);
       if (typeof window.setPreviewScreen === 'function') {
         window.setPreviewScreen('website');
       }
-      switchToTab('tab-inspector');
+      openWidgetEditMode(id);
       if (previewIframe && previewIframe.contentWindow) {
         previewIframe.contentWindow.postMessage(
           { type: 'SCROLL_TO_WIDGET', widgetId: id },
@@ -1215,7 +1214,7 @@ function moveWidgetByDelta(widgetId, delta) {
 
 function moveWidgetToPosition(widgetId, targetIndex) {
   if (state.userRole === 'visitor') {
-    showToast('🔒 Purchase now to customize and reorder sections!', 'warning');
+    showToast('🔒 Purchase now to customize and reorder widgets!', 'warning');
     window.open('/welcome#pricing', '_blank');
     return;
   }
@@ -1234,7 +1233,7 @@ function moveWidgetToPosition(widgetId, targetIndex) {
 function toggleWidgetActive(widgetId, isEnabled) {
   if (state.userRole === 'visitor') {
     showToast(
-      '🔒 Purchase now to customize sections on your website!',
+      '🔒 Purchase now to customize widgets on your website!',
       'warning',
     );
     window.open('/welcome#pricing', '_blank');
@@ -1321,8 +1320,8 @@ function initWidgetTrayControls() {
   if (btnDisableAll) {
     btnDisableAll.onclick = async () => {
       const ok = await showAppConfirm({
-        title: 'Disable Optional Sections?',
-        message: 'Are you sure you want to disable all optional sections? You can re-enable them at any time.',
+        title: 'Disable Optional Widgets?',
+        message: 'Are you sure you want to disable all optional widgets? You can re-enable them at any time.',
         confirmText: 'Disable All',
         cancelText: 'Cancel',
         danger: true,
@@ -1362,7 +1361,7 @@ async function ensureDefaultWidgetData(widgetId) {
 
 async function addWidgetAtPosition(widgetId, targetIndex) {
   if (state.userRole === 'visitor') {
-    showToast('🔒 Purchase now to customize and add new sections!', 'warning');
+    showToast('🔒 Purchase now to customize and add new widgets!', 'warning');
     window.open('/welcome#pricing', '_blank');
     return;
   }
@@ -1420,7 +1419,7 @@ async function addWidgetAtPosition(widgetId, targetIndex) {
 
 function removeWidgetFromLayout(widgetId) {
   if (state.userRole === 'visitor') {
-    showToast('🔒 Purchase now to customize and remove sections!', 'warning');
+    showToast('🔒 Purchase now to customize and remove widgets!', 'warning');
     window.open('/welcome#pricing', '_blank');
     return;
   }
@@ -1451,7 +1450,7 @@ function removeWidgetFromLayout(widgetId) {
   }
 
   const meta = WIDGET_REGISTRY[widgetId] || { title: widgetId };
-  showToast(`🗑️ Removed "${meta.title}" section from website.`, 'info');
+  showToast(`🗑️ Removed "${meta.title}" widget from website.`, 'info');
 }
 
 function renderAddSectionModal() {
@@ -1470,7 +1469,7 @@ function renderAddSectionModal() {
         : state.layoutOrder.length;
     if (state.layoutOrder.length === 0) {
       subtitle.innerHTML =
-        'Inserting as the <strong>first section</strong> on your website';
+        'Inserting as the <strong>first widget</strong> on your website';
     } else if (idx <= 0) {
       const nextTitle =
         WIDGET_REGISTRY[state.layoutOrder[0]]?.title || state.layoutOrder[0];
@@ -1704,7 +1703,7 @@ function initAddSectionModalControls() {
     btnOpen.onclick = () => {
       if (state.userRole === 'visitor') {
         showToast(
-          '🔒 Purchase now to customize and add new sections!',
+          '🔒 Purchase now to customize and add new widgets!',
           'warning',
         );
         window.open('/welcome#pricing', '_blank');
@@ -2070,16 +2069,16 @@ function renderInspectorEmptyState() {
     inspectorFormContainer.innerHTML = `
       <div class="inspector-empty-state">
         <div class="inspector-empty-icon">🧩</div>
-        <h4 class="inspector-empty-title">No Sections on Website</h4>
-        <p class="inspector-empty-desc">Your website currently has no active sections. Add or enable sections in the Sections tab to customize them.</p>
+        <h4 class="inspector-empty-title">No Widgets on Website</h4>
+        <p class="inspector-empty-desc">Your website currently has no active widgets. Add or enable widgets to edit them.</p>
         <button type="button" class="btn-empty-action" id="btnInspectorGoToSections">
-          <span>←</span> Go to Sections
+          <span>←</span> Back to Widgets
         </button>
       </div>
     `;
     const btnGo = document.getElementById('btnInspectorGoToSections');
     if (btnGo) {
-      btnGo.onclick = () => switchToTab('tab-widgets');
+      btnGo.onclick = () => closeWidgetEditMode();
     }
   }
 
@@ -2087,6 +2086,41 @@ function renderInspectorEmptyState() {
     .querySelectorAll('.tray-item')
     .forEach((item) => item.classList.remove('selected-for-edit'));
 }
+
+let savedWidgetsScrollTop = 0;
+
+function openWidgetEditMode(widgetId) {
+  const pane = document.getElementById('tab-widgets');
+  const listView = document.getElementById('widgetsListView');
+  const editView = document.getElementById('tab-inspector');
+  if (pane && !listView?.classList.contains('hidden')) {
+    savedWidgetsScrollTop = pane.scrollTop;
+  }
+  if (listView) listView.classList.add('hidden');
+  if (editView) editView.classList.remove('hidden');
+  if (pane) pane.scrollTop = 0;
+
+  if (typeof switchToTab === 'function') {
+    switchToTab('tab-widgets', true);
+  }
+
+  if (widgetId) {
+    selectWidgetForInspector(widgetId);
+  }
+}
+
+function closeWidgetEditMode() {
+  const pane = document.getElementById('tab-widgets');
+  const listView = document.getElementById('widgetsListView');
+  const editView = document.getElementById('tab-inspector');
+  if (editView) editView.classList.add('hidden');
+  if (listView) listView.classList.remove('hidden');
+  if (pane && savedWidgetsScrollTop) {
+    pane.scrollTop = savedWidgetsScrollTop;
+  }
+}
+window.openWidgetEditMode = openWidgetEditMode;
+window.closeWidgetEditMode = closeWidgetEditMode;
 
 function selectWidgetForInspector(widgetId) {
   if (!widgetId || !WIDGET_REGISTRY[widgetId]) {
@@ -3908,11 +3942,8 @@ function initSidebarTabs() {
   document.querySelectorAll('.sidebar-tab-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const tabId = btn.getAttribute('data-tab');
-      if (
-        tabId === 'tab-inspector' &&
-        (!state.layoutOrder || !state.layoutOrder.length)
-      ) {
-        showToast('No active sections on website to customize.', 'info');
+      if (tabId === 'tab-widgets') {
+        closeWidgetEditMode();
       }
       switchToTab(tabId);
     });
@@ -3920,7 +3951,7 @@ function initSidebarTabs() {
 
   const btnBack = document.getElementById('btnBackToWidgets');
   if (btnBack) {
-    btnBack.addEventListener('click', () => switchToTab('tab-widgets'));
+    btnBack.addEventListener('click', () => closeWidgetEditMode());
   }
 
   const btnMore = document.getElementById('btnInspectorMore');
@@ -3942,17 +3973,9 @@ function initSidebarTabs() {
 }
 
 function switchToTab(tabId, skipWidgetSelect = false) {
-  if (tabId === 'tab-inspector' && !skipWidgetSelect) {
-    if (state.activeInspectorWidget === 'intro') {
-      selectWidgetForInspector('intro');
-    } else if (!state.layoutOrder || !state.layoutOrder.length) {
-      renderInspectorEmptyState();
-    } else if (
-      !state.activeInspectorWidget ||
-      !state.layoutOrder.includes(state.activeInspectorWidget)
-    ) {
-      selectWidgetForInspector(state.layoutOrder[0]);
-    }
+  if (tabId === 'tab-inspector') {
+    openWidgetEditMode(state.activeInspectorWidget || state.layoutOrder[0]);
+    return;
   }
   document.querySelectorAll('.sidebar-tab-btn').forEach((b) => {
     const isActive = b.getAttribute('data-tab') === tabId;
@@ -5752,11 +5775,7 @@ function setupEventListeners() {
       if (e.data.memoryId) state.targetMemoryId = e.data.memoryId;
 
       selectWidgetForInspector(e.data.widgetId);
-      if (typeof switchToTab === 'function') switchToTab('tab-inspector');
-      const tabBtn = document.getElementById('btnTabInspector') || document.querySelector('.sidebar-tab-btn[data-tab="tab-inspector"]');
-      if (tabBtn && !tabBtn.classList.contains('active')) {
-        tabBtn.click();
-      }
+      openWidgetEditMode(e.data.widgetId);
 
       if (previewIframe && previewIframe.contentWindow) {
         if (e.data.chapterId) {
