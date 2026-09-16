@@ -169,6 +169,19 @@ const WIDGET_REGISTRY = {
     runtime: "/public/js/widgets/scrapbook-game.runtime.js",
     initFn: "setupScrapbookGame"
   },
+  love_crossword: {
+    id: "love_crossword",
+    title: "Love Story Crossword",
+    icon: "🧩",
+    desc: "Interactive 12x12 couple crossword with procedural audio, trivia clues & keepsake diploma.",
+    category: "games",
+    defaultEnabled: true,
+    css: "/public/css/widgets/love_crossword.css",
+    template: "/core/templates/love_crossword.template.js",
+    inspector: "/builder/inspectors/love_crossword.inspector.js",
+    runtime: "/public/js/widgets/love-crossword.runtime.js",
+    initFn: "setupLoveCrossword"
+  },
   letter: {
     id: "letter",
     title: "Wax-Sealed Love Letter",

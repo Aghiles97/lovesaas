@@ -1912,6 +1912,7 @@ const WIDGET_CATEGORIES = {
   reparation_coupons: 'Reparation Coupons',
   comfort_soundboard: 'Comfort Soundboard',
   scrapbook_game: 'Scrapbook Game',
+  love_crossword: 'Love Crossword',
 };
 
 const WIDGET_LABELS = {
@@ -1922,6 +1923,7 @@ const WIDGET_LABELS = {
   reparation_coupons: 'Reparation Coupons',
   comfort_soundboard: 'Comfort Soundboard',
   scrapbook_game: 'Scrapbook Game',
+  love_crossword: 'Love Crossword',
 };
 if (typeof window !== 'undefined') window.WIDGET_LABELS = WIDGET_LABELS;
 

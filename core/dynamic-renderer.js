@@ -283,6 +283,9 @@ class DynamicRenderer {
     if (sectionsData.scrapbook_game) {
       window.SCRAPBOOK_DATA = sectionsData.scrapbook_game;
     }
+    if (sectionsData.love_crossword) {
+      window.LOVE_CROSSWORD_DATA = sectionsData.love_crossword;
+    }
 
     if (isSameLayout) {
       const activeId = config.activeWidgetId || config.modifiedWidgetId;
@@ -678,6 +681,9 @@ class DynamicRenderer {
       },
       scrapbook_game: () => {
         if (typeof setupScrapbookGame === "function") try { setupScrapbookGame(sectionsData.scrapbook_game, hero); } catch (e) {}
+      },
+      love_crossword: () => {
+        if (typeof setupLoveCrossword === "function") try { setupLoveCrossword(sectionsData.love_crossword, hero); } catch (e) {}
       },
       hero: () => {
         if (typeof setupQuintillionObserver === "function") try { setupQuintillionObserver(); } catch (e) {}

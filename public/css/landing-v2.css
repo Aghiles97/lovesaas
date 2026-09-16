@@ -2468,37 +2468,56 @@ body {
   }
 
   #landingViewV2 .v2-hero-ctas {
-    width: 100%;
-    max-width: 330px;
+    width: auto;
+    max-width: 100%;
     margin: 0 auto;
+    display: flex;
+    justify-content: center;
   }
 
   #landingViewV2 .v2-btn-hero-main {
-    padding: 12px 18px;
-    font-size: 14.5px;
+    width: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 22px;
+    font-size: 13.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    border-radius: 9999px;
+    gap: 8px;
+  }
+
+  #landingViewV2 .v2-btn-hero-main .v2-btn-badge,
+  #landingViewV2 .v2-btn-hero-main .v2-btn-sparkle {
+    display: none;
   }
 
   #landingViewV2 .v2-hero-cta-guarantee {
-    font-size: 10px;
+    font-size: 9.5px;
     gap: 4px;
     justify-content: center;
-    margin: 8px auto 12px;
-    max-width: 330px;
+    margin: 8px auto 10px;
+    max-width: 320px;
   }
 
   #landingViewV2 .v2-hero-social-proof {
-    margin: 4px auto 0;
-    padding: 5px 12px;
+    margin: 2px auto 0;
+    padding: 4px 12px 4px 8px;
     justify-content: center;
+    align-items: center;
+    gap: 8px;
   }
 
   #landingViewV2 .v2-hero-avatars {
-    width: 72px;
-    height: 32px;
+    width: 60px;
+    height: 24px;
+    object-fit: contain;
   }
 
   #landingViewV2 .v2-hero-proof-text {
     font-size: 11px;
+    white-space: nowrap;
   }
 
   /* Hero Visual Art Photo */

@@ -641,7 +641,8 @@ document.addEventListener("DOMContentLoaded", () => {
     reform_deck: { title: "🃏 The Honest Reform Deck", cat: "RECONCILIATION", sub: "3D flip card deck with accountability promises & commitments" },
     reparation_coupons: { title: "🎟️ Reparation Coupons", cat: "RECONCILIATION", sub: "Scratch-off peace offering vouchers with claimed status tracking" },
     comfort_soundboard: { title: "🎧 Comfort Soundboard", cat: "AUDIO", sub: "Procedural ambient soundscapes mixer with calming photo stream" },
-    scrapbook_game: { title: "📓 Scrapbook: How Well Do You Know Me?", cat: "GAMES", sub: "Tactile couple scrapbook challenge with taped polaroids, choice stickers & keepsake" }
+    scrapbook_game: { title: "📓 Scrapbook: How Well Do You Know Me?", cat: "GAMES", sub: "Tactile couple scrapbook challenge with taped polaroids, choice stickers & keepsake" },
+    love_crossword: { title: "🧩 Love Story Crossword", cat: "GAMES", sub: "Interactive couple crossword with procedural audio, trivia clues & keepsake diploma" }
   };
 
   // More Widgets Toggle & Filter Bar

@@ -1183,6 +1183,30 @@ const DEFAULT_SECTIONS_DATA = {
         memoryNote: "Because no word in any dictionary fits you more perfectly than my eternal Lof!"
       }
     ]
+  },
+  love_crossword: {
+    tag: "Couple Trivia Puzzle 🧩❤️",
+    title: "The Love Crossword",
+    desc: "Crack the secret clues of our journey, inside jokes, and favorites to unlock our certificate!",
+    gridWidth: 12,
+    gridHeight: 12,
+    certTitle: "Crossword Master of My Heart 🏆",
+    certAwardee: "Certified Soulmate",
+    certQuote: "« Solved every clue of our story with brilliance and boundless love. »",
+    allowHints: true,
+    penaltyPerHint: 20,
+    words: [
+      { id: "A1", dir: "across", num: 1, word: "MATCHA", clue: "Our favorite creamy green morning drink ritual 🍵", r: 2, c: 0 },
+      { id: "A2", dir: "across", num: 2, word: "LOVEISBLIND", clue: "The reality drama we binge-watched on date night 📺", r: 5, c: 0 },
+      { id: "A3", dir: "across", num: 3, word: "DONUT", clue: "Our favorite sweet late-night bakery snack 🍩", r: 8, c: 0 },
+      { id: "A4", dir: "across", num: 4, word: "TARTE", clue: "Her must-have cruelty-free beauty & blush essential 💄", r: 8, c: 5 },
+      { id: "A5", dir: "across", num: 5, word: "PORSCHE", clue: "Your dream sports car in Miami blue 🏎️", r: 11, c: 2 },
+      { id: "D1", dir: "down", num: 1, word: "TAYLOR", clue: "The artist behind our favorite playlist 🎵", r: 1, c: 1 },
+      { id: "D2", dir: "down", num: 2, word: "PEANUT", clue: "Your silly nickname when you act adorable 🥜", r: 4, c: 3 },
+      { id: "D3", dir: "down", num: 3, word: "PARIS", clue: "The city where we promised our next anniversary 🥐", r: 1, c: 5 },
+      { id: "D4", dir: "down", num: 4, word: "TIMOTHEE", clue: "Your celebrity crush from Dune 🎬", r: 4, c: 8 },
+      { id: "D5", dir: "down", num: 5, word: "LAVENDER", clue: "Her favorite pastel hue & relaxing aroma 🪻", r: 0, c: 10 }
+    ]
   }
 };
 

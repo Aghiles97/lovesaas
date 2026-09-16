@@ -1396,6 +1396,70 @@
     </svg>
   `);
 
+  // 33. LOVE STORY CROSSWORD
+  PREVIEWS.love_crossword = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <defs>
+        <linearGradient id="cwBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#2a1523"/>
+          <stop offset="50%" stop-color="#1a0c16"/>
+          <stop offset="100%" stop-color="#0f070e"/>
+        </linearGradient>
+        <linearGradient id="cwGold" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#d4af37"/>
+          <stop offset="50%" stop-color="#f7d794"/>
+          <stop offset="100%" stop-color="#b87b42"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="480" fill="url(#cwBg)"/>
+      <rect x="30" y="25" width="740" height="430" rx="20" fill="rgba(255,255,255,0.05)" stroke="url(#cwGold)" stroke-width="2"/>
+      <text x="400" y="65" fill="#ff758c" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" letter-spacing="2" text-anchor="middle">COUPLE TRIVIA PUZZLE 🧩❤️</text>
+      <text x="400" y="102" fill="url(#cwGold)" font-family="Georgia, serif" font-size="28" font-weight="800" text-anchor="middle">The Love Story Crossword</text>
+
+      <!-- Mini Crossword Grid Representation -->
+      <g transform="translate(60, 130)">
+        <rect width="320" height="300" rx="14" fill="rgba(255,255,255,0.06)" stroke="rgba(224,169,109,0.3)"/>
+        <!-- Active word beam -->
+        <rect x="25" y="65" width="270" height="32" rx="4" fill="rgba(255,67,101,0.22)" stroke="#ff4365"/>
+        <text x="35" y="86" fill="#ff4365" font-family="-apple-system, sans-serif" font-size="10" font-weight="800">1</text>
+        <text x="45" y="88" fill="#fff" font-family="-apple-system, sans-serif" font-size="16" font-weight="700" letter-spacing="18">MATCHA</text>
+
+        <!-- Intersecting word beam -->
+        <rect x="72" y="30" width="32" height="180" rx="4" fill="rgba(247,215,148,0.18)" stroke="#d4af37"/>
+        <text x="76" y="44" fill="#d4af37" font-family="-apple-system, sans-serif" font-size="10" font-weight="800">1</text>
+        <text x="88" y="52" fill="#fbe3d2" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" text-anchor="middle">T</text>
+        <text x="88" y="88" fill="#fff" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" text-anchor="middle">A</text>
+        <text x="88" y="124" fill="#fbe3d2" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" text-anchor="middle">Y</text>
+        <text x="88" y="160" fill="#fbe3d2" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" text-anchor="middle">L</text>
+        <text x="88" y="196" fill="#fbe3d2" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" text-anchor="middle">O</text>
+
+        <!-- Solved word -->
+        <rect x="25" y="145" width="220" height="32" rx="4" fill="rgba(247,215,148,0.25)" stroke="#d4af37"/>
+        <text x="35" y="166" fill="#d4af37" font-family="-apple-system, sans-serif" font-size="10" font-weight="800">2</text>
+        <text x="45" y="168" fill="#f7d794" font-family="-apple-system, sans-serif" font-size="16" font-weight="700" letter-spacing="14">LOVEISBLIND</text>
+      </g>
+
+      <!-- Clues & Trophy Card -->
+      <g transform="translate(420, 130)">
+        <rect width="320" height="150" rx="14" fill="rgba(255,255,255,0.06)" stroke="rgba(224,169,109,0.3)"/>
+        <text x="20" y="32" fill="#ff758c" font-family="-apple-system, sans-serif" font-size="13" font-weight="700">↔️ ACROSS CLUES</text>
+        <text x="20" y="60" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">1. Favorite morning matcha drink 🍵 ✓</text>
+        <text x="20" y="85" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="12" font-weight="600">2. Reality show we binge in bed 📺 ✓</text>
+        <text x="20" y="110" fill="rgba(255,255,255,0.7)" font-family="-apple-system, sans-serif" font-size="12">3. Ultimate comfort dinner pasta 🍝</text>
+        <text x="20" y="135" fill="rgba(255,255,255,0.7)" font-family="-apple-system, sans-serif" font-size="12">4. Dream sports car in Miami blue 🏎️</text>
+
+        <!-- Soulmate Diploma Preview Badge -->
+        <g transform="translate(0, 170)">
+          <rect width="320" height="115" rx="14" fill="rgba(255,67,101,0.15)" stroke="#ff4365"/>
+          <text x="160" y="35" fill="#ff4365" font-family="-apple-system, sans-serif" font-size="16" font-weight="800" text-anchor="middle">🏆 100% SOULMATE AFFINITY</text>
+          <text x="160" y="62" fill="#fbe3d2" font-family="Georgia, serif" font-size="13" font-style="italic" text-anchor="middle">"Every clue solved binds our eternal story"</text>
+          <rect x="60" y="78" width="200" height="26" rx="13" fill="url(#cwGold)"/>
+          <text x="160" y="95" fill="#2c131d" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">📥 DOWNLOAD KEEPSAKE DIPLOMA</text>
+        </g>
+      </g>
+    </svg>
+  `);
+
   window.WIDGET_PREVIEWS = PREVIEWS;
   window.getWidgetPreviewImage = function(widgetId) {
     return PREVIEWS[widgetId] || null;
