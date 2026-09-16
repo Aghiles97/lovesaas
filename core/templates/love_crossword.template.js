@@ -88,6 +88,19 @@
               <div class="crossword-grid" id="crosswordGrid" role="grid" aria-label="Crossword Grid">
               </div>
               <input type="text" id="cwHiddenInput" class="cw-hidden-input" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" inputmode="text" aria-hidden="true" tabindex="-1">
+              <div class="crossword-mobile-keypad" id="cwMobileKeypad" aria-label="Touch Keyboard">
+                <div class="keypad-row">
+                  ${["Q","W","E","R","T","Y","U","I","O","P"].map(k => `<button type="button" class="cw-key" data-key="${k}">${k}</button>`).join("")}
+                </div>
+                <div class="keypad-row">
+                  ${["A","S","D","F","G","H","J","K","L"].map(k => `<button type="button" class="cw-key" data-key="${k}">${k}</button>`).join("")}
+                </div>
+                <div class="keypad-row">
+                  <button type="button" class="cw-key key-special" data-key="DIR" title="Toggle Direction" aria-label="Toggle Direction">⇄</button>
+                  ${["Z","X","C","V","B","N","M"].map(k => `<button type="button" class="cw-key" data-key="${k}">${k}</button>`).join("")}
+                  <button type="button" class="cw-key key-special" data-key="BACK" title="Delete Letter" aria-label="Delete Letter">⌫</button>
+                </div>
+              </div>
             </div>
 
             <div class="crossword-clues-panel">
@@ -97,7 +110,7 @@
               </div>
 
               <div class="clues-columns-wrapper">
-                <div class="clues-column" id="cwAcrossColumn" data-tab-content="across">
+                <div class="clues-column active" id="cwAcrossColumn" data-tab-content="across">
                   <h4 class="clue-col-title">↔️ Across</h4>
                   <ul class="clues-list" id="cwAcrossCluesList">
                     ${acrossWords.map(w => `
@@ -125,20 +138,6 @@
                   </ul>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div class="crossword-mobile-keypad" id="cwMobileKeypad" aria-label="Touch Keyboard">
-            <div class="keypad-row">
-              ${["Q","W","E","R","T","Y","U","I","O","P"].map(k => `<button type="button" class="cw-key" data-key="${k}">${k}</button>`).join("")}
-            </div>
-            <div class="keypad-row">
-              ${["A","S","D","F","G","H","J","K","L"].map(k => `<button type="button" class="cw-key" data-key="${k}">${k}</button>`).join("")}
-            </div>
-            <div class="keypad-row">
-              <button type="button" class="cw-key key-special" data-key="DIR" title="Toggle Direction">⇄</button>
-              ${["Z","X","C","V","B","N","M"].map(k => `<button type="button" class="cw-key" data-key="${k}">${k}</button>`).join("")}
-              <button type="button" class="cw-key key-special" data-key="BACK" title="Delete Letter">⌫</button>
             </div>
           </div>
         </div>
