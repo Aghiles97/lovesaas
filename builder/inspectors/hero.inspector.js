@@ -132,7 +132,7 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
               <div id="h_voiceUploadStatus" style="font-size:11px; color:var(--text-muted); margin-top:4px;"></div>
             </div>
             <div style="margin-top: 10px;">
-              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Builder Audio Preview:</label>
+              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Studio Audio Preview:</label>
               <audio id="h_voicePreview" controls src="${escapeHtml(h.voiceAudio || 'audio/myrecording-volume-adjusted.m4r')}" style="width: 100%; height: 36px;"></audio>
             </div>
             <div style="margin-top: 10px; display: flex; gap: 8px;">
@@ -173,7 +173,7 @@ if (!state.sectionsData.hero) state.sectionsData.hero = {};
             </div>
             <div id="h_musicUploadStatus" style="font-size:11px; color:var(--text-muted); margin-top:4px;"></div>
             <div style="margin-top: 10px;">
-              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Builder Soundtrack Preview:</label>
+              <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 4px;">Studio Soundtrack Preview:</label>
               <audio id="h_musicPreview" controls src="${escapeHtml(h.musicTrackUrl || 'taylor-swift-fate-of-ophelia.m4r')}" style="width: 100%; height: 36px;"></audio>
             </div>
             <div style="margin-top: 10px; display: flex; gap: 8px;">

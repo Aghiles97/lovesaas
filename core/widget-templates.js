@@ -46,7 +46,9 @@ if (typeof module !== "undefined" && module.exports) {
     reparation_coupons: require("./templates/reparation_coupons.template.js"),
     comfort_soundboard: require("./templates/comfort_soundboard.template.js"),
     scrapbook_game: require("./templates/scrapbook_game.template.js"),
-    love_crossword: require("./templates/love_crossword.template.js")
+    love_crossword: require("./templates/love_crossword.template.js"),
+    puzzle_photo: require("./templates/puzzle_photo.template.js"),
+    photobooth: require("./templates/photobooth.template.js")
   };
   module.exports = { WIDGET_TEMPLATES };
 }

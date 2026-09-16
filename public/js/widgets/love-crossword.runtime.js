@@ -497,8 +497,24 @@
       updateUI();
     }
 
+    function isMobileOrTouch() {
+      if (typeof window === "undefined") return false;
+      return (
+        window.matchMedia("(max-width: 860px)").matches ||
+        document.body.classList.contains("device-mobile") ||
+        document.body.classList.contains("is-mobile") ||
+        document.documentElement.getAttribute("data-device") === "mobile" ||
+        ("ontouchstart" in window && navigator.maxTouchPoints > 0)
+      );
+    }
+
     function focusHiddenInput() {
-      if (hiddenInput) {
+      if (!hiddenInput) return;
+      if (isMobileOrTouch()) {
+        hiddenInput.setAttribute("inputmode", "none");
+        hiddenInput.blur();
+      } else {
+        hiddenInput.removeAttribute("inputmode");
         hiddenInput.focus({ preventScroll: true });
       }
     }
@@ -522,6 +538,16 @@
       if (activeWord) {
         if (clueNumEl) clueNumEl.textContent = activeWord.num;
         if (clueTextEl) clueTextEl.textContent = activeWord.clue;
+
+        const acrossCol = section.querySelector("#cwAcrossColumn");
+        const downCol = section.querySelector("#cwDownColumn");
+        if (acrossCol && downCol) {
+          acrossCol.classList.toggle("active", activeWord.dir === "across");
+          downCol.classList.toggle("active", activeWord.dir === "down");
+        }
+        section.querySelectorAll(".clue-tab-btn").forEach(btn => {
+          btn.classList.toggle("active", btn.dataset.clueTab === activeWord.dir);
+        });
       }
 
       const activeCells = activeWord ? getActiveWordCells(activeWord) : [];
@@ -772,8 +798,9 @@
 
     if (mobileKeypad) {
       mobileKeypad.querySelectorAll(".cw-key").forEach(keyBtn => {
-        keyBtn.addEventListener("click", (e) => {
+        const handlePress = (e) => {
           e.preventDefault();
+          keyBtn.classList.add("is-pressed");
           const key = keyBtn.dataset.key;
           if (key === "DIR") {
             toggleDirection();
@@ -782,7 +809,29 @@
           } else if (key && /^[A-Z]$/.test(key)) {
             handleCharInput(key);
           }
-        });
+        };
+        const handleRelease = () => {
+          keyBtn.classList.remove("is-pressed");
+        };
+
+        if (window.PointerEvent) {
+          keyBtn.addEventListener("pointerdown", handlePress);
+          keyBtn.addEventListener("pointerup", handleRelease);
+          keyBtn.addEventListener("pointercancel", handleRelease);
+          keyBtn.addEventListener("pointerleave", handleRelease);
+        } else {
+          keyBtn.addEventListener("touchstart", handlePress, { passive: false });
+          keyBtn.addEventListener("touchend", handleRelease);
+          keyBtn.addEventListener("mousedown", handlePress);
+          keyBtn.addEventListener("mouseup", handleRelease);
+          keyBtn.addEventListener("mouseleave", handleRelease);
+        }
+      });
+    }
+
+    if (clueTextEl) {
+      clueTextEl.addEventListener("click", () => {
+        clueTextEl.classList.toggle("is-expanded");
       });
     }
 

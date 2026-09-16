@@ -82,15 +82,44 @@ body {
 #landingViewV2 .v2-bg-painting-layer {
   position: absolute;
   inset: 0;
-  background-image: url('/images/landing-v2/bg-love-painting.jpg');
   background-repeat: no-repeat;
-  background-position: top center;
   background-size: cover;
-  opacity: 0.16;
   mix-blend-mode: screen;
-  filter: saturate(1.15) contrast(1.1);
-  -webkit-mask-image: radial-gradient(ellipse 95% 75% at 50% 35%, black 45%, rgba(0, 0, 0, 0.3) 80%, transparent 100%);
-  mask-image: radial-gradient(ellipse 95% 75% at 50% 35%, black 45%, rgba(0, 0, 0, 0.3) 80%, transparent 100%);
+  filter: saturate(1.18) contrast(1.08);
+  -webkit-mask-image: radial-gradient(ellipse 100% 85% at 50% 38%, black 35%, rgba(0, 0, 0, 0.4) 75%, transparent 100%);
+  mask-image: radial-gradient(ellipse 100% 85% at 50% 38%, black 35%, rgba(0, 0, 0, 0.4) 75%, transparent 100%);
+  opacity: 0;
+  will-change: opacity;
+  transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  pointer-events: none;
+}
+
+#landingViewV2 .v2-bg-painting-layer.v2-bg-zone-1 {
+  opacity: 0.18;
+}
+
+/* Zone 1: Vintage Rose Love Letters (Hero, Demo, Moments) */
+#landingViewV2 .v2-bg-painting-layer.v2-bg-zone-1 {
+  background-image: url('/images/landing-v2/bg-love-painting.jpg');
+  background-position: top center;
+}
+
+/* Zone 2: Birthday & Valentine Celebration (Templates & Handcrafted Modules) */
+#landingViewV2 .v2-bg-painting-layer.v2-bg-zone-2 {
+  background-image: url('/images/landing-v2/bg-birthday-valentine-painting.jpg');
+  background-position: center top;
+}
+
+/* Zone 3: Celestial Midnight Starlit Voyage (How It Works & Pricing) */
+#landingViewV2 .v2-bg-painting-layer.v2-bg-zone-3 {
+  background-image: url('/images/landing-v2/bg-travel-celestial-painting.jpg');
+  background-position: center top;
+}
+
+/* Zone 4: Candlelit Romance & Rose Petals (Reviews & FAQ) */
+#landingViewV2 .v2-bg-painting-layer.v2-bg-zone-4 {
+  background-image: url('/images/landing-v2/bg-love-painting.jpg');
+  background-position: center bottom;
 }
 
 #landingViewV2 .v2-bg-drawings-layer {
@@ -1758,19 +1787,30 @@ body {
 
 #landingViewV2 .v2-filter-bar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap !important;
   justify-content: center;
+  align-items: center;
   gap: 8px;
   margin: 0 auto 36px;
-  max-width: 780px;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 4px 10px;
+}
+
+#landingViewV2 .v2-filter-bar::-webkit-scrollbar {
+  display: none;
 }
 
 #landingViewV2 .v2-filter-btn {
-  padding: 8px 18px;
+  white-space: nowrap !important;
+  flex-shrink: 0;
+  padding: 8px 16px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.78);
   font-family: var(--v2-font-sans);
   font-size: 13px;
   font-weight: 600;
@@ -1781,15 +1821,15 @@ body {
 
 #landingViewV2 .v2-filter-btn:hover {
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(223, 154, 146, 0.35);
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(251, 113, 133, 0.4);
 }
 
 #landingViewV2 .v2-filter-btn.active {
-  background: rgba(223, 154, 146, 0.22);
-  border-color: var(--v2-rose-300);
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.28) 0%, rgba(225, 29, 72, 0.2) 100%);
+  border-color: #fb7185;
   color: #ffffff;
-  box-shadow: 0 0 16px rgba(223, 154, 146, 0.25);
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.35);
 }
 
 #landingViewV2 .v2-widgets-grid {
@@ -1802,17 +1842,29 @@ body {
 }
 
 #landingViewV2 .v2-widget-card {
-  background: rgba(21, 16, 24, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 20px;
-  padding: 24px;
+  background: linear-gradient(150deg, rgba(32, 22, 34, 0.88) 0%, rgba(20, 15, 23, 0.94) 100%);
+  border: 1px solid rgba(244, 114, 182, 0.22);
+  border-radius: 22px;
+  padding: 24px 22px;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   display: flex;
   flex-direction: column;
-  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 14px 34px -6px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+#landingViewV2 .v2-widget-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 18% 12%, rgba(244, 63, 94, 0.14) 0%, transparent 60%);
+  pointer-events: none;
 }
 
 #landingViewV2 .v2-widget-card.hidden {
@@ -1820,77 +1872,94 @@ body {
 }
 
 #landingViewV2 .v2-widget-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(223, 154, 146, 0.45);
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.6), 0 0 24px rgba(223, 154, 146, 0.12);
+  transform: translateY(-5px);
+  border-color: rgba(251, 113, 133, 0.55);
+  box-shadow: 0 20px 42px -6px rgba(0, 0, 0, 0.8), 0 0 26px rgba(244, 63, 94, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 #landingViewV2 .v2-widget-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
 }
 
 #landingViewV2 .v2-widget-icon-box {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: rgba(223, 154, 146, 0.12);
-  border: 1px solid rgba(223, 154, 146, 0.22);
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.22) 0%, rgba(225, 29, 72, 0.12) 100%);
+  border: 1px solid rgba(244, 114, 182, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 22px;
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 #landingViewV2 .v2-widget-badge {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--v2-rose-300);
-  background: rgba(223, 154, 146, 0.1);
-  border: 1px solid rgba(223, 154, 146, 0.2);
-  padding: 3px 8px;
-  border-radius: 6px;
+  color: #fecdd3;
+  background: rgba(244, 63, 94, 0.16);
+  border: 1px solid rgba(244, 114, 182, 0.3);
+  padding: 4px 10px;
+  border-radius: 9999px;
 }
 
 #landingViewV2 .v2-widget-name {
   font-family: var(--v2-font-serif);
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 600;
   color: #ffffff;
   margin: 0 0 8px;
   line-height: 1.3;
+  position: relative;
+  z-index: 1;
 }
 
 #landingViewV2 .v2-widget-summary {
   font-size: 13.5px;
-  line-height: 1.55;
-  color: var(--v2-text-muted);
-  margin: 0 0 16px;
+  line-height: 1.58;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0 0 18px;
   flex: 1;
+  position: relative;
+  z-index: 1;
 }
 
 #landingViewV2 .v2-widget-action {
   margin-top: auto;
+  position: relative;
+  z-index: 1;
 }
 
 #landingViewV2 .v2-btn-card-link {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  color: var(--v2-rose-300);
-  font-size: 12.5px;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(244, 114, 182, 0.24);
+  color: #fda4af;
+  font-size: 12px;
   font-weight: 600;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.22s ease;
 }
 
 #landingViewV2 .v2-btn-card-link:hover {
-  gap: 8px;
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.25) 0%, rgba(225, 29, 72, 0.35) 100%);
+  border-color: rgba(251, 113, 133, 0.6);
   color: #ffffff;
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.3);
+  transform: translateY(-1px);
 }
 
 /* ==========================================================================
@@ -1912,44 +1981,67 @@ body {
 }
 
 #landingViewV2 .v2-step-card {
-  background: rgba(21, 16, 24, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 22px;
-  padding: 32px 26px;
+  background: linear-gradient(155deg, rgba(32, 22, 34, 0.88) 0%, rgba(20, 15, 24, 0.94) 50%, rgba(14, 10, 16, 0.98) 100%);
+  border: 1px solid rgba(244, 114, 182, 0.24);
+  border-radius: 24px;
+  padding: 34px 28px;
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  transition: transform 0.28s ease, border-color 0.28s ease;
+  transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+  box-shadow: 0 14px 36px -4px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+#landingViewV2 .v2-step-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(251, 113, 133, 0.85), transparent);
+  pointer-events: none;
 }
 
 #landingViewV2 .v2-step-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(223, 154, 146, 0.35);
+  transform: translateY(-5px);
+  border-color: rgba(251, 113, 133, 0.55);
+  box-shadow: 0 22px 46px -6px rgba(0, 0, 0, 0.8), 0 0 28px rgba(244, 63, 94, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 #landingViewV2 .v2-step-num {
   position: absolute;
-  top: 14px;
-  right: 20px;
+  top: 16px;
+  right: 22px;
   font-family: var(--v2-font-serif);
-  font-size: 48px;
+  font-size: 56px;
   font-weight: 800;
-  color: rgba(223, 154, 146, 0.12);
+  background: linear-gradient(180deg, rgba(251, 113, 133, 0.38) 0%, rgba(225, 29, 72, 0.08) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   line-height: 1;
   pointer-events: none;
   user-select: none;
 }
 
 #landingViewV2 .v2-step-icon {
-  font-size: 32px;
-  margin-bottom: 18px;
-  display: inline-block;
+  width: 56px;
+  height: 56px;
+  border-radius: 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 30% 30%, rgba(251, 113, 133, 0.28), rgba(28, 18, 28, 0.7));
+  border: 1px solid rgba(251, 113, 133, 0.4);
+  box-shadow: 0 6px 18px rgba(244, 63, 94, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  font-size: 26px;
+  margin-bottom: 20px;
 }
 
 #landingViewV2 .v2-step-title {
   font-family: var(--v2-font-serif);
-  font-size: 20px;
+  font-size: 21px;
   font-weight: 600;
   color: #ffffff;
   margin: 0 0 10px;
@@ -1958,8 +2050,8 @@ body {
 
 #landingViewV2 .v2-step-desc {
   font-size: 14px;
-  line-height: 1.6;
-  color: var(--v2-text-muted);
+  line-height: 1.62;
+  color: rgba(255, 255, 255, 0.72);
   margin: 0;
 }
 
@@ -3474,17 +3566,17 @@ body {
   width: 100%;
 }
 
-/* Variety 1 Toolbar: Elevated Showcase Bar */
+/* Variety 1 Toolbar: Clean Header (No Box Frame) */
 #landingViewV2 .v2-slider-toolbar.v2-slider-toolbar-showcase {
-  background: rgba(30, 20, 28, 0.75);
-  border: 1px solid rgba(251, 113, 133, 0.25);
-  border-radius: 9999px;
-  padding: 8px 18px;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  max-width: 520px;
-  margin: 0 auto 24px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  max-width: 100%;
+  margin: 0 auto 16px;
+  box-shadow: none;
 }
 
 /* Variety 2 Toolbar: Subtle Filmstrip Ribbon Header */
@@ -3564,23 +3656,61 @@ body {
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-#landingViewV2 .v2-slider-dot.active {
-  width: 24px;
-  background: #f43f5e;
-  box-shadow: 0 0 14px rgba(244, 63, 94, 0.85);
+#landingViewV2 .v2-slider-arrows {
+  display: none !important;
 }
 
-/* Category Filter with Slider Controls */
+#landingViewV2 .v2-slider-dots-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  width: 100%;
+}
+
+#landingViewV2 .v2-slider-dots {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-width: 90%;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+#landingViewV2 .v2-slider-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.25);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#landingViewV2 .v2-slider-dot:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+#landingViewV2 .v2-slider-dot.active {
+  width: 22px;
+  background: #f43f5e;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.85);
+}
+
+/* Category Filter Bar */
 #landingViewV2 .v2-filter-slider-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 16px;
   margin-bottom: 24px;
-}
-
-#landingViewV2 .v2-widgets-slider-arrows {
-  margin-bottom: 2px;
 }
 
 /* Base Horizontal Scroll-Snap Track */
@@ -3591,12 +3721,16 @@ body {
   overflow-x: auto !important;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
+  scroll-padding-left: 16px;
+  scroll-padding-inline-start: 16px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
-  padding-bottom: 16px;
+  padding-bottom: 20px;
+  padding-left: 16px;
+  padding-right: 36px;
   margin: 0 auto;
   cursor: grab;
   user-select: none;
@@ -3619,11 +3753,11 @@ body {
   display: none;
 }
 
-/* VARIETY 1: Showcase Slider (Elevated, Centered, Glow Effect) */
+/* Slider Cards with ~10-15% Peek of Next Picture */
 #landingViewV2 .v2-slider-showcase .v2-template-card,
 #landingViewV2 .v2-slider-showcase .v2-pricing-card,
 #landingViewV2 .v2-slider-showcase .v2-review-card {
-  scroll-snap-align: center;
+  scroll-snap-align: start;
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
@@ -3635,16 +3769,10 @@ body {
   box-shadow: 0 14px 40px rgba(244, 63, 94, 0.22);
 }
 
-/* VARIETY 2: Ribbon / Filmstrip Slider (Left-Aligned, Gradient Fade Edges) */
-#landingViewV2 .v2-slider-ribbon {
-  -webkit-mask-image: linear-gradient(to right, transparent 0, black 28px, black calc(100% - 28px), transparent 100%);
-  mask-image: linear-gradient(to right, transparent 0, black 28px, black calc(100% - 28px), transparent 100%);
-}
-
-/* 1. Moments / Polaroids Slider (Ribbon Variety) */
+/* 1. Moments / Polaroids Slider */
 #landingViewV2 .v2-polaroids-wall.v2-slider-track {
-  gap: 22px;
-  padding: 24px 12px 36px;
+  gap: 20px;
+  padding: 24px 16px 36px;
   max-width: 100%;
   margin: 10px 0 30px;
 }
@@ -3656,40 +3784,41 @@ body {
   scroll-snap-align: start;
 }
 
-/* 2. Templates Slider (Showcase Variety) */
+/* 2. Templates Slider (~12-15% next peek) */
 #landingViewV2 .v2-templates-grid.v2-slider-track {
-  gap: 24px;
-  padding: 10px 6px 22px;
+  gap: 22px;
+  padding: 10px 16px 22px;
   max-width: 100%;
   margin: 0 auto;
 }
 
 #landingViewV2 .v2-templates-grid.v2-slider-track .v2-template-card {
-  flex: 0 0 350px;
-  width: 350px;
-  max-width: 85vw;
-  scroll-snap-align: center;
+  flex: 0 0 calc(36% - 16px);
+  width: calc(36% - 16px);
+  min-width: 320px;
+  max-width: 86vw;
+  scroll-snap-align: start;
 }
 
-/* 3. 16+ Widgets Slider (Ribbon Variety) */
+/* 3. 16+ Widgets Slider */
 #landingViewV2 .v2-widgets-grid.v2-slider-track {
-  gap: 18px;
-  padding: 10px 6px 24px;
+  gap: 16px;
+  padding: 10px 16px 20px;
   max-width: 100%;
   margin: 0 auto;
 }
 
 #landingViewV2 .v2-widgets-grid.v2-slider-track .v2-widget-card {
-  flex: 0 0 310px;
-  width: 310px;
-  max-width: 85vw;
+  flex: 0 0 280px;
+  width: 280px;
+  max-width: 80vw;
   scroll-snap-align: start;
 }
 
 /* 4. How It Works Steps Slider */
 #landingViewV2 .v2-steps-grid.v2-slider-track {
   gap: 20px;
-  padding: 10px 6px 22px;
+  padding: 10px 16px 22px;
   max-width: 100%;
   margin: 0 auto;
 }
@@ -3697,29 +3826,30 @@ body {
 #landingViewV2 .v2-steps-grid.v2-slider-track .v2-step-card {
   flex: 0 0 320px;
   width: 320px;
-  max-width: 85vw;
-  scroll-snap-align: center;
+  max-width: 84vw;
+  scroll-snap-align: start;
 }
 
-/* 5. Reviews Slider (Showcase Variety) */
+/* 5. Reviews Slider (~12-15% next peek) */
 #landingViewV2 .v2-reviews-grid.v2-slider-track {
   gap: 22px;
-  padding: 10px 6px 24px;
+  padding: 10px 16px 24px;
   max-width: 100%;
   margin: 0 auto;
 }
 
 #landingViewV2 .v2-reviews-grid.v2-slider-track .v2-review-card {
-  flex: 0 0 380px;
-  width: 380px;
+  flex: 0 0 calc(44% - 16px);
+  width: calc(44% - 16px);
+  min-width: 340px;
   max-width: 85vw;
-  scroll-snap-align: center;
+  scroll-snap-align: start;
 }
 
-/* 6. Pricing Slider (Showcase Variety) */
+/* 6. Pricing Slider */
 #landingViewV2 .v2-pricing-grid.v2-slider-track {
   gap: 24px;
-  padding: 16px 8px 32px;
+  padding: 16px 16px 32px;
   max-width: 100%;
   margin: 0 auto;
 }
@@ -3728,7 +3858,7 @@ body {
   flex: 0 0 420px;
   width: 420px;
   max-width: 86vw;
-  scroll-snap-align: center;
+  scroll-snap-align: start;
 }
 
 @media (min-width: 960px) {
@@ -3744,24 +3874,36 @@ body {
     gap: 10px;
   }
 
-  #landingViewV2 .v2-widgets-slider-arrows {
-    justify-content: center;
+  #landingViewV2 .v2-templates-grid.v2-slider-track .v2-template-card {
+    flex: 0 0 84vw;
+    width: 84vw;
+    min-width: unset;
   }
 
-  #landingViewV2 .v2-slider-btn {
-    width: 36px;
-    height: 36px;
-    font-size: 14.5px;
+  #landingViewV2 .v2-widgets-grid.v2-slider-track .v2-widget-card {
+    flex: 0 0 78vw;
+    width: 78vw;
+  }
+
+  #landingViewV2 .v2-reviews-grid.v2-slider-track .v2-review-card {
+    flex: 0 0 84vw;
+    width: 84vw;
+    min-width: unset;
+  }
+
+  #landingViewV2 .v2-pricing-grid.v2-slider-track .v2-pricing-card {
+    flex: 0 0 85vw;
+    width: 85vw;
   }
 
   #landingViewV2 .v2-slider-toolbar.v2-slider-toolbar-showcase {
     max-width: 100%;
-    border-radius: 16px;
-    padding: 6px 12px;
-  }
-
-  #landingViewV2 .v2-slider-ribbon {
-    -webkit-mask-image: none;
-    mask-image: none;
+    border-radius: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
   }
 }
+
+

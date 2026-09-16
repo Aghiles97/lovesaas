@@ -642,7 +642,9 @@ document.addEventListener("DOMContentLoaded", () => {
     reparation_coupons: { title: "🎟️ Reparation Coupons", cat: "RECONCILIATION", sub: "Scratch-off peace offering vouchers with claimed status tracking" },
     comfort_soundboard: { title: "🎧 Comfort Soundboard", cat: "AUDIO", sub: "Procedural ambient soundscapes mixer with calming photo stream" },
     scrapbook_game: { title: "📓 Scrapbook: How Well Do You Know Me?", cat: "GAMES", sub: "Tactile couple scrapbook challenge with taped polaroids, choice stickers & keepsake" },
-    love_crossword: { title: "🧩 Love Story Crossword", cat: "GAMES", sub: "Interactive couple crossword with procedural audio, trivia clues & keepsake diploma" }
+    love_crossword: { title: "🧩 Love Story Crossword", cat: "GAMES", sub: "Interactive couple crossword with procedural audio, trivia clues & keepsake diploma" },
+    puzzle_photo: { title: "🧩 Memory Photo Puzzle", cat: "GAMES", sub: "Interactive slide & swap photo jigsaw with solvable shuffle, audio SFX & secret keepsake reveal" },
+    photobooth: { title: "📸 Vintage Photobooth", cat: "INTERACTIVE", sub: "Multi-shot burst camera with vintage frames, colour filters, sticker deco & keepsake strip" }
   };
 
   // More Widgets Toggle & Filter Bar
@@ -1096,16 +1098,16 @@ document.addEventListener("DOMContentLoaded", () => {
       checkoutModalFooter.style.display = "flex";
       if (isAdmin) {
         checkoutModalSubtitle.textContent = "Master Admin Mode • Instant Provisioning • Zero Cost ($0)";
-        btnCheckoutNext.innerHTML = `<span>🚀 Instant Provision Project & Launch Builder (Admin)</span> <span>✨</span>`;
+        btnCheckoutNext.innerHTML = `<span>🚀 Instant Provision Project & Launch Studio (Admin)</span> <span>✨</span>`;
       } else {
-        checkoutModalSubtitle.textContent = `One-time payment • Lifetime access • Instant Builder unlock ($${cost})`;
-        btnCheckoutNext.innerHTML = `<span>💖 Claim Project & Launch Builder ($${cost})</span> <span>🚀</span>`;
+        checkoutModalSubtitle.textContent = `One-time payment • Lifetime access • Instant Studio unlock ($${cost})`;
+        btnCheckoutNext.innerHTML = `<span>💖 Claim Project & Launch Studio ($${cost})</span> <span>🚀</span>`;
       }
     } else if (checkoutState.step === 3) {
       checkoutStep1.style.display = "none";
       checkoutStep3.style.display = "block";
       checkoutModalFooter.style.display = "none";
-      checkoutModalSubtitle.textContent = "✨ Builder Unlocked & Ready!";
+      checkoutModalSubtitle.textContent = "✨ Studio Unlocked & Ready!";
     }
   }
 
@@ -1132,7 +1134,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const isAdmin = currentUser && currentUser.role === "admin";
       btnCheckoutNext.disabled = true;
-      btnCheckoutNext.innerHTML = `<span>Activating Project & Builder...</span> <span>⏳</span>`;
+      btnCheckoutNext.innerHTML = `<span>Activating Project & Studio...</span> <span>⏳</span>`;
 
       try {
         const data = await safeJsonFetch("/api/checkout", {
@@ -1280,11 +1282,11 @@ document.addEventListener("DOMContentLoaded", () => {
       fetchSitesCount();
 
       if (btnHeroBuy) {
-        btnHeroBuy.innerHTML = `<span>🚀</span> Go to Builder`;
+        btnHeroBuy.innerHTML = `<span>🚀</span> Go to Studio`;
         btnHeroBuy.onclick = (e) => { e.preventDefault(); window.location.href = "/builder"; };
       }
       if (btnStickyBuy) {
-        btnStickyBuy.innerHTML = `<span>🚀</span> Go to Builder`;
+        btnStickyBuy.innerHTML = `<span>🚀</span> Go to Studio`;
         btnStickyBuy.onclick = (e) => { e.preventDefault(); window.location.href = "/builder"; };
       }
       if (btnMobileGetStarted) {
@@ -1721,7 +1723,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="empty-icon" style="font-size: 2.8rem; margin-bottom: 10px;">💍✨</div>
             <h4 style="font-size: 1.18rem; margin-bottom: 6px;">Create Your First Couple Website</h4>
             <p style="max-width: 360px; margin: 0 auto 16px; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.45;">
-              You don't have any websites yet. Start with our easy builder to create your romantic private keepsake.
+              You don't have any websites yet. Start with our easy studio to create your romantic private keepsake.
             </p>
             <button type="button" class="btn btn-primary btn-lg" id="btnEmptyCreateSite" style="width: 100%; justify-content: center;">
               <span>💖</span> Create Website Now
@@ -1761,7 +1763,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
             </div>
             <div class="portal-simple-actions">
-              <a href="${builderUrl}" class="btn-icon-action btn-edit-icon" title="Edit in Builder" data-slug="${escapeHtml(d.slug)}" data-token="${escapeHtml(d.authToken || "")}" data-plan="${escapeHtml(d.plan || "vip")}">
+              <a href="${builderUrl}" class="btn-icon-action btn-edit-icon" title="Edit in Studio" data-slug="${escapeHtml(d.slug)}" data-token="${escapeHtml(d.authToken || "")}" data-plan="${escapeHtml(d.plan || "vip")}">
                 ✏️
               </a>
               ${d.slug === "demo" ? "" : `

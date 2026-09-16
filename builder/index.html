@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Couple Project Builder</title>
+  <title>Couple Project Studio</title>
   <link rel="icon" type="image/png" href="/images/logo.png">
   <link rel="stylesheet" href="/builder/builder.css?v=3.0.0">
   <style>
@@ -172,7 +172,7 @@
         <div class="mobile-menu-site-info">
           <img src="/images/logo.png" alt="LoveSaas" class="brand-logo-img" width="28" height="28">
           <div>
-            <div class="mobile-menu-site-name">LoveSaas <span class="brand-badge" style="font-size: 0.65rem; padding: 1px 5px; background: rgba(244,63,94,0.1); color: var(--primary); border-radius: 4px;">Builder</span></div>
+            <div class="mobile-menu-site-name">LoveSaas <span class="brand-badge" style="font-size: 0.65rem; padding: 1px 5px; background: rgba(244,63,94,0.1); color: var(--primary); border-radius: 4px;">Studio</span></div>
             <div class="mobile-menu-site-slug"><span class="tenant-label">Project:</span> <strong id="mobileMenuTenantBadge">demo</strong></div>
           </div>
         </div>
@@ -229,11 +229,11 @@
 
   <!-- WORKSPACE SPLIT SCREEN -->
   <div class="builder-workspace show-editor" id="builderWorkspace">
-    <!-- LEFT CONTROLS: BUILDER EDITOR -->
-    <aside class="builder-sidebar" id="builderSidebar" aria-label="Builder Editor">
+    <!-- LEFT CONTROLS: STUDIO EDITOR -->
+    <aside class="builder-sidebar" id="builderSidebar" aria-label="Studio Editor">
       
       <!-- TOP TAB BAR -->
-      <nav class="sidebar-tab-bar" aria-label="Builder Navigation">
+      <nav class="sidebar-tab-bar" aria-label="Studio Navigation">
         <button type="button" class="sidebar-tab-btn active" data-tab="tab-widgets" id="btnTabWidgets">
           <span class="tab-icon">🧩</span>
           <span class="tab-text">Widgets</span>
@@ -477,8 +477,8 @@
       <span class="collapse-arrow" id="collapseArrow">◀</span>
     </button>
 
-    <!-- RIGHT PREVIEW: BUILDER PREVIEW -->
-    <main class="builder-preview-pane" id="builderPreviewPane" aria-label="Builder Preview">
+    <!-- RIGHT PREVIEW: STUDIO PREVIEW -->
+    <main class="builder-preview-pane" id="builderPreviewPane" aria-label="Studio Preview">
       <div class="preview-header">
         <div class="preview-address-bar" title="Simulated Live URL">
           <span class="preview-ssl-icon">🔒</span>
@@ -533,7 +533,7 @@
   <div class="modal-backdrop hidden" id="builderAccessGateModal" style="z-index: 9999;">
     <div class="modal-box" style="max-width: 450px; text-align: center; border: 1px solid rgba(244, 63, 94, 0.4); box-shadow: 0 25px 60px -15px rgba(0,0,0,0.8), 0 0 40px -10px rgba(244,63,94,0.3);">
       <div style="font-size: 2.6rem; margin-bottom: 4px;">💍</div>
-      <h3 style="font-size: 1.35rem; margin-bottom: 4px; font-weight: 800;">LoveSaas Builder Access</h3>
+      <h3 style="font-size: 1.35rem; margin-bottom: 4px; font-weight: 800;">LoveSaas Studio Access</h3>
       <p style="font-size: 0.84rem; color: #94a3b8; margin-bottom: 14px;">
         Choose your role or unlock your couple website.
       </p>
@@ -698,7 +698,7 @@
       <div id="npErrorMsg" class="np-error-msg" style="display: none;"></div>
 
       <button type="button" class="btn-primary np-submit-btn" id="btnCreateProjectSubmit">
-        <span>🚀 Create Website & Launch Builder</span>
+        <span>🚀 Create Website & Launch Studio</span>
       </button>
       <button type="button" id="btnExploreDemoPreview" class="np-explore-link">
         👀 Or explore demo preview first
@@ -727,7 +727,7 @@
     <div class="modal-box" style="max-width: 400px; width: 90%; background: #1e293b; border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 26px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); color: #fff;">
       <div style="text-align: center; margin-bottom: 18px;">
         <span style="font-size: 2rem; display: block; margin-bottom: 4px;">💍</span>
-        <h3 id="builderAuthTitle" style="margin: 0 0 6px 0; font-size: 1.25rem; font-weight: 700; color: #fff;">Sign in to Builder</h3>
+        <h3 id="builderAuthTitle" style="margin: 0 0 6px 0; font-size: 1.25rem; font-weight: 700; color: #fff;">Sign in to Studio</h3>
         <p id="builderAuthSubtitle" style="margin: 0; font-size: 0.8rem; color: #94a3b8;">Enter your LoveSaas credentials to customize your project.</p>
       </div>
       <div id="builderAuthError" style="display: none; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; font-size: 0.8rem; padding: 8px 12px; border-radius: 8px; margin-bottom: 14px;"></div>
@@ -1008,6 +1008,8 @@
   <script src="/core/templates/comfort_soundboard.template.js"></script>
   <script src="/core/templates/scrapbook_game.template.js"></script>
   <script src="/core/templates/love_crossword.template.js"></script>
+  <script src="/core/templates/puzzle_photo.template.js"></script>
+  <script src="/core/templates/photobooth.template.js"></script>
   <script src="/core/widget-templates.js"></script>
 
   <!-- Modular Widget Inspectors -->
@@ -1044,6 +1046,8 @@
   <script src="/builder/inspectors/comfort_soundboard.inspector.js"></script>
   <script src="/builder/inspectors/scrapbook_game.inspector.js"></script>
   <script src="/builder/inspectors/love_crossword.inspector.js"></script>
+  <script src="/builder/inspectors/puzzle_photo.inspector.js"></script>
+  <script src="/builder/inspectors/photobooth.inspector.js"></script>
   <script src="/builder/inspectors/intro.inspector.js"></script>
 
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>

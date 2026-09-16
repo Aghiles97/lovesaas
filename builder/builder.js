@@ -1,5 +1,5 @@
 /**
- * Couple Project Builder JS
+ * Couple Project Studio JS
  * 100% Customizable Widget Content Inspector, Modular Layout Reordering, & R2 Media Pipeline
  */
 function escapeHtml(str) {
@@ -1913,6 +1913,8 @@ const WIDGET_CATEGORIES = {
   comfort_soundboard: 'Comfort Soundboard',
   scrapbook_game: 'Scrapbook Game',
   love_crossword: 'Love Crossword',
+  puzzle_photo: 'Photo Puzzle',
+  photobooth: 'Photobooth',
 };
 
 const WIDGET_LABELS = {
@@ -1924,6 +1926,8 @@ const WIDGET_LABELS = {
   comfort_soundboard: 'Comfort Soundboard',
   scrapbook_game: 'Scrapbook Game',
   love_crossword: 'Love Crossword',
+  puzzle_photo: 'Photo Puzzle',
+  photobooth: 'Photobooth',
 };
 if (typeof window !== 'undefined') window.WIDGET_LABELS = WIDGET_LABELS;
 
@@ -6030,11 +6034,11 @@ function setupEventListeners() {
         if (isRegisterMode) {
           titleEl.textContent = 'Create an Account';
           nameGroup.style.display = 'block';
-          submitBtn.textContent = 'Register & Open Builder';
+          submitBtn.textContent = 'Register & Open Studio';
           toggleText.textContent = 'Already have an account?';
           toggleBtn.textContent = 'Sign in';
         } else {
-          titleEl.textContent = 'Sign in to Builder';
+          titleEl.textContent = 'Sign in to Studio';
           nameGroup.style.display = 'none';
           submitBtn.textContent = 'Sign In';
           toggleText.textContent = "Don't have an account?";
@@ -6084,7 +6088,7 @@ function setupEventListeners() {
           }
           submitBtn.disabled = false;
           submitBtn.textContent = isRegisterMode
-            ? 'Register & Open Builder'
+            ? 'Register & Open Studio'
             : 'Sign In';
         }
       };
@@ -6198,7 +6202,7 @@ function showDesignPickerModal(designs) {
         <div class="dp-stat"><span class="dp-stat-icon">📅</span> Created: ${dpFormatDate(d.createdAt)}</div>
         <div class="dp-stat"><span class="dp-stat-icon">✏️</span> Last modified: ${dpRelativeTime(d.updatedAt || d.createdAt)}</div>
       </div>
-      <button type="button" class="dp-card-action">Open in Builder →</button>
+      <button type="button" class="dp-card-action">Open in Studio →</button>
     </div>`;
   });
 
@@ -6567,7 +6571,7 @@ function setupNewProjectModal() {
         }
       } finally {
         btnSubmit.disabled = false;
-        btnSubmit.innerHTML = `<span>🚀 Create Website & Launch Builder</span>`;
+        btnSubmit.innerHTML = `<span>🚀 Create Website & Launch Studio</span>`;
       }
     });
   }

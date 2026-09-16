@@ -33,7 +33,7 @@ const DEFAULT_PRESETS = {
     "letter"
   ],
   storyteller: ["hero", "timeline", "map", "memories", "boarding_pass", "letter"],
-  playful: ["hero", "love_meter", "reasons", "truth_dare", "spinner", "coupons", "quiz", "scrapbook_game", "love_crossword", "playful"],
+  playful: ["hero", "love_meter", "reasons", "truth_dare", "spinner", "coupons", "quiz", "scrapbook_game", "love_crossword", "puzzle_photo", "photobooth", "playful"],
   complete: [
     "hero",
     "candle_blowout",
@@ -60,6 +60,8 @@ const DEFAULT_PRESETS = {
     "quiz",
     "scrapbook_game",
     "love_crossword",
+    "puzzle_photo",
+    "photobooth",
     "letter",
     "valentine_scratch",
     "forgiveness_meter",
@@ -69,7 +71,7 @@ const DEFAULT_PRESETS = {
     "comfort_soundboard",
     "playful"
   ],
-  minimal_gallery: ["hero", "memories", "letter"]
+  minimal_gallery: ["hero", "photobooth", "memories", "letter"]
 };
 
 module.exports = {

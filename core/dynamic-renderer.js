@@ -286,6 +286,12 @@ class DynamicRenderer {
     if (sectionsData.love_crossword) {
       window.LOVE_CROSSWORD_DATA = sectionsData.love_crossword;
     }
+    if (sectionsData.puzzle_photo) {
+      window.PUZZLE_PHOTO_DATA = sectionsData.puzzle_photo;
+    }
+    if (sectionsData.photobooth) {
+      window.PHOTOBOOTH_DATA = sectionsData.photobooth;
+    }
 
     if (isSameLayout) {
       const activeId = config.activeWidgetId || config.modifiedWidgetId;
@@ -684,6 +690,12 @@ class DynamicRenderer {
       },
       love_crossword: () => {
         if (typeof setupLoveCrossword === "function") try { setupLoveCrossword(sectionsData.love_crossword, hero); } catch (e) {}
+      },
+      puzzle_photo: () => {
+        if (typeof setupPuzzlePhoto === "function") try { setupPuzzlePhoto(sectionsData.puzzle_photo, hero); } catch (e) {}
+      },
+      photobooth: () => {
+        if (typeof setupPhotobooth === "function") try { setupPhotobooth(sectionsData.photobooth, hero); } catch (e) {}
       },
       hero: () => {
         if (typeof setupQuintillionObserver === "function") try { setupQuintillionObserver(); } catch (e) {}

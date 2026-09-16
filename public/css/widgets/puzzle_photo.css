@@ -1,0 +1,716 @@
+/**
+ * Stylesheet: puzzle_photo.css
+ * Memory Photo Puzzle Widget — Luxury Fine-Art Edition
+ * Bespoke gallery-grade photo jigsaw with dynamic aspect-ratio preservation (zero image distortion),
+ * micro-beveled lacquer tiles, floating obsidian HUD, physical gesture physics & museum keepsake card.
+ */
+
+.puzzle-photo-section {
+  position: relative;
+  padding: clamp(48px, 7vw, 96px) 16px;
+  overflow: hidden;
+}
+
+.puzzle-card {
+  max-width: 680px;
+  margin: 0 auto;
+  border-radius: 28px;
+  padding: clamp(24px, 4.5vw, 40px);
+  background: radial-gradient(circle at 50% 0%, rgba(45, 20, 36, 0.5) 0%, rgba(16, 8, 14, 0.85) 100%);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 32px 80px -16px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  position: relative;
+  z-index: 2;
+}
+
+.puzzle-header {
+  margin-bottom: 22px;
+}
+
+.puzzle-header .section-tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #ff758c;
+  margin-bottom: 8px;
+}
+
+.puzzle-header .section-title {
+  font-family: var(--font-serif, "Playfair Display", Georgia, serif);
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.puzzle-header .section-desc {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 480px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   Floating Obsidian HUD
+   ========================================================================== */
+.puzzle-hud-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  margin-bottom: 22px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.hud-stats-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hud-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.3px;
+}
+
+.hud-pill-icon {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.hud-pill-target strong {
+  color: #ff758c;
+}
+
+.hud-pill-best {
+  border-color: rgba(212, 175, 55, 0.35);
+  color: #f7d794;
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.hud-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Minimalist Segmented Switches */
+.hud-segmented-switch {
+  display: inline-flex;
+  padding: 2.5px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.switch-pill-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 3px 9px;
+  border-radius: 11px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  touch-action: manipulation;
+}
+
+.switch-pill-btn:hover {
+  color: #ffffff;
+}
+
+.switch-pill-btn.active {
+  background: linear-gradient(135deg, #ff5470, #ff758c);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(255, 84, 112, 0.4);
+}
+
+/* Action Icon Buttons */
+.hud-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 5px 9px;
+  border-radius: 12px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.hud-action-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.hud-action-btn:active,
+.hud-action-btn.active {
+  background: rgba(255, 84, 112, 0.3);
+  color: #ffffff;
+  border-color: #ff5470;
+  transform: translateY(0);
+}
+
+.hud-action-btn.sound-btn.muted {
+  opacity: 0.5;
+}
+
+/* ==========================================================================
+   Museum Gallery Frame & Dynamic Aspect-Ratio Board
+   ========================================================================== */
+.puzzle-board-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.puzzle-board-container {
+  width: 100%;
+  max-width: min(90vw, 410px);
+  aspect-ratio: var(--aspect, 3 / 4);
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 50%, rgba(30, 15, 25, 0.95) 0%, rgba(10, 4, 9, 0.98) 100%);
+  border: 2.5px solid rgba(212, 175, 55, 0.35);
+  outline: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), inset 0 2px 12px rgba(0, 0, 0, 0.85);
+  user-select: none;
+  -webkit-user-select: none;
+  transition: aspect-ratio 0.3s ease;
+}
+
+.puzzle-board {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: var(--aspect, 3 / 4);
+  touch-action: none;
+}
+
+/* Fine-Art Lacquer Puzzle Tiles */
+.puzzle-tile {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% / var(--n));
+  height: calc(100% / var(--n));
+  transform: translate3d(calc(var(--c) * 100%), calc(var(--r) * 100%), 0);
+  transition: transform 190ms cubic-bezier(0.2, 0.9, 0.3, 1.1);
+  will-change: transform;
+  box-sizing: border-box;
+  padding: 1.5px;
+  z-index: 1;
+}
+
+.puzzle-tile.is-empty {
+  display: none;
+  pointer-events: none;
+}
+
+.puzzle-tile-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  background-image: var(--img);
+  background-size: calc(var(--n) * 100%) calc(var(--n) * 100%);
+  background-position: calc(var(--oc) * (100% / (var(--n) - 1))) calc(var(--or) * (100% / (var(--n) - 1)));
+  box-shadow: inset 0.8px 0.8px 1.2px rgba(255, 255, 255, 0.5), inset -0.8px -0.8px 1.2px rgba(0, 0, 0, 0.65), 0 2px 6px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: filter 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  touch-action: manipulation;
+}
+
+/* Fine-art specular sheen */
+.puzzle-tile-inner::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.03) 60%, transparent 100%);
+  pointer-events: none;
+  border-radius: 5px 5px 0 0;
+}
+
+.puzzle-tile-inner:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: inset 1px 1px 1.5px rgba(255, 255, 255, 0.65), inset -1px -1px 1.5px rgba(0, 0, 0, 0.6), 0 8px 18px rgba(0, 0, 0, 0.55);
+  z-index: 4;
+}
+
+.puzzle-tile-inner:active {
+  transform: scale(0.97);
+  box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.7), 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* In-Flight Elevation during move/drag */
+.puzzle-tile.is-moving {
+  z-index: 15;
+}
+
+.puzzle-tile.is-moving .puzzle-tile-inner {
+  box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.8), inset -1px -1px 2px rgba(0, 0, 0, 0.6), 0 16px 32px rgba(0, 0, 0, 0.7);
+  transform: scale(1.03);
+}
+
+/* Selected state in Swap Mode */
+.puzzle-tile.is-selected .puzzle-tile-inner {
+  transform: scale(0.95);
+  box-shadow: 0 0 0 2.5px #ff5470, 0 8px 24px rgba(255, 84, 112, 0.6);
+  filter: brightness(1.12);
+  animation: pulseTileSelected 1.2s infinite alternate ease-in-out;
+  z-index: 10;
+}
+
+@keyframes pulseTileSelected {
+  0% { box-shadow: 0 0 0 2px #ff5470, 0 6px 16px rgba(255, 84, 112, 0.4); }
+  100% { box-shadow: 0 0 0 3.5px #ff758c, 0 10px 28px rgba(255, 117, 140, 0.7); }
+}
+
+/* Number / Guide Coordinate Overlay */
+.tile-num-badge {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+}
+
+.puzzle-board.show-numbers .tile-num-badge {
+  opacity: 0.9;
+}
+
+/* Correct Position Discrete Sparkle Dot */
+.puzzle-tile.is-correct .puzzle-tile-inner::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #2ecc71;
+  box-shadow: 0 0 6px #2ecc71;
+  opacity: 0.85;
+}
+
+/* Ghost Peek Overlay */
+.puzzle-ghost-overlay {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease-in-out;
+  z-index: 5;
+  filter: brightness(0.95);
+}
+
+.puzzle-ghost-overlay.is-active {
+  opacity: 0.88;
+}
+
+/* Solved Celebration Overlay */
+.puzzle-completed-overlay {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.puzzle-completed-overlay.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  box-shadow: inset 0 0 30px rgba(212, 175, 55, 0.5), 0 0 40px rgba(255, 84, 112, 0.35);
+}
+
+.completion-heart-burst {
+  font-size: clamp(48px, 12vw, 76px);
+  filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.85));
+  animation: burstHeart 1.4s infinite alternate ease-in-out;
+}
+
+@keyframes burstHeart {
+  0% { transform: scale(0.92); }
+  100% { transform: scale(1.12); }
+}
+
+.puzzle-mobile-hint {
+  margin-top: 14px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  letter-spacing: 0.2px;
+}
+
+/* ==========================================================================
+   Museum Keepsake Modal & Bespoke Polaroid
+   ========================================================================== */
+.puzzle-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 4, 8, 0.88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.puzzle-modal-card {
+  max-width: 460px;
+  width: 100%;
+  border-radius: 26px;
+  padding: clamp(24px, 5vw, 36px) 22px;
+  background: linear-gradient(145deg, rgba(32, 16, 26, 0.96), rgba(16, 8, 14, 0.98));
+  border: 1.5px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.75), 0 0 40px rgba(212, 175, 55, 0.15);
+  position: relative;
+  text-align: center;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: translateY(0);
+  animation: modalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalSlideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-ribbon-badge {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(255, 84, 112, 0.2));
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: #f7d794;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+}
+
+/* Polaroid keepsake frame with Realistic 3D Tilt & Washi Tape */
+.polaroid-3d-scene {
+  perspective: 900px;
+}
+
+.modal-polaroid-preview {
+  margin: 0 auto 16px;
+  max-width: 220px;
+}
+
+.polaroid-frame {
+  background: #ffffff;
+  padding: 10px 10px 14px;
+  border-radius: 6px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
+  transform: rotate(-2deg);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  will-change: transform;
+}
+
+.polaroid-photo {
+  width: 100%;
+  aspect-ratio: var(--aspect, 3 / 4);
+  object-fit: cover;
+  border-radius: 3px;
+  display: block;
+}
+
+.polaroid-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  font-family: var(--font-hand, "Caveat", cursive);
+  color: #2b1e1a;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.caption-stamp {
+  color: #ff5470;
+  font-size: 0.72rem;
+  font-weight: 800;
+  border: 1px dashed #ff5470;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.washi-tape {
+  position: absolute;
+  width: 44px;
+  height: 15px;
+  background: rgba(255, 182, 193, 0.85);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  backdrop-filter: blur(2px);
+}
+
+.washi-tape-top-left {
+  top: -6px;
+  left: -12px;
+  transform: rotate(-25deg);
+}
+
+.washi-tape-top-right {
+  top: -6px;
+  right: -12px;
+  transform: rotate(20deg);
+  background: rgba(254, 215, 170, 0.88);
+}
+
+.modal-title {
+  font-family: var(--font-serif, "Playfair Display", Georgia, serif);
+  font-size: clamp(1.3rem, 4vw, 1.6rem);
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 12px;
+}
+
+.modal-stats-summary {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.summary-chip {
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-variant-numeric: tabular-nums;
+}
+
+.modal-letter-scroll {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.letter-text {
+  font-family: var(--font-serif, "Playfair Display", Georgia, serif);
+  font-style: italic;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #ffe4e8;
+  margin: 0;
+}
+
+.modal-actions-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btn-puzzle-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1e9651, #128c7e);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.92rem;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(30, 150, 81, 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-puzzle-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(30, 150, 81, 0.45);
+}
+
+.btn-puzzle-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 14px;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: #f7d794;
+  font-weight: 700;
+  font-size: 0.86rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-puzzle-download:hover {
+  background: rgba(212, 175, 55, 0.2);
+  transform: translateY(-1px);
+}
+
+.btn-puzzle-replay {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px;
+  transition: color 0.2s ease;
+}
+
+.btn-puzzle-replay:hover {
+  color: #ffffff;
+}
+
+.btn-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.6rem;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.btn-modal-close:hover {
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Mobile Ergonomics & Responsive Breakpoints
+   ========================================================================== */
+@media (max-width: 600px) {
+  .puzzle-hud-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .hud-stats-group {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .hud-pill {
+    padding: 3.5px 7px;
+    font-size: 0.74rem;
+  }
+
+  .hud-controls-group {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .hud-action-btn .btn-text {
+    display: none;
+  }
+
+  .hud-action-btn {
+    padding: 4px 7px;
+  }
+
+  .switch-pill-btn {
+    padding: 3px 7px;
+    font-size: 0.7rem;
+  }
+
+  .puzzle-board-container {
+    max-width: min(92vw, 360px);
+    border-radius: 16px;
+  }
+
+  .puzzle-tile-inner {
+    border-radius: 5px;
+  }
+
+  .modal-polaroid-preview {
+    max-width: 180px;
+  }
+}

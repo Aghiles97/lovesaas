@@ -1209,6 +1209,46 @@ const DEFAULT_SECTIONS_DATA = {
       { id: "D4", dir: "down", num: 6, word: "PERFUME", clue: "The sweet surprise gift you handed me at your apartment on Dec 10 🎁", r: 5, c: 1 },
       { id: "D5", dir: "down", num: 7, word: "JAKARTA", clue: "The city where we met Lili & Ayung, played games, and ordered snacks 🇮🇩", r: 5, c: 9 }
     ]
+  },
+  puzzle_photo: {
+    tag: "Memory Puzzle 🧩",
+    title: "Piece Our Love Together",
+    desc: "Solve the puzzle to reveal our special memory & secret note.",
+    photoUrl: "/public/images/puzzle-couple.jpg",
+    mode: "slide",
+    gridSize: 3,
+    allowModeSwitch: true,
+    allowHints: true,
+    showNumbers: false,
+    sfxEnabled: true,
+    hapticsEnabled: true,
+    reward: {
+      badge: "💌 Secret Keepsake Unlocked",
+      title: "You Complete My World 💕",
+      letter: "« Every single moment, laugh, and adventure we share fits into my heart like the final missing piece of an eternal puzzle. I love you endlessly! »",
+      actionText: "Claim Romantic Date 🥂",
+      actionUrl: "https://api.whatsapp.com/send?text=I%20solved%20our%20photo%20puzzle!%20Time%20to%20claim%20my%20romantic%20date!%20%E2%9D%A4%EF%B8%8F%F0%9F%A5%82"
+    }
+  },
+  photobooth: {
+    tag: "Vintage Photobooth 📸",
+    title: "Capture Our Sweet Moments",
+    desc: "Pick a retro frame, strike your cutest poses, and print a personalized love strip keepsake!",
+    boothSubheading: "PICK A FRAME INSIDE THE BOOTH",
+    defaultLayout: "classic_strip",
+    defaultFilter: "vintage_90s",
+    stripCaption: "Alex & Sam ♡ Forever",
+    stripLocation: "PARIS • 2026",
+    sfxEnabled: true,
+    hapticsEnabled: true,
+    showDate: true,
+    allowStickers: true,
+    samplePhotos: [
+      "/public/images/landing-v2/avatar-couple-1.jpg",
+      "/public/images/landing-v2/avatar-couple-2.png",
+      "/public/images/landing-v2/avatar-couple-3.jpg",
+      "/public/images/puzzle-couple.jpg"
+    ]
   }
 };
 

@@ -182,6 +182,32 @@ const WIDGET_REGISTRY = {
     runtime: "/public/js/widgets/love-crossword.runtime.js",
     initFn: "setupLoveCrossword"
   },
+  puzzle_photo: {
+    id: "puzzle_photo",
+    title: "Memory Photo Puzzle",
+    icon: "🧩",
+    desc: "Interactive slide & swap photo jigsaw with solvable shuffle, audio SFX, peek hint & keepsake reveal.",
+    category: "games",
+    defaultEnabled: true,
+    css: "/public/css/widgets/puzzle_photo.css",
+    template: "/core/templates/puzzle_photo.template.js",
+    inspector: "/builder/inspectors/puzzle_photo.inspector.js",
+    runtime: "/public/js/widgets/puzzle-photo.runtime.js",
+    initFn: "setupPuzzlePhoto"
+  },
+  photobooth: {
+    id: "photobooth",
+    title: "Vintage Love Photobooth",
+    icon: "📸",
+    desc: "Retro photo booth with multi-shot burst, frame styles, vintage filters, sticker deco & keepsake strip.",
+    category: "interactive",
+    defaultEnabled: true,
+    css: "/public/css/widgets/photobooth.css",
+    template: "/core/templates/photobooth.template.js",
+    inspector: "/builder/inspectors/photobooth.inspector.js",
+    runtime: "/public/js/widgets/photobooth.runtime.js",
+    initFn: "setupPhotobooth"
+  },
   letter: {
     id: "letter",
     title: "Wax-Sealed Love Letter",
@@ -495,8 +521,8 @@ const PRESETS = {
   },
   playful: {
     name: "Playful & Interactive",
-    desc: "High energy games: Hero → Lof-O-Meter → Reasons → Truth/Dare → Spinner → Coupons → Quiz → Playful.",
-    widgets: ["hero", "love_meter", "reasons", "truth_dare", "spinner", "coupons", "quiz", "playful"]
+    desc: "High energy games: Hero → Lof-O-Meter → Reasons → Truth/Dare → Spinner → Coupons → Quiz → Scrapbook → Crossword → Photo Puzzle → Photobooth → Playful.",
+    widgets: ["hero", "love_meter", "reasons", "truth_dare", "spinner", "coupons", "quiz", "scrapbook_game", "love_crossword", "puzzle_photo", "photobooth", "playful"]
   },
   complete: {
     name: "The Full Experience (All Modules)",
@@ -525,6 +551,10 @@ const PRESETS = {
       "coupons",
       "boarding_pass",
       "quiz",
+      "scrapbook_game",
+      "love_crossword",
+      "puzzle_photo",
+      "photobooth",
       "letter",
       "valentine_scratch",
       "forgiveness_meter",
@@ -537,8 +567,8 @@ const PRESETS = {
   },
   minimal_gallery: {
     name: "Minimalist Photo Gallery",
-    desc: "Clean & photo-first: Hero → Polaroid Wall → Wax-Sealed Letter.",
-    widgets: ["hero", "memories", "letter"]
+    desc: "Clean & photo-first: Hero → Photobooth → Polaroid Wall → Wax-Sealed Letter.",
+    widgets: ["hero", "photobooth", "memories", "letter"]
   }
 };
 

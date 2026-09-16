@@ -280,6 +280,7 @@ function enrichSectionsData(rawSections, partner1, partner2) {
       merged.intro.senderClosing = `From ${partner1} with Infinite Lof & Birthday Kisses 🎂💕`;
     }
     if (merged.love_crossword) merged.love_crossword.partner1 = partner1;
+    if (merged.puzzle_photo) merged.puzzle_photo.partner1 = partner1;
   }
   if (partner2) {
     if (merged.hero) merged.hero.partner2 = partner2;
@@ -295,6 +296,12 @@ function enrichSectionsData(rawSections, partner1, partner2) {
     if (merged.love_crossword) {
       merged.love_crossword.partner2 = partner2;
       merged.love_crossword.certAwardee = `Presented with Infinite Love to ${partner2} & ${partner1 || "Aghiles"}`;
+    }
+    if (merged.puzzle_photo) {
+      merged.puzzle_photo.partner2 = partner2;
+      if (merged.puzzle_photo.reward) {
+        merged.puzzle_photo.reward.letter = `« Every single moment, laugh, and adventure we share fits into my heart like the final missing piece of an eternal puzzle. I love you endlessly, ${partner2}! »`;
+      }
     }
   }
   if (!rawSections || typeof rawSections !== "object") return merged;

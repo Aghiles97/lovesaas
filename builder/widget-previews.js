@@ -1459,6 +1459,190 @@
     </svg>
   `);
 
+  // 34. MEMORY PHOTO PUZZLE
+  PREVIEWS.puzzle_photo = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <defs>
+        <linearGradient id="pzBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#2c1124"/>
+          <stop offset="50%" stop-color="#190915"/>
+          <stop offset="100%" stop-color="#0d040a"/>
+        </linearGradient>
+        <linearGradient id="pzRose" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#ff5470"/>
+          <stop offset="100%" stop-color="#ff758c"/>
+        </linearGradient>
+        <linearGradient id="pzTileGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ff9a9e"/>
+          <stop offset="50%" stop-color="#fecfef"/>
+          <stop offset="100%" stop-color="#a1c4fd"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="480" fill="url(#pzBg)"/>
+      <rect x="30" y="25" width="740" height="430" rx="20" fill="rgba(255,255,255,0.05)" stroke="url(#pzRose)" stroke-width="2"/>
+      <text x="400" y="65" fill="#ff758c" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" letter-spacing="2" text-anchor="middle">MEMORY PHOTO PUZZLE 🧩❤️</text>
+      <text x="400" y="100" fill="#ffffff" font-family="Georgia, serif" font-size="26" font-weight="800" text-anchor="middle">Piece Our Love Together</text>
+
+      <!-- HUD Bar -->
+      <g transform="translate(60, 115)">
+        <rect width="680" height="40" rx="12" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)"/>
+        <text x="25" y="25" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">⏱️ 01:24</text>
+        <text x="120" y="25" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">🔄 18 moves</text>
+        <text x="230" y="25" fill="#ff758c" font-family="-apple-system, sans-serif" font-size="12" font-weight="700">🎯 8/9 Solved</text>
+        <rect x="520" y="7" width="65" height="26" rx="13" fill="url(#pzRose)"/>
+        <text x="552" y="24" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Slide</text>
+        <rect x="595" y="7" width="65" height="26" rx="13" fill="rgba(255,255,255,0.1)"/>
+        <text x="627" y="24" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Swap</text>
+      </g>
+
+      <!-- 3x3 Puzzle Board representation -->
+      <g transform="translate(80, 175)">
+        <rect width="270" height="255" rx="16" fill="rgba(0,0,0,0.4)" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+        <!-- 3x3 tiles -->
+        <rect x="12" y="10" width="76" height="72" rx="8" fill="url(#pzTileGrad)" stroke="rgba(255,255,255,0.4)"/>
+        <text x="76" y="74" fill="#333" font-size="10" font-weight="800">1</text>
+        <rect x="96" y="10" width="76" height="72" rx="8" fill="url(#pzTileGrad)" stroke="rgba(255,255,255,0.4)"/>
+        <text x="160" y="74" fill="#333" font-size="10" font-weight="800">2</text>
+        <rect x="180" y="10" width="76" height="72" rx="8" fill="url(#pzTileGrad)" stroke="rgba(255,255,255,0.4)"/>
+        <text x="244" y="74" fill="#333" font-size="10" font-weight="800">3</text>
+
+        <rect x="12" y="90" width="76" height="72" rx="8" fill="url(#pzTileGrad)" stroke="rgba(255,255,255,0.4)"/>
+        <text x="76" y="154" fill="#333" font-size="10" font-weight="800">4</text>
+        <rect x="96" y="90" width="76" height="72" rx="8" fill="url(#pzTileGrad)" stroke="rgba(255,255,255,0.4)"/>
+        <text x="160" y="154" fill="#333" font-size="10" font-weight="800">5</text>
+        <rect x="180" y="90" width="76" height="72" rx="8" fill="url(#pzTileGrad)" stroke="rgba(255,255,255,0.4)"/>
+        <text x="244" y="154" fill="#333" font-size="10" font-weight="800">6</text>
+
+        <rect x="12" y="170" width="76" height="72" rx="8" fill="url(#pzTileGrad)" stroke="rgba(255,255,255,0.4)"/>
+        <text x="76" y="234" fill="#333" font-size="10" font-weight="800">7</text>
+        <rect x="96" y="170" width="76" height="72" rx="8" fill="url(#pzTileGrad)" stroke="rgba(255,255,255,0.4)"/>
+        <text x="160" y="234" fill="#333" font-size="10" font-weight="800">8</text>
+        <!-- Empty Slot -->
+        <rect x="180" y="170" width="76" height="72" rx="8" fill="rgba(255,255,255,0.03)" stroke="rgba(255,84,112,0.4)" stroke-dasharray="4,4"/>
+        <text x="218" y="212" font-size="20" text-anchor="middle">💖</text>
+      </g>
+
+      <!-- Keepsake Reveal Voucher Preview -->
+      <g transform="translate(410, 175)">
+        <rect width="320" height="255" rx="16" fill="rgba(255,255,255,0.06)" stroke="rgba(255,182,193,0.3)"/>
+        <rect x="60" y="16" width="200" height="26" rx="13" fill="url(#pzRose)"/>
+        <text x="160" y="33" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="800" text-anchor="middle">💌 SECRET KEEPSAKE</text>
+        <text x="160" y="75" fill="#ffffff" font-family="Georgia, serif" font-size="18" font-weight="700" text-anchor="middle">You Complete My World</text>
+        <text x="160" y="105" fill="#ffe4e8" font-family="Georgia, serif" font-size="12" font-style="italic" text-anchor="middle">"Every piece of my heart belongs to you."</text>
+        
+        <!-- Polaroid Mini -->
+        <rect x="105" y="125" width="110" height="85" rx="6" fill="#ffffff" filter="drop-shadow(0 4px 10px rgba(0,0,0,0.3))" transform="rotate(-3 160 165)"/>
+        <rect x="112" y="132" width="96" height="60" rx="3" fill="url(#pzTileGrad)" transform="rotate(-3 160 165)"/>
+        <text x="160" y="202" fill="#ff5470" font-size="9" font-weight="800" text-anchor="middle" transform="rotate(-3 160 165)">100% SOLVED ❤️</text>
+
+        <rect x="60" y="222" width="200" height="24" rx="12" fill="#25d366"/>
+        <text x="160" y="238" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" text-anchor="middle">🥂 Claim Romantic Date</text>
+      </g>
+    </svg>
+  `);
+
+  // 35. VINTAGE PHOTOBOOTH
+  PREVIEWS.photobooth = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <defs>
+        <linearGradient id="pbBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#1f141e"/>
+          <stop offset="50%" stop-color="#140d17"/>
+          <stop offset="100%" stop-color="#08040a"/>
+        </linearGradient>
+        <linearGradient id="pbPink" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#e06377"/>
+          <stop offset="100%" stop-color="#ff8da1"/>
+        </linearGradient>
+        <linearGradient id="pbCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#48cae4"/>
+          <stop offset="100%" stop-color="#0077b6"/>
+        </linearGradient>
+        <linearGradient id="pbStrip" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="100%" stop-color="#fdfbf7"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="480" fill="url(#pbBg)"/>
+      <rect x="30" y="25" width="740" height="430" rx="20" fill="rgba(255,255,255,0.04)" stroke="url(#pbPink)" stroke-width="2"/>
+      
+      <!-- Top Badges -->
+      <g transform="translate(400, 55)" text-anchor="middle">
+        <rect x="-110" y="-14" width="220" height="24" rx="12" fill="rgba(224,99,119,0.2)" stroke="url(#pbPink)"/>
+        <text y="3" fill="#ff8da1" font-family="-apple-system, sans-serif" font-size="11" font-weight="800" letter-spacing="2">VINTAGE PHOTOBOOTH 📸</text>
+        <text y="36" fill="#ffffff" font-family="Georgia, serif" font-size="24" font-weight="700">Capture Our Sweet Moments</text>
+      </g>
+
+      <!-- Machine Viewfinder Screen -->
+      <g transform="translate(60, 115)">
+        <rect width="320" height="315" rx="16" fill="#0e0710" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+        <rect x="15" y="15" width="290" height="230" rx="10" fill="#1b1220"/>
+        
+        <!-- Camera Lens Circle -->
+        <circle cx="160" cy="120" r="50" fill="#25172d" stroke="#e06377" stroke-width="3"/>
+        <circle cx="160" cy="120" r="32" fill="#352042" stroke="rgba(255,255,255,0.3)"/>
+        <circle cx="150" cy="110" r="10" fill="rgba(255,255,255,0.2)"/>
+        <text x="160" y="126" font-size="22" text-anchor="middle">📸</text>
+
+        <!-- Viewfinder HUD Overlays -->
+        <path d="M 25 25 L 45 25 M 25 25 L 25 45" stroke="#ff8da1" stroke-width="2" fill="none"/>
+        <path d="M 295 25 L 275 25 M 295 25 L 295 45" stroke="#ff8da1" stroke-width="2" fill="none"/>
+        <path d="M 25 235 L 45 235 M 25 235 L 25 215" stroke="#ff8da1" stroke-width="2" fill="none"/>
+        <path d="M 295 235 L 275 235 M 295 235 L 295 215" stroke="#ff8da1" stroke-width="2" fill="none"/>
+        
+        <rect x="25" y="32" width="55" height="18" rx="9" fill="#e06377"/>
+        <text x="52" y="44" fill="#ffffff" font-size="9" font-weight="800" text-anchor="middle">● REC</text>
+
+        <!-- Shutter Button & Upload Bar -->
+        <rect x="25" y="260" width="130" height="38" rx="19" fill="url(#pbPink)"/>
+        <text x="90" y="284" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" text-anchor="middle">Take Photo 📸</text>
+        <rect x="165" y="260" width="130" height="38" rx="19" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.25)"/>
+        <text x="230" y="284" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" text-anchor="middle">Upload 🖼️</text>
+      </g>
+
+      <!-- Frame Rack & Ejected Photostrip -->
+      <g transform="translate(410, 115)">
+        <text x="165" y="10" fill="rgba(255,255,255,0.7)" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" letter-spacing="2" text-anchor="middle">PICK A FRAME INSIDE THE BOOTH</text>
+        
+        <!-- 4 mini frame selector icons -->
+        <g transform="translate(0, 22)">
+          <rect x="5" y="0" width="70" height="110" rx="8" fill="#48cae4" stroke="#ffffff" stroke-width="2"/>
+          <text x="40" y="100" fill="#003554" font-size="8" font-weight="800" text-anchor="middle">STRIP</text>
+          
+          <rect x="85" y="0" width="70" height="110" rx="8" fill="#40916c" stroke="#b7e4c7" stroke-width="1.5"/>
+          <text x="120" y="100" fill="#ffffff" font-size="8" font-weight="800" text-anchor="middle">GRID</text>
+
+          <rect x="165" y="0" width="70" height="110" rx="8" fill="#f72585" stroke="#ffb703" stroke-width="1.5"/>
+          <text x="200" y="100" fill="#ffffff" font-size="8" font-weight="800" text-anchor="middle">PAIR</text>
+
+          <rect x="245" y="0" width="70" height="110" rx="8" fill="#7209b7" stroke="#c77dff" stroke-width="1.5"/>
+          <text x="280" y="100" fill="#ffffff" font-size="8" font-weight="800" text-anchor="middle">WIDE</text>
+        </g>
+
+        <!-- Ejected Strip Machine Slot -->
+        <g transform="translate(60, 150)">
+          <rect x="0" y="0" width="200" height="14" rx="7" fill="#08040a" stroke="rgba(255,255,255,0.3)"/>
+          
+          <!-- Printed Photostrip Sliding Out -->
+          <g transform="translate(25, 10)">
+            <rect width="150" height="155" rx="6" fill="url(#pbStrip)" stroke="#e06377" stroke-width="2" filter="drop-shadow(0 6px 15px rgba(0,0,0,0.5))"/>
+            <!-- 3 Mini Photos -->
+            <rect x="12" y="10" width="126" height="34" rx="4" fill="#331c38"/>
+            <rect x="12" y="48" width="126" height="34" rx="4" fill="#331c38"/>
+            <rect x="12" y="86" width="126" height="34" rx="4" fill="#331c38"/>
+            
+            <text x="75" y="32" font-size="14" text-anchor="middle">🥰</text>
+            <text x="75" y="70" font-size="14" text-anchor="middle">🫶</text>
+            <text x="75" y="108" font-size="14" text-anchor="middle">✨</text>
+            
+            <text x="75" y="132" fill="#e06377" font-family="-apple-system, sans-serif" font-size="8" font-weight="800" text-anchor="middle">ALEX &amp; SAM ♡ 2026</text>
+            <text x="75" y="144" fill="#999" font-size="6" text-anchor="middle">CLASSIC PHOTOBOOTH STRIP</text>
+          </g>
+        </g>
+      </g>
+    </svg>
+  `);
+
   window.WIDGET_PREVIEWS = PREVIEWS;
   window.getWidgetPreviewImage = function(widgetId) {
     return PREVIEWS[widgetId] || null;

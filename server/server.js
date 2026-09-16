@@ -1210,7 +1210,7 @@ server.listen(PORT, () => {
   console.log(`====================================================`);
   console.log(` Couples SaaS Platform Engine running on Port ${PORT}`);
   console.log(` Landing Page:   http://localhost:${PORT}/`);
-  console.log(` Builder:        http://localhost:${PORT}/builder`);
+  console.log(` Studio:         http://localhost:${PORT}/builder`);
   console.log(` Demo Couple Project: http://localhost:${PORT}/sites/demo`);
   console.log(` Storage Mode:   ${r2.isR2Configured ? "Cloudflare R2" : "Local Storage (R2 ready)"}`);
   console.log(`====================================================`);
