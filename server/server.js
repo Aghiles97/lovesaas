@@ -447,18 +447,19 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  // DELETE /api/user/designs/:slug
-  const delUserDesignMatch = pathname.match(/^\/api\/user\/designs\/([^/]+)$/);
+  // DELETE /api/user/designs/:slug or /api/tenants/:slug
+  const delUserDesignMatch = pathname.match(/^\/api\/(?:user\/designs|tenants)\/([^/]+)$/);
   if (delUserDesignMatch && method === "DELETE") {
     try {
       const authUser = await getAuthenticatedUser(req, parsedUrl);
-      if (!authUser) return sendJson(res, 401, { error: "Authentication required" });
+      const reqAuthToken = extractRequestAuthToken(req, parsedUrl);
+      const isMasterAdmin = Boolean(process.env.ADMIN_TOKEN && reqAuthToken === process.env.ADMIN_TOKEN);
+      const isAdmin = (authUser && authUser.role === "admin") || isMasterAdmin;
 
       const slug = decodeURIComponent(delUserDesignMatch[1]);
       if (slug === "demo") return sendJson(res, 400, { error: "Cannot delete demo template" });
 
-      const isAdmin = authUser.role === "admin";
-      const success = await db.deleteTenant(slug, authUser.id, isAdmin);
+      const success = await db.deleteTenant(slug, authUser ? authUser.id : null, isAdmin);
       if (!success) return sendJson(res, 404, { error: "Website not found or unauthorized" });
 
       return sendJson(res, 200, { success: true, message: "Website deleted" });

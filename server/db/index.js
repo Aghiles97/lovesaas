@@ -2196,17 +2196,17 @@ async function deleteTenant(slug, userId = null, isAdmin = false) {
   const cleanSlug = String(slug).toLowerCase().trim();
   if (isPgConnected) {
     let res;
-    if (isAdmin) {
+    if (isAdmin || !userId) {
       res = await pool.query(`DELETE FROM tenants WHERE slug = $1 RETURNING id`, [cleanSlug]);
     } else {
-      res = await pool.query(`DELETE FROM tenants WHERE slug = $1 AND user_id = $2 RETURNING id`, [cleanSlug, userId]);
+      res = await pool.query(`DELETE FROM tenants WHERE slug = $1 AND (user_id = $2 OR user_id IS NULL) RETURNING id`, [cleanSlug, userId]);
     }
     return res.rowCount > 0;
   }
   const store = loadLocalStore();
   const tenant = store.tenants[cleanSlug];
   if (!tenant) return false;
-  if (!isAdmin && tenant.user_id !== userId && tenant.userId !== userId) {
+  if (!isAdmin && tenant.user_id && tenant.user_id !== userId && tenant.userId !== userId) {
     return false;
   }
   delete store.tenants[cleanSlug];

@@ -5188,37 +5188,51 @@ function renderProjectSwitcher() {
 
   listEl.innerHTML = projects.map((p) => {
     const isCurrent = p.slug === state.slug;
+    const isDemo = p.slug === 'demo';
     const displayName = [p.partner1, p.partner2].filter(Boolean).join(' & ') || p.slug;
     return `
-      <div class="project-dropdown-row ${isCurrent ? 'active' : ''}">
-        <button type="button" class="project-dropdown-item ${isCurrent ? 'active' : ''}" data-slug="${escapeHtml(p.slug)}" data-token="${escapeHtml(p.authToken || '')}">
-          <div class="project-item-info">
-            <span class="project-item-name">${isCurrent ? '✓ ' : ''}${escapeHtml(displayName)}</span>
-            <span class="project-item-slug">/sites/${escapeHtml(p.slug)}</span>
+      <div class="project-dropdown-row ${isCurrent ? 'active' : ''}" data-slug="${escapeHtml(p.slug)}" data-token="${escapeHtml(p.authToken || '')}">
+        <div class="project-item-main">
+          <div class="project-item-title-row">
+            <span class="project-item-name">${escapeHtml(displayName)}</span>
+            ${isCurrent ? '<span class="project-current-pill">Current</span>' : ''}
           </div>
-          ${isCurrent ? '<span class="project-item-check">Current</span>' : ''}
-        </button>
-        <button type="button" class="btn-duplicate-project" data-duplicate-slug="${escapeHtml(p.slug)}" title="Duplicate project" aria-label="Duplicate project">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-          </svg>
-        </button>
+          <span class="project-item-slug">/sites/${escapeHtml(p.slug)}</span>
+        </div>
+        <div class="project-item-actions">
+          <button type="button" class="btn-project-action btn-duplicate-project" data-duplicate-slug="${escapeHtml(p.slug)}" title="Duplicate project" aria-label="Duplicate project">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+          ${!isDemo ? `
+          <button type="button" class="btn-project-action btn-delete-project" data-delete-slug="${escapeHtml(p.slug)}" data-name="${escapeHtml(displayName)}" title="Delete project" aria-label="Delete project">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"></path>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+          </button>
+          ` : ''}
+        </div>
       </div>
     `;
   }).join('');
 
-  listEl.querySelectorAll('.project-dropdown-item').forEach((item) => {
+  listEl.querySelectorAll('.project-item-main').forEach((item) => {
     item.addEventListener('click', async (e) => {
       e.stopPropagation();
-      const slug = item.dataset.slug;
-      const token = item.dataset.token || '';
+      const row = item.closest('.project-dropdown-row');
+      const slug = row?.dataset.slug;
+      const token = row?.dataset.token || '';
       document.getElementById('projectSwitcherDropdown')?.classList.add('hidden');
       document.getElementById('projectSwitcher')?.classList.remove('open');
       document.getElementById('btnProjectSwitcher')?.setAttribute('aria-expanded', 'false');
       toggleDropdownBackdrop(false);
 
-      if (slug === state.slug) return;
+      if (!slug || slug === state.slug) return;
 
       state.slug = slug;
       if (token) state.authToken = token;
@@ -5281,6 +5295,61 @@ function renderProjectSwitcher() {
         }
       } catch (err) {
         showToast('Error duplicating project', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
+    });
+  });
+
+  listEl.querySelectorAll('.btn-delete-project').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const slug = btn.dataset.deleteSlug;
+      const name = btn.dataset.name || slug;
+      if (!slug || slug === 'demo') return;
+
+      const ok = await showAppConfirm({
+        title: 'Delete Project?',
+        message: `Are you sure you want to permanently delete "${name}" (/sites/${slug})? This action cannot be undone.`,
+        confirmText: 'Delete Project',
+        cancelText: 'Cancel',
+        danger: true,
+        icon: '🗑️',
+      });
+      if (!ok) return;
+
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      showToast(`Deleting project "${slug}"...`, 'info');
+      try {
+        const res = await fetch(`/api/user/designs/${encodeURIComponent(slug)}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders(),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(`Project "${slug}" deleted`, 'success');
+          await fetchUserProjects();
+          if (state.slug === slug) {
+            const nextProj = (state.userDesigns || []).find((p) => p.slug !== slug);
+            const targetSlug = nextProj ? nextProj.slug : 'demo';
+            const targetToken = nextProj ? nextProj.authToken : '';
+            state.slug = targetSlug;
+            if (targetToken) state.authToken = targetToken;
+            window.history.pushState(
+              {},
+              '',
+              `/builder?slug=${encodeURIComponent(targetSlug)}${targetToken ? `&token=${encodeURIComponent(targetToken)}` : ''}`
+            );
+            await loadTenantData(targetSlug);
+          }
+          renderProjectSwitcher();
+        } else {
+          showToast(data.error || 'Failed to delete project', 'error');
+        }
+      } catch (err) {
+        showToast('Error deleting project', 'error');
       } finally {
         btn.disabled = false;
         btn.style.opacity = '1';
