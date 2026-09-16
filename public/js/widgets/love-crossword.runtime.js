@@ -5,16 +5,16 @@
  */
 (function() {
   const DEFAULT_WORDS = [
-    { id: "A1", dir: "across", num: 1, word: "MATCHA", clue: "Our favorite creamy green morning drink ritual 🍵", r: 2, c: 0 },
-    { id: "A2", dir: "across", num: 2, word: "LOVEISBLIND", clue: "The reality drama we binge-watched on date night 📺", r: 5, c: 0 },
-    { id: "A3", dir: "across", num: 3, word: "DONUT", clue: "Our favorite sweet late-night bakery snack 🍩", r: 8, c: 0 },
-    { id: "A4", dir: "across", num: 4, word: "TARTE", clue: "Her must-have cruelty-free beauty & blush essential 💄", r: 8, c: 5 },
-    { id: "A5", dir: "across", num: 5, word: "PORSCHE", clue: "Your dream sports car in Miami blue 🏎️", r: 11, c: 2 },
-    { id: "D1", dir: "down", num: 1, word: "TAYLOR", clue: "The artist behind our favorite playlist 🎵", r: 1, c: 1 },
-    { id: "D2", dir: "down", num: 2, word: "PEANUT", clue: "Your silly nickname when you act adorable 🥜", r: 4, c: 3 },
-    { id: "D3", dir: "down", num: 3, word: "PARIS", clue: "The city where we promised our next anniversary 🥐", r: 1, c: 5 },
-    { id: "D4", dir: "down", num: 4, word: "TIMOTHEE", clue: "Your celebrity crush from Dune 🎬", r: 4, c: 8 },
-    { id: "D5", dir: "down", num: 5, word: "LAVENDER", clue: "Her favorite pastel hue & relaxing aroma 🪻", r: 0, c: 10 }
+    { id: "A1", dir: "across", num: 3, word: "CANTON", clue: "The iconic Guangzhou tower where we talked for 7 hours until sunrise 🗼", r: 1, c: 6 },
+    { id: "A2", dir: "across", num: 5, word: "ALGERIA", clue: "My home country waiting with Mediterranean beaches to welcome you 🇩🇿", r: 3, c: 2 },
+    { id: "A3", dir: "across", num: 8, word: "BEBEK", clue: "The Balinese duck dinner that means \"your father\" in Algerian Arabic 🦆", r: 6, c: 0 },
+    { id: "A4", dir: "across", num: 9, word: "VIETNAM", clue: "The transit airport where we wore 4 pairs of pants each in 30°C heat 🇻🇳", r: 8, c: 4 },
+    { id: "A5", dir: "across", num: 10, word: "SEEDS", clue: "Two special sunflower items given on April 23 to ask you to be mine 🌻", r: 11, c: 0 },
+    { id: "D1", dir: "down", num: 1, word: "BALI", clue: "Our dream island escape with sunset beaches, private villa & ATV trails 🌴", r: 0, c: 7 },
+    { id: "D2", dir: "down", num: 2, word: "DAGU", clue: "Freezing 5,000m summit glacier where we warmed up together in the chalet 🏔️", r: 1, c: 4 },
+    { id: "D3", dir: "down", num: 4, word: "NANJING", clue: "The rainy mountain where we climbed together to the Buddha temple 🛕", r: 1, c: 11 },
+    { id: "D4", dir: "down", num: 6, word: "PERFUME", clue: "The sweet surprise gift you handed me at your apartment on Dec 10 🎁", r: 5, c: 1 },
+    { id: "D5", dir: "down", num: 7, word: "JAKARTA", clue: "The city where we met Lili & Ayung, played games, and ordered snacks 🇮🇩", r: 5, c: 9 }
   ];
 
   const CrosswordAudio = {
@@ -373,9 +373,9 @@
       }
     });
 
-    let cursor = { r: 2, c: 0 };
-    let currentDir = "across";
-    let selectedWordId = "A1";
+    let cursor = { r: words[0] ? words[0].r : 1, c: words[0] ? words[0].c : 6 };
+    let currentDir = words[0] ? words[0].dir : "across";
+    let selectedWordId = words[0] ? words[0].id : "A1";
     let completedWordIds = new Set();
     let penalties = { hints: 0, checks: 0, wordSolves: 0 };
     let secondsElapsed = 0;
@@ -761,9 +761,9 @@
           penalties = { hints: 0, checks: 0, wordSolves: 0 };
           secondsElapsed = 0;
           isGameOver = false;
-          cursor = { r: 2, c: 0 };
-          currentDir = "across";
-          selectedWordId = "A1";
+          cursor = { r: words[0] ? words[0].r : 1, c: words[0] ? words[0].c : 6 };
+          currentDir = words[0] ? words[0].dir : "across";
+          selectedWordId = words[0] ? words[0].id : "A1";
           startTimer();
           updateUI();
         }
@@ -814,9 +814,9 @@
         penalties = { hints: 0, checks: 0, wordSolves: 0 };
         secondsElapsed = 0;
         isGameOver = false;
-        cursor = { r: 2, c: 0 };
-        currentDir = "across";
-        selectedWordId = "A1";
+        cursor = { r: words[0] ? words[0].r : 1, c: words[0] ? words[0].c : 6 };
+        currentDir = words[0] ? words[0].dir : "across";
+        selectedWordId = words[0] ? words[0].id : "A1";
         startTimer();
         updateUI();
       });

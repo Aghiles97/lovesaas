@@ -346,7 +346,15 @@
         Not just buttons and cards — your website is an intimate, living home for the smiles, trips, and stolen glances you never want to fade.
       </p>
 
-      <div class="v2-polaroids-wall">
+      <div class="v2-slider-toolbar">
+        <div class="v2-slider-hint">✨ Swipe or use arrows to view moments</div>
+        <div class="v2-slider-arrows">
+          <button type="button" class="v2-slider-btn v2-slider-prev" data-slider="moments" aria-label="Previous memory">←</button>
+          <button type="button" class="v2-slider-btn v2-slider-next" data-slider="moments" aria-label="Next memory">→</button>
+        </div>
+      </div>
+
+      <div class="v2-polaroids-wall v2-slider-track" id="slider-moments">
         <!-- Polaroid 1: Paris Morning -->
         <div class="v2-polaroid-card v2-rot-neg-2">
           <div class="v2-polaroid-pin">📌</div>
@@ -443,7 +451,15 @@
         From anniversaries to weddings, find the perfect design and make it yours.
       </p>
 
-      <div class="v2-templates-grid">
+      <div class="v2-slider-toolbar">
+        <div class="v2-slider-dots" id="dots-templates"></div>
+        <div class="v2-slider-arrows">
+          <button type="button" class="v2-slider-btn v2-slider-prev" data-slider="templates" aria-label="Previous template">←</button>
+          <button type="button" class="v2-slider-btn v2-slider-next" data-slider="templates" aria-label="Next template">→</button>
+        </div>
+      </div>
+
+      <div class="v2-templates-grid v2-slider-track" id="slider-templates">
         <!-- Template 1: Our Story Across the World -->
         <div class="v2-template-card" data-preset="travel-world">
           <div class="v2-template-media">
@@ -498,17 +514,23 @@
         Pick and choose any module to craft your dream couple website. Toggle on or off anytime with live drag-and-drop.
       </p>
 
-      <!-- Category Filter Pills -->
-      <div class="v2-filter-bar" role="tablist">
-        <button type="button" class="v2-filter-btn active" data-filter="all">All Modules (17)</button>
-        <button type="button" class="v2-filter-btn" data-filter="birthday">🎂 Birthday Special</button>
-        <button type="button" class="v2-filter-btn" data-filter="apology">🕊️ Apology &amp; Truce</button>
-        <button type="button" class="v2-filter-btn" data-filter="travel">🌍 Our World &amp; Travel</button>
-        <button type="button" class="v2-filter-btn" data-filter="romance">💌 Valentine &amp; Romance</button>
+      <!-- Category Filter Pills with Slider Controls -->
+      <div class="v2-filter-slider-bar">
+        <div class="v2-filter-bar" role="tablist">
+          <button type="button" class="v2-filter-btn active" data-filter="all">All Modules (17)</button>
+          <button type="button" class="v2-filter-btn" data-filter="birthday">🎂 Birthday Special</button>
+          <button type="button" class="v2-filter-btn" data-filter="apology">🕊️ Apology &amp; Truce</button>
+          <button type="button" class="v2-filter-btn" data-filter="travel">🌍 Our World &amp; Travel</button>
+          <button type="button" class="v2-filter-btn" data-filter="romance">💌 Valentine &amp; Romance</button>
+        </div>
+        <div class="v2-slider-arrows v2-widgets-slider-arrows">
+          <button type="button" class="v2-slider-btn v2-slider-prev" data-slider="widgets" aria-label="Previous widget">←</button>
+          <button type="button" class="v2-slider-btn v2-slider-next" data-slider="widgets" aria-label="Next widget">→</button>
+        </div>
       </div>
 
-      <!-- Widgets Showcase Cards Grid -->
-      <div class="v2-widgets-grid">
+      <!-- Widgets Showcase Cards Slider Track -->
+      <div class="v2-widgets-grid v2-slider-track" id="slider-widgets">
         <!-- BIRTHDAY 1: Candle Blow-Out -->
         <div class="v2-widget-card" data-cat="birthday">
           <div class="v2-widget-top">
@@ -745,7 +767,15 @@
         No coding, no complicated setup. In just 2 minutes, surprise your partner with an unforgettable digital sanctuary.
       </p>
 
-      <div class="v2-steps-grid">
+      <div class="v2-slider-toolbar v2-steps-slider-toolbar">
+        <div class="v2-slider-hint">3 Effortless Steps</div>
+        <div class="v2-slider-arrows">
+          <button type="button" class="v2-slider-btn v2-slider-prev" data-slider="steps" aria-label="Previous step">←</button>
+          <button type="button" class="v2-slider-btn v2-slider-next" data-slider="steps" aria-label="Next step">→</button>
+        </div>
+      </div>
+
+      <div class="v2-steps-grid v2-slider-track" id="slider-steps">
         <!-- Step 1 -->
         <div class="v2-step-card">
           <div class="v2-step-num">01</div>
@@ -821,7 +851,15 @@
         From anniversary surprises to long-distance reunions and wedding vows, here is what couples say:
       </p>
 
-      <div class="v2-reviews-grid">
+      <div class="v2-slider-toolbar">
+        <div class="v2-slider-dots" id="dots-reviews"></div>
+        <div class="v2-slider-arrows">
+          <button type="button" class="v2-slider-btn v2-slider-prev" data-slider="reviews" aria-label="Previous review">←</button>
+          <button type="button" class="v2-slider-btn v2-slider-next" data-slider="reviews" aria-label="Next review">→</button>
+        </div>
+      </div>
+
+      <div class="v2-reviews-grid v2-slider-track" id="slider-reviews">
         <!-- Review 1: Birthday -->
         <div class="v2-review-card">
           <div class="v2-review-card-header">
@@ -1480,8 +1518,63 @@
             const match = filter === 'all' || cat === filter;
             card.classList.toggle('hidden', !match);
           });
+          const sliderWidgets = document.getElementById('slider-widgets');
+          if (sliderWidgets) sliderWidgets.scrollTo({ left: 0, behavior: 'smooth' });
         });
       });
+
+      // V2 Reusable Horizontal Sliders
+      document.querySelectorAll('#landingViewV2 .v2-slider-btn[data-slider]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const sliderId = btn.dataset.slider;
+          const track = document.getElementById('slider-' + sliderId);
+          if (!track) return;
+          const isNext = btn.classList.contains('v2-slider-next');
+          const firstCard = track.firstElementChild;
+          const step = (firstCard ? firstCard.getBoundingClientRect().width : 320) + 20;
+          track.scrollBy({ left: isNext ? step : -step, behavior: 'smooth' });
+        });
+      });
+
+      // V2 Slider Dot Pagination
+      function setupSliderDots(trackId, dotsId) {
+        const track = document.getElementById(trackId);
+        const dotsWrap = document.getElementById(dotsId);
+        if (!track || !dotsWrap) return;
+        const cards = Array.from(track.children);
+        dotsWrap.innerHTML = '';
+        cards.forEach((_, idx) => {
+          const dot = document.createElement('button');
+          dot.type = 'button';
+          dot.className = 'v2-slider-dot' + (idx === 0 ? ' active' : '');
+          dot.setAttribute('aria-label', `Go to slide ${idx + 1}`);
+          dot.addEventListener('click', () => {
+            const card = cards[idx];
+            if (card) {
+              track.scrollTo({ left: card.offsetLeft - track.offsetLeft, behavior: 'smooth' });
+            }
+          });
+          dotsWrap.appendChild(dot);
+        });
+
+        track.addEventListener('scroll', () => {
+          const scrollLeft = track.scrollLeft;
+          let activeIndex = 0;
+          let minDiff = Infinity;
+          cards.forEach((card, idx) => {
+            const diff = Math.abs((card.offsetLeft - track.offsetLeft) - scrollLeft);
+            if (diff < minDiff) {
+              minDiff = diff;
+              activeIndex = idx;
+            }
+          });
+          const dots = dotsWrap.querySelectorAll('.v2-slider-dot');
+          dots.forEach((d, i) => d.classList.toggle('active', i === activeIndex));
+        }, { passive: true });
+      }
+
+      setupSliderDots('slider-templates', 'dots-templates');
+      setupSliderDots('slider-reviews', 'dots-reviews');
 
       // V2 Quick Squircles Filter Linking
       document.querySelectorAll('#landingViewV2 .v2-feature-item[data-filter]').forEach(item => {

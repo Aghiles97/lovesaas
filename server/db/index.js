@@ -279,6 +279,7 @@ function enrichSectionsData(rawSections, partner1, partner2) {
       merged.intro.senderName = partner1;
       merged.intro.senderClosing = `From ${partner1} with Infinite Lof & Birthday Kisses 🎂💕`;
     }
+    if (merged.love_crossword) merged.love_crossword.partner1 = partner1;
   }
   if (partner2) {
     if (merged.hero) merged.hero.partner2 = partner2;
@@ -290,6 +291,10 @@ function enrichSectionsData(rawSections, partner1, partner2) {
     if (merged.intro) {
       merged.intro.recipientName = partner2;
       merged.intro.title = `Happy Birthday ${partner2} 🎂❤️`;
+    }
+    if (merged.love_crossword) {
+      merged.love_crossword.partner2 = partner2;
+      merged.love_crossword.certAwardee = `Presented with Infinite Love to ${partner2} & ${partner1 || "Aghiles"}`;
     }
   }
   if (!rawSections || typeof rawSections !== "object") return merged;
