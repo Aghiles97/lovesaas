@@ -171,11 +171,11 @@ body {
   position: sticky;
   top: 0;
   z-index: 1000;
-  background: rgba(10, 9, 12, 0.88);
+  background: rgba(10, 9, 12, 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(223, 154, 146, 0.16);
-  padding: 13px 0;
+  padding: 12px 0;
   width: 100%;
 }
 
@@ -183,7 +183,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 16px;
   max-width: 1240px;
   margin: 0 auto;
   padding: 0 24px;
@@ -192,9 +192,9 @@ body {
 #landingViewV2 .nav-brand {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 10px;
   font-family: var(--v2-font-sans);
-  font-size: 1.2rem;
+  font-size: 1.35rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   text-decoration: none;
@@ -203,34 +203,35 @@ body {
 }
 
 #landingViewV2 .nav-brand-logo {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   object-fit: cover;
-  box-shadow: 0 2px 10px rgba(223, 154, 146, 0.35), 0 0 0 1px rgba(223, 154, 146, 0.25);
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 12px rgba(244, 63, 94, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+  flex-shrink: 0;
 }
 
 #landingViewV2 .nav-brand:hover .nav-brand-logo {
   transform: scale(1.08) rotate(-2deg);
+  box-shadow: 0 4px 20px rgba(244, 63, 94, 0.7), 0 0 0 1px rgba(244, 63, 94, 0.5);
 }
 
 #landingViewV2 .nav-brand-text {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: #ffffff !important;
 }
 
 #landingViewV2 .nav-brand-badge {
-  font-size: 8px;
+  font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
-  background: rgba(223, 154, 146, 0.15);
-  border: 1px solid rgba(223, 154, 146, 0.3);
-  color: #fecdd3;
-  padding: 2px 7px;
+  background: linear-gradient(90deg, #f43f5e, #8b5cf6);
+  color: #ffffff;
+  padding: 3px 9px;
   border-radius: 9999px;
 }
 
@@ -238,7 +239,7 @@ body {
 #landingViewV2 .desktop-nav-links {
   display: none;
   align-items: center;
-  gap: 2px;
+  gap: clamp(12px, 1.6vw, 22px);
 }
 
 @media (min-width: 901px) {
@@ -248,51 +249,50 @@ body {
 }
 
 #landingViewV2 .desktop-nav-links .nav-link {
-  color: rgba(254, 205, 211, 0.75);
+  color: rgba(255, 255, 255, 0.75);
   font-family: var(--v2-font-sans);
-  font-size: 13px;
+  font-size: 0.92rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   text-decoration: none;
-  padding: 5px 10px;
-  border-radius: 9999px;
-  transition: all 0.2s ease;
+  padding: 4px 0;
+  transition: color 0.18s ease;
   white-space: nowrap;
 }
 
 #landingViewV2 .desktop-nav-links .nav-link:hover {
   color: #ffffff;
-  background: rgba(223, 154, 146, 0.12);
 }
 
 /* Nav Actions */
 #landingViewV2 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 /* Sign In Ghost Button */
 #landingViewV2 #btnOpenSignInModal {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(223, 154, 146, 0.25);
-  color: #fecdd3;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
   border-radius: 9999px;
   font-family: var(--v2-font-sans);
-  font-size: 12.5px;
-  font-weight: 600;
-  padding: 6px 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 9px 20px;
   cursor: pointer;
   transition: all 0.2s ease;
   backdrop-filter: blur(8px);
+  line-height: 1.2;
 }
 
 #landingViewV2 #btnOpenSignInModal:hover {
-  background: rgba(223, 154, 146, 0.16);
-  border-color: rgba(223, 154, 146, 0.45);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.28);
   color: #ffffff;
   transform: translateY(-1px);
 }
@@ -302,19 +302,20 @@ body {
   display: none;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, #ffd3ce 0%, #f4a9a0 30%, #e28f85 70%, #c97167 100%);
-  color: #261114 !important;
+  background: linear-gradient(135deg, #fb7185 0%, #f43f5e 50%, #e11d48 100%);
+  color: #ffffff !important;
   font-family: var(--v2-font-sans);
-  font-size: 12.5px;
-  font-weight: 800;
+  font-size: 0.88rem;
+  font-weight: 700;
   letter-spacing: 0.01em;
-  padding: 7px 15px;
+  padding: 9px 20px;
   border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 4px 16px rgba(223, 154, 146, 0.35);
+  border: none;
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.4);
   text-decoration: none;
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
+  line-height: 1.2;
 }
 
 @media (min-width: 901px) {
@@ -324,8 +325,9 @@ body {
 }
 
 #landingViewV2 #btnNavGetStarted:hover {
-  box-shadow: 0 6px 22px rgba(223, 154, 146, 0.55);
+  box-shadow: 0 6px 20px rgba(244, 63, 94, 0.65);
   transform: translateY(-1px);
+  color: #ffffff !important;
 }
 
 /* Builder Pill Button (Logged In) */
@@ -710,6 +712,7 @@ body {
 #landingViewV2 .v2-hero {
   position: relative;
   width: 100%;
+  padding-top: 0;
   padding-bottom: 20px;
 }
 
@@ -2531,7 +2534,7 @@ body {
     grid-template-columns: 1.18fr 0.82fr;
     gap: 40px;
     min-height: 480px;
-    padding: 16px 0 28px;
+    padding: 0 0 28px;
   }
 
   #landingViewV2 .v2-hero-content {

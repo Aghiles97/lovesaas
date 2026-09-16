@@ -92,7 +92,7 @@ async function runStaticChecks() {
     { label: 'Design switcher completely removed', pass: !html.includes('id="landingDesignSwitcher"') && !html.includes('btnSwitchV1') && !html.includes('btnSwitchV2') },
     { label: 'Desktop navigation links', pass: html.includes('desktop-nav-links') },
     { label: 'Mobile slide-out menu', pass: html.includes('mobile-nav-drawer') || html.includes('v2-mobile-menu') },
-    { label: 'Promo banner 50% OFF', pass: html.includes('50% OFF') && html.includes('Private Couple Keepsake') },
+    { label: '50% OFF promo banner removed', pass: !html.includes('v2-promo-pill') },
     { label: 'Hero Primary CTA', pass: html.includes('Start Building Your Website') || html.includes('Go to Builder') },
     { label: '5 Feature quick tags', pass: html.includes('Wax-Sealed Letters') && html.includes('Travel Maps') },
     { label: '4 Stats counters with dividers', pass: html.includes('1,280+') && css.includes('.v2-stat-item:not(:last-child)::after') },
