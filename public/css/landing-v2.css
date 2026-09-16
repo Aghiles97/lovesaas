@@ -62,22 +62,103 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Background Glowing Ambient Orbs / Vignettes */
-#landingViewV2::before {
-  content: '';
-  position: absolute;
+/* ==========================================================================
+   DYNAMIC AMBIENT BACKGROUND SYSTEM (.v2-ambient-bg)
+   ========================================================================== */
+#landingViewV2 .v2-ambient-bg {
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 1600px;
-  background:
-    radial-gradient(circle at 82% 12%, rgba(223, 154, 146, 0.16) 0%, transparent 52%),
-    radial-gradient(circle at 18% 34%, rgba(196, 118, 110, 0.08) 0%, transparent 48%),
-    radial-gradient(ellipse 70% 45% at 50% 60%, rgba(223, 154, 146, 0.05) 0%, transparent 65%);
-  -webkit-mask-image: linear-gradient(180deg, #000 65%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 65%, transparent 100%);
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
   z-index: 0;
+  overflow: hidden;
+  background: radial-gradient(ellipse 120% 80% at 50% -20%, #1a1118 0%, #0c0a0e 65%, #060507 100%);
+}
+
+#landingViewV2 .v2-stardust-layer {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(rgba(244, 114, 182, 0.18) 1.2px, transparent 1.2px),
+    radial-gradient(rgba(251, 191, 36, 0.12) 1px, transparent 1px);
+  background-size: 48px 48px, 96px 96px;
+  background-position: 0 0, 24px 24px;
+  opacity: 0.9;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 55%, rgba(0, 0, 0, 0.3) 85%, transparent 100%);
+  mask-image: radial-gradient(ellipse at 50% 50%, black 55%, rgba(0, 0, 0, 0.3) 85%, transparent 100%);
+}
+
+#landingViewV2 .v2-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(85px);
+  -webkit-filter: blur(85px);
+  opacity: 0.58;
+  mix-blend-mode: screen;
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* Warm Rose Ambient Orb (Top Right) */
+#landingViewV2 .v2-orb-1 {
+  top: -8%;
+  right: -5%;
+  width: 620px;
+  height: 620px;
+  background: radial-gradient(circle, rgba(244, 63, 94, 0.35) 0%, rgba(223, 154, 146, 0.20) 45%, transparent 70%);
+  animation: v2OrbFloat1 18s ease-in-out infinite alternate;
+}
+
+/* Warm Champagne Gold Orb (Mid-Left) */
+#landingViewV2 .v2-orb-2 {
+  top: 30%;
+  left: -10%;
+  width: 540px;
+  height: 540px;
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.22) 0%, rgba(217, 119, 6, 0.12) 50%, transparent 70%);
+  animation: v2OrbFloat2 22s ease-in-out infinite alternate;
+}
+
+/* Romantic Ruby / Crimson Orb (Bottom-Right) */
+#landingViewV2 .v2-orb-3 {
+  bottom: 6%;
+  right: -8%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(225, 29, 72, 0.26) 0%, rgba(159, 18, 57, 0.14) 50%, transparent 70%);
+  animation: v2OrbFloat3 26s ease-in-out infinite alternate;
+}
+
+/* Soft Orchid Whisper Orb (Bottom-Left / Center) */
+#landingViewV2 .v2-orb-4 {
+  bottom: 25%;
+  left: 18%;
+  width: 480px;
+  height: 480px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.18) 0%, rgba(139, 92, 246, 0.08) 50%, transparent 70%);
+  animation: v2OrbFloat1 20s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes v2OrbFloat1 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-40px, 35px, 0) scale(1.08); }
+  100% { transform: translate3d(30px, -25px, 0) scale(0.94); }
+}
+
+@keyframes v2OrbFloat2 {
+  0% { transform: translate3d(0, 0, 0) scale(0.96); }
+  50% { transform: translate3d(50px, -30px, 0) scale(1.06); }
+  100% { transform: translate3d(-20px, 40px, 0) scale(1); }
+}
+
+@keyframes v2OrbFloat3 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-35px, -45px, 0) scale(1.1); }
+  100% { transform: translate3d(45px, 20px, 0) scale(0.92); }
 }
 
 #landingViewV2 * {
@@ -933,10 +1014,20 @@ body {
 }
 
 #landingViewV2 .v2-hero-avatars {
-  height: 28px;
-  width: auto;
-  object-fit: contain;
-  display: block;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+#landingViewV2 .v2-hero-avatars .v2-pill-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #1a1518;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 #landingViewV2 .v2-hero-proof-info {
@@ -2539,9 +2630,13 @@ body {
   }
 
   #landingViewV2 .v2-hero-avatars {
-    width: 60px;
-    height: 24px;
-    object-fit: contain;
+    display: flex;
+    align-items: center;
+  }
+
+  #landingViewV2 .v2-hero-avatars .v2-pill-avatar {
+    width: 22px;
+    height: 22px;
   }
 
   #landingViewV2 .v2-hero-proof-text {
@@ -3019,8 +3114,9 @@ body {
     padding: 9px 20px 9px 14px;
   }
 
-  #landingViewV2 .v2-hero-avatars {
-    height: 32px;
+  #landingViewV2 .v2-hero-avatars .v2-pill-avatar {
+    width: 30px;
+    height: 30px;
   }
 
   #landingViewV2 .v2-hero-stars {
