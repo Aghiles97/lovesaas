@@ -1191,24 +1191,40 @@ body.is-resizing-sidebar .builder-sidebar,
 }
 
 .btn-inspector-back {
-  background: #f8f9fa;
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-size: 0.78rem;
-  font-weight: 600;
-  padding: 6px 9px;
-  border-radius: 6px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 12px 6px 8px;
+  border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 6px;
   white-space: nowrap;
-  transition: all 0.15s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+}
+.btn-inspector-back .btn-back-icon {
+  width: 15px;
+  height: 15px;
+  stroke: #475569;
+  transition: transform 0.15s ease, stroke 0.15s ease;
+  flex-shrink: 0;
 }
 .btn-inspector-back:hover {
-  background: #e9ecef;
-  color: var(--primary);
-  border-color: #ffccd5;
+  background: #fff1f2;
+  color: var(--primary, #e11d48);
+  border-color: #fecdd3;
+  box-shadow: 0 2px 5px rgba(225, 29, 72, 0.12);
+}
+.btn-inspector-back:hover .btn-back-icon {
+  stroke: var(--primary, #e11d48);
+  transform: translateX(-2px);
+}
+.btn-inspector-back:active {
+  transform: scale(0.97);
 }
 
 .inspector-select-container {
