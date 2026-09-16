@@ -3458,6 +3458,17 @@ body.admin-mode #detailHighlights {
   transition: opacity 0.22s ease, transform 0.22s ease;
 }
 
+.site-add-section-divider:first-child,
+.site-add-section-divider.site-add-section-top {
+  margin-top: clamp(75px, 12vh, 95px) !important;
+  margin-bottom: 20px !important;
+}
+
+.site-add-section-divider.site-add-section-empty {
+  margin-top: clamp(140px, 24vh, 200px) !important;
+  margin-bottom: 36px !important;
+}
+
 .site-add-section-divider:hover {
   opacity: 1;
   z-index: 50;

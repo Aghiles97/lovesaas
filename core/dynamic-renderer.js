@@ -397,10 +397,16 @@ class DynamicRenderer {
     )) || Boolean(urlParams && (urlParams.get("preview") === "builder" || urlParams.get("builder") === "1"));
 
     const createAddDivider = (insertIndex) => {
-      const isEnd = insertIndex === layoutOrder.length;
+      const isTop = insertIndex === 0;
+      const isEnd = insertIndex === (typeof activeLayout !== "undefined" ? activeLayout.length : layoutOrder.length);
+      const isEmpty = typeof activeLayout !== "undefined" && activeLayout.length === 0;
       const divider = document.createElement("div");
-      divider.className = `site-add-section-divider${isEnd ? " site-add-section-bottom" : ""}`;
+      divider.className = `site-add-section-divider${isEnd ? " site-add-section-bottom" : ""}${isTop ? " site-add-section-top" : ""}${isEmpty ? " site-add-section-empty" : ""}`;
       divider.dataset.insertIndex = insertIndex;
+      if (isTop) {
+        divider.style.marginTop = isEmpty ? "clamp(140px, 24vh, 200px)" : "clamp(75px, 12vh, 95px)";
+        divider.style.marginBottom = isEmpty ? "36px" : "20px";
+      }
       divider.innerHTML = `
         <div class="site-add-section-line"></div>
         <button type="button" class="btn-site-add-section" data-insert-index="${insertIndex}" title="Add widget here">
@@ -422,11 +428,15 @@ class DynamicRenderer {
       return divider;
     };
 
-    if (isBuilder && layoutOrder.length === 0) {
+    const activeLayout = (layoutOrder || []).filter(
+      (widgetId) => widgetId !== "intro" && typeof templates[widgetId] === "function"
+    );
+
+    if (isBuilder && activeLayout.length === 0) {
       this.container.appendChild(createAddDivider(0));
     }
 
-    layoutOrder.forEach((widgetId, index) => {
+    activeLayout.forEach((widgetId, index) => {
       if (isBuilder && index === 0) {
         this.container.appendChild(createAddDivider(0));
       }
@@ -483,7 +493,7 @@ class DynamicRenderer {
       }
     });
 
-    this.initInteractiveEngines(sectionsData, layoutOrder);
+    this.initInteractiveEngines(sectionsData, activeLayout);
 
     if (typeof window !== "undefined") {
       const restoreScroll = () => {

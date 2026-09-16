@@ -793,9 +793,9 @@ async function loadTenantData(slug) {
       data.themeId === 'romantic-rose' || !data.themeId
         ? 'theme-pink'
         : data.themeId;
-    state.layoutOrder = Array.isArray(data.layoutOrder)
+    state.layoutOrder = (Array.isArray(data.layoutOrder)
       ? data.layoutOrder
-      : PRESETS.storyteller?.widgets || [];
+      : PRESETS.storyteller?.widgets || []).filter((id) => id !== 'intro');
     state.sectionsData = data.sectionsData || {};
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -1337,8 +1337,17 @@ function initWidgetTrayControls() {
 
   const btnEnableAll = document.getElementById('btnEnableAllWidgets');
   if (btnEnableAll) {
-    btnEnableAll.onclick = () => {
-      state.layoutOrder = [...state.allWidgetIds];
+    btnEnableAll.onclick = async () => {
+      const ok = await showAppConfirm({
+        title: 'Add All Widgets?',
+        message: 'This will add all widgets to your website. Do you want to continue?',
+        confirmText: 'Add All',
+        cancelText: 'Cancel',
+        danger: false,
+        icon: '⚠️',
+      });
+      if (!ok) return;
+      state.layoutOrder = state.allWidgetIds.filter((id) => id !== 'intro');
       state.templatePreset = 'custom';
       if (!state.activeInspectorWidget && state.layoutOrder.length > 0) {
         selectWidgetForInspector(state.layoutOrder[0]);
