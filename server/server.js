@@ -467,6 +467,23 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
+  // POST /api/user/designs/:slug/duplicate or /api/tenants/:slug/duplicate
+  const dupDesignMatch = pathname.match(/^\/api\/(?:user\/designs|tenants)\/([^/]+)\/duplicate$/);
+  if (dupDesignMatch && method === "POST") {
+    try {
+      const authUser = await getAuthenticatedUser(req, parsedUrl);
+      const reqAuthToken = extractRequestAuthToken(req, parsedUrl);
+      const isMasterAdmin = Boolean(process.env.ADMIN_TOKEN && reqAuthToken === process.env.ADMIN_TOKEN);
+      const isAdmin = (authUser && authUser.role === "admin") || isMasterAdmin;
+      const slug = decodeURIComponent(dupDesignMatch[1]);
+
+      const newTenant = await db.duplicateTenant(slug, authUser ? authUser.id : null, isAdmin);
+      return sendJson(res, 201, { success: true, tenant: newTenant });
+    } catch (err) {
+      return sendJson(res, 400, { error: err.message });
+    }
+  }
+
   // GET /api/user/purchases
   if (pathname === "/api/user/purchases" && method === "GET") {
     try {

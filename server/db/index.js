@@ -2215,6 +2215,85 @@ async function deleteTenant(slug, userId = null, isAdmin = false) {
   return true;
 }
 
+async function duplicateTenant(slug, userId = null, isAdmin = false) {
+  const cleanSlug = String(slug).toLowerCase().trim();
+  const source = await getTenantBySlug(cleanSlug);
+  if (!source) {
+    throw new Error("Source website not found");
+  }
+  if (!isAdmin && userId && source.userId && source.userId !== userId) {
+    throw new Error("Unauthorized to duplicate this project");
+  }
+
+  let baseSlug = `${cleanSlug}-copy`.replace(/[^a-z0-9_-]/g, "-").slice(0, 32);
+  let candidateSlug = baseSlug;
+  let counter = 2;
+  while (await getTenantBySlug(candidateSlug)) {
+    candidateSlug = `${baseSlug}-${counter++}`;
+  }
+
+  const id = crypto.randomUUID();
+  const authToken = crypto.randomBytes(24).toString("hex");
+  const partner1 = source.partner1 || "Partner 1";
+  const partner2 = source.partner2 || "Partner 2";
+  const customerEmail = source.customerEmail || null;
+  const isPurchased = source.isPurchased;
+  const plan = source.plan || "vip";
+  const targetUserId = userId || source.userId || null;
+  const templatePreset = source.templatePreset || "blank";
+  const themeId = source.themeId || "romantic-rose";
+  const layoutOrder = source.layoutOrder || [];
+  const sectionsData = source.sectionsData || {};
+
+  if (isPgConnected) {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      await client.query(
+        `INSERT INTO tenants (id, slug, partner1_name, partner2_name, customer_email, is_purchased, plan, auth_token, user_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+        [id, candidateSlug, partner1, partner2, customerEmail, isPurchased, plan, authToken, targetUserId]
+      );
+      await client.query(
+        `INSERT INTO site_configs (tenant_id, template_preset, theme_id, layout_order, sections_data)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [id, templatePreset, themeId, JSON.stringify(layoutOrder), JSON.stringify(sectionsData)]
+      );
+      await client.query("COMMIT");
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
+  } else {
+    const store = loadLocalStore();
+    store.tenants[candidateSlug] = {
+      id,
+      slug: candidateSlug,
+      partner1_name: partner1,
+      partner2_name: partner2,
+      customer_email: customerEmail,
+      is_purchased: isPurchased,
+      plan,
+      auth_token: authToken,
+      user_id: targetUserId,
+      created_at: new Date().toISOString()
+    };
+    store.site_configs[candidateSlug] = {
+      tenant_id: id,
+      template_preset: templatePreset,
+      theme_id: themeId,
+      layout_order: layoutOrder,
+      sections_data: sectionsData,
+      updated_at: new Date().toISOString()
+    };
+    saveLocalStore(store);
+  }
+
+  return getTenantBySlug(candidateSlug);
+}
+
 module.exports = {
   pool,
   initDb,
@@ -2237,5 +2316,6 @@ module.exports = {
   getUserDesigns,
   linkTenantToUser,
   deleteTenant,
+  duplicateTenant,
   MASTER_ADMIN_TOKEN
 };

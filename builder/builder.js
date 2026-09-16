@@ -5092,13 +5092,21 @@ function renderProjectSwitcher() {
     const isCurrent = p.slug === state.slug;
     const displayName = [p.partner1, p.partner2].filter(Boolean).join(' & ') || p.slug;
     return `
-      <button type="button" class="project-dropdown-item ${isCurrent ? 'active' : ''}" data-slug="${escapeHtml(p.slug)}" data-token="${escapeHtml(p.authToken || '')}">
-        <div class="project-item-info">
-          <span class="project-item-name">${isCurrent ? '✓ ' : ''}${escapeHtml(displayName)}</span>
-          <span class="project-item-slug">/sites/${escapeHtml(p.slug)}</span>
-        </div>
-        ${isCurrent ? '<span class="project-item-check">Current</span>' : ''}
-      </button>
+      <div class="project-dropdown-row ${isCurrent ? 'active' : ''}">
+        <button type="button" class="project-dropdown-item ${isCurrent ? 'active' : ''}" data-slug="${escapeHtml(p.slug)}" data-token="${escapeHtml(p.authToken || '')}">
+          <div class="project-item-info">
+            <span class="project-item-name">${isCurrent ? '✓ ' : ''}${escapeHtml(displayName)}</span>
+            <span class="project-item-slug">/sites/${escapeHtml(p.slug)}</span>
+          </div>
+          ${isCurrent ? '<span class="project-item-check">Current</span>' : ''}
+        </button>
+        <button type="button" class="btn-duplicate-project" data-duplicate-slug="${escapeHtml(p.slug)}" title="Duplicate project" aria-label="Duplicate project">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </button>
+      </div>
     `;
   }).join('');
 
@@ -5131,6 +5139,54 @@ function renderProjectSwitcher() {
       await loadTenantData(slug);
       showToast(`Switched to project "${slug}"`, 'info');
       renderProjectSwitcher();
+    });
+  });
+
+  listEl.querySelectorAll('.btn-duplicate-project').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const slug = btn.dataset.duplicateSlug;
+      if (!slug) return;
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+      showToast(`Duplicating project "${slug}"...`, 'info');
+      try {
+        const res = await fetch(`/api/user/designs/${encodeURIComponent(slug)}/duplicate`, {
+          method: 'POST',
+          headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        });
+        const data = await res.json();
+        if (res.ok && data.tenant) {
+          showToast(`Project duplicated: ${data.tenant.slug}`, 'success');
+          await fetchUserProjects();
+          state.slug = data.tenant.slug;
+          if (data.tenant.authToken) state.authToken = data.tenant.authToken;
+          try {
+            const localAuth = JSON.parse(localStorage.getItem('lovesaas_auth') || '{}');
+            localAuth.slug = data.tenant.slug;
+            if (data.tenant.authToken) localAuth.authToken = data.tenant.authToken;
+            localStorage.setItem('lovesaas_auth', JSON.stringify(localAuth));
+          } catch (err) {}
+          window.history.pushState(
+            {},
+            '',
+            `/builder?slug=${encodeURIComponent(data.tenant.slug)}${data.tenant.authToken ? `&token=${encodeURIComponent(data.tenant.authToken)}` : ''}`
+          );
+          document.getElementById('projectSwitcherDropdown')?.classList.add('hidden');
+          document.getElementById('projectSwitcher')?.classList.remove('open');
+          document.getElementById('btnProjectSwitcher')?.setAttribute('aria-expanded', 'false');
+          toggleDropdownBackdrop(false);
+          await loadTenantData(data.tenant.slug);
+          renderProjectSwitcher();
+        } else {
+          showToast(data.error || 'Failed to duplicate project', 'error');
+        }
+      } catch (err) {
+        showToast('Error duplicating project', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
     });
   });
 }
