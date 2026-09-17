@@ -275,6 +275,19 @@ assert(freshRuntime.includes("setLdrStage"), "Runtime implements setLdrStage sta
 assert(freshRuntime.includes("echoCancellation: true"), "Runtime requests echo-cancelled audio track in LDR mode");
 assert(freshRuntime.includes("localVideos.forEach") && freshRuntime.includes("v.muted = true"), "Runtime mutes all local video feeds preventing feedback loops");
 
+// --- GATE 15: TRUE FULLSCREEN, TWO-SCREEN ONBOARDING & MANUAL PROCEED ---
+console.log("\n--- GATE 15: True Fullscreen, Two-Screen Onboarding & Manual Proceed ---");
+assert(freshTemplate.includes('id="ldrStageWelcome"') && freshTemplate.includes('id="btnLdrStartRoom"') && freshTemplate.includes('id="btnLdrJoinRoom"'), "Template contains Stage 0 Welcome Screen matching Screen 1");
+assert(freshTemplate.includes('id="btnLdrJustMe"') && freshTemplate.includes('id="btnLdrBackAll"'), "Template contains solo and back options on Welcome Screen");
+assert(freshTemplate.includes('id="ldrCodeTilesContainer"') && freshTemplate.includes('id="btnProceedToSetup"'), "Template contains Stage 1 Lobby with 5-letter tiles and manual proceed button");
+assert(!freshTemplate.includes('class="ldr-stepper"'), "Step numbers bar (1 2 3 4 5) is completely removed");
+assert(cssContent.includes("inset: 0 !important") && cssContent.includes("overflow: hidden !important"), "CSS enforces strict zero-scroll full-window display on desktop & mobile");
+const freshRoom = fs.readFileSync(path.join(__dirname, "../server/photobooth-room.js"), "utf8");
+assert(freshRoom.includes('"welcome"'), "Server room supports welcome stage in VALID_STAGES");
+assert(freshRuntime.includes("renderLdrCodeTiles"), "Runtime implements renderLdrCodeTiles for 5-letter dark tiles");
+assert(freshRuntime.includes('"welcome"') && freshRuntime.includes("btnProceedToSetup"), "Runtime supports welcome stage and wires proceed to setup button");
+assert(!freshRuntime.includes('setTimeout(() => {\n            if (this.session.isLdrMode) {\n              this.session.setLdrStage("setup"'), "Runtime does not auto-advance on partner join, waits for proceed click");
+
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");
 if (passedChecks === totalChecks) {

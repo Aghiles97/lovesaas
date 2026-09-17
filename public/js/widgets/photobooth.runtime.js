@@ -387,20 +387,16 @@
         if (dot) dot.className = "status-pulse-dot connected";
         if (modalDot) modalDot.className = "status-pulse-dot connected";
 
+        const waitingWrap = document.getElementById("ldrWaitingStatusWrap");
+        const connectedCard = document.getElementById("ldrPartnerConnectedCard");
+        if (waitingWrap) waitingWrap.style.display = "none";
+        if (connectedCard) connectedCard.style.display = "block";
+
         if (this.localStream) {
           this.setupWebRTC(this.localStream);
         }
 
         this.session.play("sparkle");
-
-        // Auto-advance both users from Lobby to Setup when partner joins
-        if (!this.session.currentLdrStage || this.session.currentLdrStage === "lobby") {
-          setTimeout(() => {
-            if (this.session.isLdrMode) {
-              this.session.setLdrStage("setup", false);
-            }
-          }, 1200);
-        }
         return;
       }
 
@@ -421,10 +417,16 @@
         if (dot) dot.className = "status-pulse-dot waiting";
         if (modalDot) modalDot.className = "status-pulse-dot waiting";
 
+        const waitingWrap = document.getElementById("ldrWaitingStatusWrap");
+        const connectedCard = document.getElementById("ldrPartnerConnectedCard");
+        if (waitingWrap) waitingWrap.style.display = "flex";
+        if (connectedCard) connectedCard.style.display = "none";
+
         const remoteVideos = [
           document.getElementById("photoboothVideoRemote"),
           document.getElementById("ldrVideoFeedRemote"),
-          document.getElementById("photoboothVideoDockedRemote")
+          document.getElementById("photoboothVideoDockedRemote"),
+          document.getElementById("ldrVideoFeedLobbyRemote")
         ];
         remoteVideos.forEach(v => { if (v) v.srcObject = null; });
 
@@ -535,7 +537,8 @@
         const remoteVideos = [
           document.getElementById("photoboothVideoRemote"),
           document.getElementById("ldrVideoFeedRemote"),
-          document.getElementById("photoboothVideoDockedRemote")
+          document.getElementById("photoboothVideoDockedRemote"),
+          document.getElementById("ldrVideoFeedLobbyRemote")
         ];
         remoteVideos.forEach((remoteVideo) => {
           if (remoteVideo) {
@@ -720,6 +723,19 @@
       }
     }
 
+    renderLdrCodeTiles(code) {
+      if (!code) return;
+      const container = document.getElementById("ldrCodeTilesContainer");
+      if (container) {
+        container.innerHTML = code.toUpperCase().split("").map(c => `<span class="ldr-code-tile">${c}</span>`).join("");
+      }
+      const codeEls = [
+        document.getElementById("ldrRoomCodeText"),
+        document.getElementById("ldrModalRoomCode")
+      ];
+      codeEls.forEach(el => { if (el) el.textContent = code; });
+    }
+
     openLdrModal(customCode = null) {
       this.isLdrMode = true;
       const modal = document.getElementById("photoboothLdrModal");
@@ -734,16 +750,16 @@
       if (!this.ldrManager) {
         this.ldrManager = new LdrManager(this);
       }
-      const code = customCode || this.generateRoomCode();
-      const codeEls = [
-        document.getElementById("ldrRoomCodeText"),
-        document.getElementById("ldrModalRoomCode")
-      ];
-      codeEls.forEach(el => { if (el) el.textContent = code; });
 
-      this.ldrManager.connect(code);
-      this.setLdrStage("lobby", false);
       this.startCamera();
+
+      if (customCode) {
+        this.renderLdrCodeTiles(customCode);
+        this.ldrManager.connect(customCode);
+        this.setLdrStage("lobby", false);
+      } else {
+        this.setLdrStage("welcome", false);
+      }
       this.play("beep", 660, 0.05);
     }
 
@@ -780,7 +796,7 @@
     setLdrStage(stage, isRemote = false) {
       if (!this.isLdrMode) return;
       this.currentLdrStage = stage;
-      const stages = ["lobby", "setup", "capture", "select", "deco", "print"];
+      const stages = ["welcome", "lobby", "setup", "capture", "select", "deco", "print"];
       stages.forEach((s) => {
         const node = document.getElementById("ldrStepNode" + s.charAt(0).toUpperCase() + s.slice(1));
         const panel = document.getElementById("ldrStage" + s.charAt(0).toUpperCase() + s.slice(1));
@@ -808,6 +824,13 @@
           localCap.volume = 0;
           localCap.play().catch(() => {});
         }
+        const localLobby = document.getElementById("photoboothVideoLobbyPreview");
+        if (localLobby && localLobby.srcObject !== this.mediaStream) {
+          localLobby.srcObject = this.mediaStream;
+          localLobby.muted = true;
+          localLobby.volume = 0;
+          localLobby.play().catch(() => {});
+        }
       }
       if (this.ldrManager?.remoteStream) {
         const stream = this.ldrManager.remoteStream;
@@ -824,6 +847,13 @@
           remoteCap.muted = false;
           remoteCap.volume = 1.0;
           remoteCap.play().catch(() => {});
+        }
+        const remoteLobby = document.getElementById("ldrVideoFeedLobbyRemote");
+        if (remoteLobby && remoteLobby.srcObject !== stream) {
+          remoteLobby.srcObject = stream;
+          remoteLobby.muted = false;
+          remoteLobby.volume = 1.0;
+          remoteLobby.play().catch(() => {});
         }
       }
 
@@ -949,9 +979,9 @@
     }
 
     generateRoomCode() {
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
       let code = "";
-      for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+      for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
       return code;
     }
 
@@ -979,6 +1009,7 @@
     generateNewRoom() {
       if (this.ldrManager) {
         const newCode = this.generateRoomCode();
+        this.renderLdrCodeTiles(newCode);
         this.ldrManager.connect(newCode);
         this.play("beep", 520, 0.05);
       }
@@ -1003,6 +1034,57 @@
           this.copyInviteLink();
         }
       });
+
+      // Stage 0: Welcome controls
+      document.getElementById("btnLdrStartRoom")?.addEventListener("click", () => {
+        const code = this.generateRoomCode();
+        this.renderLdrCodeTiles(code);
+        if (!this.ldrManager) this.ldrManager = new LdrManager(this);
+        this.ldrManager.connect(code);
+        this.setLdrStage("lobby", false);
+        this.play("beep", 720, 0.05);
+      });
+
+      const joinBtn = document.getElementById("btnLdrJoinRoom");
+      const joinForm = document.getElementById("ldrInlineJoinForm");
+      const joinInput = document.getElementById("ldrInputJoinCode");
+      joinBtn?.addEventListener("click", () => {
+        if (joinForm) {
+          const isHidden = joinForm.style.display === "none" || !joinForm.style.display;
+          joinForm.style.display = isHidden ? "block" : "none";
+          if (isHidden && joinInput) joinInput.focus();
+        }
+      });
+
+      const handleJoin = () => {
+        const code = (joinInput?.value || "").trim().toUpperCase();
+        if (code.length >= 4) {
+          this.renderLdrCodeTiles(code);
+          if (!this.ldrManager) this.ldrManager = new LdrManager(this);
+          this.ldrManager.connect(code);
+          this.setLdrStage("lobby", false);
+          this.play("beep", 720, 0.05);
+        }
+      };
+      document.getElementById("btnSubmitJoinCode")?.addEventListener("click", handleJoin);
+      joinInput?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          handleJoin();
+        }
+      });
+
+      document.getElementById("btnLdrJustMe")?.addEventListener("click", () => this.closeLdrModal());
+      document.getElementById("btnLdrBackAll")?.addEventListener("click", () => this.closeLdrModal());
+
+      // Stage 1: Lobby controls
+      document.getElementById("btnProceedToSetup")?.addEventListener("click", () => {
+        this.setLdrStage("setup", false);
+        this.play("beep", 880, 0.05);
+      });
+      document.getElementById("btnLdrPhotosAlone")?.addEventListener("click", () => this.closeLdrModal());
+      document.getElementById("btnLdrLeaveRoom")?.addEventListener("click", () => this.closeLdrModal());
+
       document.querySelectorAll(".ldr-step-node").forEach(node => {
         node.addEventListener("click", () => {
           const step = node.dataset.step;

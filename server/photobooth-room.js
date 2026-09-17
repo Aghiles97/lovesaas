@@ -171,7 +171,7 @@ class PhotoboothRoomServer {
 
     if (type === "STAGE_CHANGE" || type === "SET_STAGE") {
       const stage = sanitizeStr(payload?.stage || payload, 20);
-      const VALID_STAGES = new Set(["lobby", "setup", "capture", "select", "deco", "print"]);
+      const VALID_STAGES = new Set(["welcome", "lobby", "setup", "capture", "select", "deco", "print"]);
       if (VALID_STAGES.has(stage)) {
         currentRoom.state.stage = stage;
         this.broadcastAll(currentRoom, {

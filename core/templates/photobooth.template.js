@@ -455,50 +455,16 @@
           <div class="photobooth-ldr-modal-backdrop" id="ldrModalBackdrop"></div>
           <div class="photobooth-ldr-modal-dialog">
             
-            <!-- Modal Header: Progress Stepper, Status Pill, Close Button -->
-            <div class="ldr-modal-header">
-              <div class="ldr-stepper" role="tablist" aria-label="LDR Steps">
-                <div class="ldr-step-node active" data-step="lobby" id="ldrStepNodeLobby">
-                  <span class="step-num">1</span>
-                  <span class="step-text">Lobby</span>
-                </div>
-                <div class="ldr-step-line"></div>
-                <div class="ldr-step-node" data-step="setup" id="ldrStepNodeSetup">
-                  <span class="step-num">2</span>
-                  <span class="step-text">Style</span>
-                </div>
-                <div class="ldr-step-line"></div>
-                <div class="ldr-step-node" data-step="capture" id="ldrStepNodeCapture">
-                  <span class="step-num">3</span>
-                  <span class="step-text">Shoot</span>
-                </div>
-                <div class="ldr-step-line"></div>
-                <div class="ldr-step-node" data-step="select" id="ldrStepNodeSelect">
-                  <span class="step-num">4</span>
-                  <span class="step-text">Pick</span>
-                </div>
-                <div class="ldr-step-line"></div>
-                <div class="ldr-step-node" data-step="deco" id="ldrStepNodeDeco">
-                  <span class="step-num">5</span>
-                  <span class="step-text">Doodle</span>
-                </div>
-                <div class="ldr-step-line"></div>
-                <div class="ldr-step-node" data-step="print" id="ldrStepNodePrint">
-                  <span class="step-num">6</span>
-                  <span class="step-text">Print</span>
-                </div>
+            <!-- Minimal Unobtrusive Top Bar (No Stepper) -->
+            <div class="ldr-minimal-topbar">
+              <div class="ldr-live-call-status" id="ldrModalLiveCallStatus">
+                <span class="status-pulse-dot waiting" id="ldrModalPulseDot"></span>
+                <span id="ldrModalStatusText">Long Distance Photobooth</span>
+                <span class="ldr-audio-indicator" id="ldrAudioIndicator" style="display:none;" title="Audio connected">🎤 Audio Active</span>
               </div>
-
-              <div class="ldr-header-actions">
-                <div class="ldr-live-call-status">
-                  <span class="status-pulse-dot waiting" id="ldrModalPulseDot"></span>
-                  <span id="ldrModalStatusText">Waiting for partner...</span>
-                  <span class="ldr-audio-indicator" id="ldrAudioIndicator" title="Audio connected">🎤 Audio Active</span>
-                </div>
-                <button type="button" class="ldr-modal-close-btn" id="btnLeaveLdrModal" aria-label="Leave Room">
-                  <span>✕ Leave Room</span>
-                </button>
-              </div>
+              <button type="button" class="ldr-modal-close-btn" id="btnLeaveLdrModal" aria-label="Leave Photobooth">
+                <span>✕ Close</span>
+              </button>
             </div>
 
             <!-- Mini Docked Video Call Bar for Steps 2, 4, 5 -->
@@ -512,7 +478,7 @@
                 <span class="docked-tag">Partner 💕</span>
               </div>
               <div class="docked-call-controls">
-                <span class="docked-call-title">Live Call Active</span>
+                <span class="docked-call-title">Live Call Active 🎤</span>
                 <span class="docked-call-hint">Both talking in real time</span>
               </div>
             </div>
@@ -520,39 +486,91 @@
             <!-- Modal Content Body -->
             <div class="ldr-modal-body">
 
-              <!-- Stage 1: Lobby / Waiting Room -->
-              <div class="ldr-stage-panel" id="ldrStageLobby">
-                <div class="ldr-lobby-wrap">
-                  <div class="ldr-lobby-card">
-                    <div class="ldr-lobby-icon">💌</div>
-                    <h3 class="ldr-lobby-title">Invite Your Partner to the Booth</h3>
-                    <p class="ldr-lobby-sub">Send this room link to your partner. Once they open it, you will see each other live, talk with audio, and pick your frame together!</p>
+              <!-- Stage 0: Welcome / Mode Selection (Screenshot 1) -->
+              <div class="ldr-stage-panel" id="ldrStageWelcome">
+                <div class="ldr-welcome-wrap">
+                  <div class="ldr-welcome-pill">인생네컷 · for two</div>
+                  <h1 class="ldr-welcome-title">Photobooth</h1>
+                  <p class="ldr-welcome-sub">One photo strip, both of you in it, taken from two places at once.</p>
 
-                    <div class="ldr-code-card">
-                      <span class="ldr-code-label">ROOM CODE</span>
-                      <span class="ldr-code-big" id="ldrModalRoomCode">------</span>
+                  <button type="button" class="ldr-menu-card ldr-card-dark" id="btnLdrStartRoom">
+                    <span class="ldr-card-title">Start a room</span>
+                    <span class="ldr-card-sub">with your partner</span>
+                  </button>
+
+                  <button type="button" class="ldr-menu-card ldr-card-light" id="btnLdrJoinRoom">
+                    <span class="ldr-card-title">Join a room</span>
+                    <span class="ldr-card-sub">with a code</span>
+                  </button>
+
+                  <div class="ldr-inline-join-form" id="ldrInlineJoinForm" style="display:none;">
+                    <div class="ldr-join-input-group">
+                      <input type="text" id="ldrInputJoinCode" class="ldr-join-input" placeholder="ENTER 5-LETTER CODE" maxlength="6" autocomplete="off" />
+                      <button type="button" class="btn btn-primary" id="btnSubmitJoinCode">Join</button>
+                    </div>
+                  </div>
+
+                  <div class="ldr-sub-actions-row">
+                    <button type="button" class="ldr-pill-btn" id="btnLdrJustMe">
+                      <span>📷 Just me</span>
+                    </button>
+                  </div>
+
+                  <button type="button" class="ldr-text-back-btn" id="btnLdrBackAll">
+                    <span>← All activities</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Stage 1: Lobby / Send Code to Partner (Screenshot 2) -->
+              <div class="ldr-stage-panel" id="ldrStageLobby" style="display:none;">
+                <div class="ldr-lobby-ambient-bg">
+                  <h2 class="ldr-code-screen-title">Send this code to your partner</h2>
+                  <p class="ldr-code-screen-sub">They type it in, or open your link.</p>
+
+                  <div class="ldr-code-box-card">
+                    <div class="ldr-code-tiles-row" id="ldrCodeTilesContainer">
+                      <span class="ldr-code-tile">-</span>
+                      <span class="ldr-code-tile">-</span>
+                      <span class="ldr-code-tile">-</span>
+                      <span class="ldr-code-tile">-</span>
+                      <span class="ldr-code-tile">-</span>
+                    </div>
+                    <span id="ldrModalRoomCode" style="display:none;"></span>
+
+                    <div class="ldr-code-actions-row">
+                      <button type="button" class="ldr-tile-btn" id="btnModalCopyInvite">Copy link</button>
+                      <button type="button" class="ldr-tile-btn" id="btnModalShareInvite">share ↗</button>
                     </div>
 
-                    <div class="ldr-invite-actions">
-                      <button type="button" id="btnModalCopyInvite" class="btn btn-primary btn-lg">
-                        <span>🔗 Copy Direct Invite Link</span>
-                      </button>
-                      <button type="button" id="btnModalShareInvite" class="btn btn-secondary btn-lg">
-                        <span>📲 Share via App</span>
-                      </button>
+                    <!-- Waiting pulse before partner connects -->
+                    <div class="ldr-waiting-indicator" id="ldrWaitingStatusWrap">
+                      <span class="ldr-pulse-pink-dot"></span>
+                      <span id="ldrLobbyWaitingMsg">Waiting for your partner...</span>
                     </div>
 
-                    <div class="ldr-lobby-pulse-wrap">
-                      <div class="pulse-ring"></div>
-                      <span class="pulse-msg" id="ldrLobbyWaitingMsg">Waiting for your partner to join...</span>
-                    </div>
-
-                    <div class="ldr-self-test-wrap">
-                      <div class="self-test-label">Camera & Microphone Preview</div>
-                      <div class="self-test-feed">
-                        <video id="photoboothVideoLobbyPreview" autoplay playsinline muted></video>
+                    <!-- Partner Connected Card shown when partner joins -->
+                    <div class="ldr-partner-connected-card" id="ldrPartnerConnectedCard" style="display:none;">
+                      <div class="ldr-connected-tag">💕 Partner Connected & Live!</div>
+                      <div class="ldr-dual-preview-row">
+                        <div class="ldr-preview-feed-box">
+                          <video id="photoboothVideoLobbyPreview" autoplay playsinline muted></video>
+                          <span class="feed-tag">You</span>
+                        </div>
+                        <div class="ldr-preview-feed-box">
+                          <video id="ldrVideoFeedLobbyRemote" autoplay playsinline></video>
+                          <span class="feed-tag">Partner 💕</span>
+                        </div>
                       </div>
+                      <button type="button" class="btn btn-primary btn-xl ldr-proceed-setup-btn" id="btnProceedToSetup">
+                        <span>Proceed to Frame & Theme →</span>
+                      </button>
                     </div>
+                  </div>
+
+                  <div class="ldr-code-bottom-links">
+                    <button type="button" class="ldr-link-btn" id="btnLdrPhotosAlone">Take photos alone instead</button>
+                    <button type="button" class="ldr-link-btn" id="btnLdrLeaveRoom">Leave</button>
                   </div>
                 </div>
               </div>
