@@ -240,8 +240,56 @@
               </div>
             </div>
 
-            <!-- View 2: Frame Showcase & Layout Chooser (LOBBY - Visible by default!) -->
-            <div class="photobooth-frame-section photobooth-frame-selector photobooth-frames" id="photoboothFrameSection">
+            <!-- Primary Screen 1: Welcome Screen (Matches Screenshot 1) -->
+            <div class="photobooth-welcome-screen" id="photoboothWelcomeScreen">
+              <div class="ldr-welcome-wrap">
+                <div class="ldr-welcome-pill"><span>💕 Long Distance · Photobooth for Two</span></div>
+                <h1 class="ldr-welcome-title">Photobooth</h1>
+                <p class="ldr-welcome-sub">One synchronized vintage photo strip, both of you in it — taken together from anywhere in the world.</p>
+
+                <button type="button" class="ldr-menu-card ldr-card-dark" id="btnPrimaryStartRoom">
+                  <div class="ldr-card-left">
+                    <span class="ldr-card-icon">📸</span>
+                    <div class="ldr-card-texts">
+                      <span class="ldr-card-title">Start a room</span>
+                      <span class="ldr-card-sub">with your partner</span>
+                    </div>
+                  </div>
+                  <span class="ldr-card-arrow">→</span>
+                </button>
+
+                <button type="button" class="ldr-menu-card ldr-card-light" id="btnPrimaryJoinRoom">
+                  <div class="ldr-card-left">
+                    <span class="ldr-card-icon">💌</span>
+                    <div class="ldr-card-texts">
+                      <span class="ldr-card-title">Join a room</span>
+                      <span class="ldr-card-sub">with a code</span>
+                    </div>
+                  </div>
+                  <span class="ldr-card-arrow">→</span>
+                </button>
+
+                <div class="ldr-inline-join-form" id="primaryInlineJoinForm" style="display:none;">
+                  <div class="ldr-join-input-group">
+                    <input type="text" id="primaryInputJoinCode" class="ldr-join-input" placeholder="5-LETTER CODE" maxlength="6" autocomplete="off" spellcheck="false" />
+                    <button type="button" class="btn btn-primary" id="btnPrimarySubmitJoin">Join</button>
+                  </div>
+                </div>
+
+                <div class="ldr-sub-actions-row">
+                  <button type="button" class="ldr-pill-btn" id="btnPrimarySoloBooth">
+                    <span>📷 Solo Booth</span>
+                  </button>
+                </div>
+
+                <button type="button" class="ldr-text-back-btn" id="btnPrimaryBackWebsite">
+                  <span>← Back to Website</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- View 2: Frame Showcase & Layout Chooser (Setup - Hidden on Screen 1) -->
+            <div class="photobooth-frame-section photobooth-frame-selector photobooth-frames" id="photoboothFrameSection" style="display:none;">
               <p class="photobooth-subheading">PICK A FRAME INSIDE THE BOOTH</p>
               
               <!-- Interactive Frame Phrase Inscription Bar -->
@@ -591,36 +639,115 @@
               <div class="ldr-stage-panel" id="ldrStageSetup" style="display:none;">
                 <div class="ldr-setup-wrap">
                   <div class="ldr-stage-header">
-                    <h3>Pick Your Layout & Style Together</h3>
-                    <p>Live synchronized selection. Either partner can choose!</p>
+                    <span class="ldr-step-badge">Step 1 of 4 • Design Your Strip</span>
+                    <h3 class="ldr-stage-title">Pick Your Layout &amp; Theme Together</h3>
+                    <p class="ldr-stage-sub">Real-time synchronized selection. Tap any layout, pattern, or filter to update both screens!</p>
                   </div>
 
-                  <div class="ldr-setup-grid">
+                  <div class="ldr-setup-content-scroll">
+                    <!-- 1. Layout Formats -->
                     <div class="ldr-setup-section">
-                      <label class="ldr-setup-label">1. Frame Layout</label>
-                      <div class="ldr-layout-picker" id="ldrModalLayoutPicker">
-                        <!-- Populated dynamically or mapped -->
+                      <div class="ldr-section-header">
+                        <span class="ldr-section-num">1</span>
+                        <label class="ldr-setup-label">Photo Layout Format</label>
+                      </div>
+                      <div class="booth-formats-row ldr-formats-row" role="radiogroup" aria-label="Photo Layout Format">
+                        <button type="button" class="format-pill-btn ldr-format-pill-btn ${defaultFormat === 'classic_3cut' ? 'active' : ''}" data-format="classic_3cut">1×3 Strip</button>
+                        <button type="button" class="format-pill-btn ldr-format-pill-btn ${defaultFormat === 'classic_strip' ? 'active' : ''}" data-format="classic_strip">1×4 Strip</button>
+                        <button type="button" class="format-pill-btn ldr-format-pill-btn ${defaultFormat === 'double_6cut' ? 'active' : ''}" data-format="double_6cut">2×3 Double</button>
+                        <button type="button" class="format-pill-btn ldr-format-pill-btn ${defaultFormat === 'double_8cut' ? 'active' : ''}" data-format="double_8cut">2×4 Double</button>
+                        <button type="button" class="format-pill-btn ldr-format-pill-btn ${defaultFormat === 'film_grid' ? 'active' : ''}" data-format="film_grid">2×2 Grid</button>
+                        <button type="button" class="format-pill-btn ldr-format-pill-btn ${defaultFormat === 'grid_3x3' ? 'active' : ''}" data-format="grid_3x3">3×3 Grid</button>
+                        <button type="button" class="format-pill-btn ldr-format-pill-btn ${defaultFormat === 'polaroid_single' ? 'active' : ''}" data-format="polaroid_single">Polaroid</button>
+                        <button type="button" class="format-pill-btn ldr-format-pill-btn ${defaultFormat === 'portrait_pair' ? 'active' : ''}" data-format="portrait_pair">1×2 Pair</button>
+                        <button type="button" class="format-pill-btn ldr-format-pill-btn ${defaultFormat === 'landscape_2split' ? 'active' : ''}" data-format="landscape_2split">Wide 2-Cut</button>
+                        <button type="button" class="format-pill-btn ldr-format-pill-btn ${defaultFormat === 'landscape_toptext' ? 'active' : ''}" data-format="landscape_toptext">Banner 2-Cut</button>
+                        <button type="button" class="format-pill-btn ldr-format-pill-btn ${defaultFormat === 'triptych_3cut' ? 'active' : ''}" data-format="triptych_3cut">Triptych</button>
+                        <button type="button" class="format-pill-btn ldr-format-pill-btn ${defaultFormat === 'asym_collage' ? 'active' : ''}" data-format="asym_collage">Collage</button>
+                        <button type="button" class="format-pill-btn ldr-format-pill-btn ${defaultFormat === 'landscape_hero' ? 'active' : ''}" data-format="landscape_hero">Landscape</button>
                       </div>
                     </div>
 
+                    <!-- 2. Decorative Border Styles Grid -->
                     <div class="ldr-setup-section">
-                      <label class="ldr-setup-label">2. Color & Pattern Theme</label>
-                      <div class="ldr-style-picker" id="ldrModalStylePicker">
-                        <!-- Populated dynamically -->
+                      <div class="ldr-section-header">
+                        <span class="ldr-section-num">2</span>
+                        <label class="ldr-setup-label">Decorative Border Theme</label>
+                      </div>
+                      <div class="booth-frame-cards-grid ldr-frame-cards-grid ${defaultFormat === 'film_grid' || defaultFormat === 'grid_3x3' ? 'format-is-square' : ''}" id="ldrModalLayoutPicker" data-format="${defaultFormat}" role="radiogroup" aria-label="Frame Style">
+                        <div class="frame-card-preview ${defaultStyle === 'style_cyan_stars' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_cyan_stars" tabindex="0">
+                          <div class="frame-mini-strip frame-style-classic">${renderMiniWindows(defaultFormat)}</div>
+                          <span class="frame-card-title">CLASSIC STRIP</span>
+                        </div>
+                        <div class="frame-card-preview ${defaultStyle === 'style_floral' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_floral" tabindex="0">
+                          <div class="frame-mini-strip frame-style-floral">${renderMiniWindows(defaultFormat)}</div>
+                          <span class="frame-card-title">FILM GRID</span>
+                        </div>
+                        <div class="frame-card-preview ${defaultStyle === 'style_retro_swirl' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_retro_swirl" tabindex="0">
+                          <div class="frame-mini-strip frame-style-swirls">${renderMiniWindows(defaultFormat)}</div>
+                          <span class="frame-card-title">PORTRAIT PAIR</span>
+                        </div>
+                        <div class="frame-card-preview ${defaultStyle === 'style_lavender_stripes' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_lavender_stripes" tabindex="0">
+                          <div class="frame-mini-strip frame-style-stripes">${renderMiniWindows(defaultFormat)}</div>
+                          <span class="frame-card-title">WIDE COLLAGE</span>
+                        </div>
+                        <div class="frame-card-preview ${defaultStyle === 'style_noir_film' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_noir_film" tabindex="0">
+                          <div class="frame-mini-strip frame-style-noir">${renderMiniWindows(defaultFormat)}</div>
+                          <span class="frame-card-title">35MM NOIR</span>
+                        </div>
+                        <div class="frame-card-preview ${defaultStyle === 'style_y2k_pink' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_y2k_pink" tabindex="0">
+                          <div class="frame-mini-strip frame-style-y2k">${renderMiniWindows(defaultFormat)}</div>
+                          <span class="frame-card-title">Y2K PINK</span>
+                        </div>
+                        <div class="frame-card-preview ${defaultStyle === 'style_newspaper' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_newspaper" tabindex="0">
+                          <div class="frame-mini-strip frame-style-newspaper">${renderMiniWindows(defaultFormat)}</div>
+                          <span class="frame-card-title">NEWSPAPER</span>
+                        </div>
+                        <div class="frame-card-preview ${defaultStyle === 'style_minimal_white' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_minimal_white" tabindex="0">
+                          <div class="frame-mini-strip frame-style-minimal">${renderMiniWindows(defaultFormat)}</div>
+                          <span class="frame-card-title">MINIMAL</span>
+                        </div>
+                      </div>
+                      <div id="ldrModalStylePicker" style="display:none;"></div>
+                    </div>
+
+                    <!-- 3. Filters -->
+                    <div class="ldr-setup-section">
+                      <div class="ldr-section-header">
+                        <span class="ldr-section-num">3</span>
+                        <label class="ldr-setup-label">Colour Filter</label>
+                      </div>
+                      <div class="booth-filter-chips ldr-filter-chips" id="ldrModalFilterChips" role="radiogroup" aria-label="Color Filter">
+                        <button type="button" class="filter-chip-btn ${defaultFilter === 'vintage_90s' ? 'active' : ''}" data-filter="vintage_90s">90s Film</button>
+                        <button type="button" class="filter-chip-btn ${defaultFilter === 'bw_noir' ? 'active' : ''}" data-filter="bw_noir">B&amp;W Noir</button>
+                        <button type="button" class="filter-chip-btn ${defaultFilter === 'golden_sunset' ? 'active' : ''}" data-filter="golden_sunset">Golden Sunset</button>
+                        <button type="button" class="filter-chip-btn ${defaultFilter === 'dreamy_bloom' ? 'active' : ''}" data-filter="dreamy_bloom">Dreamy Bloom</button>
+                        <button type="button" class="filter-chip-btn ${defaultFilter === 'cyberpunk' ? 'active' : ''}" data-filter="cyberpunk">Cyberpunk</button>
+                        <button type="button" class="filter-chip-btn ${defaultFilter === 'natural' ? 'active' : ''}" data-filter="natural">Natural</button>
                       </div>
                     </div>
 
+                    <!-- 4. Frame Inscription -->
                     <div class="ldr-setup-section">
-                      <label class="ldr-setup-label">3. Couple Inscription Phrase</label>
-                      <div class="ldr-phrase-input-wrap">
-                        <input type="text" id="ldrModalPhraseInput" class="form-input" maxlength="60" placeholder="e.g. Together Forever ♡" />
+                      <div class="ldr-section-header">
+                        <span class="ldr-section-num">4</span>
+                        <label class="ldr-setup-label">Couple Inscription</label>
+                      </div>
+                      <div class="booth-phrase-editor-bar ldr-phrase-editor-bar">
+                        <input type="text" id="ldrModalPhraseInput" class="booth-phrase-input form-input" maxlength="42" value="${esc(stripCaption)}" placeholder="Write something lovely on your strip..." />
+                        <div class="phrase-presets">
+                          <button type="button" class="phrase-preset-btn" data-phrase="Forever &amp; Always ♡">Forever &amp; Always ♡</button>
+                          <button type="button" class="phrase-preset-btn" data-phrase="You + Me = Love ✨">You + Me = Love ✨</button>
+                          <button type="button" class="phrase-preset-btn" data-phrase="Best Day Ever 📸">Best Day Ever 📸</button>
+                          <button type="button" class="phrase-preset-btn" data-phrase="To The Moon &amp; Back 🌙">To The Moon &amp; Back 🌙</button>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   <div class="ldr-stage-actions">
                     <button type="button" id="btnLdrReadyToShoot" class="btn btn-primary btn-xl">
-                      <span>📸 Ready to Shoot Photos!</span>
+                      <span>📸 Ready to Shoot Photos →</span>
                     </button>
                   </div>
                 </div>
@@ -629,6 +756,38 @@
               <!-- Stage 3: Synchronized Capture / Viewfinder -->
               <div class="ldr-stage-panel" id="ldrStageCapture" style="display:none;">
                 <div class="ldr-capture-wrap">
+                  <div class="ldr-capture-top-nav">
+                    <button type="button" id="btnCaptureBackToSetup" class="btn-nav-back">
+                      <span>← Back to Frame</span>
+                    </button>
+                    <div class="ldr-live-call-tag">
+                      <span class="live-dot"></span>
+                      <span>LIVE WITH PARTNER 🎤</span>
+                    </div>
+                  </div>
+
+                  <!-- Camera Pro Controls Bar -->
+                  <div class="booth-pro-bar ldr-capture-pro-bar">
+                    <div class="booth-timer-picker" role="radiogroup" aria-label="Shutter Timer">
+                      <span class="pro-label">⏱️</span>
+                      <button type="button" class="pro-chip-btn active ldr-timer-chip" data-timer="3">3s</button>
+                      <button type="button" class="pro-chip-btn ldr-timer-chip" data-timer="5">5s</button>
+                      <button type="button" class="pro-chip-btn ldr-timer-chip" data-timer="10">10s</button>
+                      <button type="button" class="pro-chip-btn ldr-timer-chip" data-timer="1">Instant</button>
+                    </div>
+                    <div class="booth-pro-toggles">
+                      <button type="button" id="btnSwitchCameraLdr" class="pro-icon-toggle" title="Flip Camera">
+                        <span>🔄</span>
+                      </button>
+                      <button type="button" id="btnToggleMirrorLdr" class="pro-icon-toggle active" title="Toggle Mirror View">
+                        <span>🪞</span>
+                      </button>
+                      <button type="button" id="btnToggleFlashModeLdr" class="pro-icon-toggle active" title="Toggle Flash">
+                        <span>⚡</span>
+                      </button>
+                    </div>
+                  </div>
+
                   <div class="ldr-viewfinder-screen">
                     <div class="viewfinder-split-screen modal-split-viewfinder" id="ldrSplitViewfinder">
                       <div class="split-feed split-feed-local">
@@ -637,10 +796,10 @@
                       </div>
                       <div class="split-feed split-feed-remote">
                         <video id="ldrVideoFeedRemote" autoplay playsinline></video>
-                        <span class="split-tag">Partner (Live Audio Active 🎤)</span>
+                        <span class="split-tag">Partner 💕 (Live Audio 🎤)</span>
                         <div class="remote-placeholder" id="ldrRemotePlaceholder">
                           <span class="placeholder-icon">💕</span>
-                          <span class="placeholder-txt">Connecting partner video...</span>
+                          <span class="placeholder-txt">Connecting partner video &amp; audio...</span>
                         </div>
                       </div>
                     </div>
@@ -652,10 +811,12 @@
                   </div>
 
                   <div class="ldr-capture-controls">
-                    <div class="ldr-pose-hint" id="ldrModalPoseHint">✨ Pose 1: Give your biggest smile!</div>
+                    <div class="ldr-pose-hint" id="ldrModalPoseHint">✨ Pose 1: Smile big together! 😊</div>
                     <div class="ldr-shutter-bar">
                       <button type="button" class="photobooth-shutter-btn" id="btnLdrModalShutter" aria-label="Take synchronized photo burst">
-                        <span class="shutter-inner"></span>
+                        <div class="shutter-inner">
+                          <span class="shutter-icon">📸</span>
+                        </div>
                       </button>
                     </div>
                   </div>
@@ -666,20 +827,19 @@
               <div class="ldr-stage-panel" id="ldrStageSelect" style="display:none;">
                 <div class="ldr-select-wrap">
                   <div class="ldr-stage-header">
-                    <h3>Choose Your Favorite Shots</h3>
-                    <p id="ldrSelectionCounterText">Select photos to place in your frame</p>
+                    <span class="ldr-step-badge">Step 2 of 4 • Select Shots</span>
+                    <h3 class="ldr-stage-title">Choose Your Favorite Shots</h3>
+                    <p class="ldr-stage-sub" id="ldrSelectionCounterText">Select photos to place in your couple strip</p>
                   </div>
 
-                  <div class="selection-candidates-grid" id="ldrModalCandidatesGrid">
-                    <!-- Rendered dynamically -->
-                  </div>
+                  <div class="selection-candidates-grid ldr-candidates-grid" id="ldrModalCandidatesGrid"></div>
 
                   <div class="ldr-stage-actions">
                     <button type="button" id="btnLdrModalRetryExtra" class="btn btn-secondary">
                       <span>🔄 Reshoot Extra Set (1 Left)</span>
                     </button>
                     <button type="button" id="btnLdrConfirmSelection" class="btn btn-primary btn-xl" disabled>
-                      <span>✨ Next: Doodle & Stickers →</span>
+                      <span>✨ Next: Doodle &amp; Stickers →</span>
                     </button>
                   </div>
                 </div>
@@ -689,46 +849,52 @@
               <div class="ldr-stage-panel" id="ldrStageDeco" style="display:none;">
                 <div class="ldr-deco-wrap">
                   <div class="ldr-stage-header">
-                    <h3>Draw, Sign & Decorate Together</h3>
-                    <p>Your strokes and stickers appear on both screens in real time!</p>
+                    <span class="ldr-step-badge">Step 3 of 4 • Decorate Together</span>
+                    <h3 class="ldr-stage-title">Draw, Sign &amp; Decorate Together</h3>
+                    <p class="ldr-stage-sub">Your strokes and stickers appear on both screens in real time!</p>
+                  </div>
+
+                  <!-- Deco Navigation Tabs -->
+                  <div class="photobooth-deco-tabs" id="ldrModalDecoTabs" role="tablist" aria-label="Deco Categories">
+                    <button type="button" class="deco-tab-btn active" data-tab="stickers" role="tab">✨ Stickers</button>
+                    <button type="button" class="deco-tab-btn" data-tab="frames" role="tab">🖼️ Whole Frames</button>
+                    <button type="button" class="deco-tab-btn" data-tab="stamps" role="tab">🏷️ Postal &amp; Wax</button>
+                    <button type="button" class="deco-tab-btn" data-tab="washi" role="tab">🩹 Washi Tape</button>
+                    <button type="button" class="deco-tab-btn" data-tab="paint" role="tab">🎨 Paint &amp; Doodle</button>
+                  </div>
+
+                  <!-- Sticker Palette Tray -->
+                  <div class="photobooth-sticker-tray ldr-sticker-tray">
+                    <div class="sticker-palette" id="ldrModalStickerPalette"></div>
+                  </div>
+
+                  <!-- Paint & Doodle Palette -->
+                  <div class="photobooth-paint-palette ldr-paint-palette" id="ldrModalPaintPalette" style="display:none;">
+                    <div class="paint-color-swatches" id="ldrModalColorSwatches">
+                      <button type="button" class="color-swatch-btn active" data-color="#ff2d55" style="background:#ff2d55;" title="Ruby Red"></button>
+                      <button type="button" class="color-swatch-btn" data-color="#ffffff" style="background:#ffffff;" title="Pure White"></button>
+                      <button type="button" class="color-swatch-btn" data-color="#000000" style="background:#000000;" title="Jet Black"></button>
+                      <button type="button" class="color-swatch-btn" data-color="#ffd60a" style="background:#ffd60a;" title="Gold Star"></button>
+                      <button type="button" class="color-swatch-btn" data-color="#30d158" style="background:#30d158;" title="Mint Green"></button>
+                      <button type="button" class="color-swatch-btn" data-color="#0a84ff" style="background:#0a84ff;" title="Sky Blue"></button>
+                      <button type="button" class="color-swatch-btn" data-color="#bf5af2" style="background:#bf5af2;" title="Lavender"></button>
+                      <button type="button" class="color-swatch-btn" data-color="#ff9f0a" style="background:#ff9f0a;" title="Warm Coral"></button>
+                    </div>
+                    <div class="paint-size-picker" id="ldrModalSizePicker">
+                      <button type="button" class="size-chip-btn" data-size="3">Fine</button>
+                      <button type="button" class="size-chip-btn active" data-size="6">Med</button>
+                      <button type="button" class="size-chip-btn" data-size="14">Bold</button>
+                    </div>
+                    <div class="paint-tools-row">
+                      <button type="button" id="btnLdrModalUndoPaint" class="deco-tool-pill" title="Undo Last Stroke">↩️ Undo</button>
+                      <button type="button" id="btnLdrModalClearPaint" class="deco-tool-pill deco-tool-clear" title="Clear All Paint">🧹 Clear Paint</button>
+                    </div>
                   </div>
 
                   <div class="ldr-deco-workspace">
-                    <div class="ldr-deco-canvas-wrap" id="ldrModalDecoCanvasWrap">
+                    <div class="ldr-deco-canvas-wrap paint-mode-active" id="ldrModalDecoCanvasWrap">
                       <div class="photobooth-strip-container" id="ldrModalStripContainer"></div>
                       <canvas class="photobooth-paint-canvas" id="ldrModalPaintCanvas"></canvas>
-                    </div>
-
-                    <div class="ldr-deco-toolbar">
-                      <div class="photobooth-paint-palette" id="ldrModalPaintPalette">
-                        <div class="palette-group">
-                          <label class="palette-lbl">Color</label>
-                          <div class="color-swatches" id="ldrModalColorSwatches">
-                            <button type="button" class="color-swatch-btn active" data-color="#ff2d55" style="background:#ff2d55;" aria-label="Pink"></button>
-                            <button type="button" class="color-swatch-btn" data-color="#ff9500" style="background:#ff9500;" aria-label="Peach"></button>
-                            <button type="button" class="color-swatch-btn" data-color="#ffd60a" style="background:#ffd60a;" aria-label="Yellow"></button>
-                            <button type="button" class="color-swatch-btn" data-color="#30d158" style="background:#30d158;" aria-label="Mint"></button>
-                            <button type="button" class="color-swatch-btn" data-color="#0a84ff" style="background:#0a84ff;" aria-label="Sky"></button>
-                            <button type="button" class="color-swatch-btn" data-color="#bf5af2" style="background:#bf5af2;" aria-label="Lavender"></button>
-                            <button type="button" class="color-swatch-btn" data-color="#ffffff" style="background:#ffffff;" aria-label="White"></button>
-                            <button type="button" class="color-swatch-btn" data-color="#1c1c1e" style="background:#1c1c1e;" aria-label="Ink"></button>
-                          </div>
-                        </div>
-                        <div class="palette-group">
-                          <label class="palette-lbl">Brush</label>
-                          <div class="size-swatches" id="ldrModalSizeSwatches">
-                            <button type="button" class="brush-size-btn" data-size="3">Fine</button>
-                            <button type="button" class="brush-size-btn active" data-size="7">Medium</button>
-                            <button type="button" class="brush-size-btn" data-size="14">Thick</button>
-                          </div>
-                        </div>
-                        <div class="palette-group">
-                          <div class="paint-actions">
-                            <button type="button" class="btn btn-sm btn-ghost" id="btnLdrModalUndoPaint">↩ Undo</button>
-                            <button type="button" class="btn btn-sm btn-ghost" id="btnLdrModalClearPaint">🗑 Clear</button>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
 
@@ -744,8 +910,9 @@
               <div class="ldr-stage-panel" id="ldrStagePrint" style="display:none;">
                 <div class="ldr-print-wrap">
                   <div class="ldr-stage-header">
-                    <h3>🎉 Your Couple Photo Strip is Ready!</h3>
-                    <p>Taken together with love across the distance.</p>
+                    <span class="ldr-step-badge">🎉 Keepsake Ready</span>
+                    <h3 class="ldr-stage-title">Your Couple Photo Strip is Ready!</h3>
+                    <p class="ldr-stage-sub">Taken together with love across the distance.</p>
                   </div>
 
                   <div class="ldr-eject-slot-wrap">
@@ -754,18 +921,18 @@
                     </div>
                   </div>
 
-                  <div class="ldr-stage-actions">
+                  <div class="ldr-stage-actions ldr-print-actions">
                     <button type="button" id="btnLdrModalDownload" class="btn btn-primary btn-lg">
                       <span>💾 Save Photo Strip (PNG)</span>
                     </button>
                     <button type="button" id="btnLdrModalShare" class="btn btn-accent btn-lg">
-                      <span>💌 Share With Each Other</span>
+                      <span>💌 Share Strip</span>
                     </button>
                     <button type="button" id="btnLdrModalNewSession" class="btn btn-secondary btn-lg">
                       <span>🔄 Take Another Strip</span>
                     </button>
                     <button type="button" id="btnLdrModalFinishExit" class="btn btn-ghost btn-lg">
-                      <span>✕ Finish & Exit Room</span>
+                      <span>✕ Finish &amp; Exit Room</span>
                     </button>
                   </div>
                 </div>

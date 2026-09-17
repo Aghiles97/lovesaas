@@ -370,7 +370,15 @@
         if (dot) dot.className = dotClass;
         if (modalDot) modalDot.className = dotClass;
 
-        if (state?.stage && this.session) {
+        if (msg.participantCount >= 2) {
+          const waitingWrap = document.getElementById("ldrWaitingStatusWrap");
+          const connectedCard = document.getElementById("ldrPartnerConnectedCard");
+          if (waitingWrap) waitingWrap.style.display = "none";
+          if (connectedCard) connectedCard.style.display = "block";
+          this.setupWebRTC(this.localStream || this.session?.mediaStream);
+        }
+
+        if (state?.stage && state.stage !== "welcome" && this.session) {
           this.session.setLdrStage(state.stage, true);
         }
         return;
@@ -392,9 +400,7 @@
         if (waitingWrap) waitingWrap.style.display = "none";
         if (connectedCard) connectedCard.style.display = "block";
 
-        if (this.localStream) {
-          this.setupWebRTC(this.localStream);
-        }
+        this.setupWebRTC(this.localStream || this.session?.mediaStream);
 
         this.session.play("sparkle");
         return;
@@ -516,7 +522,9 @@
     }
 
     async setupWebRTC(stream) {
-      this.localStream = stream;
+      const media = stream || this.localStream || this.session?.mediaStream;
+      if (!media) return;
+      this.localStream = media;
       if (typeof RTCPeerConnection === "undefined") return;
 
       if (this.pc) {
@@ -528,7 +536,7 @@
       });
       this.pc = pc;
 
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+      media.getTracks().forEach((track) => pc.addTrack(track, media));
 
       pc.ontrack = (evt) => {
         const stream = evt.streams[0];
@@ -589,7 +597,11 @@
     }
 
     async handleWebRtcSignal(signal) {
-      if (!signal || !this.pc) return;
+      if (!signal) return;
+      if (!this.pc) {
+        await this.setupWebRTC(this.localStream || this.session?.mediaStream);
+      }
+      if (!this.pc) return;
       try {
         if (signal.sdp) {
           await this.pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
@@ -748,12 +760,15 @@
         if (modal.parentElement !== document.body) {
           document.body.appendChild(modal);
         }
+        modal.classList.add("is-active");
         modal.style.display = "flex";
         document.body.style.overflow = "hidden";
       }
       this.btnModeSolo?.classList.remove("active");
       this.btnModeLdr?.classList.add("active");
       if (this.boothLdrPanel) this.boothLdrPanel.style.display = "block";
+      const liveCallTag = document.querySelector(".ldr-live-call-tag");
+      if (liveCallTag) liveCallTag.innerHTML = '<span class="live-dot"></span><span>LIVE WITH PARTNER 🎤</span>';
 
       if (!this.ldrManager) {
         this.ldrManager = new LdrManager(this);
@@ -771,9 +786,37 @@
       this.play("beep", 660, 0.05);
     }
 
+    startSoloSession() {
+      this.isLdrMode = false;
+      if (this.ldrManager) {
+        this.ldrManager.disconnect();
+        this.ldrManager = null;
+      }
+      const modal = document.getElementById("photoboothLdrModal");
+      if (modal) {
+        if (modal.parentElement !== document.body) {
+          document.body.appendChild(modal);
+        }
+        modal.classList.add("is-active");
+        modal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
+      this.btnModeLdr?.classList.remove("active");
+      this.btnModeSolo?.classList.add("active");
+      if (this.boothLdrPanel) this.boothLdrPanel.style.display = "none";
+      const dockedBar = document.getElementById("ldrDockedCallBar");
+      if (dockedBar) dockedBar.style.display = "none";
+      const liveCallTag = document.querySelector(".ldr-live-call-tag");
+      if (liveCallTag) liveCallTag.innerHTML = '<span class="live-dot"></span><span>SOLO CAMERA BOOTH 📸</span>';
+      this.startCamera();
+      this.setLdrStage("setup", false);
+      this.play("beep", 660, 0.05);
+    }
+
     closeLdrModal() {
       const modal = document.getElementById("photoboothLdrModal");
       if (modal) {
+        modal.classList.remove("is-active");
         modal.style.display = "none";
         document.body.style.overflow = "";
       }
@@ -811,7 +854,6 @@
     }
 
     setLdrStage(stage, isRemote = false) {
-      if (!this.isLdrMode) return;
       this.currentLdrStage = stage;
       const stages = ["welcome", "lobby", "setup", "capture", "select", "deco", "print"];
       stages.forEach((s) => {
@@ -823,7 +865,7 @@
 
       const dockedBar = document.getElementById("ldrDockedCallBar");
       if (dockedBar) {
-        dockedBar.style.display = (stage === "setup" || stage === "select" || stage === "deco" || stage === "print") ? "flex" : "none";
+        dockedBar.style.display = (this.isLdrMode && (stage === "setup" || stage === "select" || stage === "deco" || stage === "print")) ? "flex" : "none";
       }
 
       if (this.mediaStream) {
@@ -886,60 +928,43 @@
     }
 
     initLdrSetupStage() {
-      const layoutPicker = document.getElementById("ldrModalLayoutPicker");
-      if (layoutPicker) {
-        const layouts = [
-          { id: "classic_3cut", name: "Classic 3-Cut", icon: "🎞️" },
-          { id: "classic_strip", name: "4-Cut Strip", icon: "📸" },
-          { id: "portrait_pair", name: "2-Cut Duo", icon: "✨" },
-          { id: "film_grid", name: "2x2 Film Grid", icon: "🔲" },
-          { id: "wide_collage", name: "Wide Strip", icon: "🖼️" }
-        ];
-        layoutPicker.innerHTML = layouts.map(l => `
-          <button type="button" class="ldr-choice-card ${l.id === this.currentFormat ? 'active' : ''}" data-format="${l.id}">
-            <span class="ldr-choice-icon">${l.icon}</span>
-            <span class="ldr-choice-name">${l.name}</span>
-          </button>
-        `).join("");
-        layoutPicker.querySelectorAll(".ldr-choice-card").forEach(btn => {
-          btn.addEventListener("click", () => {
-            layoutPicker.querySelectorAll(".ldr-choice-card").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            this.setFormat(btn.dataset.format);
-          });
-        });
-      }
+      document.querySelectorAll(".ldr-format-pill-btn").forEach(btn => {
+        btn.onclick = () => {
+          this.setFormat(btn.dataset.format);
+          this.play("beep", 660, 0.04);
+        };
+      });
 
-      const stylePicker = document.getElementById("ldrModalStylePicker");
-      if (stylePicker) {
-        const styles = [
-          { id: "style_cyan_stars", name: "Cyan Stars", preview: "#00d2ff" },
-          { id: "style_floral", name: "Floral Rose", preview: "#ff758c" },
-          { id: "style_retro_swirl", name: "Retro Swirl", preview: "#ff9f0a" },
-          { id: "style_lavender", name: "Lavender Dream", preview: "#bf5af2" },
-          { id: "style_checker", name: "Pastel Checkers", preview: "#30d158" },
-          { id: "style_noir", name: "Noir Minimal", preview: "#1c1c1e" }
-        ];
-        stylePicker.innerHTML = styles.map(s => `
-          <button type="button" class="ldr-choice-card ${s.id === this.currentStyle ? 'active' : ''}" data-style="${s.id}">
-            <span class="ldr-style-circle" style="background:${s.preview};"></span>
-            <span class="ldr-choice-name">${s.name}</span>
-          </button>
-        `).join("");
-        stylePicker.querySelectorAll(".ldr-choice-card").forEach(btn => {
-          btn.addEventListener("click", () => {
-            stylePicker.querySelectorAll(".ldr-choice-card").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            this.setStyle(btn.dataset.style);
-          });
-        });
-      }
+      document.querySelectorAll("#ldrModalLayoutPicker .ldr-style-chip-btn").forEach(card => {
+        card.onclick = () => {
+          this.setStyle(card.dataset.style);
+          this.play("beep", 580, 0.04);
+        };
+      });
+
+      document.querySelectorAll("#ldrModalFilterChips .filter-chip-btn").forEach(btn => {
+        btn.onclick = () => {
+          this.applyFilter(btn.dataset.filter);
+          this.play("beep", 520, 0.04);
+        };
+      });
 
       const phraseInput = document.getElementById("ldrModalPhraseInput");
       if (phraseInput) {
         phraseInput.value = this.caption || "";
         phraseInput.oninput = (e) => this.updatePhraseDisplays(e.target.value);
       }
+      document.querySelectorAll("#ldrStageSetup .phrase-preset-btn").forEach(btn => {
+        btn.onclick = () => {
+          const phrase = btn.dataset.phrase;
+          this.updatePhraseDisplays(phrase);
+          this.play("beep", 720, 0.04);
+        };
+      });
+
+      this.setFormat(this.currentFormat, true);
+      this.setStyle(this.currentStyle, true);
+      this.applyFilter(this.currentFilter, true);
 
       const readyBtn = document.getElementById("btnLdrReadyToShoot");
       if (readyBtn) {
@@ -952,6 +977,18 @@
       if (shutterBtn) {
         shutterBtn.onclick = () => this.startBurst();
       }
+      document.getElementById("btnCaptureBackToSetup")?.addEventListener("click", () => this.setLdrStage("setup", false));
+      document.getElementById("btnSwitchCameraLdr")?.addEventListener("click", () => this.switchCamera());
+      document.getElementById("btnToggleMirrorLdr")?.addEventListener("click", () => this.toggleMirror());
+      document.getElementById("btnToggleFlashModeLdr")?.addEventListener("click", () => this.toggleFlashMode());
+      document.querySelectorAll(".ldr-timer-chip").forEach(chip => {
+        chip.onclick = () => {
+          document.querySelectorAll(".ldr-timer-chip").forEach(c => c.classList.remove("active"));
+          chip.classList.add("active");
+          this.countdownSeconds = Number(chip.dataset.timer) || 3;
+          this.play("beep", 600, 0.03);
+        };
+      });
     }
 
     initLdrSelectStage() {
@@ -971,11 +1008,54 @@
 
     initLdrDecoStage() {
       this.renderStrip();
+      this.renderLdrStickerPalette();
+      this.initPaintEngine();
       setTimeout(() => this.resizePaintCanvas(), 60);
+
+      document.querySelectorAll("#ldrModalDecoTabs .deco-tab-btn").forEach(tab => {
+        tab.onclick = () => {
+          document.querySelectorAll("#ldrModalDecoTabs .deco-tab-btn").forEach(t => t.classList.remove("active"));
+          tab.classList.add("active");
+          const tabKey = tab.dataset.tab;
+          const isPaint = tabKey === "paint";
+          const paintPalette = document.getElementById("ldrModalPaintPalette");
+          if (paintPalette) paintPalette.style.display = isPaint ? "flex" : "none";
+          const wrap = document.getElementById("ldrModalDecoCanvasWrap");
+          if (wrap) wrap.classList.toggle("paint-mode-active", isPaint);
+          this.renderLdrStickerPalette(tabKey);
+          this.play("beep", 550, 0.04);
+        };
+      });
+
       const printBtn = document.getElementById("btnLdrModalPrintStrip");
       if (printBtn) {
         printBtn.onclick = () => this.setLdrStage("print", false);
       }
+    }
+
+    renderLdrStickerPalette(tab = "stickers") {
+      const palette = document.getElementById("ldrModalStickerPalette");
+      if (!palette) return;
+      if (tab === "paint") {
+        if (palette.parentElement) palette.parentElement.style.display = "none";
+        return;
+      }
+      if (palette.parentElement) palette.parentElement.style.display = "block";
+      const items = (tab === "stickers") ? STICKERS : (DECO_ITEMS[tab] || []);
+      palette.innerHTML = items.map(item => `
+        <button type="button" class="sticker-item-btn" data-type="${item.type}" data-val="${item.val || ''}" data-key="${item.id}">
+          <span class="sticker-thumb">${item.val || item.name}</span>
+        </button>
+      `).join("");
+      palette.querySelectorAll(".sticker-item-btn").forEach(btn => {
+        btn.onclick = () => {
+          this.addSticker({
+            type: btn.dataset.type,
+            val: btn.dataset.val,
+            itemKey: btn.dataset.key
+          });
+        };
+      });
     }
 
     initLdrPrintStage() {
@@ -1033,7 +1113,7 @@
     }
 
     bindControls() {
-      this.btnModeSolo?.addEventListener("click", () => this.switchMode("solo"));
+      this.btnModeSolo?.addEventListener("click", () => this.startSoloSession());
       this.btnModeLdr?.addEventListener("click", () => this.openLdrModal());
       document.getElementById("btnLeaveLdrModal")?.addEventListener("click", () => this.closeLdrModal());
       document.getElementById("ldrModalBackdrop")?.addEventListener("click", () => this.closeLdrModal());
@@ -1052,55 +1132,96 @@
         }
       });
 
-      // Stage 0: Welcome controls
-      document.getElementById("btnLdrStartRoom")?.addEventListener("click", () => {
+      // Stage 0: Welcome controls (Screen 1)
+      const handleStartRoom = (e) => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
         const code = this.generateRoomCode();
-        this.renderLdrCodeTiles(code);
-        if (!this.ldrManager) this.ldrManager = new LdrManager(this);
-        this.ldrManager.connect(code);
-        this.setLdrStage("lobby", false);
+        this.openLdrModal(code);
         this.play("beep", 720, 0.05);
-      });
+      };
+      document.getElementById("btnLdrStartRoom")?.addEventListener("click", handleStartRoom);
+      document.getElementById("btnPrimaryStartRoom")?.addEventListener("click", handleStartRoom);
 
-      const joinBtn = document.getElementById("btnLdrJoinRoom");
-      const joinForm = document.getElementById("ldrInlineJoinForm");
-      const joinInput = document.getElementById("ldrInputJoinCode");
-      joinBtn?.addEventListener("click", () => {
-        if (joinForm) {
-          const isHidden = joinForm.style.display === "none" || !joinForm.style.display;
-          joinForm.style.display = isHidden ? "block" : "none";
-          if (isHidden && joinInput) joinInput.focus();
-        }
-      });
+      const setupJoinControls = (btnId, formId, inputId, submitId) => {
+        const joinBtn = document.getElementById(btnId);
+        const joinForm = document.getElementById(formId);
+        const joinInput = document.getElementById(inputId);
+        const submitBtn = document.getElementById(submitId);
 
-      const handleJoin = () => {
-        const code = (joinInput?.value || "").trim().toUpperCase();
-        if (code.length >= 4) {
-          this.renderLdrCodeTiles(code);
-          if (!this.ldrManager) this.ldrManager = new LdrManager(this);
-          this.ldrManager.connect(code);
-          this.setLdrStage("lobby", false);
-          this.play("beep", 720, 0.05);
+        joinBtn?.addEventListener("click", (e) => {
+          if (e) { e.preventDefault(); e.stopPropagation(); }
+          if (joinForm) {
+            const isHidden = joinForm.style.display === "none" || !joinForm.style.display;
+            joinForm.style.display = isHidden ? "block" : "none";
+            if (isHidden && joinInput) joinInput.focus();
+          }
+        });
+
+        const doJoin = (e) => {
+          if (e) { e.preventDefault(); e.stopPropagation(); }
+          const code = (joinInput?.value || "").trim().toUpperCase();
+          if (code.length >= 4) {
+            this.openLdrModal(code);
+            this.play("beep", 720, 0.05);
+          } else if (joinInput) {
+            joinInput.focus();
+            joinInput.style.borderColor = "#ff453a";
+            setTimeout(() => { if (joinInput) joinInput.style.borderColor = ""; }, 1500);
+          }
+        };
+
+        submitBtn?.addEventListener("click", doJoin);
+        joinInput?.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            doJoin(e);
+          }
+        });
+      };
+
+      setupJoinControls("btnLdrJoinRoom", "ldrInlineJoinForm", "ldrInputJoinCode", "btnSubmitJoinCode");
+      setupJoinControls("btnPrimaryJoinRoom", "primaryInlineJoinForm", "primaryInputJoinCode", "btnPrimarySubmitJoin");
+
+      const handleSoloBooth = (e) => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        this.startSoloSession();
+      };
+      document.getElementById("btnLdrJustMe")?.addEventListener("click", handleSoloBooth);
+      document.getElementById("btnPrimarySoloBooth")?.addEventListener("click", handleSoloBooth);
+
+      const handleBackWebsite = (e) => {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        this.closeLdrModal();
+        if (typeof window !== "undefined") {
+          if (window.IS_STANDALONE_PHOTOBOOTH) {
+            window.location.href = "/";
+          } else {
+            const nextSec = document.getElementById("section-photobooth")?.nextElementSibling;
+            if (nextSec) nextSec.scrollIntoView({ behavior: "smooth" });
+          }
         }
       };
-      document.getElementById("btnSubmitJoinCode")?.addEventListener("click", handleJoin);
-      joinInput?.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          handleJoin();
-        }
-      });
-
-      document.getElementById("btnLdrJustMe")?.addEventListener("click", () => this.closeLdrModal());
-      document.getElementById("btnLdrBackAll")?.addEventListener("click", () => this.closeLdrModal());
+      document.getElementById("btnLdrBackAll")?.addEventListener("click", handleBackWebsite);
+      document.getElementById("btnPrimaryBackWebsite")?.addEventListener("click", handleBackWebsite);
 
       // Stage 1: Lobby controls
       document.getElementById("btnProceedToSetup")?.addEventListener("click", () => {
         this.setLdrStage("setup", false);
         this.play("beep", 880, 0.05);
       });
-      document.getElementById("btnLdrPhotosAlone")?.addEventListener("click", () => this.closeLdrModal());
+      document.getElementById("btnLdrPhotosAlone")?.addEventListener("click", handleSoloBooth);
       document.getElementById("btnLdrLeaveRoom")?.addEventListener("click", () => this.closeLdrModal());
+
+      document.addEventListener("click", (e) => {
+        const target = e.target.closest("button, a");
+        if (!target) return;
+        if (target.id === "btnLdrStartRoom" || target.id === "btnPrimaryStartRoom") {
+          handleStartRoom(e);
+        } else if (target.id === "btnLdrJustMe" || target.id === "btnPrimarySoloBooth" || target.id === "btnLdrPhotosAlone") {
+          handleSoloBooth(e);
+        } else if (target.id === "btnLdrBackAll" || target.id === "btnPrimaryBackWebsite") {
+          handleBackWebsite(e);
+        }
+      });
 
       document.querySelectorAll(".ldr-step-node").forEach(node => {
         node.addEventListener("click", () => {
@@ -1896,15 +2017,18 @@
     }
 
     backToLobby() {
+      const welcome = document.getElementById("photoboothWelcomeScreen");
       const frameSection = document.getElementById("photoboothFrameSection");
       const viewfinder = document.getElementById("photoboothViewfinder");
       const review = document.getElementById("photoboothReviewWorkspace");
       if (viewfinder) viewfinder.style.display = "none";
       if (review) review.style.display = "none";
       if (this.selectionTray) this.selectionTray.style.display = "none";
+      if (welcome) {
+        welcome.style.display = "flex";
+      }
       if (frameSection) {
-        frameSection.style.display = "block";
-        frameSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        frameSection.style.display = "none";
       }
       this.stopCamera();
       this.play("beep", 440, 0.05);

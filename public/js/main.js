@@ -593,6 +593,34 @@ function initEvents() {
 
   const musicToggle = document.getElementById("musicToggle");
   const vinylDisc = document.getElementById("vinylDisc");
+  const musicWidget = document.getElementById("musicPlayerWidget");
+  const musicCollapseToggle = document.getElementById("musicCollapseToggle");
+
+  if (musicCollapseToggle && musicWidget) {
+    musicCollapseToggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      musicWidget.classList.toggle("collapsed");
+      const isCol = musicWidget.classList.contains("collapsed");
+      try { localStorage.setItem("soundtrack_player_collapsed", isCol ? "1" : "0"); } catch (err) {}
+    });
+  }
+
+  if (musicWidget) {
+    try {
+      if (localStorage.getItem("soundtrack_player_collapsed") === "1") {
+        musicWidget.classList.add("collapsed");
+      }
+    } catch (err) {}
+
+    musicWidget.addEventListener("click", (e) => {
+      if (musicWidget.classList.contains("collapsed")) {
+        e.stopPropagation();
+        musicWidget.classList.remove("collapsed");
+        try { localStorage.setItem("soundtrack_player_collapsed", "0"); } catch (err) {}
+      }
+    });
+  }
+
   if (musicToggle) {
     musicToggle.addEventListener("click", () => {
       audio.toggleMusic();
@@ -600,7 +628,13 @@ function initEvents() {
   }
   if (vinylDisc) {
     vinylDisc.style.cursor = "pointer";
-    vinylDisc.addEventListener("click", () => {
+    vinylDisc.addEventListener("click", (e) => {
+      if (musicWidget && musicWidget.classList.contains("collapsed")) {
+        e.stopPropagation();
+        musicWidget.classList.remove("collapsed");
+        try { localStorage.setItem("soundtrack_player_collapsed", "0"); } catch (err) {}
+        return;
+      }
       audio.toggleMusic();
     });
   }

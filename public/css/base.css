@@ -1500,6 +1500,51 @@ body.hide-floating-player .floating-controls {
   transform: translateY(-2px);
 }
 
+.btn-music-collapse {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: var(--text-muted, #64748b);
+  font-size: 0.72rem;
+  font-weight: 700;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.btn-music-collapse:hover {
+  background: rgba(244, 63, 94, 0.15);
+  color: #e11d48;
+  border-color: rgba(244, 63, 94, 0.3);
+  transform: scale(1.08);
+}
+
+.music-player-widget.collapsed {
+  padding: 3px !important;
+  gap: 0 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+  cursor: pointer;
+}
+
+.music-player-widget.collapsed:hover {
+  transform: scale(1.08);
+}
+
+.music-player-widget.collapsed .music-meta,
+.music-player-widget.collapsed .audio-equalizer,
+.music-player-widget.collapsed .music-play-btn,
+.music-player-widget.collapsed .volume-control-wrap,
+.music-player-widget.collapsed .btn-music-collapse {
+  display: none !important;
+}
+
 .vinyl-disc {
   width: 34px;
   height: 34px;

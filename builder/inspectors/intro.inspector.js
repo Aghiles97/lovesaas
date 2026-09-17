@@ -21,6 +21,7 @@
     const intro = state.sectionsData.intro;
 
     if (intro.enabled === undefined) intro.enabled = true;
+    if (intro.skipIntro === undefined) intro.skipIntro = false;
     if (intro.title === undefined) intro.title = "Happy Birthday Ella 🎂❤️";
     if (intro.subtitle === undefined) intro.subtitle = "I created a special magical world for your birthday! Please pick our romantic song below 🎵, then tap the wax seal to enter your magical birthday world! 🎂✨";
     if (intro.recipientSubtext === undefined) intro.recipientSubtext = "A Magical Birthday World For";
@@ -76,6 +77,16 @@
           <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; font-weight: 600;">
             <input type="checkbox" id="intro_enabled" ${intro.enabled !== false ? 'checked' : ''}>
             <span>Enable Opening Card Screen</span>
+          </label>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);">
+          <div>
+            <span style="font-size: 12px; font-weight: 600; color: var(--text-main, #f8fafc);">⏭️ Skip Screen 1 (Direct Entry)</span>
+            <p style="font-size: 11px; color: var(--text-muted, #94a3b8); margin: 2px 0 0 0;">Open directly to Screen 2 (Main Website) without sealing</p>
+          </div>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; font-weight: 600;">
+            <input type="checkbox" id="intro_skipIntro" ${intro.skipIntro === true ? 'checked' : ''}>
+            <span>Skip Screen 1</span>
           </label>
         </div>
       </div>
@@ -211,6 +222,7 @@
 
     const syncIntro = () => {
       const enEl = document.getElementById('intro_enabled');
+      const skEl = document.getElementById('intro_skipIntro');
       const tiEl = document.getElementById('intro_title');
       const suEl = document.getElementById('intro_subtitle');
       const rsubEl = document.getElementById('intro_recipientSubtext');
@@ -226,6 +238,18 @@
       const emojEl = document.getElementById('intro_floatingEmojis');
 
       if (enEl) intro.enabled = enEl.checked;
+      if (skEl) {
+        const wasSkipped = intro.skipIntro === true;
+        intro.skipIntro = skEl.checked;
+        try {
+          if (state && state.slug) {
+            localStorage.setItem('intro_skip_' + state.slug, intro.skipIntro ? '1' : '0');
+          }
+        } catch (e) {}
+        if (intro.skipIntro && !wasSkipped && typeof window.setPreviewScreen === 'function') {
+          window.setPreviewScreen('website');
+        }
+      }
       if (tiEl) intro.title = tiEl.value;
       if (suEl) intro.subtitle = suEl.value;
       if (rsubEl) intro.recipientSubtext = rsubEl.value;
@@ -281,7 +305,7 @@
     });
 
     // Checkboxes
-    ['intro_enabled', 'intro_showFlowerSelector', 'intro_showSoundtrackSelector'].forEach((id) => {
+    ['intro_enabled', 'intro_skipIntro', 'intro_showFlowerSelector', 'intro_showSoundtrackSelector'].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('change', syncIntro);
     });

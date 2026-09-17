@@ -6,10 +6,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <script>
     window.IS_TENANT_VIEWER = true;
+    (function checkEarlyInstantUnseal() {
+      try {
+        var p = new URLSearchParams(window.location.search);
+        var pathParts = window.location.pathname.split("/").filter(Boolean);
+        var slug = p.get("slug") || (pathParts[0] === "sites" ? pathParts[1] : pathParts[pathParts.length - 1]) || "demo";
+        var isForcedSealed = p.get("screen") === "intro" || p.get("sealed") === "1";
+        var isCachedSkipped = localStorage.getItem("intro_skip_" + slug) === "1";
+        var shouldEarlyUnseal = !isForcedSealed && (
+          p.get("screen") === "website" ||
+          p.get("unsealed") === "1" ||
+          p.get("skip_intro") === "1" ||
+          p.get("skipIntro") === "1" ||
+          p.get("empty") === "1" ||
+          (p.get("preview") !== "builder" && isCachedSkipped)
+        );
+        if (shouldEarlyUnseal) {
+          document.documentElement.classList.add("instant-unsealed");
+        }
+      } catch (e) {}
+    })();
     window.IntroEnvelope = {
-      isSealed: true,
+      isSealed: !document.documentElement.classList.contains("instant-unsealed"),
       unseal(opts = {}) {
         this.isSealed = false;
+        document.documentElement.classList.add("instant-unsealed");
         document.body.classList.add("letter-unsealed");
         const env = document.getElementById("envelopeScreen");
         if (env) {
@@ -64,6 +85,7 @@
       },
       reseal() {
         this.isSealed = true;
+        document.documentElement.classList.remove("instant-unsealed");
         document.body.classList.remove("letter-unsealed");
         const env = document.getElementById("envelopeScreen");
         if (env) {
@@ -135,15 +157,90 @@
       background: #ff4365;
       transform: translateY(-2px);
     }
+    .btn-skip-envelope {
+      margin: 14px auto 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(244, 63, 94, 0.25);
+      color: #e11d48;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 2px 8px rgba(244, 63, 94, 0.08);
+      text-decoration: none;
+    }
+    .btn-skip-envelope:hover {
+      background: #f43f5e;
+      color: #ffffff;
+      border-color: #f43f5e;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(244, 63, 94, 0.25);
+    }
+    html.instant-unsealed #envelopeScreen {
+      display: none !important;
+    }
+    html.instant-unsealed #modularGridContainer,
+    html.instant-unsealed #mainApp,
+    html.instant-unsealed .main-content {
+      animation: none !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      transform: none !important;
+      filter: none !important;
+    }
+    .btn-music-collapse {
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      color: var(--text-muted, #64748b);
+      font-size: 0.72rem;
+      font-weight: 700;
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+    .btn-music-collapse:hover {
+      background: rgba(244, 63, 94, 0.15);
+      color: #e11d48;
+      border-color: rgba(244, 63, 94, 0.3);
+      transform: scale(1.08);
+    }
+    .music-player-widget.collapsed {
+      padding: 3px !important;
+      gap: 0 !important;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+      cursor: pointer;
+    }
+    .music-player-widget.collapsed:hover {
+      transform: scale(1.08);
+    }
+    .music-player-widget.collapsed .music-meta,
+    .music-player-widget.collapsed .audio-equalizer,
+    .music-player-widget.collapsed .music-play-btn,
+    .music-player-widget.collapsed .volume-control-wrap,
+    .music-player-widget.collapsed .btn-music-collapse {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
 
   <!-- SaaS Viewer Top Floating Bar -->
   <div class="saas-badge-bar" id="saasBadgeBar" style="display: none;">
-    <a href="/welcome" class="btn-edit-link" style="background: rgba(17, 24, 39, 0.85); border: 1px solid rgba(255,255,255,0.2); font-size: 0.82rem;">
-      💍 Made with LoveSaas
-    </a>
     <a href="/builder?slug=demo" id="btnViewerEditBuilder" class="btn-edit-link" style="font-size: 0.82rem;">
       ✏️ Studio
     </a>
@@ -159,7 +256,7 @@
     <!-- Floating Music Player & Settings Controls -->
   <div class="floating-controls" id="floatingControls">
     <div id="musicPlayerWidget" class="music-player-widget">
-      <div class="vinyl-disc" id="vinylDisc">
+      <div class="vinyl-disc" id="vinylDisc" title="Music Disc">
         <span class="vinyl-center">💿</span>
       </div>
       <div class="music-meta">
@@ -185,6 +282,7 @@
           <span id="volumeVal" class="volume-val-text">80%</span>
         </div>
       </div>
+      <button id="musicCollapseToggle" class="btn-music-collapse" title="Collapse Player" aria-label="Collapse Player">✕</button>
     </div>
 
   </div>
@@ -335,6 +433,7 @@
           </div>
         </div>
         <p class="envelope-hint" id="envelopeHint">🎵 Choose our soundtrack above to enter your magical birthday world ✨</p>
+        <button type="button" class="btn-skip-envelope" id="btnSkipEnvelope" aria-label="Skip to website">Skip to website ➔</button>
       </div>
     </div>
   </div>
@@ -1075,11 +1174,13 @@
       window.CURRENT_TENANT_SLUG = slug;
 
       // Immediately handle empty canvas mode so zero old/demo widgets or envelope ever flash
-      if (urlParams.get("empty") === "1") {
+      if (urlParams.get("empty") === "1" || urlParams.get("unsealed") === "1" || urlParams.get("screen") === "website" || urlParams.get("skip_intro") === "1" || urlParams.get("skipIntro") === "1") {
         window.IntroEnvelope.unseal({ instant: true });
-        document.body.classList.add("builder-mode", "in-builder-preview");
-        const app = document.getElementById("modularGridContainer");
-        if (app) { app.innerHTML = ""; }
+        if (urlParams.get("empty") === "1") {
+          document.body.classList.add("builder-mode", "in-builder-preview");
+          const app = document.getElementById("modularGridContainer");
+          if (app) { app.innerHTML = ""; }
+        }
       }
 
 
@@ -1296,6 +1397,15 @@
             hintEl.textContent = intro.envelopeHint;
           }
 
+          const btnSkip = document.getElementById("btnSkipEnvelope");
+          if (btnSkip) {
+            btnSkip.style.display = (intro.hideSkipButton === true) ? "none" : "inline-flex";
+            btnSkip.onclick = (e) => {
+              e.stopPropagation();
+              window.IntroEnvelope.unseal({ instant: true });
+            };
+          }
+
           if (intro.floatingEmojis) {
             const floatWrap = document.querySelector(".intro-floating-emojis");
             if (floatWrap) {
@@ -1320,11 +1430,15 @@
         // Envelope state: ONLY unseal if website screen requested, unsealed=1 explicitly requested, or intro disabled outside preview
         const requestedScreen = urlParams.get("screen");
         const shouldStaySealed = requestedScreen === "intro" || urlParams.get("sealed") === "1";
+        const isIntroSkipped = introData.skipIntro === true || introData.enabled === false || urlParams.get("skip_intro") === "1" || urlParams.get("skipIntro") === "1";
+        try {
+          localStorage.setItem("intro_skip_" + slug, isIntroSkipped ? "1" : "0");
+        } catch (e) {}
         const shouldUnseal = !shouldStaySealed && (
           requestedScreen === "website" ||
           urlParams.get("unsealed") === "1" ||
           (isLayoutEmpty && !isBuilderPreview) ||
-          (introData.enabled === false && !isBuilderPreview)
+          (isIntroSkipped && !isBuilderPreview)
         );
 
         if (shouldUnseal) {
@@ -1354,7 +1468,7 @@
           document.body.classList.remove("builder-mode", "in-builder-preview", "admin-mode", "admin-edit-on");
           const badgeBar = document.getElementById("saasBadgeBar");
           const editBtn = document.getElementById("btnViewerEditBuilder");
-          if (badgeBar) badgeBar.style.display = isIframe ? "none" : "flex";
+          if (badgeBar) badgeBar.style.display = "none";
           if (editBtn) editBtn.style.display = "none";
         }
 

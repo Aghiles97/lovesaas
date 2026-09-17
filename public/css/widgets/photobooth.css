@@ -3079,7 +3079,7 @@
   max-width: 100vw !important;
   max-height: 100dvh !important;
   z-index: 9999999 !important;
-  display: flex !important;
+  display: none;
   flex-direction: column !important;
   overflow: hidden !important;
   background: #0d0a14 !important;
@@ -3090,6 +3090,11 @@
   border-radius: 0 !important;
   box-shadow: none !important;
   color: #ffffff !important;
+}
+.photobooth-ldr-modal.is-active,
+.photobooth-ldr-modal[style*="display: flex"],
+.photobooth-ldr-modal[style*="display:flex"] {
+  display: flex !important;
 }
 .photobooth-ldr-modal-backdrop {
   display: none !important;
@@ -3174,7 +3179,17 @@
   border-color: rgba(255, 77, 136, 0.5);
 }
 
-/* Stage 0: Welcome Screen */
+/* Stage 0 / Primary Screen 1: Welcome Screen */
+.photobooth-welcome-screen {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 480px;
+  position: relative;
+  z-index: 5;
+  padding: 20px 0;
+}
 .ldr-welcome-wrap {
   flex: 1;
   display: flex;

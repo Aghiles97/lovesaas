@@ -31,8 +31,12 @@ if (typeof WIDGET_REGISTRY !== 'undefined' && !WIDGET_REGISTRY.intro) {
   };
 }
 
+const initSlug = (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('slug')) || 'demo';
+const initSavedScreen = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('builder_active_screen_' + initSlug)) ||
+  ((typeof localStorage !== 'undefined' && localStorage.getItem('intro_skip_' + initSlug) === '1') ? 'website' : 'intro');
+
 let state = {
-  slug: '',
+  slug: initSlug,
   authToken: null,
   userRole: 'visitor', // "visitor" | "user" | "admin"
   isPurchased: false,
@@ -41,7 +45,7 @@ let state = {
   layoutOrder: [],
   sectionsData: {},
   allWidgetIds: Object.keys(WIDGET_REGISTRY),
-  activeScreen: 'intro',
+  activeScreen: initSavedScreen,
   activeInspectorWidget: null,
   mediaViewMode:
     (typeof localStorage !== 'undefined' &&
@@ -838,10 +842,15 @@ async function loadTenantData(slug) {
       state.activeInspectorWidget = null;
     }
 
+    const introData = (state.sectionsData && state.sectionsData.intro) || {};
+    const isIntroSkipped = introData.skipIntro === true || introData.enabled === false;
+    try {
+      if (state.slug) localStorage.setItem('intro_skip_' + state.slug, isIntroSkipped ? '1' : '0');
+    } catch (e) {}
     const savedScreen =
       (state.slug &&
         sessionStorage.getItem('builder_active_screen_' + state.slug)) ||
-      'intro';
+      (isIntroSkipped ? 'website' : 'intro');
     state.activeScreen = savedScreen;
     if (typeof window.setPreviewScreen === 'function') {
       window.setPreviewScreen(savedScreen);
@@ -979,10 +988,13 @@ function renderWidgetTray() {
 
   const query = (currentWidgetSearchQuery || '').toLowerCase().trim();
   const showIntroCard = !query || 'first screen wax sealed letter opening card intro gate flower burst soundtrack'.includes(query);
+  const introData = (state.sectionsData && state.sectionsData.intro) || {};
+  const isIntroActive = introData.enabled !== false && introData.skipIntro !== true;
+  const showForFilter = currentWidgetFilter === 'all' || (currentWidgetFilter === 'active' && isIntroActive) || (currentWidgetFilter === 'inactive' && !isIntroActive) || (!['all', 'active', 'inactive'].includes(currentWidgetFilter));
 
-  if (showIntroCard && currentWidgetFilter !== 'inactive') {
+  if (showIntroCard && showForFilter) {
     const screen1Card = document.createElement('div');
-    screen1Card.className = `tray-item screen1-pinned-card active-widget ${state.activeInspectorWidget === 'intro' ? 'selected-for-edit' : ''}`;
+    screen1Card.className = `tray-item screen1-pinned-card ${isIntroActive ? 'active-widget' : 'inactive-widget'} ${state.activeInspectorWidget === 'intro' ? 'selected-for-edit' : ''}`;
     screen1Card.dataset.widgetId = 'intro';
     screen1Card.title = 'Edit Screen 1: Wax Sealed Letter';
     screen1Card.style.cursor = 'pointer';
@@ -999,6 +1011,10 @@ function renderWidgetTray() {
         </div>
       </div>
       <div class="screen1-actions">
+        <label class="toggle-switch" title="${isIntroActive ? 'Skip Screen 1' : 'Enable Screen 1'}">
+          <input type="checkbox" ${isIntroActive ? 'checked' : ''} data-toggle="intro">
+          <span class="slider"></span>
+        </label>
         <span class="screen1-chevron">›</span>
       </div>
     `;
@@ -1012,6 +1028,27 @@ function renderWidgetTray() {
     };
 
     screen1Card.onclick = openIntroCustomize;
+
+    const introToggle = screen1Card.querySelector('[data-toggle="intro"]');
+    if (introToggle) {
+      introToggle.onclick = (e) => e.stopPropagation();
+      introToggle.onchange = (e) => {
+        const checked = e.target.checked;
+        if (!state.sectionsData) state.sectionsData = {};
+        if (!state.sectionsData.intro) state.sectionsData.intro = {};
+        state.sectionsData.intro.enabled = checked;
+        state.sectionsData.intro.skipIntro = !checked;
+        try {
+          if (state.slug) localStorage.setItem('intro_skip_' + state.slug, !checked ? '1' : '0');
+        } catch (e) {}
+        if (typeof window.setPreviewScreen === 'function') {
+          window.setPreviewScreen(checked ? 'intro' : 'website');
+        }
+        debouncedLiveUpdate();
+        debouncedAutoSaveLayout();
+        renderWidgetTray();
+      };
+    }
 
     widgetTray.appendChild(screen1Card);
   }
@@ -2497,11 +2534,13 @@ function renderWidgetInspector(widgetId, forceScrollTop = false) {
 function reloadPreview() {
   const isEmpty =
     state.layoutOrder && state.layoutOrder.length === 0 ? '1' : '0';
+  const introData = (state.sectionsData && state.sectionsData.intro) || {};
+  const isIntroSkipped = introData.skipIntro === true || introData.enabled === false;
   const currentScreen =
     state.activeScreen ||
     (state.slug &&
       sessionStorage.getItem('builder_active_screen_' + state.slug)) ||
-    'intro';
+    (isIntroSkipped ? 'website' : 'intro');
   previewIframe.src = `/sites/${encodeURIComponent(state.slug)}?preview=builder&empty=${isEmpty}&t=${Date.now()}&screen=${currentScreen}${currentScreen === 'website' ? '&unsealed=1' : '&sealed=1'}`;
 }
 
@@ -5265,6 +5304,7 @@ function initScreenSwitcher() {
   if (btnIntro) btnIntro.onclick = () => setPreviewScreen('intro');
   if (btnCore) btnCore.onclick = () => setPreviewScreen('website');
   window.setPreviewScreen = setPreviewScreen;
+  setPreviewScreen(state.activeScreen);
 }
 
 function initMobileWorkspaceToggle() {
@@ -5870,11 +5910,13 @@ function setupEventListeners() {
     }
     if (e.data.type === 'BUILDER_IFRAME_READY') {
       debouncedLiveUpdate(true);
+      const introData = (state.sectionsData && state.sectionsData.intro) || {};
+      const isIntroSkipped = introData.skipIntro === true || introData.enabled === false;
       const currentScreen =
         state.activeScreen ||
         (state.slug &&
           sessionStorage.getItem('builder_active_screen_' + state.slug)) ||
-        'intro';
+        (isIntroSkipped ? 'website' : 'intro');
       if (previewIframe && previewIframe.contentWindow) {
         previewIframe.contentWindow.postMessage(
           {
