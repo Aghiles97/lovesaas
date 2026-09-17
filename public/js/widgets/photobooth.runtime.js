@@ -745,6 +745,9 @@
       this.isLdrMode = true;
       const modal = document.getElementById("photoboothLdrModal");
       if (modal) {
+        if (modal.parentElement !== document.body) {
+          document.body.appendChild(modal);
+        }
         modal.style.display = "flex";
         document.body.style.overflow = "hidden";
       }
