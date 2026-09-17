@@ -474,6 +474,10 @@
       if (type === "REMOTE_CLICK") {
         const ripple = document.getElementById("remoteClickRipple");
         if (ripple) {
+          if (typeof msg.x === "number" && typeof msg.y === "number") {
+            ripple.style.left = `${msg.x * 100}vw`;
+            ripple.style.top = `${msg.y * 100}vh`;
+          }
           ripple.classList.remove("rippling");
           void ripple.offsetWidth;
           ripple.classList.add("rippling");
@@ -548,20 +552,10 @@
     }
 
     routeRemoteAudio(stream) {
-      if (!stream || !stream.getAudioTracks().length) return;
-      try {
-        const ctx = AudioEngine.getCtx();
-        if (ctx) {
-          if (this.remoteAudioSource) {
-            try { this.remoteAudioSource.disconnect(); } catch (e) {}
-          }
-          this.remoteAudioSource = ctx.createMediaStreamSource(stream);
-          this.remoteAudioGain = ctx.createGain();
-          this.remoteAudioGain.gain.setValueAtTime(1.0, ctx.currentTime);
-          this.remoteAudioSource.connect(this.remoteAudioGain);
-          this.remoteAudioGain.connect(ctx.destination);
-        }
-      } catch (e) {}
+      if (this.remoteAudioSource) {
+        try { this.remoteAudioSource.disconnect(); } catch (e) {}
+        this.remoteAudioSource = null;
+      }
     }
 
     async renegotiate() {
@@ -999,13 +993,22 @@
       const dockedBar = document.getElementById("ldrDockedCallBar");
       if (dockedBar) dockedBar.style.display = "none";
 
+      this.isCapturing = false;
+      if (this.countdownTimer) {
+        clearTimeout(this.countdownTimer);
+        this.countdownTimer = null;
+      }
+      this.retryCount = 0;
+
       if (typeof window !== "undefined" && window.IS_STANDALONE_PHOTOBOOTH) {
         const endedScreen = document.getElementById("photoboothSessionEnded");
         if (endedScreen) endedScreen.style.display = "flex";
+        this.stopCamera();
+      } else {
+        this.startCamera();
       }
 
       this.play("beep", 440, 0.05);
-      this.startCamera();
     }
 
     setLdrStage(stage, isRemote = false) {
@@ -1057,7 +1060,7 @@
         remoteVideos.forEach((v) => {
           if (v && v.srcObject !== stream) {
             v.srcObject = stream;
-            v.muted = true;
+            v.muted = false;
             v.playsInline = true;
             v.setAttribute("playsinline", "");
             v.setAttribute("webkit-playsinline", "");
@@ -1322,7 +1325,14 @@
 
       document.getElementById("btnLdrModalDownload")?.addEventListener("click", () => this.exportStrip(), { once: true });
       document.getElementById("btnLdrModalShare")?.addEventListener("click", () => this.shareStrip(), { once: true });
-      document.getElementById("btnLdrModalNewSession")?.addEventListener("click", () => this.setLdrStage("setup", false), { once: true });
+      document.getElementById("btnLdrModalNewSession")?.addEventListener("click", () => {
+        this.retryCount = 0;
+        this.candidatePhotos = [];
+        this.selectedCandidateIndices = [];
+        this.capturedPhotos = [];
+        this.paintStrokes = [];
+        this.setLdrStage("setup", false);
+      }, { once: true });
       document.getElementById("btnLdrModalFinishExit")?.addEventListener("click", () => this.closeLdrModal(), { once: true });
     }
 
@@ -1549,21 +1559,8 @@
         });
       });
 
-      document.getElementById("btnToggleMirror")?.addEventListener("click", (e) => {
-        this.isMirror = !this.isMirror;
-        e.currentTarget.classList.toggle("active", this.isMirror);
-        if (this.videoEl) this.videoEl.classList.toggle("booth-no-mirror", !this.isMirror);
-        if (this.videoLocalEl) this.videoLocalEl.classList.toggle("booth-no-mirror", !this.isMirror);
-        this.vibrate(20);
-      });
-
-      document.getElementById("btnToggleFlashMode")?.addEventListener("click", (e) => {
-        this.flashEnabled = !this.flashEnabled;
-        e.currentTarget.classList.toggle("active", this.flashEnabled);
-        const icon = document.getElementById("flashModeIcon");
-        if (icon) icon.textContent = this.flashEnabled ? "⚡" : "🚫";
-        this.vibrate(20);
-      });
+      document.getElementById("btnToggleMirror")?.addEventListener("click", () => this.toggleMirror());
+      document.getElementById("btnToggleFlashMode")?.addEventListener("click", () => this.toggleFlashMode());
 
       document.querySelectorAll(".format-pill-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -1747,6 +1744,27 @@
       this.vibrate(20);
       this.play("beep", 660, 0.05);
       await this.startCamera();
+    }
+
+    toggleMirror() {
+      this.isMirror = !this.isMirror;
+      ["btnToggleMirror", "btnToggleMirrorLdr"].forEach(id => {
+        document.getElementById(id)?.classList.toggle("active", this.isMirror);
+      });
+      [this.videoEl, this.videoLocalEl, document.getElementById("ldrVideoFeedLocal")].forEach(el => {
+        if (el) el.classList.toggle("booth-no-mirror", !this.isMirror);
+      });
+      this.vibrate(20);
+    }
+
+    toggleFlashMode() {
+      this.flashEnabled = !this.flashEnabled;
+      ["btnToggleFlashMode", "btnToggleFlashModeLdr"].forEach(id => {
+        document.getElementById(id)?.classList.toggle("active", this.flashEnabled);
+      });
+      const icon = document.getElementById("flashModeIcon");
+      if (icon) icon.textContent = this.flashEnabled ? "⚡" : "🚫";
+      this.vibrate(20);
     }
 
     updatePhraseDisplays(text, isRemote = false) {
@@ -2021,9 +2039,11 @@
     async runBurstSequence(totalShots) {
       if (this.isCapturing) return;
       this.isCapturing = true;
-      this.capturedPhotos = [];
-      this.candidatePhotos = [];
-      this.selectedCandidateIndices = [];
+      if (!this.retryCount) {
+        this.capturedPhotos = [];
+        this.candidatePhotos = [];
+        this.selectedCandidateIndices = [];
+      }
 
       this.updateBurstProgress(0, totalShots);
 
@@ -2078,6 +2098,13 @@
         }
 
         const tick = () => {
+          if (!this.isCapturing) {
+            if (this.countdownOverlay) this.countdownOverlay.style.display = "none";
+            if (ldrOverlay) ldrOverlay.style.display = "none";
+            if (this.posePill) this.posePill.style.display = "none";
+            resolve();
+            return;
+          }
           if (this.countdownDigit) this.countdownDigit.textContent = count;
           const ldrDigit = document.getElementById("ldrCountdownDigit");
           if (ldrDigit) ldrDigit.textContent = count;
@@ -2085,7 +2112,7 @@
           if (count > 0) {
             this.play("beep", count === 1 ? 880 : 440, 0.09);
             count--;
-            setTimeout(tick, 1000);
+            this.countdownTimer = setTimeout(tick, 1000);
           } else {
             if (this.countdownOverlay) this.countdownOverlay.style.display = "none";
             if (ldrOverlay) ldrOverlay.style.display = "none";
@@ -2130,12 +2157,12 @@
         ].filter(Boolean);
         const localVideo = candidateLocalVideos.find(v => v.videoWidth > 0) || candidateLocalVideos[0];
         if (localVideo && localVideo.videoWidth) {
-          const vw = localVideo.videoWidth, vh = localVideo.videoHeight;
+          const vw = localVideo.videoWidth || 640, vh = localVideo.videoHeight || 480;
           const cropW = Math.min(vw, vh * (W / 2) / H);
           const cropH = cropW * H / (W / 2);
           const sx = (vw - cropW) / 2, sy = (vh - cropH) / 2;
           ctx.save();
-          if (this.isMirror) {
+          if (this.isMirror && this.facingMode === "user") {
             ctx.translate(W / 2, 0);
             ctx.scale(-1, 1);
             ctx.drawImage(localVideo, sx, sy, cropW, cropH, 0, 0, W / 2, H);
@@ -2156,7 +2183,7 @@
         ].filter(Boolean);
         const remoteVideo = candidateRemoteVideos.find(v => v.videoWidth > 0 && v.srcObject) || candidateRemoteVideos[0];
         if (remoteVideo && remoteVideo.videoWidth && remoteVideo.srcObject) {
-          const rvw = remoteVideo.videoWidth, rvh = remoteVideo.videoHeight;
+          const rvw = remoteVideo.videoWidth || 640, rvh = remoteVideo.videoHeight || 480;
           const rcropW = Math.min(rvw, rvh * (W / 2) / H);
           const rcropH = rcropW * H / (W / 2);
           const rsx = (rvw - rcropW) / 2, rsy = (rvh - rcropH) / 2;
@@ -3277,17 +3304,20 @@
 
       // Render Paint Strokes onto High-Res Final Strip
       if (this.paintStrokes && this.paintStrokes.length > 0) {
+        const getPt = (p) => Array.isArray(p) ? { x: p[0], y: p[1] } : (p || { x: 0, y: 0 });
+        const strokeScale = dim.w / 360;
         this.paintStrokes.forEach((stroke) => {
           if (!stroke || !stroke.points || stroke.points.length === 0) return;
-          const scale = totalW / 360;
           ctx.strokeStyle = stroke.color;
-          ctx.lineWidth = stroke.size * scale;
+          ctx.lineWidth = (stroke.size || 6) * strokeScale;
           ctx.lineCap = "round";
           ctx.lineJoin = "round";
           ctx.beginPath();
-          ctx.moveTo(stroke.points[0].x * totalW, stroke.points[0].y * totalH);
+          const p0 = getPt(stroke.points[0]);
+          ctx.moveTo(p0.x * dim.w, p0.y * dim.h);
           for (let i = 1; i < stroke.points.length; i++) {
-            ctx.lineTo(stroke.points[i].x * totalW, stroke.points[i].y * totalH);
+            const pt = getPt(stroke.points[i]);
+            ctx.lineTo(pt.x * dim.w, pt.y * dim.h);
           }
           ctx.stroke();
         });
@@ -3435,35 +3465,40 @@
     }
 
     drawStrokeLine(p1, p2, color, size) {
+      const getPt = (p) => Array.isArray(p) ? { x: p[0], y: p[1] } : (p || { x: 0, y: 0 });
+      const pt1 = getPt(p1), pt2 = getPt(p2);
       this.getPaintCanvases().forEach((canvas) => {
         const ctx = canvas.getContext("2d");
         const w = canvas.width, h = canvas.height;
         const scale = w / 360;
         ctx.strokeStyle = color;
-        ctx.lineWidth = size * scale;
+        ctx.lineWidth = (size || 6) * scale;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
         ctx.beginPath();
-        ctx.moveTo(p1.x * w, p1.y * h);
-        ctx.lineTo(p2.x * w, p2.y * h);
+        ctx.moveTo(pt1.x * w, pt1.y * h);
+        ctx.lineTo(pt2.x * w, pt2.y * h);
         ctx.stroke();
       });
     }
 
     drawStrokeOnCanvas(stroke) {
       if (!stroke || !stroke.points || stroke.points.length === 0) return;
+      const getPt = (p) => Array.isArray(p) ? { x: p[0], y: p[1] } : (p || { x: 0, y: 0 });
       this.getPaintCanvases().forEach((canvas) => {
         const ctx = canvas.getContext("2d");
         const w = canvas.width, h = canvas.height;
         const scale = w / 360;
         ctx.strokeStyle = stroke.color;
-        ctx.lineWidth = stroke.size * scale;
+        ctx.lineWidth = (stroke.size || 6) * scale;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
         ctx.beginPath();
-        ctx.moveTo(stroke.points[0].x * w, stroke.points[0].y * h);
+        const p0 = getPt(stroke.points[0]);
+        ctx.moveTo(p0.x * w, p0.y * h);
         for (let i = 1; i < stroke.points.length; i++) {
-          ctx.lineTo(stroke.points[i].x * w, stroke.points[i].y * h);
+          const pt = getPt(stroke.points[i]);
+          ctx.lineTo(pt.x * w, pt.y * h);
         }
         ctx.stroke();
       });

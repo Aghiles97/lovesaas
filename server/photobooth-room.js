@@ -11,7 +11,7 @@ const sanitizeStr = (s, len = 80) => String(s || "").replace(/<[^>]*>/g, "").sli
 class PhotoboothRoomServer {
   constructor() {
     this.rooms = new Map();
-    this.cleanupInterval = setInterval(() => this.cleanupExpiredRooms(), 10 * 60 * 1000);
+    this.cleanupInterval = setInterval(() => this.cleanupExpiredRooms(), 10 * 60 * 1000).unref();
   }
 
   getOrCreateRoom(code) {
@@ -25,6 +25,7 @@ class PhotoboothRoomServer {
         sseClients: new Set(),
         state: {
           stage: "lobby",
+          setupSubStep: 1,
           format: "classic_3cut",
           style: "style_cyan_stars",
           filter: "vintage_90s",
@@ -200,7 +201,11 @@ class PhotoboothRoomServer {
     if (type === "ACTION_CLICK") {
       const { action, field, value } = payload || {};
       if (field && ALLOWED_FIELDS.has(field) && value !== undefined) {
-        currentRoom.state[field] = (typeof value === "string") ? sanitizeStr(value, field === "caption" ? 80 : 32) : value;
+        if (field === "setupSubStep") {
+          currentRoom.state[field] = Math.min(3, Math.max(1, parseInt(value, 10) || 1));
+        } else {
+          currentRoom.state[field] = (typeof value === "string") ? sanitizeStr(value, field === "caption" ? 80 : 32) : value;
+        }
       }
       this.broadcastAll(currentRoom, {
         type: "ACTION_APPLIED",
@@ -248,7 +253,7 @@ class PhotoboothRoomServer {
       const rawIndices = Array.isArray(payload?.selectedIndices) ? payload.selectedIndices : [];
       currentRoom.state.selectedPhotos = rawIndices
         .filter(n => Number.isInteger(n) && n >= 0 && n <= 12)
-        .slice(0, 6);
+        .slice(0, 9);
       this.broadcastAll(currentRoom, {
         type: "PHOTO_SELECTION_UPDATED",
         selectedIndices: currentRoom.state.selectedPhotos,
@@ -350,12 +355,22 @@ class PhotoboothRoomServer {
             if (!code) return;
 
             currentRoom = this.getOrCreateRoom(code);
-            if (currentRoom.participants.size >= 2 && !currentRoom.participants.has(ws)) {
+            if (payload?.participantId) {
+              participantId = sanitizeStr(payload.participantId, 32);
+              for (const [prevWs, meta] of currentRoom.participants.entries()) {
+                if (meta.id === participantId && prevWs !== ws) {
+                  try { prevWs.terminate(); } catch (e) {}
+                  currentRoom.participants.delete(prevWs);
+                }
+              }
+            }
+            const activeCount = currentRoom.participants.size + (currentRoom.sseClients?.size || 0);
+            if (activeCount >= 2 && !currentRoom.participants.has(ws)) {
               ws.send(JSON.stringify({ type: "ROOM_FULL", error: "Room has reached max capacity of 2 partners." }));
               return;
             }
 
-            const role = currentRoom.participants.size === 0 ? "host" : "guest";
+            const role = activeCount === 0 ? "host" : "guest";
             participantName = sanitizeStr(payload?.name, 24) || (role === "host" ? "Partner 1" : "Partner 2");
             currentRoom.participants.set(ws, { id: participantId, name: participantName, role });
 

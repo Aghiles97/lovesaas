@@ -190,7 +190,7 @@
                     <span class="split-tag">You (Local)</span>
                   </div>
                   <div class="split-feed split-feed-remote">
-                    <video id="photoboothVideoRemote" autoplay playsinline muted webkit-playsinline></video>
+                    <video id="photoboothVideoRemote" autoplay playsinline webkit-playsinline></video>
                     <span class="split-tag">Partner (Live)</span>
                     <div class="remote-placeholder" id="remoteVideoPlaceholder">
                       <span class="placeholder-icon">💕</span>
@@ -504,7 +504,7 @@
         <div class="photobooth-ldr-modal" id="photoboothLdrModal" style="display:none;" role="dialog" aria-modal="true" aria-label="Long Distance Relationship Photobooth">
           <div class="photobooth-ldr-modal-backdrop" id="ldrModalBackdrop"></div>
           <div class="photobooth-ldr-modal-dialog">
-            
+            <div class="photobooth-flash" id="ldrModalFlash" aria-hidden="true"></div>
             <!-- Unified Professional Top Bar (Zero Collision / Overlap) -->
             <div class="ldr-app-header ldr-minimal-topbar" id="ldrAppHeader">
               <div class="ldr-header-left">
@@ -522,7 +522,7 @@
                   <span class="docked-tag">You</span>
                 </div>
                 <div class="docked-feed docked-feed-remote">
-                  <video id="photoboothVideoDockedRemote" autoplay playsinline muted webkit-playsinline></video>
+                  <video id="photoboothVideoDockedRemote" autoplay playsinline webkit-playsinline></video>
                   <span class="docked-tag">Partner 💕</span>
                 </div>
               </div>
@@ -634,7 +634,7 @@
                       <span class="feed-tag">You</span>
                     </div>
                     <div class="ldr-preview-feed-box">
-                      <video id="ldrVideoFeedLobbyRemote" autoplay playsinline muted webkit-playsinline></video>
+                      <video id="ldrVideoFeedLobbyRemote" autoplay playsinline webkit-playsinline></video>
                       <span class="feed-tag">Partner 💕</span>
                       <div class="remote-placeholder" id="ldrLobbyRemotePlaceholder" style="display:none;">
                         <span class="placeholder-icon">💕</span>
@@ -913,7 +913,7 @@
                         <span class="split-tag">You (Local)</span>
                       </div>
                       <div class="split-feed split-feed-remote">
-                        <video id="ldrVideoFeedRemote" autoplay playsinline muted webkit-playsinline></video>
+                        <video id="ldrVideoFeedRemote" autoplay playsinline webkit-playsinline></video>
                         <span class="split-tag">Partner 💕 (Live Audio 🎤)</span>
                         <div class="remote-placeholder" id="ldrRemotePlaceholder">
                           <span class="placeholder-icon">💕</span>
@@ -925,7 +925,6 @@
                     <div class="photobooth-countdown-overlay" id="ldrModalCountdown" style="display:none;">
                       <span class="countdown-digit" id="ldrCountdownDigit">3</span>
                     </div>
-                    <div class="photobooth-flash" id="ldrModalFlash" aria-hidden="true"></div>
                   </div>
 
                   <div class="ldr-capture-controls">
@@ -954,7 +953,7 @@
               <div class="ldr-stage-panel" id="ldrStageSelect" style="display:none;">
                 <div class="ldr-select-wrap">
                   <div class="ldr-stage-header">
-                    <span class="ldr-step-badge">Step 2 of 4 • Select Shots</span>
+                    <span class="ldr-step-badge">Step 4 of 6 • Select Shots</span>
                     <h3 class="ldr-stage-title">Choose Your Favorite Shots</h3>
                     <p class="ldr-stage-sub" id="ldrSelectionCounterText">Select photos to place in your couple strip</p>
                   </div>
@@ -976,7 +975,7 @@
               <div class="ldr-stage-panel" id="ldrStageDeco" style="display:none;">
                 <div class="ldr-deco-wrap">
                   <div class="ldr-stage-header">
-                    <span class="ldr-step-badge">Step 3 of 4 • Decorate Together</span>
+                    <span class="ldr-step-badge">Step 5 of 6 • Decorate Together</span>
                     <h3 class="ldr-stage-title">Draw, Sign &amp; Decorate Together</h3>
                     <p class="ldr-stage-sub">Your strokes and stickers appear on both screens in real time!</p>
                   </div>
