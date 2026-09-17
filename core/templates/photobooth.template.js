@@ -503,31 +503,32 @@
           <div class="photobooth-ldr-modal-backdrop" id="ldrModalBackdrop"></div>
           <div class="photobooth-ldr-modal-dialog">
             
-            <!-- Minimal Unobtrusive Top Bar (No Stepper) -->
-            <div class="ldr-minimal-topbar">
-              <div class="ldr-live-call-status" id="ldrModalLiveCallStatus">
-                <span class="status-pulse-dot waiting" id="ldrModalPulseDot"></span>
-                <span id="ldrModalStatusText">Long Distance Photobooth</span>
-                <span class="ldr-audio-indicator" id="ldrAudioIndicator" style="display:none;" title="Audio connected">🎤 Audio Active</span>
+            <!-- Unified Professional Top Bar (Zero Collision / Overlap) -->
+            <div class="ldr-app-header ldr-minimal-topbar" id="ldrAppHeader">
+              <div class="ldr-header-left">
+                <div class="ldr-live-call-status" id="ldrModalLiveCallStatus">
+                  <span class="status-pulse-dot waiting" id="ldrModalPulseDot"></span>
+                  <span id="ldrModalStatusText">Long Distance Photobooth</span>
+                  <span class="ldr-audio-indicator" id="ldrAudioIndicator" style="display:none;" title="Audio connected">🎤 Audio Active</span>
+                </div>
               </div>
-              <button type="button" class="ldr-modal-close-btn" id="btnLeaveLdrModal" aria-label="Leave Photobooth">
-                <span>✕ Close</span>
-              </button>
-            </div>
 
-            <!-- Mini Docked Video Call Bar for Steps 2, 4, 5 -->
-            <div class="ldr-docked-call-bar" id="ldrDockedCallBar" style="display:none;">
-              <div class="docked-feed docked-feed-local">
-                <video id="photoboothVideoDockedLocal" autoplay playsinline muted></video>
-                <span class="docked-tag">You</span>
+              <!-- Mini Docked Video Feeds (Steps 2, 4, 5) -->
+              <div class="ldr-header-docked-call ldr-docked-call-bar" id="ldrDockedCallBar" style="display:none;">
+                <div class="docked-feed docked-feed-local">
+                  <video id="photoboothVideoDockedLocal" autoplay playsinline muted></video>
+                  <span class="docked-tag">You</span>
+                </div>
+                <div class="docked-feed docked-feed-remote">
+                  <video id="photoboothVideoDockedRemote" autoplay playsinline muted webkit-playsinline></video>
+                  <span class="docked-tag">Partner 💕</span>
+                </div>
               </div>
-              <div class="docked-feed docked-feed-remote">
-                <video id="photoboothVideoDockedRemote" autoplay playsinline></video>
-                <span class="docked-tag">Partner 💕</span>
-              </div>
-              <div class="docked-call-controls">
-                <span class="docked-call-title">Live Call Active 🎤</span>
-                <span class="docked-call-hint">Both talking in real time</span>
+
+              <div class="ldr-header-right">
+                <button type="button" class="ldr-modal-close-btn" id="btnLeaveLdrModal" aria-label="Leave Photobooth">
+                  <span>✕ Close</span>
+                </button>
               </div>
             </div>
 
@@ -826,11 +827,20 @@
 
                   <div class="ldr-capture-controls">
                     <div class="ldr-pose-hint" id="ldrModalPoseHint">✨ Pose 1: Smile big together! 😊</div>
+                    <div class="ldr-burst-progress-wrap" id="ldrBurstProgressWrap">
+                      <div class="ldr-burst-progress-dots" id="ldrBurstProgressDots"></div>
+                      <span class="ldr-burst-progress-text" id="ldrBurstProgressText">Ready for Shot 1</span>
+                    </div>
                     <div class="ldr-shutter-bar">
                       <button type="button" class="photobooth-shutter-btn" id="btnLdrModalShutter" aria-label="Take synchronized photo burst">
                         <div class="shutter-inner">
                           <span class="shutter-icon">📸</span>
                         </div>
+                      </button>
+                    </div>
+                    <div class="ldr-early-select-bar" id="ldrEarlySelectBar" style="display:none;">
+                      <button type="button" class="btn btn-sm btn-primary ldr-early-select-btn" id="btnLdrDoneEarly">
+                        <span>Done, Pick Favorites →</span>
                       </button>
                     </div>
                   </div>

@@ -215,7 +215,7 @@ class PhotoboothRoomServer {
         type: "BURST_START_SYNC",
         initiatorId: participantId,
         timestamp: Date.now(),
-        shotCount: payload?.shotCount || 3,
+        shotCount: payload?.shotCount || 6,
         timerSeconds: payload?.timerSeconds || 3
       });
       return;

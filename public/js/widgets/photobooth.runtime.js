@@ -498,7 +498,7 @@
         this.session.updateRetryBudgetUi();
         if (this.session.selectionTray) this.session.selectionTray.style.display = "none";
         this.session.openCamera();
-        this.session.runBurstSequence(this.session.getShotCount());
+        this.session.runBurstSequence(this.session.getTrialCount());
         return;
       }
 
@@ -1031,6 +1031,16 @@
       document.getElementById("btnSwitchCameraLdr")?.addEventListener("click", () => this.switchCamera());
       document.getElementById("btnToggleMirrorLdr")?.addEventListener("click", () => this.toggleMirror());
       document.getElementById("btnToggleFlashModeLdr")?.addEventListener("click", () => this.toggleFlashMode());
+      const doneEarlyBtn = document.getElementById("btnLdrDoneEarly");
+      if (doneEarlyBtn) {
+        doneEarlyBtn.onclick = () => {
+          if (this.candidatePhotos.length >= this.getShotCount()) {
+            this.isCapturing = false;
+            this.setLdrStage("select", false);
+          }
+        };
+      }
+      this.updateBurstProgress(0, this.getTrialCount());
       document.querySelectorAll(".ldr-timer-chip").forEach(chip => {
         chip.onclick = () => {
           document.querySelectorAll(".ldr-timer-chip").forEach(c => c.classList.remove("active"));
@@ -1042,6 +1052,13 @@
     }
 
     initLdrSelectStage() {
+      const targetCount = this.getShotCount();
+      if (!this.selectedCandidateIndices.length || this.selectedCandidateIndices.length !== targetCount) {
+        this.selectedCandidateIndices = [];
+        for (let i = 0; i < Math.min(targetCount, this.candidatePhotos.length); i++) {
+          this.selectedCandidateIndices.push(i);
+        }
+      }
       this.renderCandidateCards();
       const retryBtn = document.getElementById("btnLdrModalRetryExtra");
       if (retryBtn) {
@@ -1724,36 +1741,91 @@
       return counts[this.currentFormat] || counts[this.currentLayout] || 3;
     }
 
+    getTrialCount() {
+      const slotCount = this.getShotCount();
+      const trialMap = {
+        1: 3,
+        2: 4,
+        3: 6,
+        4: 8,
+        6: 8,
+        8: 10,
+        9: 10
+      };
+      return trialMap[slotCount] || Math.max(slotCount * 2, 6);
+    }
+
+    updateBurstProgress(current, total) {
+      const dotsContainer = document.getElementById("ldrBurstProgressDots");
+      const textEl = document.getElementById("ldrBurstProgressText");
+      const earlyBar = document.getElementById("ldrEarlySelectBar");
+      const slotCount = this.getShotCount();
+      
+      if (dotsContainer) {
+        dotsContainer.innerHTML = Array.from({ length: total }, (_, i) => {
+          let cls = "burst-progress-dot";
+          if (i < current) cls += " filled";
+          else if (i === current) cls += " active";
+          return `<span class="${cls}"></span>`;
+        }).join("");
+      }
+      if (textEl) {
+        if (current === 0) {
+          textEl.textContent = `Ready for Shot 1 of ${total} (${total} trials for ${slotCount}-shot strip)`;
+        } else if (current >= total) {
+          textEl.textContent = `All ${total} trials captured! Proceeding to selection...`;
+        } else {
+          textEl.textContent = `Trial ${current} of ${total} captured`;
+        }
+      }
+      if (earlyBar) {
+        earlyBar.style.display = (current >= slotCount && current < total) ? "block" : "none";
+      }
+    }
+
     async startBurst(isRemote = false) {
       if (this.isCapturing) return;
 
       if (this.isLdrMode && !isRemote && this.ldrManager) {
         this.ldrManager.send("BURST_START_REQ", {
-          shotCount: this.getShotCount(),
+          shotCount: this.getTrialCount(),
           timerSeconds: this.countdownSeconds
         });
         return;
       }
 
-      await this.runBurstSequence(this.getShotCount());
+      await this.runBurstSequence(this.getTrialCount());
     }
 
     async runBurstSequence(totalShots) {
       if (this.isCapturing) return;
       this.isCapturing = true;
       this.capturedPhotos = [];
+      this.candidatePhotos = [];
+      this.selectedCandidateIndices = [];
+
+      this.updateBurstProgress(0, totalShots);
 
       for (let i = 0; i < totalShots; i++) {
+        if (!this.isCapturing) break;
         await this.runShotCountdown(i, totalShots);
+        if (!this.isCapturing) break;
         this.captureFrame();
-        if (i < totalShots - 1) await new Promise((r) => setTimeout(r, 900));
+        this.updateBurstProgress(i + 1, totalShots);
+        if (i < totalShots - 1) {
+          const ldrHint = document.getElementById("ldrModalPoseHint");
+          if (ldrHint) ldrHint.textContent = `✨ Shot ${i + 1} saved! Switch pose for Shot ${i + 2}...`;
+          await new Promise((r) => setTimeout(r, 2000));
+        }
       }
 
       this.isCapturing = false;
       this.play("sparkle");
       this.play("filmMotor");
       this.vibrate([40, 50, 40]);
-      this.stopCamera();
+      if (!this.isLdrMode) {
+        this.stopCamera();
+      }
       if (this.isLdrMode) {
         this.setLdrStage("select", false);
       } else {
@@ -1775,8 +1847,8 @@
         const ldrOverlay = document.getElementById("ldrModalCountdown");
         if (ldrOverlay) ldrOverlay.style.display = "flex";
 
-        let count = this.countdownSeconds;
-        if (count <= 1) {
+        let count = Number(this.countdownSeconds) || 3;
+        if (count <= 0) {
           if (this.countdownOverlay) this.countdownOverlay.style.display = "none";
           if (ldrOverlay) ldrOverlay.style.display = "none";
           if (this.posePill) this.posePill.style.display = "none";
@@ -1829,7 +1901,13 @@
         canvas.height = H;
 
         // Left Half: Local Partner
-        const localVideo = document.getElementById("ldrVideoFeedLocal") || this.videoLocalEl || this.videoEl;
+        const candidateLocalVideos = [
+          document.getElementById("ldrVideoFeedLocal"),
+          this.videoLocalEl,
+          document.getElementById("photoboothVideoDockedLocal"),
+          this.videoEl
+        ].filter(Boolean);
+        const localVideo = candidateLocalVideos.find(v => v.videoWidth > 0) || candidateLocalVideos[0];
         if (localVideo && localVideo.videoWidth) {
           const vw = localVideo.videoWidth, vh = localVideo.videoHeight;
           const cropW = Math.min(vw, vh * (W / 2) / H);
@@ -1850,7 +1928,12 @@
         }
 
         // Right Half: Remote Partner
-        const remoteVideo = document.getElementById("ldrVideoFeedRemote") || this.videoRemoteEl;
+        const candidateRemoteVideos = [
+          document.getElementById("ldrVideoFeedRemote"),
+          this.videoRemoteEl,
+          document.getElementById("photoboothVideoDockedRemote")
+        ].filter(Boolean);
+        const remoteVideo = candidateRemoteVideos.find(v => v.videoWidth > 0 && v.srcObject) || candidateRemoteVideos[0];
         if (remoteVideo && remoteVideo.videoWidth && remoteVideo.srcObject) {
           const rvw = remoteVideo.videoWidth, rvh = remoteVideo.videoHeight;
           const rcropW = Math.min(rvw, rvh * (W / 2) / H);
@@ -1947,6 +2030,7 @@
 
     renderCandidateCards() {
       const targetCount = this.getShotCount();
+      const totalCandidates = this.candidatePhotos.length;
       const grids = [
         this.selectionCandidatesGrid,
         document.getElementById("ldrModalCandidatesGrid")
@@ -1975,13 +2059,22 @@
       });
 
       const isReady = (this.selectedCandidateIndices.length === targetCount);
-      if (this.btnConfirmSelection) this.btnConfirmSelection.disabled = !isReady;
+      if (this.btnConfirmSelection) {
+        this.btnConfirmSelection.disabled = !isReady;
+        this.btnConfirmSelection.classList.toggle("ready-pulse", isReady);
+      }
       const modalConfirmBtn = document.getElementById("btnLdrConfirmSelection");
-      if (modalConfirmBtn) modalConfirmBtn.disabled = !isReady;
+      if (modalConfirmBtn) {
+        modalConfirmBtn.disabled = !isReady;
+        modalConfirmBtn.classList.toggle("ready-pulse", isReady);
+        modalConfirmBtn.innerHTML = isReady
+          ? `<span>Lock Selection & Decorate →</span>`
+          : `<span>Pick ${targetCount - this.selectedCandidateIndices.length} more (${this.selectedCandidateIndices.length}/${targetCount})</span>`;
+      }
 
       const counterText = document.getElementById("ldrSelectionCounterText");
       if (counterText) {
-        counterText.textContent = `Select ${targetCount} photos (${this.selectedCandidateIndices.length}/${targetCount} chosen)`;
+        counterText.textContent = `Pick ${targetCount} favorite shots from your ${totalCandidates} trials (${this.selectedCandidateIndices.length}/${targetCount} chosen)`;
       }
     }
 
@@ -2029,7 +2122,7 @@
         this.updateRetryBudgetUi();
         if (this.selectionTray) this.selectionTray.style.display = "none";
         this.openCamera();
-        this.runBurstSequence(this.getShotCount());
+        this.runBurstSequence(this.getTrialCount());
       }
     }
 
