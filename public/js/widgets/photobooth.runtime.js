@@ -71,6 +71,8 @@
   if (typeof window !== "undefined") {
     const unlockAudio = () => {
       AudioEngine.getCtx();
+      const el = document.getElementById("ldrRemoteAudio");
+      if (el && el.srcObject) el.play().catch(() => {});
       window.removeEventListener("touchstart", unlockAudio, true);
       window.removeEventListener("pointerdown", unlockAudio, true);
       window.removeEventListener("click", unlockAudio, true);
@@ -527,6 +529,43 @@
       this.send("STAGE_CHANGE", { stage });
     }
 
+    routeRemoteAudio(stream) {
+      if (!stream || !stream.getAudioTracks().length) return;
+      try {
+        const ctx = AudioEngine.getCtx();
+        if (ctx) {
+          if (this.remoteAudioSource) {
+            try { this.remoteAudioSource.disconnect(); } catch (e) {}
+          }
+          this.remoteAudioSource = ctx.createMediaStreamSource(stream);
+          this.remoteAudioGain = ctx.createGain();
+          this.remoteAudioGain.gain.setValueAtTime(1.0, ctx.currentTime);
+          this.remoteAudioSource.connect(this.remoteAudioGain);
+          this.remoteAudioGain.connect(ctx.destination);
+        }
+      } catch (e) {}
+    }
+
+    async renegotiate() {
+      if (!this.pc) return;
+      if (this.role === "host") {
+        if (this.pc.signalingState !== "stable") {
+          this.needRenegotiate = true;
+          return;
+        }
+        try {
+          const offer = await this.pc.createOffer();
+          if (this.pc.signalingState !== "stable") return;
+          await this.pc.setLocalDescription(offer);
+          this.send("WEBRTC_SIGNAL", { signal: { sdp: this.pc.localDescription } });
+        } catch (err) {
+          console.warn("WebRTC Renegotiate failed:", err);
+        }
+      } else {
+        this.send("WEBRTC_SIGNAL", { signal: { renegotiateReq: true } });
+      }
+    }
+
     async setupWebRTC(stream) {
       if (typeof RTCPeerConnection === "undefined") return;
       const media = stream || this.localStream || this.session?.mediaStream;
@@ -538,7 +577,16 @@
             { urls: "stun:stun.l.google.com:19302" },
             { urls: "stun:stun1.l.google.com:19302" },
             { urls: "stun:stun2.l.google.com:19302" },
-            { urls: "stun:stun.cloudflare.com:3478" }
+            { urls: "stun:stun.cloudflare.com:3478" },
+            {
+              urls: [
+                "turn:openrelay.metered.ca:80",
+                "turn:openrelay.metered.ca:443",
+                "turn:openrelay.metered.ca:443?transport=tcp"
+              ],
+              username: "openrelay",
+              credential: "openrelay"
+            }
           ]
         });
         this.pc = pc;
@@ -549,9 +597,24 @@
           pc.addTransceiver("audio", { direction: "sendrecv" });
         } catch (e) {}
 
+        pc.onnegotiationneeded = () => {
+          this.renegotiate();
+        };
+
         pc.ontrack = (evt) => {
-          const remoteStream = evt.streams[0] || new MediaStream([evt.track]);
-          this.remoteStream = remoteStream;
+          if (!this.remoteStream) {
+            this.remoteStream = new MediaStream();
+          }
+          if (evt.streams && evt.streams[0]) {
+            evt.streams[0].getTracks().forEach(t => {
+              if (!this.remoteStream.getTracks().some(existing => existing.id === t.id)) {
+                this.remoteStream.addTrack(t);
+              }
+            });
+          }
+          if (evt.track && !this.remoteStream.getTracks().some(existing => existing.id === evt.track.id)) {
+            this.remoteStream.addTrack(evt.track);
+          }
 
           const remoteVideos = [
             document.getElementById("photoboothVideoRemote"),
@@ -561,8 +624,11 @@
           ];
           remoteVideos.forEach((remoteVideo) => {
             if (remoteVideo) {
-              remoteVideo.srcObject = remoteStream;
+              if (remoteVideo.srcObject !== this.remoteStream) {
+                remoteVideo.srcObject = this.remoteStream;
+              }
               remoteVideo.muted = true;
+              remoteVideo.volume = 0;
               remoteVideo.playsInline = true;
               remoteVideo.setAttribute("playsinline", "");
               remoteVideo.setAttribute("webkit-playsinline", "");
@@ -572,7 +638,14 @@
 
           const remoteAudio = document.getElementById("ldrRemoteAudio");
           if (remoteAudio) {
-            remoteAudio.srcObject = remoteStream;
+            if (remoteAudio.srcObject !== this.remoteStream) {
+              remoteAudio.srcObject = this.remoteStream;
+            }
+            remoteAudio.muted = false;
+            remoteAudio.volume = 1.0;
+            remoteAudio.playsInline = true;
+            remoteAudio.setAttribute("playsinline", "");
+            remoteAudio.setAttribute("webkit-playsinline", "");
             remoteAudio.play().catch(() => {
               const unlockAudio = () => {
                 remoteAudio.play().catch(() => {});
@@ -583,6 +656,8 @@
               document.addEventListener("touchstart", unlockAudio, { once: true });
             });
           }
+
+          this.routeRemoteAudio(this.remoteStream);
 
           const placeholders = [
             document.getElementById("remoteVideoPlaceholder"),
@@ -606,27 +681,29 @@
       }
 
       if (this.localStream && this.pc) {
-        const senders = this.pc.getSenders();
+        const transceivers = this.pc.getTransceivers ? this.pc.getTransceivers() : [];
+        const senders = this.pc.getSenders ? this.pc.getSenders() : [];
         this.localStream.getTracks().forEach((track) => {
-          const sender = senders.find(s => s.track && s.track.kind === track.kind);
-          if (sender) {
-            sender.replaceTrack(track).catch(() => {});
+          const matchTransceiver = transceivers.find(t =>
+            (t.sender && t.sender.track && t.sender.track.kind === track.kind) ||
+            (t.receiver && t.receiver.track && t.receiver.track.kind === track.kind)
+          );
+          if (matchTransceiver && matchTransceiver.sender) {
+            matchTransceiver.sender.replaceTrack(track).catch(() => {});
           } else {
-            try {
-              this.pc.addTrack(track, this.localStream);
-            } catch (e) {}
+            const sender = senders.find(s => s.track && s.track.kind === track.kind);
+            if (sender) {
+              sender.replaceTrack(track).catch(() => {});
+            } else {
+              try { this.pc.addTrack(track, this.localStream); } catch (e) {}
+            }
           }
         });
+        this.renegotiate();
       }
 
       if (this.role === "host" && this.pc) {
-        try {
-          const offer = await this.pc.createOffer();
-          await this.pc.setLocalDescription(offer);
-          this.send("WEBRTC_SIGNAL", { signal: { sdp: this.pc.localDescription } });
-        } catch (err) {
-          console.warn("WebRTC Offer failed:", err);
-        }
+        this.renegotiate();
       }
     }
 
@@ -637,6 +714,13 @@
       }
       if (!this.pc) return;
       try {
+        if (signal.renegotiateReq) {
+          if (this.role === "host") {
+            this.renegotiate();
+          }
+          return;
+        }
+
         if (signal.sdp) {
           await this.pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
           if (this.pendingIceCandidates && this.pendingIceCandidates.length) {
@@ -649,6 +733,9 @@
             const answer = await this.pc.createAnswer();
             await this.pc.setLocalDescription(answer);
             this.send("WEBRTC_SIGNAL", { signal: { sdp: this.pc.localDescription } });
+          } else if (signal.sdp.type === "answer" && this.needRenegotiate) {
+            this.needRenegotiate = false;
+            this.renegotiate();
           }
         } else if (signal.candidate) {
           if (this.pc.remoteDescription && this.pc.remoteDescription.type) {
@@ -960,10 +1047,16 @@
           }
         });
         const remoteAudio = document.getElementById("ldrRemoteAudio");
-        if (remoteAudio && remoteAudio.srcObject !== stream) {
-          remoteAudio.srcObject = stream;
+        if (remoteAudio) {
+          if (remoteAudio.srcObject !== stream) remoteAudio.srcObject = stream;
+          remoteAudio.muted = false;
+          remoteAudio.volume = 1.0;
+          remoteAudio.playsInline = true;
+          remoteAudio.setAttribute("playsinline", "");
+          remoteAudio.setAttribute("webkit-playsinline", "");
           remoteAudio.play().catch(() => {});
         }
+        this.ldrManager.routeRemoteAudio(stream);
       }
 
       if (stage === "setup") this.initLdrSetupStage();
@@ -1456,32 +1549,31 @@
       try {
         const needsAudio = Boolean(this.isLdrMode);
         let stream = null;
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: this.facingMode,
-              width: { ideal: 1280 },
-              height: { ideal: 960 }
-            },
-            audio: needsAudio ? {
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true
-            } : false
-          });
-        } catch (mediaErr) {
-          if (needsAudio) {
-            console.warn("getUserMedia with audio failed, falling back to video-only:", mediaErr);
-            stream = await navigator.mediaDevices.getUserMedia({
-              video: {
-                facingMode: this.facingMode,
-                width: { ideal: 1280 },
-                height: { ideal: 960 }
-              },
-              audio: false
-            });
-          } else {
-            throw mediaErr;
+        const attempts = [
+          {
+            video: { facingMode: this.facingMode, width: { ideal: 1280 }, height: { ideal: 960 } },
+            audio: needsAudio ? { echoCancellation: true, noiseSuppression: true } : false
+          },
+          {
+            video: { facingMode: this.facingMode },
+            audio: needsAudio
+          },
+          {
+            video: true,
+            audio: needsAudio
+          },
+          {
+            video: true,
+            audio: false
+          }
+        ];
+
+        for (let i = 0; i < attempts.length; i++) {
+          try {
+            stream = await navigator.mediaDevices.getUserMedia(attempts[i]);
+            if (stream) break;
+          } catch (e) {
+            if (i === attempts.length - 1) throw e;
           }
         }
         this.mediaStream = stream;
@@ -1496,6 +1588,9 @@
           if (v) {
             v.muted = true;
             v.volume = 0;
+            v.playsInline = true;
+            v.setAttribute("playsinline", "");
+            v.setAttribute("webkit-playsinline", "");
             v.srcObject = stream;
             v.classList.toggle("facing-environment", this.facingMode === "environment");
             v.play().catch(() => {});
@@ -1512,6 +1607,11 @@
           if (this.viewfinderSplitScreen) this.viewfinderSplitScreen.style.display = "none";
           if (this.videoEl) {
             this.videoEl.style.display = "block";
+            this.videoEl.muted = true;
+            this.videoEl.volume = 0;
+            this.videoEl.playsInline = true;
+            this.videoEl.setAttribute("playsinline", "");
+            this.videoEl.setAttribute("webkit-playsinline", "");
             this.videoEl.srcObject = stream;
             this.videoEl.classList.toggle("facing-environment", this.facingMode === "environment");
             await this.videoEl.play();

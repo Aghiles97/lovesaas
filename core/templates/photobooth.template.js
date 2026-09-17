@@ -140,6 +140,7 @@
 
           <div class="photobooth-apparatus" data-default-layout="${esc(defaultLayout)}" data-default-format="${esc(defaultFormat)}" data-default-style="${esc(defaultStyle)}" data-default-filter="${esc(defaultFilter)}" data-strip-caption="${esc(stripCaption)}" data-strip-location="${esc(stripLocation)}" data-sfx="${sfxEnabled}">
             <div class="photobooth-flash" id="photoboothFlash" aria-hidden="true"></div>
+            <audio id="ldrRemoteAudio" autoplay playsinline webkit-playsinline style="position:fixed; top:-9999px; left:-9999px; opacity:0.001; pointer-events:none;"></audio>
 
             <!-- Remote Partner Floating Cursor -->
             <div class="photobooth-remote-cursor" id="photoboothRemoteCursor" style="display:none;" aria-hidden="true">
@@ -189,7 +190,7 @@
                     <span class="split-tag">You (Local)</span>
                   </div>
                   <div class="split-feed split-feed-remote">
-                    <video id="photoboothVideoRemote" autoplay playsinline></video>
+                    <video id="photoboothVideoRemote" autoplay playsinline muted webkit-playsinline></video>
                     <span class="split-tag">Partner (Live)</span>
                     <div class="remote-placeholder" id="remoteVideoPlaceholder">
                       <span class="placeholder-icon">💕</span>
@@ -533,6 +534,7 @@
               </div>
             </div>
 
+
             <!-- Modal Content Body -->
             <div class="ldr-modal-body">
 
@@ -646,9 +648,6 @@
                     </button>
                   </div>
                 </div>
-
-                <!-- Dedicated Audio Sink for mobile WebRTC audio stream -->
-                <audio id="ldrRemoteAudio" autoplay playsinline style="display:none;"></audio>
               </div>
 
               <!-- Stage 2: Synchronized Frame & Style Selection -->
@@ -811,7 +810,7 @@
                         <span class="split-tag">You (Local)</span>
                       </div>
                       <div class="split-feed split-feed-remote">
-                        <video id="ldrVideoFeedRemote" autoplay playsinline></video>
+                        <video id="ldrVideoFeedRemote" autoplay playsinline muted webkit-playsinline></video>
                         <span class="split-tag">Partner 💕 (Live Audio 🎤)</span>
                         <div class="remote-placeholder" id="ldrRemotePlaceholder">
                           <span class="placeholder-icon">💕</span>
