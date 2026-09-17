@@ -1022,9 +1022,10 @@
       });
 
       const dockedBar = document.getElementById("ldrDockedCallBar");
-      if (dockedBar) {
-        dockedBar.style.display = (this.isLdrMode && (stage === "setup" || stage === "select" || stage === "deco" || stage === "print")) ? "flex" : "none";
-      }
+      const appHeader = document.getElementById("ldrAppHeader");
+      const showDocked = Boolean(this.isLdrMode && (stage === "select" || stage === "deco"));
+      if (dockedBar) dockedBar.style.display = showDocked ? "flex" : "none";
+      if (appHeader) appHeader.classList.toggle("has-docked-call", showDocked);
 
       if (this.mediaStream) {
         const localDocked = document.getElementById("photoboothVideoDockedLocal");
@@ -1295,10 +1296,17 @@
         return;
       }
       if (palette.parentElement) palette.parentElement.style.display = "block";
-      const items = (tab === "stickers") ? STICKERS : (DECO_ITEMS[tab] || []);
+      let items = [];
+      if (tab === "stickers") {
+        items = DECO_ITEMS.stickers || [];
+      } else if (tab === "frames") {
+        items = WHOLE_FRAME_OVERLAYS.map(f => ({ id: f.id, type: "frame", val: f.id, label: f.icon || f.name }));
+      } else {
+        items = DECO_ITEMS[tab] || [];
+      }
       palette.innerHTML = items.map(item => `
-        <button type="button" class="sticker-item-btn" data-type="${item.type}" data-val="${item.val || ''}" data-key="${item.id}">
-          <span class="sticker-thumb">${item.val || item.name}</span>
+        <button type="button" class="sticker-item-btn" data-type="${item.type || 'emoji'}" data-val="${item.val || item.icon || item.text || ''}" data-key="${item.id}">
+          <span class="sticker-thumb">${item.val || item.icon || item.label || item.text || item.name || '✨'}</span>
         </button>
       `).join("");
       palette.querySelectorAll(".sticker-item-btn").forEach(btn => {
@@ -2480,7 +2488,6 @@
       let photosHtml = "";
       const isTopText = this.currentFormat === "landscape_toptext" || this.currentFormat === "triptych_toptext";
       const topPhraseHtml = isTopText ? `<div class="strip-phrase-slot pos-top"><span class="strip-phrase-display">${this.caption}</span></div>` : "";
-      const botPhraseHtml = !isTopText ? `<div class="strip-phrase-slot pos-bottom"><span class="strip-phrase-display">${this.caption}</span></div>` : "";
 
       if (this.currentFormat === "film_grid") {
         photosHtml = `<div class="grid-2x2-wrap">${activePhotos.map((src, i) => `
@@ -2488,42 +2495,42 @@
             <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
             <span class="photo-idx-badge">#${i + 1}</span>
           </div>
-        `).join("")}</div>${botPhraseHtml}`;
+        `).join("")}</div>`;
       } else if (this.currentFormat === "grid_3x3") {
         photosHtml = `<div class="grid-3x3-wrap">${activePhotos.map((src, i) => `
           <div class="strip-photo-card" data-idx="${i}" title="Tap to swap photo position">
             <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
             <span class="photo-idx-badge">#${i + 1}</span>
           </div>
-        `).join("")}</div>${botPhraseHtml}`;
+        `).join("")}</div>`;
       } else if (this.currentFormat === "double_6cut") {
         photosHtml = `<div class="grid-double-6-wrap">${activePhotos.map((src, i) => `
           <div class="strip-photo-card" data-idx="${i}" title="Tap to swap photo position">
             <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
             <span class="photo-idx-badge">#${i + 1}</span>
           </div>
-        `).join("")}</div>${botPhraseHtml}`;
+        `).join("")}</div>`;
       } else if (this.currentFormat === "double_8cut") {
         photosHtml = `<div class="grid-double-8-wrap">${activePhotos.map((src, i) => `
           <div class="strip-photo-card" data-idx="${i}" title="Tap to swap photo position">
             <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
             <span class="photo-idx-badge">#${i + 1}</span>
           </div>
-        `).join("")}</div>${botPhraseHtml}`;
+        `).join("")}</div>`;
       } else if (this.currentFormat === "landscape_2split" || this.currentFormat === "landscape_toptext") {
         photosHtml = `${topPhraseHtml}<div class="landscape-2split-wrap">${activePhotos.slice(0, 2).map((src, i) => `
           <div class="strip-photo-card" data-idx="${i}" title="Tap to swap photo position">
             <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
             <span class="photo-idx-badge">#${i + 1}</span>
           </div>
-        `).join("")}</div>${botPhraseHtml}`;
+        `).join("")}</div>`;
       } else if (this.currentFormat === "triptych_3cut" || this.currentFormat === "triptych_toptext") {
         photosHtml = `${topPhraseHtml}<div class="triptych-wrap">${activePhotos.slice(0, 3).map((src, i) => `
           <div class="strip-photo-card" data-idx="${i}" title="Tap to swap photo position">
             <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
             <span class="photo-idx-badge">#${i + 1}</span>
           </div>
-        `).join("")}</div>${botPhraseHtml}`;
+        `).join("")}</div>`;
       } else if (this.currentFormat === "wide_collage" || this.currentFormat === "asym_collage") {
         photosHtml = `
           <div class="asym-collage-wrap">
@@ -2540,14 +2547,12 @@
               `).join("")}
             </div>
           </div>
-          ${botPhraseHtml}
         `;
       } else if (this.currentFormat === "polaroid_single" || this.currentFormat === "landscape_hero") {
         photosHtml = `
           <div class="strip-photo-card ${this.currentFormat === 'polaroid_single' ? 'polaroid-single-card' : 'landscape-hero-card'}" data-idx="0">
             <img src="${activePhotos[0] || DEFAULT_SAMPLES[0]}" alt="Photobooth Single" style="filter: ${filterCss};">
           </div>
-          ${botPhraseHtml}
         `;
       } else {
         photosHtml = `${activePhotos.map((src, i) => `
@@ -2555,7 +2560,7 @@
             <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
             <span class="photo-idx-badge">#${i + 1}</span>
           </div>
-        `).join("")}${botPhraseHtml}`;
+        `).join("")}`;
       }
 
       this.stripContainer.className = `photobooth-strip-container strip-layout-${this.currentLayout} strip-format-${this.currentFormat} strip-style-${this.currentStyle}`;
@@ -2568,12 +2573,12 @@
         ${this.filmGrainEnabled ? `<div class="strip-film-grain" aria-hidden="true"></div>` : ""}
         <div class="strip-header-banner">
           <span>✦</span>
-          <span>${this.caption}</span>
+          <span>PHOTOBOOTH</span>
           <span>✦</span>
         </div>
         ${photosHtml}
         <div class="strip-footer-meta">
-          <div class="strip-caption-txt">${this.caption}</div>
+          <div class="strip-caption-txt strip-phrase-slot"><span class="strip-phrase-display">${this.caption}</span></div>
           <div class="strip-sub-txt">${this.location}${this.showDate ? ` • ${dateStr}` : ""}</div>
           ${this.dateStampEnabled ? `<div class="strip-date-stamp-digital">${dateDigital}</div>` : ""}
           <div class="strip-barcode-line">||| | || |||| | ||| | ||</div>
@@ -2702,6 +2707,12 @@
     }
 
     addSticker(item) {
+      if (item.type === "frame") {
+        this.currentOverlay = item.itemKey || item.id || "none";
+        this.renderStrip();
+        this.play("beep", 660, 0.04);
+        return;
+      }
       const id = "stk_" + Math.random().toString(36).slice(2, 9);
       const sticker = {
         id,

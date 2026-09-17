@@ -768,19 +768,19 @@
                         <div class="booth-frame-cards-grid ldr-frame-cards-grid ${defaultFormat === 'film_grid' || defaultFormat === 'grid_3x3' ? 'format-is-square' : ''}" id="ldrModalLayoutPicker" data-format="${defaultFormat}" role="radiogroup" aria-label="Frame Style">
                           <div class="frame-card-preview ${defaultStyle === 'style_cyan_stars' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_cyan_stars" tabindex="0">
                             <div class="frame-mini-strip frame-style-classic">${renderMiniWindows(defaultFormat)}</div>
-                            <span class="frame-card-title">CLASSIC STRIP</span>
+                            <span class="frame-card-title">CYAN STARS</span>
                           </div>
                           <div class="frame-card-preview ${defaultStyle === 'style_floral' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_floral" tabindex="0">
                             <div class="frame-mini-strip frame-style-floral">${renderMiniWindows(defaultFormat)}</div>
-                            <span class="frame-card-title">FILM GRID</span>
+                            <span class="frame-card-title">FLORAL TEAL</span>
                           </div>
                           <div class="frame-card-preview ${defaultStyle === 'style_retro_swirl' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_retro_swirl" tabindex="0">
                             <div class="frame-mini-strip frame-style-swirls">${renderMiniWindows(defaultFormat)}</div>
-                            <span class="frame-card-title">PORTRAIT PAIR</span>
+                            <span class="frame-card-title">RETRO SWIRL</span>
                           </div>
                           <div class="frame-card-preview ${defaultStyle === 'style_lavender_stripes' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_lavender_stripes" tabindex="0">
                             <div class="frame-mini-strip frame-style-stripes">${renderMiniWindows(defaultFormat)}</div>
-                            <span class="frame-card-title">WIDE COLLAGE</span>
+                            <span class="frame-card-title">LAVENDER</span>
                           </div>
                           <div class="frame-card-preview ${defaultStyle === 'style_noir_film' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_noir_film" tabindex="0">
                             <div class="frame-mini-strip frame-style-noir">${renderMiniWindows(defaultFormat)}</div>
