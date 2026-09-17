@@ -47,24 +47,69 @@
           return `<div class="mini-windows-wrap fmt-portrait_pair">${win(0)}${win(1)}</div>${phraseBlock("bottom", customPhrase)}`;
         case "wide_collage":
         case "asym_collage":
-          return `<div class="mini-windows-wrap fmt-asym_collage"><div class="mini-window asym-hero"><img src="${SAMPLES[0]}" alt="" class="mini-window-img"></div><div class="mini-window asym-sub"><img src="${SAMPLES[1]}" alt="" class="mini-window-img"></div><div class="mini-window asym-sub"><img src="${SAMPLES[2]}" alt="" class="mini-window-img"></div></div>${phraseBlock("corner", customPhrase)}`;
+        case "asym_tr_chin":
+          return `<div class="mini-windows-wrap fmt-asym_tr_chin"><div class="asym-cell pos-tl">${win(0)}</div><div class="asym-cell pos-tr chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell pos-bl">${win(1)}</div><div class="asym-cell pos-br">${win(2)}</div></div>`;
+        case "asym_br_chin":
+          return `<div class="mini-windows-wrap fmt-asym_br_chin"><div class="asym-cell pos-tl">${win(0)}</div><div class="asym-cell pos-tr">${win(1)}</div><div class="asym-cell pos-bl">${win(2)}</div><div class="asym-cell pos-br chin-cell">${phraseBlock("cell", customPhrase)}</div></div>`;
+        case "asym_tl_chin":
+          return `<div class="mini-windows-wrap fmt-asym_tl_chin"><div class="asym-cell pos-tl chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell pos-tr">${win(0)}</div><div class="asym-cell pos-bl">${win(1)}</div><div class="asym-cell pos-br">${win(2)}</div></div>`;
+        case "asym_bl_chin":
+          return `<div class="mini-windows-wrap fmt-asym_bl_chin"><div class="asym-cell pos-tl">${win(0)}</div><div class="asym-cell pos-tr">${win(1)}</div><div class="asym-cell pos-bl chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell pos-br">${win(2)}</div></div>`;
         case "polaroid_single":
           return `<div class="mini-windows-wrap fmt-polaroid_single">${win(0)}</div>${phraseBlock("bottom", customPhrase)}`;
+        case "landscape_single":
         case "landscape_hero":
-          return `<div class="mini-windows-wrap fmt-landscape_hero">${win(0)}</div>${phraseBlock("bottom", customPhrase)}`;
-        case "landscape_2split":
-          return `<div class="mini-windows-wrap fmt-landscape_2split">${win(0)}${win(1)}</div>${phraseBlock("bottom", customPhrase)}`;
+          return `<div class="mini-windows-wrap fmt-landscape_single">${win(0)}</div>${phraseBlock("bottom", customPhrase)}`;
         case "landscape_toptext":
           return `${phraseBlock("top", customPhrase)}<div class="mini-windows-wrap fmt-landscape_toptext">${win(0)}${win(1)}</div>`;
+        case "landscape_lefttext":
+          return `<div class="mini-windows-wrap fmt-landscape_lefttext"><div class="asym-col-left chin-col">${phraseBlock("side", customPhrase)}</div><div class="asym-col-right">${win(0)}${win(1)}</div></div>`;
+        case "landscape_2split":
+          return `<div class="mini-windows-wrap fmt-landscape_2split">${win(0)}${win(1)}</div>${phraseBlock("bottom", customPhrase)}`;
+        case "hero_split_left":
+          return `<div class="mini-windows-wrap fmt-hero_split_left"><div class="hero-top-row"><div class="hero-wide-win">${win(0)}</div><div class="hero-chin-win">${phraseBlock("cell", customPhrase)}</div></div><div class="hero-bottom-row">${win(1)}${win(2)}${win(3)}</div></div>`;
+        case "hero_split_right":
+          return `<div class="mini-windows-wrap fmt-hero_split_right"><div class="hero-top-row"><div class="hero-chin-win">${phraseBlock("cell", customPhrase)}</div><div class="hero-wide-win">${win(0)}</div></div><div class="hero-bottom-row">${win(1)}${win(2)}${win(3)}</div></div>`;
         case "triptych_3cut":
           return `<div class="mini-windows-wrap fmt-triptych_3cut">${win(0)}${win(1)}${win(2)}</div>${phraseBlock("bottom", customPhrase)}`;
         case "triptych_toptext":
           return `${phraseBlock("top", customPhrase)}<div class="mini-windows-wrap fmt-triptych_toptext">${win(0)}${win(1)}${win(2)}</div>`;
+        case "triptych_offset":
+          return `<div class="mini-windows-wrap fmt-triptych_offset"><div class="trip-col">${win(0)}</div><div class="trip-col trip-col-raised">${win(1)}${phraseBlock("center_chin", customPhrase)}</div><div class="trip-col">${win(2)}</div></div>`;
+        case "hero_bottom_right":
+          return `<div class="mini-windows-wrap fmt-hero_bottom_right"><div class="hero-top-row">${win(0)}${win(1)}${win(2)}</div><div class="hero-bottom-row"><div class="hero-chin-win">${phraseBlock("cell", customPhrase)}</div><div class="hero-wide-win">${win(3)}</div></div></div>`;
+        case "hero_left_stack":
+          return `<div class="mini-windows-wrap fmt-hero_left_stack"><div class="hero-col-left"><div class="hero-large-win">${win(0)}</div><div class="hero-chin-win">${phraseBlock("cell", customPhrase)}</div></div><div class="hero-col-right">${win(1)}${win(2)}${win(3)}</div></div>`;
         case "classic_3cut":
         default:
           return `<div class="mini-windows-wrap fmt-classic_3cut">${win(0)}${win(1)}${win(2)}</div>${phraseBlock("bottom", customPhrase)}`;
       }
     };
+
+    const FRAME_CATALOGUE = [
+      { id: "classic_3cut", num: 1, title: "1×3 RETRO", desc: "3 Photos • Vertical Strip", aspect: "strip" },
+      { id: "classic_strip", num: 2, title: "1×4 CLASSIC", desc: "4 Photos • Classic Strip", aspect: "strip" },
+      { id: "double_6cut", num: 3, title: "2×3 DOUBLE", desc: "6 Photos • Double Strip", aspect: "double" },
+      { id: "double_8cut", num: 4, title: "2×4 DOUBLE", desc: "8 Photos • Wide Double", aspect: "double" },
+      { id: "polaroid_single", num: 5, title: "POLAROID", desc: "1 Photo • Keepsake", aspect: "portrait" },
+      { id: "film_grid", num: 6, title: "2×2 GRID", desc: "4 Photos • Film Grid", aspect: "portrait" },
+      { id: "portrait_pair", num: 7, title: "1×2 PAIR", desc: "2 Photos • Portrait Pair", aspect: "portrait" },
+      { id: "asym_tr_chin", num: 8, title: "2×2 L-LEFT", desc: "3 Photos • Top-Right Slot", aspect: "landscape" },
+      { id: "asym_br_chin", num: 9, title: "2×2 L-TOP", desc: "3 Photos • Bot-Right Slot", aspect: "landscape" },
+      { id: "asym_tl_chin", num: 10, title: "2×2 L-RIGHT", desc: "3 Photos • Top-Left Slot", aspect: "landscape" },
+      { id: "asym_bl_chin", num: 11, title: "2×2 L-INVERT", desc: "3 Photos • Bot-Left Slot", aspect: "landscape" },
+      { id: "landscape_single", num: 12, title: "WIDE SINGLE", desc: "1 Photo • Landscape Hero", aspect: "landscape" },
+      { id: "landscape_toptext", num: 13, title: "2-WIDE TOP", desc: "2 Photos • Top Chin", aspect: "landscape" },
+      { id: "landscape_lefttext", num: 14, title: "2-STACK LEFT", desc: "2 Photos • Left Chin", aspect: "landscape" },
+      { id: "landscape_2split", num: 15, title: "2-WIDE BOTTOM", desc: "2 Photos • Bottom Chin", aspect: "landscape" },
+      { id: "hero_split_left", num: 16, title: "HERO L-SPLIT", desc: "4 Photos • 1 Big + 3 Sub", aspect: "landscape" },
+      { id: "hero_split_right", num: 17, title: "HERO R-SPLIT", desc: "4 Photos • 1 Big + 3 Sub", aspect: "landscape" },
+      { id: "triptych_3cut", num: 18, title: "3-WIDE BOTTOM", desc: "3 Photos • Bottom Chin", aspect: "landscape" },
+      { id: "triptych_toptext", num: 19, title: "3-WIDE TOP", desc: "3 Photos • Top Chin", aspect: "landscape" },
+      { id: "triptych_offset", num: 20, title: "3-WIDE RAISED", desc: "3 Photos • Center Raised", aspect: "landscape" },
+      { id: "hero_bottom_right", num: 21, title: "HERO B-RIGHT", desc: "4 Photos • 3 Sub + 1 Big", aspect: "landscape" },
+      { id: "hero_left_stack", num: 22, title: "HERO L-STACK", desc: "4 Photos • Left Big + 3 Stack", aspect: "landscape" }
+    ];
 
     return `
     <section class="section photobooth-section filter-bg-${defaultFilter}" id="section-photobooth" data-widget-id="photobooth" data-active-filter="${defaultFilter}">
@@ -663,69 +708,15 @@
                     </div>
 
                     <div class="ldr-format-cards-grid" id="ldrFormatCardsGrid" role="radiogroup" aria-label="Photo Layout Format">
-                      <div class="frame-card-preview ldr-format-card-preview ${defaultFormat === 'film_grid' ? 'active' : ''}" data-format="film_grid" tabindex="0">
-                        <div class="frame-mini-strip frame-style-minimal format-frame-preview">${renderMiniWindows('film_grid')}</div>
+                      ${FRAME_CATALOGUE.map(item => `
+                      <div class="frame-card-preview ldr-format-card-preview format-aspect-${item.aspect} ${(defaultFormat === item.id || (item.id === 'asym_tr_chin' && (defaultFormat === 'wide_collage' || defaultFormat === 'asym_collage')) || (item.id === 'landscape_single' && defaultFormat === 'landscape_hero')) ? 'active' : ''}" data-format="${item.id}" tabindex="0">
+                        <div class="frame-mini-strip frame-style-minimal format-frame-preview format-${item.aspect}">${renderMiniWindows(item.id)}</div>
                         <div class="ldr-card-meta">
-                          <span class="frame-card-title">2×2 GRID</span>
-                          <span class="frame-card-sub">4 Photos • Square</span>
+                          <span class="frame-card-title">${item.num}. ${item.title}</span>
+                          <span class="frame-card-sub">${item.desc}</span>
                         </div>
                       </div>
-                      <div class="frame-card-preview ldr-format-card-preview ${defaultFormat === 'double_8cut' ? 'active' : ''}" data-format="double_8cut" tabindex="0">
-                        <div class="frame-mini-strip frame-style-minimal format-frame-preview">${renderMiniWindows('double_8cut')}</div>
-                        <div class="ldr-card-meta">
-                          <span class="frame-card-title">2×4 DOUBLE</span>
-                          <span class="frame-card-sub">8 Photos • Wide Double</span>
-                        </div>
-                      </div>
-                      <div class="frame-card-preview ldr-format-card-preview ${defaultFormat === 'classic_strip' ? 'active' : ''}" data-format="classic_strip" tabindex="0">
-                        <div class="frame-mini-strip frame-style-minimal format-frame-preview">${renderMiniWindows('classic_strip')}</div>
-                        <div class="ldr-card-meta">
-                          <span class="frame-card-title">1×4 CLASSIC</span>
-                          <span class="frame-card-sub">4 Photos • Classic Strip</span>
-                        </div>
-                      </div>
-                      <div class="frame-card-preview ldr-format-card-preview ${defaultFormat === 'classic_3cut' ? 'active' : ''}" data-format="classic_3cut" tabindex="0">
-                        <div class="frame-mini-strip frame-style-minimal format-frame-preview">${renderMiniWindows('classic_3cut')}</div>
-                        <div class="ldr-card-meta">
-                          <span class="frame-card-title">1×3 RETRO</span>
-                          <span class="frame-card-sub">3 Photos • Vintage Strip</span>
-                        </div>
-                      </div>
-                      <div class="frame-card-preview ldr-format-card-preview ${defaultFormat === 'double_6cut' ? 'active' : ''}" data-format="double_6cut" tabindex="0">
-                        <div class="frame-mini-strip frame-style-minimal format-frame-preview">${renderMiniWindows('double_6cut')}</div>
-                        <div class="ldr-card-meta">
-                          <span class="frame-card-title">2×3 DOUBLE</span>
-                          <span class="frame-card-sub">6 Photos • Double Strip</span>
-                        </div>
-                      </div>
-                      <div class="frame-card-preview ldr-format-card-preview ${defaultFormat === 'grid_3x3' ? 'active' : ''}" data-format="grid_3x3" tabindex="0">
-                        <div class="frame-mini-strip frame-style-minimal format-frame-preview">${renderMiniWindows('grid_3x3')}</div>
-                        <div class="ldr-card-meta">
-                          <span class="frame-card-title">3×3 GRID</span>
-                          <span class="frame-card-sub">9 Photos • Mega Grid</span>
-                        </div>
-                      </div>
-                      <div class="frame-card-preview ldr-format-card-preview ${defaultFormat === 'portrait_pair' ? 'active' : ''}" data-format="portrait_pair" tabindex="0">
-                        <div class="frame-mini-strip frame-style-minimal format-frame-preview">${renderMiniWindows('portrait_pair')}</div>
-                        <div class="ldr-card-meta">
-                          <span class="frame-card-title">1×2 PAIR</span>
-                          <span class="frame-card-sub">2 Photos • Portrait Pair</span>
-                        </div>
-                      </div>
-                      <div class="frame-card-preview ldr-format-card-preview ${defaultFormat === 'polaroid_single' ? 'active' : ''}" data-format="polaroid_single" tabindex="0">
-                        <div class="frame-mini-strip frame-style-minimal format-frame-preview">${renderMiniWindows('polaroid_single')}</div>
-                        <div class="ldr-card-meta">
-                          <span class="frame-card-title">POLAROID</span>
-                          <span class="frame-card-sub">1 Photo • Classic Keepsake</span>
-                        </div>
-                      </div>
-                      <div class="frame-card-preview ldr-format-card-preview ${defaultFormat === 'wide_collage' || defaultFormat === 'asym_collage' ? 'active' : ''}" data-format="wide_collage" tabindex="0">
-                        <div class="frame-mini-strip frame-style-minimal format-frame-preview">${renderMiniWindows('wide_collage')}</div>
-                        <div class="ldr-card-meta">
-                          <span class="frame-card-title">COLLAGE</span>
-                          <span class="frame-card-sub">3 Photos • Hero Collage</span>
-                        </div>
-                      </div>
+                      `).join("")}
                     </div>
 
                     <!-- Hidden legacy format pills preserved for compatibility -->
@@ -742,8 +733,8 @@
                     </div>
 
                     <div class="ldr-stage-actions ldr-setup-nav-bar">
-                      <button type="button" class="btn btn-secondary btn-lg" id="btnFormatBackToLobby">
-                        <span>← Back to Room</span>
+                      <button type="button" class="btn btn-secondary btn-lg btn-return-sync" id="btnFormatBackToLobby">
+                        <span>← Return</span>
                       </button>
                       <button type="button" class="btn btn-primary btn-xl" id="btnFormatNextToTheme">
                         <span>Next: Border &amp; Filter →</span>
@@ -819,8 +810,8 @@
                     </div>
 
                     <div class="ldr-stage-actions ldr-setup-nav-bar">
-                      <button type="button" class="btn btn-secondary btn-lg" id="btnThemeBackToFormat">
-                        <span>← Back: Layout</span>
+                      <button type="button" class="btn btn-secondary btn-lg btn-return-sync" id="btnThemeBackToFormat">
+                        <span>← Return</span>
                       </button>
                       <button type="button" class="btn btn-primary btn-xl" id="btnThemeNextToCaption">
                         <span>Next: Couple Inscription →</span>
@@ -859,8 +850,8 @@
                     </div>
 
                     <div class="ldr-stage-actions ldr-setup-nav-bar">
-                      <button type="button" class="btn btn-secondary btn-lg" id="btnCaptionBackToTheme">
-                        <span>← Back: Border Theme</span>
+                      <button type="button" class="btn btn-secondary btn-lg btn-return-sync" id="btnCaptionBackToTheme">
+                        <span>← Return</span>
                       </button>
                       <button type="button" id="btnLdrReadyToShoot" class="btn btn-primary btn-xl">
                         <span>📸 Ready to Shoot Photos →</span>
@@ -875,8 +866,8 @@
               <div class="ldr-stage-panel" id="ldrStageCapture" style="display:none;">
                 <div class="ldr-capture-wrap">
                   <div class="ldr-capture-top-nav">
-                    <button type="button" id="btnCaptureBackToSetup" class="btn-nav-back">
-                      <span>← Back to Frame</span>
+                    <button type="button" id="btnCaptureBackToSetup" class="btn-nav-back btn-return-sync">
+                      <span>← Return</span>
                     </button>
                     <div class="ldr-live-call-tag">
                       <span class="live-dot"></span>
@@ -961,7 +952,10 @@
                   <div class="selection-candidates-grid ldr-candidates-grid" id="ldrModalCandidatesGrid"></div>
 
                   <div class="ldr-stage-actions">
-                    <button type="button" id="btnLdrModalRetryExtra" class="btn btn-secondary">
+                    <button type="button" class="btn btn-secondary btn-lg btn-return-sync" id="btnSelectBackToCapture">
+                      <span>← Return</span>
+                    </button>
+                    <button type="button" id="btnLdrModalRetryExtra" class="btn btn-secondary btn-lg">
                       <span>🔄 Reshoot Extra Set (1 Left)</span>
                     </button>
                     <button type="button" id="btnLdrConfirmSelection" class="btn btn-primary btn-xl" disabled>
@@ -1025,6 +1019,9 @@
                   </div>
 
                   <div class="ldr-stage-actions">
+                    <button type="button" class="btn btn-secondary btn-lg btn-return-sync" id="btnDecoBackToSelect">
+                      <span>← Return</span>
+                    </button>
                     <button type="button" id="btnLdrModalPrintStrip" class="btn btn-primary btn-xl">
                       <span>🖨️ Print Final Strip!</span>
                     </button>

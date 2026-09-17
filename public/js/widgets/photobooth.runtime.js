@@ -558,6 +558,65 @@
       }
     }
 
+    attachRemoteStreamToUI() {
+      if (!this.remoteStream) return;
+      const remoteVideos = [
+        document.getElementById("photoboothVideoRemote"),
+        document.getElementById("ldrVideoFeedRemote"),
+        document.getElementById("photoboothVideoDockedRemote"),
+        document.getElementById("ldrVideoFeedLobbyRemote")
+      ];
+      remoteVideos.forEach((remoteVideo) => {
+        if (remoteVideo) {
+          if (remoteVideo.srcObject !== this.remoteStream) {
+            remoteVideo.srcObject = this.remoteStream;
+          }
+          remoteVideo.muted = true;
+          remoteVideo.volume = 0;
+          remoteVideo.playsInline = true;
+          remoteVideo.setAttribute("playsinline", "");
+          remoteVideo.setAttribute("webkit-playsinline", "");
+          remoteVideo.play().catch(() => {});
+        }
+      });
+
+      const remoteAudio = document.getElementById("ldrRemoteAudio");
+      if (remoteAudio) {
+        if (remoteAudio.srcObject !== this.remoteStream) {
+          remoteAudio.srcObject = this.remoteStream;
+        }
+        remoteAudio.muted = false;
+        remoteAudio.volume = 1.0;
+        remoteAudio.playsInline = true;
+        remoteAudio.setAttribute("playsinline", "");
+        remoteAudio.setAttribute("webkit-playsinline", "");
+        remoteAudio.play().catch(() => {
+          const unlockAudio = () => {
+            remoteAudio.play().catch(() => {});
+            document.removeEventListener("click", unlockAudio);
+            document.removeEventListener("touchstart", unlockAudio);
+          };
+          document.addEventListener("click", unlockAudio, { once: true });
+          document.addEventListener("touchstart", unlockAudio, { once: true });
+        });
+      }
+
+      this.routeRemoteAudio(this.remoteStream);
+
+      const placeholders = [
+        document.getElementById("remoteVideoPlaceholder"),
+        document.getElementById("ldrRemotePlaceholder"),
+        document.getElementById("ldrLobbyRemotePlaceholder")
+      ];
+      placeholders.forEach(p => { if (p) p.style.display = "none"; });
+
+      const audioBadge = document.getElementById("ldrAudioIndicator");
+      if (audioBadge) {
+        audioBadge.style.display = "inline-flex";
+        audioBadge.textContent = "🎤 Audio Active";
+      }
+    }
+
     async renegotiate() {
       if (!this.pc) return;
       if (this.role === "host") {
@@ -566,6 +625,12 @@
           return;
         }
         try {
+          if (this.localStream) {
+            const transceivers = this.pc.getTransceivers ? this.pc.getTransceivers() : [];
+            transceivers.forEach(t => {
+              try { if (t.direction !== "sendrecv") t.direction = "sendrecv"; } catch (e) {}
+            });
+          }
           const offer = await this.pc.createOffer();
           if (this.pc.signalingState !== "stable") return;
           await this.pc.setLocalDescription(offer);
@@ -627,62 +692,10 @@
           if (evt.track && !this.remoteStream.getTracks().some(existing => existing.id === evt.track.id)) {
             this.remoteStream.addTrack(evt.track);
           }
-
-          const remoteVideos = [
-            document.getElementById("photoboothVideoRemote"),
-            document.getElementById("ldrVideoFeedRemote"),
-            document.getElementById("photoboothVideoDockedRemote"),
-            document.getElementById("ldrVideoFeedLobbyRemote")
-          ];
-          remoteVideos.forEach((remoteVideo) => {
-            if (remoteVideo) {
-              if (remoteVideo.srcObject !== this.remoteStream) {
-                remoteVideo.srcObject = this.remoteStream;
-              }
-              remoteVideo.muted = true;
-              remoteVideo.volume = 0;
-              remoteVideo.playsInline = true;
-              remoteVideo.setAttribute("playsinline", "");
-              remoteVideo.setAttribute("webkit-playsinline", "");
-              remoteVideo.play().catch(() => {});
-            }
-          });
-
-          const remoteAudio = document.getElementById("ldrRemoteAudio");
-          if (remoteAudio) {
-            if (remoteAudio.srcObject !== this.remoteStream) {
-              remoteAudio.srcObject = this.remoteStream;
-            }
-            remoteAudio.muted = false;
-            remoteAudio.volume = 1.0;
-            remoteAudio.playsInline = true;
-            remoteAudio.setAttribute("playsinline", "");
-            remoteAudio.setAttribute("webkit-playsinline", "");
-            remoteAudio.play().catch(() => {
-              const unlockAudio = () => {
-                remoteAudio.play().catch(() => {});
-                document.removeEventListener("click", unlockAudio);
-                document.removeEventListener("touchstart", unlockAudio);
-              };
-              document.addEventListener("click", unlockAudio, { once: true });
-              document.addEventListener("touchstart", unlockAudio, { once: true });
-            });
+          if (evt.track) {
+            evt.track.onunmute = () => this.attachRemoteStreamToUI();
           }
-
-          this.routeRemoteAudio(this.remoteStream);
-
-          const placeholders = [
-            document.getElementById("remoteVideoPlaceholder"),
-            document.getElementById("ldrRemotePlaceholder"),
-            document.getElementById("ldrLobbyRemotePlaceholder")
-          ];
-          placeholders.forEach(p => { if (p) p.style.display = "none"; });
-
-          const audioBadge = document.getElementById("ldrAudioIndicator");
-          if (audioBadge) {
-            audioBadge.style.display = "inline-flex";
-            audioBadge.textContent = "🎤 Audio Active";
-          }
+          this.attachRemoteStreamToUI();
         };
 
         pc.onicecandidate = (evt) => {
@@ -696,13 +709,20 @@
         const transceivers = this.pc.getTransceivers ? this.pc.getTransceivers() : [];
         const senders = this.pc.getSenders ? this.pc.getSenders() : [];
         this.localStream.getTracks().forEach((track) => {
-          const matchTransceiver = transceivers.find(t =>
-            (t.sender && t.sender.track && t.sender.track.kind === track.kind) ||
-            (t.receiver && t.receiver.track && t.receiver.track.kind === track.kind)
-          );
-          if (matchTransceiver && matchTransceiver.sender) {
-            matchTransceiver.sender.replaceTrack(track).catch(() => {});
-          } else {
+          let attached = false;
+          transceivers.forEach((t) => {
+            const kind = (t.receiver?.track?.kind) || (t.sender?.track?.kind);
+            if (kind === track.kind || !kind) {
+              try {
+                if (t.direction !== "sendrecv") t.direction = "sendrecv";
+                if (t.sender) {
+                  t.sender.replaceTrack(track).catch(() => {});
+                  attached = true;
+                }
+              } catch (e) {}
+            }
+          });
+          if (!attached) {
             const sender = senders.find(s => s.track && s.track.kind === track.kind);
             if (sender) {
               sender.replaceTrack(track).catch(() => {});
@@ -728,7 +748,11 @@
       try {
         if (signal.renegotiateReq) {
           if (this.role === "host") {
-            this.renegotiate();
+            if (this.pc.signalingState !== "stable") {
+              this.needRenegotiate = true;
+            } else {
+              this.renegotiate();
+            }
           }
           return;
         }
@@ -741,7 +765,36 @@
             }
             this.pendingIceCandidates = [];
           }
+
+          if (!this.remoteStream) this.remoteStream = new MediaStream();
+          const receivers = this.pc.getReceivers ? this.pc.getReceivers() : [];
+          receivers.forEach((r) => {
+            if (r.track && !this.remoteStream.getTracks().some(t => t.id === r.track.id)) {
+              this.remoteStream.addTrack(r.track);
+            }
+            if (r.track) {
+              r.track.onunmute = () => this.attachRemoteStreamToUI();
+            }
+          });
+          this.attachRemoteStreamToUI();
+
           if (signal.sdp.type === "offer") {
+            if (this.localStream) {
+              const transceivers = this.pc.getTransceivers ? this.pc.getTransceivers() : [];
+              this.localStream.getTracks().forEach((track) => {
+                transceivers.forEach((t) => {
+                  const kind = (t.receiver?.track?.kind) || (t.sender?.track?.kind);
+                  if (kind === track.kind || !kind) {
+                    try {
+                      if (t.direction !== "sendrecv") t.direction = "sendrecv";
+                      if (t.sender && (!t.sender.track || t.sender.track.id !== track.id)) {
+                        t.sender.replaceTrack(track).catch(() => {});
+                      }
+                    } catch (e) {}
+                  }
+                });
+              });
+            }
             const answer = await this.pc.createAnswer();
             await this.pc.setLocalDescription(answer);
             this.send("WEBRTC_SIGNAL", { signal: { sdp: this.pc.localDescription } });
@@ -751,7 +804,9 @@
           }
         } else if (signal.candidate) {
           if (this.pc.remoteDescription && this.pc.remoteDescription.type) {
-            await this.pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+            try {
+              await this.pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+            } catch (err) {}
           } else {
             if (!this.pendingIceCandidates) this.pendingIceCandidates = [];
             this.pendingIceCandidates.push(signal.candidate);
@@ -1023,7 +1078,7 @@
 
       const dockedBar = document.getElementById("ldrDockedCallBar");
       const appHeader = document.getElementById("ldrAppHeader");
-      const showDocked = Boolean(this.isLdrMode && (stage === "select" || stage === "deco"));
+      const showDocked = Boolean(this.isLdrMode && (stage === "setup" || stage === "select" || stage === "deco"));
       if (dockedBar) dockedBar.style.display = showDocked ? "flex" : "none";
       if (appHeader) appHeader.classList.toggle("has-docked-call", showDocked);
 
@@ -1051,34 +1106,7 @@
         }
       }
       if (this.ldrManager?.remoteStream) {
-        const stream = this.ldrManager.remoteStream;
-        const remoteVideos = [
-          document.getElementById("photoboothVideoDockedRemote"),
-          document.getElementById("ldrVideoFeedRemote"),
-          document.getElementById("ldrVideoFeedLobbyRemote"),
-          document.getElementById("photoboothVideoRemote")
-        ];
-        remoteVideos.forEach((v) => {
-          if (v && v.srcObject !== stream) {
-            v.srcObject = stream;
-            v.muted = false;
-            v.playsInline = true;
-            v.setAttribute("playsinline", "");
-            v.setAttribute("webkit-playsinline", "");
-            v.play().catch(() => {});
-          }
-        });
-        const remoteAudio = document.getElementById("ldrRemoteAudio");
-        if (remoteAudio) {
-          if (remoteAudio.srcObject !== stream) remoteAudio.srcObject = stream;
-          remoteAudio.muted = false;
-          remoteAudio.volume = 1.0;
-          remoteAudio.playsInline = true;
-          remoteAudio.setAttribute("playsinline", "");
-          remoteAudio.setAttribute("webkit-playsinline", "");
-          remoteAudio.play().catch(() => {});
-        }
-        this.ldrManager.routeRemoteAudio(stream);
+        this.ldrManager.attachRemoteStreamToUI();
       }
 
       if (stage === "setup") this.initLdrSetupStage();
@@ -1248,6 +1276,7 @@
         }
       }
       this.renderCandidateCards();
+      document.getElementById("btnSelectBackToCapture")?.addEventListener("click", () => this.setLdrStage("capture", false));
       const retryBtn = document.getElementById("btnLdrModalRetryExtra");
       if (retryBtn) {
         retryBtn.onclick = () => this.requestRetryExtraSet();
@@ -1266,6 +1295,8 @@
       this.renderLdrStickerPalette();
       this.initPaintEngine();
       setTimeout(() => this.resizePaintCanvas(), 60);
+
+      document.getElementById("btnDecoBackToSelect")?.addEventListener("click", () => this.setLdrStage("select", false));
 
       document.querySelectorAll("#ldrModalDecoTabs .deco-tab-btn").forEach(tab => {
         tab.onclick = () => {
@@ -1881,19 +1912,39 @@
           return `<div class="mini-windows-wrap fmt-portrait_pair">${win(0)}${win(1)}</div>${phraseBlock("bottom", customPhrase)}`;
         case "wide_collage":
         case "asym_collage":
-          return `<div class="mini-windows-wrap fmt-asym_collage"><div class="mini-window asym-hero"><img src="${photos[0]}" alt="" class="mini-window-img" style="filter: ${filterCss};"></div><div class="mini-window asym-sub"><img src="${photos[1 % photos.length]}" alt="" class="mini-window-img" style="filter: ${filterCss};"></div><div class="mini-window asym-sub"><img src="${photos[2 % photos.length]}" alt="" class="mini-window-img" style="filter: ${filterCss};"></div></div>${phraseBlock("corner", customPhrase)}`;
+        case "asym_tr_chin":
+          return `<div class="mini-windows-wrap fmt-asym_tr_chin"><div class="asym-cell pos-tl">${win(0)}</div><div class="asym-cell pos-tr chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell pos-bl">${win(1)}</div><div class="asym-cell pos-br">${win(2)}</div></div>`;
+        case "asym_br_chin":
+          return `<div class="mini-windows-wrap fmt-asym_br_chin"><div class="asym-cell pos-tl">${win(0)}</div><div class="asym-cell pos-tr">${win(1)}</div><div class="asym-cell pos-bl">${win(2)}</div><div class="asym-cell pos-br chin-cell">${phraseBlock("cell", customPhrase)}</div></div>`;
+        case "asym_tl_chin":
+          return `<div class="mini-windows-wrap fmt-asym_tl_chin"><div class="asym-cell pos-tl chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell pos-tr">${win(0)}</div><div class="asym-cell pos-bl">${win(1)}</div><div class="asym-cell pos-br">${win(2)}</div></div>`;
+        case "asym_bl_chin":
+          return `<div class="mini-windows-wrap fmt-asym_bl_chin"><div class="asym-cell pos-tl">${win(0)}</div><div class="asym-cell pos-tr">${win(1)}</div><div class="asym-cell pos-bl chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell pos-br">${win(2)}</div></div>`;
         case "polaroid_single":
           return `<div class="mini-windows-wrap fmt-polaroid_single">${win(0)}</div>${phraseBlock("bottom", customPhrase)}`;
+        case "landscape_single":
         case "landscape_hero":
-          return `<div class="mini-windows-wrap fmt-landscape_hero">${win(0)}</div>${phraseBlock("bottom", customPhrase)}`;
-        case "landscape_2split":
-          return `<div class="mini-windows-wrap fmt-landscape_2split">${win(0)}${win(1)}</div>${phraseBlock("bottom", customPhrase)}`;
+          return `<div class="mini-windows-wrap fmt-landscape_single">${win(0)}</div>${phraseBlock("bottom", customPhrase)}`;
         case "landscape_toptext":
           return `${phraseBlock("top", customPhrase)}<div class="mini-windows-wrap fmt-landscape_toptext">${win(0)}${win(1)}</div>`;
+        case "landscape_lefttext":
+          return `<div class="mini-windows-wrap fmt-landscape_lefttext"><div class="asym-col-left chin-col">${phraseBlock("side", customPhrase)}</div><div class="asym-col-right">${win(0)}${win(1)}</div></div>`;
+        case "landscape_2split":
+          return `<div class="mini-windows-wrap fmt-landscape_2split">${win(0)}${win(1)}</div>${phraseBlock("bottom", customPhrase)}`;
+        case "hero_split_left":
+          return `<div class="mini-windows-wrap fmt-hero_split_left"><div class="hero-top-row"><div class="hero-wide-win">${win(0)}</div><div class="hero-chin-win">${phraseBlock("cell", customPhrase)}</div></div><div class="hero-bottom-row">${win(1)}${win(2)}${win(3)}</div></div>`;
+        case "hero_split_right":
+          return `<div class="mini-windows-wrap fmt-hero_split_right"><div class="hero-top-row"><div class="hero-chin-win">${phraseBlock("cell", customPhrase)}</div><div class="hero-wide-win">${win(0)}</div></div><div class="hero-bottom-row">${win(1)}${win(2)}${win(3)}</div></div>`;
         case "triptych_3cut":
           return `<div class="mini-windows-wrap fmt-triptych_3cut">${win(0)}${win(1)}${win(2)}</div>${phraseBlock("bottom", customPhrase)}`;
         case "triptych_toptext":
           return `${phraseBlock("top", customPhrase)}<div class="mini-windows-wrap fmt-triptych_toptext">${win(0)}${win(1)}${win(2)}</div>`;
+        case "triptych_offset":
+          return `<div class="mini-windows-wrap fmt-triptych_offset"><div class="trip-col">${win(0)}</div><div class="trip-col trip-col-raised">${win(1)}${phraseBlock("center_chin", customPhrase)}</div><div class="trip-col">${win(2)}</div></div>`;
+        case "hero_bottom_right":
+          return `<div class="mini-windows-wrap fmt-hero_bottom_right"><div class="hero-top-row">${win(0)}${win(1)}${win(2)}</div><div class="hero-bottom-row"><div class="hero-chin-win">${phraseBlock("cell", customPhrase)}</div><div class="hero-wide-win">${win(3)}</div></div></div>`;
+        case "hero_left_stack":
+          return `<div class="mini-windows-wrap fmt-hero_left_stack"><div class="hero-col-left"><div class="hero-large-win">${win(0)}</div><div class="hero-chin-win">${phraseBlock("cell", customPhrase)}</div></div><div class="hero-col-right">${win(1)}${win(2)}${win(3)}</div></div>`;
         case "classic_3cut":
         default:
           return `<div class="mini-windows-wrap fmt-classic_3cut">${win(0)}${win(1)}${win(2)}</div>${phraseBlock("bottom", customPhrase)}`;
@@ -1971,16 +2022,27 @@
       const counts = {
         polaroid_single: 1,
         landscape_hero: 1,
+        landscape_single: 1,
         portrait_pair: 2,
         landscape_2split: 2,
         landscape_toptext: 2,
+        landscape_lefttext: 2,
         classic_3cut: 3,
         wide_collage: 3,
         asym_collage: 3,
+        asym_tr_chin: 3,
+        asym_br_chin: 3,
+        asym_tl_chin: 3,
+        asym_bl_chin: 3,
         triptych_3cut: 3,
         triptych_toptext: 3,
+        triptych_offset: 3,
         classic_strip: 4,
         film_grid: 4,
+        hero_split_left: 4,
+        hero_split_right: 4,
+        hero_bottom_right: 4,
+        hero_left_stack: 4,
         double_6cut: 6,
         double_8cut: 8,
         grid_3x3: 9
@@ -2885,14 +2947,25 @@
         film_grid: { w: 460, h: 500 },
         grid_3x3: { w: 480, h: 520 },
         portrait_pair: { w: 340, h: 720 },
-        wide_collage: { w: 460, h: 480 },
-        asym_collage: { w: 460, h: 480 },
+        wide_collage: { w: 540, h: 360 },
+        asym_collage: { w: 540, h: 360 },
+        asym_tr_chin: { w: 540, h: 360 },
+        asym_br_chin: { w: 540, h: 360 },
+        asym_tl_chin: { w: 540, h: 360 },
+        asym_bl_chin: { w: 540, h: 360 },
         polaroid_single: { w: 340, h: 440 },
-        landscape_hero: { w: 520, h: 420 },
+        landscape_hero: { w: 540, h: 360 },
+        landscape_single: { w: 540, h: 360 },
         landscape_2split: { w: 540, h: 360 },
         landscape_toptext: { w: 540, h: 360 },
-        triptych_3cut: { w: 640, h: 320 },
-        triptych_toptext: { w: 640, h: 320 }
+        landscape_lefttext: { w: 540, h: 360 },
+        hero_split_left: { w: 540, h: 360 },
+        hero_split_right: { w: 540, h: 360 },
+        triptych_3cut: { w: 540, h: 360 },
+        triptych_toptext: { w: 540, h: 360 },
+        triptych_offset: { w: 540, h: 360 },
+        hero_bottom_right: { w: 540, h: 360 },
+        hero_left_stack: { w: 540, h: 360 }
       };
       const dim = dimensions[this.currentFormat] || dimensions[this.currentLayout] || dimensions.classic_strip;
       const scale = 2;
@@ -2998,7 +3071,7 @@
       if (this.currentFormat === "polaroid_single") {
         const sz = dim.w - 48;
         drawCover(loadedImages[0], 24, 44, sz, sz);
-      } else if (this.currentFormat === "landscape_hero") {
+      } else if (this.currentFormat === "landscape_hero" || this.currentFormat === "landscape_single") {
         const pw = dim.w - sideMargin * 2;
         const ph = dim.h - 130;
         drawCover(loadedImages[0], sideMargin, 44, pw, ph);
@@ -3009,6 +3082,12 @@
         const startY = this.currentFormat === "landscape_toptext" ? 56 : 44;
         drawCover(loadedImages[0], sideMargin, startY, pw, ph);
         drawCover(loadedImages[1], sideMargin + pw + gap, startY, pw, ph);
+      } else if (this.currentFormat === "landscape_lefttext") {
+        const leftW = (dim.w - sideMargin * 2) * 0.42;
+        const rightW = (dim.w - sideMargin * 2) * 0.58 - 10;
+        const ph = (dim.h - 130 - 10) / 2;
+        drawCover(loadedImages[0], sideMargin + leftW + 10, 44, rightW, ph);
+        drawCover(loadedImages[1], sideMargin + leftW + 10, 44 + ph + 10, rightW, ph);
       } else if (this.currentFormat === "triptych_3cut" || this.currentFormat === "triptych_toptext") {
         const gap = 10;
         const pw = (dim.w - sideMargin * 2 - gap * 2) / 3;
@@ -3017,58 +3096,88 @@
         drawCover(loadedImages[0], sideMargin, startY, pw, ph);
         drawCover(loadedImages[1], sideMargin + pw + gap, startY, pw, ph);
         drawCover(loadedImages[2], sideMargin + (pw + gap) * 2, startY, pw, ph);
-      } else if (this.currentFormat === "double_6cut") {
+      } else if (this.currentFormat === "triptych_offset") {
         const gap = 10;
-        const colW = (dim.w - sideMargin * 2 - gap) / 2;
-        const rowH = (dim.h - 140) / 3;
-        for (let r = 0; r < 3; r++) {
-          for (let c = 0; c < 2; c++) {
-            const idx = r * 2 + c;
-            const x = sideMargin + c * (colW + gap);
-            const y = 44 + r * (rowH + gap);
-            drawCover(loadedImages[idx % loadedImages.length], x, y, colW, rowH);
-          }
-        }
-      } else if (this.currentFormat === "double_8cut") {
-        const gap = 10;
-        const colW = (dim.w - sideMargin * 2 - gap) / 2;
-        const rowH = (dim.h - 140) / 4;
-        for (let r = 0; r < 4; r++) {
-          for (let c = 0; c < 2; c++) {
-            const idx = r * 2 + c;
-            const x = sideMargin + c * (colW + gap);
-            const y = 44 + r * (rowH + gap);
-            drawCover(loadedImages[idx % loadedImages.length], x, y, colW, rowH);
-          }
-        }
-      } else if (this.currentFormat === "grid_3x3") {
-        const sz = (dim.w - (sideMargin * 2 + 16)) / 3;
-        for (let row = 0; row < 3; row++) {
-          for (let col = 0; col < 3; col++) {
-            const idx = row * 3 + col;
-            const x = sideMargin + col * (sz + 8);
-            const y = 44 + row * (sz + 8);
-            drawCover(loadedImages[idx % loadedImages.length], x, y, sz, sz);
-          }
-        }
-      } else if (this.currentFormat === "film_grid" || this.currentLayout === "film_grid") {
-        const gap = 10;
-        const sz = (dim.w - (sideMargin * 2 + gap)) / 2;
-        const coords = [
-          { x: sideMargin, y: 44 },
-          { x: sideMargin + sz + gap, y: 44 },
-          { x: sideMargin, y: 44 + sz + gap },
-          { x: sideMargin + sz + gap, y: 44 + sz + gap }
-        ];
-        coords.forEach((pt, i) => drawCover(loadedImages[i % loadedImages.length], pt.x, pt.y, sz, sz));
-      } else if (this.currentFormat === "wide_collage" || this.currentFormat === "asym_collage") {
-        const heroW = (dim.w - sideMargin * 2 - 10) * 0.58;
-        const subW = (dim.w - sideMargin * 2 - 10) * 0.42;
+        const pw = (dim.w - sideMargin * 2 - gap * 2) / 3;
         const ph = dim.h - 130;
-        const subH = (ph - 10) / 2;
-        drawCover(loadedImages[0], sideMargin, 44, heroW, ph);
-        drawCover(loadedImages[1], sideMargin + heroW + 10, 44, subW, subH);
-        drawCover(loadedImages[2], sideMargin + heroW + 10, 44 + subH + 10, subW, subH);
+        drawCover(loadedImages[0], sideMargin, 44 + 20, pw, ph - 20);
+        drawCover(loadedImages[1], sideMargin + pw + gap, 44, pw, ph - 35);
+        drawCover(loadedImages[2], sideMargin + (pw + gap) * 2, 44 + 20, pw, ph - 20);
+      } else if (this.currentFormat === "asym_tr_chin" || this.currentFormat === "wide_collage" || this.currentFormat === "asym_collage") {
+        const gap = 10;
+        const pw = (dim.w - sideMargin * 2 - gap) / 2;
+        const ph = (dim.h - 130 - gap) / 2;
+        drawCover(loadedImages[0], sideMargin, 44, pw, ph);
+        drawCover(loadedImages[1], sideMargin, 44 + ph + gap, pw, ph);
+        drawCover(loadedImages[2], sideMargin + pw + gap, 44 + ph + gap, pw, ph);
+      } else if (this.currentFormat === "asym_br_chin") {
+        const gap = 10;
+        const pw = (dim.w - sideMargin * 2 - gap) / 2;
+        const ph = (dim.h - 130 - gap) / 2;
+        drawCover(loadedImages[0], sideMargin, 44, pw, ph);
+        drawCover(loadedImages[1], sideMargin + pw + gap, 44, pw, ph);
+        drawCover(loadedImages[2], sideMargin, 44 + ph + gap, pw, ph);
+      } else if (this.currentFormat === "asym_tl_chin") {
+        const gap = 10;
+        const pw = (dim.w - sideMargin * 2 - gap) / 2;
+        const ph = (dim.h - 130 - gap) / 2;
+        drawCover(loadedImages[0], sideMargin + pw + gap, 44, pw, ph);
+        drawCover(loadedImages[1], sideMargin, 44 + ph + gap, pw, ph);
+        drawCover(loadedImages[2], sideMargin + pw + gap, 44 + ph + gap, pw, ph);
+      } else if (this.currentFormat === "asym_bl_chin") {
+        const gap = 10;
+        const pw = (dim.w - sideMargin * 2 - gap) / 2;
+        const ph = (dim.h - 130 - gap) / 2;
+        drawCover(loadedImages[0], sideMargin, 44, pw, ph);
+        drawCover(loadedImages[1], sideMargin + pw + gap, 44, pw, ph);
+        drawCover(loadedImages[2], sideMargin + pw + gap, 44 + ph + gap, pw, ph);
+      } else if (this.currentFormat === "hero_split_left") {
+        const gap = 10;
+        const totalW = dim.w - sideMargin * 2;
+        const topH = (dim.h - 130 - gap) * 0.58;
+        const botH = (dim.h - 130 - gap) * 0.42;
+        const heroW = (totalW - gap) * (2 / 3);
+        const subW = (totalW - gap * 2) / 3;
+        drawCover(loadedImages[0], sideMargin, 44, heroW, topH);
+        drawCover(loadedImages[1], sideMargin, 44 + topH + gap, subW, botH);
+        drawCover(loadedImages[2], sideMargin + subW + gap, 44 + topH + gap, subW, botH);
+        drawCover(loadedImages[3], sideMargin + (subW + gap) * 2, 44 + topH + gap, subW, botH);
+      } else if (this.currentFormat === "hero_split_right") {
+        const gap = 10;
+        const totalW = dim.w - sideMargin * 2;
+        const topH = (dim.h - 130 - gap) * 0.58;
+        const botH = (dim.h - 130 - gap) * 0.42;
+        const heroW = (totalW - gap) * (2 / 3);
+        const chinW = (totalW - gap) * (1 / 3);
+        const subW = (totalW - gap * 2) / 3;
+        drawCover(loadedImages[0], sideMargin + chinW + gap, 44, heroW, topH);
+        drawCover(loadedImages[1], sideMargin, 44 + topH + gap, subW, botH);
+        drawCover(loadedImages[2], sideMargin + subW + gap, 44 + topH + gap, subW, botH);
+        drawCover(loadedImages[3], sideMargin + (subW + gap) * 2, 44 + topH + gap, subW, botH);
+      } else if (this.currentFormat === "hero_bottom_right") {
+        const gap = 10;
+        const totalW = dim.w - sideMargin * 2;
+        const topH = (dim.h - 130 - gap) * 0.42;
+        const botH = (dim.h - 130 - gap) * 0.58;
+        const subW = (totalW - gap * 2) / 3;
+        const heroW = (totalW - gap) * (2 / 3);
+        const chinW = (totalW - gap) * (1 / 3);
+        drawCover(loadedImages[0], sideMargin, 44, subW, topH);
+        drawCover(loadedImages[1], sideMargin + subW + gap, 44, subW, topH);
+        drawCover(loadedImages[2], sideMargin + (subW + gap) * 2, 44, subW, topH);
+        drawCover(loadedImages[3], sideMargin + chinW + gap, 44 + topH + gap, heroW, botH);
+      } else if (this.currentFormat === "hero_left_stack") {
+        const gap = 10;
+        const totalW = dim.w - sideMargin * 2;
+        const totalH = dim.h - 130;
+        const leftW = (totalW - gap) * 0.62;
+        const rightW = (totalW - gap) * 0.38;
+        const heroH = totalH * 0.72;
+        const subH = (totalH - gap * 2) / 3;
+        drawCover(loadedImages[0], sideMargin, 44, leftW, heroH);
+        drawCover(loadedImages[1], sideMargin + leftW + gap, 44, rightW, subH);
+        drawCover(loadedImages[2], sideMargin + leftW + gap, 44 + subH + gap, rightW, subH);
+        drawCover(loadedImages[3], sideMargin + leftW + gap, 44 + (subH + gap) * 2, rightW, subH);
       } else {
         const pw = dim.w - sideMargin * 2;
         const ph = (dim.h - 120) / count;
