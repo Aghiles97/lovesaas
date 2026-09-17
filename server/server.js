@@ -1233,6 +1233,23 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
+  // POST or GET /api/deploy/webhook (Instant Auto-Deploy Trigger)
+  if (pathname === "/api/deploy/webhook" && (method === "POST" || method === "GET")) {
+    const token = parsedUrl.query?.token || req.headers["x-deploy-token"];
+    const validToken = process.env.DEPLOY_TOKEN || "lovesaas-deploy-secret-2026";
+    if (token !== validToken) {
+      return sendJson(res, 401, { error: "Unauthorized deploy token" });
+    }
+    const { spawn } = require("child_process");
+    const script = "/home/terusjay/bin/update-lovesaas.sh";
+    if (require("fs").existsSync(script)) {
+      const child = spawn("/bin/bash", [script, "--force"], { detached: true, stdio: "ignore" });
+      child.unref();
+      return sendJson(res, 200, { ok: true, message: "Deploy process triggered on server" });
+    }
+    return sendJson(res, 200, { ok: true, message: "Deploy hook received (dev environment)" });
+  }
+
   // API route 404 fallback (guarantees API responses are always valid JSON)
   if (pathname.startsWith("/api/")) {
     return sendJson(res, 404, { error: `API endpoint not found: ${method} ${pathname}` });
