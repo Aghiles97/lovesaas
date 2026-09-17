@@ -360,38 +360,79 @@
         const syncBadge = document.getElementById("ldrSyncBadge");
         if (syncBadge) syncBadge.style.display = "inline-flex";
         const badge = document.getElementById("ldrPartnerStatusText");
+        const modalBadge = document.getElementById("ldrModalStatusText");
         const dot = document.getElementById("ldrPulseDot");
-        if (msg.participantCount >= 2) {
-          if (badge) badge.textContent = "Partner connected 💕";
-          if (dot) dot.className = "status-pulse-dot connected";
-        } else {
-          if (badge) badge.textContent = "Waiting for partner...";
-          if (dot) dot.className = "status-pulse-dot waiting";
+        const modalDot = document.getElementById("ldrModalPulseDot");
+        const statusText = (msg.participantCount >= 2) ? "Partner connected 💕" : "Waiting for partner...";
+        if (badge) badge.textContent = statusText;
+        if (modalBadge) modalBadge.textContent = statusText;
+        const dotClass = (msg.participantCount >= 2) ? "status-pulse-dot connected" : "status-pulse-dot waiting";
+        if (dot) dot.className = dotClass;
+        if (modalDot) modalDot.className = dotClass;
+
+        if (state?.stage && this.session) {
+          this.session.setLdrStage(state.stage, true);
         }
         return;
       }
 
       if (type === "PARTNER_JOINED") {
         const badge = document.getElementById("ldrPartnerStatusText");
-        if (badge) badge.textContent = `${partner?.name || "Partner"} connected 💕`;
+        const modalBadge = document.getElementById("ldrModalStatusText");
         const dot = document.getElementById("ldrPulseDot");
+        const modalDot = document.getElementById("ldrModalPulseDot");
+        const partnerName = partner?.name || "Partner";
+        if (badge) badge.textContent = `${partnerName} connected 💕`;
+        if (modalBadge) modalBadge.textContent = `${partnerName} connected 💕`;
         if (dot) dot.className = "status-pulse-dot connected";
+        if (modalDot) modalDot.className = "status-pulse-dot connected";
 
         if (this.localStream) {
           this.setupWebRTC(this.localStream);
+        }
+
+        this.session.play("sparkle");
+
+        // Auto-advance both users from Lobby to Setup when partner joins
+        if (!this.session.currentLdrStage || this.session.currentLdrStage === "lobby") {
+          setTimeout(() => {
+            if (this.session.isLdrMode) {
+              this.session.setLdrStage("setup", false);
+            }
+          }, 1200);
+        }
+        return;
+      }
+
+      if (type === "STAGE_CHANGED") {
+        if (msg.stage) {
+          this.session.setLdrStage(msg.stage, true);
         }
         return;
       }
 
       if (type === "PARTNER_LEFT") {
         const badge = document.getElementById("ldrPartnerStatusText");
-        if (badge) badge.textContent = "Partner disconnected";
+        const modalBadge = document.getElementById("ldrModalStatusText");
         const dot = document.getElementById("ldrPulseDot");
+        const modalDot = document.getElementById("ldrModalPulseDot");
+        if (badge) badge.textContent = "Partner disconnected";
+        if (modalBadge) modalBadge.textContent = "Partner disconnected";
         if (dot) dot.className = "status-pulse-dot waiting";
-        const remoteVideo = document.getElementById("photoboothVideoRemote");
-        if (remoteVideo) remoteVideo.srcObject = null;
-        const placeholder = document.getElementById("remoteVideoPlaceholder");
-        if (placeholder) placeholder.style.display = "flex";
+        if (modalDot) modalDot.className = "status-pulse-dot waiting";
+
+        const remoteVideos = [
+          document.getElementById("photoboothVideoRemote"),
+          document.getElementById("ldrVideoFeedRemote"),
+          document.getElementById("photoboothVideoDockedRemote")
+        ];
+        remoteVideos.forEach(v => { if (v) v.srcObject = null; });
+
+        const placeholders = [
+          document.getElementById("remoteVideoPlaceholder"),
+          document.getElementById("ldrRemotePlaceholder")
+        ];
+        placeholders.forEach(p => { if (p) p.style.display = "flex"; });
         return;
       }
 
@@ -468,6 +509,10 @@
       }
     }
 
+    sendStage(stage) {
+      this.send("STAGE_CHANGE", { stage });
+    }
+
     async setupWebRTC(stream) {
       this.localStream = stream;
       if (typeof RTCPeerConnection === "undefined") return;
@@ -484,12 +529,42 @@
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
       pc.ontrack = (evt) => {
-        const remoteVideo = document.getElementById("photoboothVideoRemote");
-        const placeholder = document.getElementById("remoteVideoPlaceholder");
-        if (remoteVideo && evt.streams[0]) {
-          remoteVideo.srcObject = evt.streams[0];
-          remoteVideo.play().catch(() => {});
-          if (placeholder) placeholder.style.display = "none";
+        const stream = evt.streams[0];
+        if (!stream) return;
+        this.remoteStream = stream;
+        const remoteVideos = [
+          document.getElementById("photoboothVideoRemote"),
+          document.getElementById("ldrVideoFeedRemote"),
+          document.getElementById("photoboothVideoDockedRemote")
+        ];
+        remoteVideos.forEach((remoteVideo) => {
+          if (remoteVideo) {
+            remoteVideo.srcObject = stream;
+            remoteVideo.muted = false;
+            remoteVideo.volume = 1.0;
+            remoteVideo.play().catch(() => {
+              const unlockAudio = () => {
+                remoteVideo.muted = false;
+                remoteVideo.volume = 1.0;
+                remoteVideo.play().catch(() => {});
+                document.removeEventListener("click", unlockAudio);
+                document.removeEventListener("touchstart", unlockAudio);
+              };
+              document.addEventListener("click", unlockAudio, { once: true });
+              document.addEventListener("touchstart", unlockAudio, { once: true });
+            });
+          }
+        });
+        const placeholders = [
+          document.getElementById("remoteVideoPlaceholder"),
+          document.getElementById("ldrRemotePlaceholder")
+        ];
+        placeholders.forEach(p => { if (p) p.style.display = "none"; });
+
+        const audioBadge = document.getElementById("ldrAudioIndicator");
+        if (audioBadge) {
+          audioBadge.style.display = "inline-flex";
+          audioBadge.textContent = "🎤 Audio Active";
         }
       };
 
@@ -639,28 +714,238 @@
 
     switchMode(mode, customCode = null) {
       if (mode === "ldr") {
-        this.isLdrMode = true;
-        this.btnModeSolo?.classList.remove("active");
-        this.btnModeLdr?.classList.add("active");
-        if (this.boothLdrPanel) this.boothLdrPanel.style.display = "block";
-        if (!this.ldrManager) {
-          this.ldrManager = new LdrManager(this);
-        }
-        const code = customCode || this.generateRoomCode();
-        this.ldrManager.connect(code);
-        this.play("beep", 660, 0.05);
+        this.openLdrModal(customCode);
       } else {
-        this.isLdrMode = false;
-        this.btnModeLdr?.classList.remove("active");
-        this.btnModeSolo?.classList.add("active");
-        if (this.boothLdrPanel) this.boothLdrPanel.style.display = "none";
-        if (this.remoteCursorEl) this.remoteCursorEl.style.display = "none";
-        if (this.ldrManager) {
-          this.ldrManager.disconnect();
-          this.ldrManager = null;
-        }
-        this.play("beep", 440, 0.05);
+        this.closeLdrModal();
       }
+    }
+
+    openLdrModal(customCode = null) {
+      this.isLdrMode = true;
+      const modal = document.getElementById("photoboothLdrModal");
+      if (modal) {
+        modal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
+      this.btnModeSolo?.classList.remove("active");
+      this.btnModeLdr?.classList.add("active");
+      if (this.boothLdrPanel) this.boothLdrPanel.style.display = "block";
+
+      if (!this.ldrManager) {
+        this.ldrManager = new LdrManager(this);
+      }
+      const code = customCode || this.generateRoomCode();
+      const codeEls = [
+        document.getElementById("ldrRoomCodeText"),
+        document.getElementById("ldrModalRoomCode")
+      ];
+      codeEls.forEach(el => { if (el) el.textContent = code; });
+
+      this.ldrManager.connect(code);
+      this.setLdrStage("lobby", false);
+      this.startCamera();
+      this.play("beep", 660, 0.05);
+    }
+
+    closeLdrModal() {
+      const modal = document.getElementById("photoboothLdrModal");
+      if (modal) {
+        modal.style.display = "none";
+        document.body.style.overflow = "";
+      }
+      if (typeof window !== "undefined" && window.history && window.history.replaceState) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has("booth_room")) {
+          url.searchParams.delete("booth_room");
+          window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : ""));
+        }
+      }
+      if (this.ldrManager) {
+        this.ldrManager.disconnect();
+        this.ldrManager = null;
+      }
+      this.isLdrMode = false;
+      this.currentLdrStage = null;
+      this.btnModeLdr?.classList.remove("active");
+      this.btnModeSolo?.classList.add("active");
+      if (this.boothLdrPanel) this.boothLdrPanel.style.display = "none";
+      if (this.remoteCursorEl) this.remoteCursorEl.style.display = "none";
+      const dockedBar = document.getElementById("ldrDockedCallBar");
+      if (dockedBar) dockedBar.style.display = "none";
+
+      this.play("beep", 440, 0.05);
+      this.startCamera();
+    }
+
+    setLdrStage(stage, isRemote = false) {
+      if (!this.isLdrMode) return;
+      this.currentLdrStage = stage;
+      const stages = ["lobby", "setup", "capture", "select", "deco", "print"];
+      stages.forEach((s) => {
+        const node = document.getElementById("ldrStepNode" + s.charAt(0).toUpperCase() + s.slice(1));
+        const panel = document.getElementById("ldrStage" + s.charAt(0).toUpperCase() + s.slice(1));
+        if (node) node.classList.toggle("active", s === stage);
+        if (panel) panel.style.display = (s === stage) ? "block" : "none";
+      });
+
+      const dockedBar = document.getElementById("ldrDockedCallBar");
+      if (dockedBar) {
+        dockedBar.style.display = (stage === "setup" || stage === "select" || stage === "deco" || stage === "print") ? "flex" : "none";
+      }
+
+      if (this.mediaStream) {
+        const localDocked = document.getElementById("photoboothVideoDockedLocal");
+        if (localDocked && localDocked.srcObject !== this.mediaStream) {
+          localDocked.srcObject = this.mediaStream;
+          localDocked.muted = true;
+          localDocked.volume = 0;
+          localDocked.play().catch(() => {});
+        }
+        const localCap = document.getElementById("ldrVideoFeedLocal");
+        if (localCap && localCap.srcObject !== this.mediaStream) {
+          localCap.srcObject = this.mediaStream;
+          localCap.muted = true;
+          localCap.volume = 0;
+          localCap.play().catch(() => {});
+        }
+      }
+      if (this.ldrManager?.remoteStream) {
+        const stream = this.ldrManager.remoteStream;
+        const remoteDocked = document.getElementById("photoboothVideoDockedRemote");
+        if (remoteDocked && remoteDocked.srcObject !== stream) {
+          remoteDocked.srcObject = stream;
+          remoteDocked.muted = false;
+          remoteDocked.volume = 1.0;
+          remoteDocked.play().catch(() => {});
+        }
+        const remoteCap = document.getElementById("ldrVideoFeedRemote");
+        if (remoteCap && remoteCap.srcObject !== stream) {
+          remoteCap.srcObject = stream;
+          remoteCap.muted = false;
+          remoteCap.volume = 1.0;
+          remoteCap.play().catch(() => {});
+        }
+      }
+
+      if (stage === "setup") this.initLdrSetupStage();
+      else if (stage === "capture") this.initLdrCaptureStage();
+      else if (stage === "select") this.initLdrSelectStage();
+      else if (stage === "deco") this.initLdrDecoStage();
+      else if (stage === "print") this.initLdrPrintStage();
+
+      if (!isRemote && this.ldrManager) {
+        this.ldrManager.sendStage(stage);
+      }
+    }
+
+    initLdrSetupStage() {
+      const layoutPicker = document.getElementById("ldrModalLayoutPicker");
+      if (layoutPicker) {
+        const layouts = [
+          { id: "classic_3cut", name: "Classic 3-Cut", icon: "🎞️" },
+          { id: "classic_strip", name: "4-Cut Strip", icon: "📸" },
+          { id: "portrait_pair", name: "2-Cut Duo", icon: "✨" },
+          { id: "film_grid", name: "2x2 Film Grid", icon: "🔲" },
+          { id: "wide_collage", name: "Wide Strip", icon: "🖼️" }
+        ];
+        layoutPicker.innerHTML = layouts.map(l => `
+          <button type="button" class="ldr-choice-card ${l.id === this.currentFormat ? 'active' : ''}" data-format="${l.id}">
+            <span class="ldr-choice-icon">${l.icon}</span>
+            <span class="ldr-choice-name">${l.name}</span>
+          </button>
+        `).join("");
+        layoutPicker.querySelectorAll(".ldr-choice-card").forEach(btn => {
+          btn.addEventListener("click", () => {
+            layoutPicker.querySelectorAll(".ldr-choice-card").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            this.setFormat(btn.dataset.format);
+          });
+        });
+      }
+
+      const stylePicker = document.getElementById("ldrModalStylePicker");
+      if (stylePicker) {
+        const styles = [
+          { id: "style_cyan_stars", name: "Cyan Stars", preview: "#00d2ff" },
+          { id: "style_floral", name: "Floral Rose", preview: "#ff758c" },
+          { id: "style_retro_swirl", name: "Retro Swirl", preview: "#ff9f0a" },
+          { id: "style_lavender", name: "Lavender Dream", preview: "#bf5af2" },
+          { id: "style_checker", name: "Pastel Checkers", preview: "#30d158" },
+          { id: "style_noir", name: "Noir Minimal", preview: "#1c1c1e" }
+        ];
+        stylePicker.innerHTML = styles.map(s => `
+          <button type="button" class="ldr-choice-card ${s.id === this.currentStyle ? 'active' : ''}" data-style="${s.id}">
+            <span class="ldr-style-circle" style="background:${s.preview};"></span>
+            <span class="ldr-choice-name">${s.name}</span>
+          </button>
+        `).join("");
+        stylePicker.querySelectorAll(".ldr-choice-card").forEach(btn => {
+          btn.addEventListener("click", () => {
+            stylePicker.querySelectorAll(".ldr-choice-card").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            this.setStyle(btn.dataset.style);
+          });
+        });
+      }
+
+      const phraseInput = document.getElementById("ldrModalPhraseInput");
+      if (phraseInput) {
+        phraseInput.value = this.caption || "";
+        phraseInput.oninput = (e) => this.updatePhraseDisplays(e.target.value);
+      }
+
+      const readyBtn = document.getElementById("btnLdrReadyToShoot");
+      if (readyBtn) {
+        readyBtn.onclick = () => this.setLdrStage("capture", false);
+      }
+    }
+
+    initLdrCaptureStage() {
+      const shutterBtn = document.getElementById("btnLdrModalShutter");
+      if (shutterBtn) {
+        shutterBtn.onclick = () => this.startBurst();
+      }
+    }
+
+    initLdrSelectStage() {
+      this.renderCandidateCards();
+      const retryBtn = document.getElementById("btnLdrModalRetryExtra");
+      if (retryBtn) {
+        retryBtn.onclick = () => this.requestRetryExtraSet();
+      }
+      const confirmBtn = document.getElementById("btnLdrConfirmSelection");
+      if (confirmBtn) {
+        confirmBtn.onclick = () => {
+          this.confirmPhotoSelection();
+          this.setLdrStage("deco", false);
+        };
+      }
+    }
+
+    initLdrDecoStage() {
+      this.renderStrip();
+      setTimeout(() => this.resizePaintCanvas(), 60);
+      const printBtn = document.getElementById("btnLdrModalPrintStrip");
+      if (printBtn) {
+        printBtn.onclick = () => this.setLdrStage("print", false);
+      }
+    }
+
+    initLdrPrintStage() {
+      this.renderStrip();
+      this.play("sparkle");
+      this.play("filmMotor");
+      this.vibrate([40, 60, 40]);
+
+      const ejectTray = document.getElementById("ldrModalEjectTray");
+      if (ejectTray && this.stripContainer) {
+        ejectTray.innerHTML = `<div class="${this.stripContainer.className}">${this.stripContainer.innerHTML}</div>`;
+      }
+
+      document.getElementById("btnLdrModalDownload")?.addEventListener("click", () => this.exportStrip(), { once: true });
+      document.getElementById("btnLdrModalShare")?.addEventListener("click", () => this.shareStrip(), { once: true });
+      document.getElementById("btnLdrModalNewSession")?.addEventListener("click", () => this.setLdrStage("setup", false), { once: true });
+      document.getElementById("btnLdrModalFinishExit")?.addEventListener("click", () => this.closeLdrModal(), { once: true });
     }
 
     generateRoomCode() {
@@ -675,12 +960,17 @@
       const url = `${window.location.origin}${window.location.pathname}?booth_room=${this.ldrManager.roomCode}`;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
-          const btn = document.getElementById("btnCopyInviteLink");
-          if (btn) {
-            const orig = btn.innerHTML;
-            btn.innerHTML = "<span>✅ Link Copied!</span>";
-            setTimeout(() => { btn.innerHTML = orig; }, 2000);
-          }
+          const btns = [
+            document.getElementById("btnCopyInviteLink"),
+            document.getElementById("btnModalCopyInvite")
+          ];
+          btns.forEach(btn => {
+            if (btn) {
+              const orig = btn.innerHTML;
+              btn.innerHTML = "<span>✅ Link Copied!</span>";
+              setTimeout(() => { btn.innerHTML = orig; }, 2000);
+            }
+          });
         }).catch(() => {});
       }
       this.play("beep", 880, 0.05);
@@ -696,7 +986,36 @@
 
     bindControls() {
       this.btnModeSolo?.addEventListener("click", () => this.switchMode("solo"));
-      this.btnModeLdr?.addEventListener("click", () => this.switchMode("ldr"));
+      this.btnModeLdr?.addEventListener("click", () => this.openLdrModal());
+      document.getElementById("btnLeaveLdrModal")?.addEventListener("click", () => this.closeLdrModal());
+      document.getElementById("ldrModalBackdrop")?.addEventListener("click", () => this.closeLdrModal());
+      document.getElementById("btnModalCopyInvite")?.addEventListener("click", () => this.copyInviteLink());
+      document.getElementById("btnModalShareInvite")?.addEventListener("click", () => {
+        if (!this.ldrManager || !this.ldrManager.roomCode) return;
+        const url = `${window.location.origin}${window.location.pathname}?booth_room=${this.ldrManager.roomCode}`;
+        if (navigator.share) {
+          navigator.share({
+            title: "Join my Photobooth room 💕",
+            text: "Let's take vintage photos together across the distance!",
+            url
+          }).catch(() => {});
+        } else {
+          this.copyInviteLink();
+        }
+      });
+      document.querySelectorAll(".ldr-step-node").forEach(node => {
+        node.addEventListener("click", () => {
+          const step = node.dataset.step;
+          if (step && this.currentLdrStage) {
+            const stages = ["lobby", "setup", "capture", "select", "deco", "print"];
+            const currIdx = stages.indexOf(this.currentLdrStage);
+            const targetIdx = stages.indexOf(step);
+            if (targetIdx <= currIdx && targetIdx >= 1) {
+              this.setLdrStage(step, false);
+            }
+          }
+        });
+      });
       document.getElementById("btnCopyInviteLink")?.addEventListener("click", () => this.copyInviteLink());
       document.getElementById("btnNewRoomCode")?.addEventListener("click", () => this.generateNewRoom());
 
@@ -848,23 +1167,40 @@
         return;
       }
       try {
+        const needsAudio = Boolean(this.isLdrMode);
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: this.facingMode,
             width: { ideal: 1280 },
             height: { ideal: 960 }
           },
-          audio: false
+          audio: needsAudio ? {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          } : false
         });
         this.mediaStream = stream;
+
+        const localVideos = [
+          this.videoLocalEl,
+          document.getElementById("photoboothVideoLobbyPreview"),
+          document.getElementById("ldrVideoFeedLocal"),
+          document.getElementById("photoboothVideoDockedLocal")
+        ];
+        localVideos.forEach((v) => {
+          if (v) {
+            v.muted = true;
+            v.volume = 0;
+            v.srcObject = stream;
+            v.classList.toggle("facing-environment", this.facingMode === "environment");
+            v.play().catch(() => {});
+          }
+        });
+
         if (this.isLdrMode) {
           if (this.viewfinderSplitScreen) this.viewfinderSplitScreen.style.display = "grid";
           if (this.videoEl) this.videoEl.style.display = "none";
-          if (this.videoLocalEl) {
-            this.videoLocalEl.srcObject = stream;
-            this.videoLocalEl.classList.toggle("facing-environment", this.facingMode === "environment");
-            await this.videoLocalEl.play().catch(() => {});
-          }
           if (this.ldrManager) {
             this.ldrManager.setupWebRTC(stream);
           }
@@ -891,8 +1227,14 @@
         } catch (e) {}
         this.mediaStream = null;
       }
-      if (this.videoEl) this.videoEl.srcObject = null;
-      if (this.videoLocalEl) this.videoLocalEl.srcObject = null;
+      const localVideos = [
+        this.videoEl,
+        this.videoLocalEl,
+        document.getElementById("photoboothVideoLobbyPreview"),
+        document.getElementById("ldrVideoFeedLocal"),
+        document.getElementById("photoboothVideoDockedLocal")
+      ];
+      localVideos.forEach(v => { if (v) v.srcObject = null; });
       if (this.viewfinderSplitScreen) this.viewfinderSplitScreen.style.display = "none";
       if (this.videoEl) this.videoEl.style.display = "block";
     }
@@ -908,6 +1250,8 @@
       if (text != null) this.caption = text;
       const inp = document.getElementById("boothPhraseInput");
       if (inp && inp.value !== this.caption) inp.value = this.caption;
+      const modalInp = document.getElementById("ldrModalPhraseInput");
+      if (modalInp && modalInp.value !== this.caption) modalInp.value = this.caption;
       document.querySelectorAll(".frame-phrase-text").forEach(el => el.textContent = this.caption);
       document.querySelectorAll(".strip-phrase-display").forEach(el => el.textContent = this.caption);
       const stripCap = document.querySelector(".strip-caption-txt");
@@ -923,15 +1267,17 @@
     applyFilter(filterKey, isRemote = false) {
       this.currentFilter = filterKey;
       const css = FILTERS[filterKey]?.css || "none";
-      if (this.videoEl) {
-        this.videoEl.style.filter = css;
-      }
-      if (this.videoLocalEl) {
-        this.videoLocalEl.style.filter = css;
-      }
-      if (this.videoRemoteEl) {
-        this.videoRemoteEl.style.filter = css;
-      }
+      const videos = [
+        this.videoEl,
+        this.videoLocalEl,
+        this.videoRemoteEl,
+        document.getElementById("ldrVideoFeedLocal"),
+        document.getElementById("ldrVideoFeedRemote"),
+        document.getElementById("photoboothVideoDockedLocal"),
+        document.getElementById("photoboothVideoDockedRemote"),
+        document.getElementById("photoboothVideoLobbyPreview")
+      ].filter(Boolean);
+      videos.forEach(v => { v.style.filter = css; });
       if (this.sectionEl) {
         this.sectionEl.dataset.activeFilter = filterKey;
         this.sectionEl.classList.remove(
@@ -1023,6 +1369,9 @@
       document.querySelectorAll(".format-pill-btn").forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.format === fmtKey);
       });
+      document.querySelectorAll("#ldrModalLayoutPicker .ldr-choice-card").forEach((card) => {
+        card.classList.toggle("active", card.dataset.format === fmtKey);
+      });
 
       const isSquare = fmtKey === "film_grid" || fmtKey === "grid_3x3";
       const chips = document.getElementById("boothLayoutChips");
@@ -1051,6 +1400,9 @@
       this.currentStyle = styleKey;
       document.querySelectorAll(".layout-chip-btn").forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.style === styleKey);
+      });
+      document.querySelectorAll("#ldrModalStylePicker .ldr-choice-card").forEach((card) => {
+        card.classList.toggle("active", card.dataset.style === styleKey);
       });
       this.vibrate(15);
       if (this.capturedPhotos.length) this.renderStrip();
@@ -1115,20 +1467,31 @@
       this.play("filmMotor");
       this.vibrate([40, 50, 40]);
       this.stopCamera();
-      this.showSelectionTray();
+      if (this.isLdrMode) {
+        this.setLdrStage("select", false);
+      } else {
+        this.showSelectionTray();
+      }
     }
 
     runShotCountdown(shotIdx, totalShots) {
       return new Promise((resolve) => {
+        const hint = POSE_HINTS[shotIdx % POSE_HINTS.length];
         if (this.posePill && this.poseText) {
-          this.poseText.textContent = POSE_HINTS[shotIdx % POSE_HINTS.length];
+          this.poseText.textContent = hint;
           this.posePill.style.display = "block";
         }
+        const ldrHint = document.getElementById("ldrModalPoseHint");
+        if (ldrHint) ldrHint.textContent = hint;
+
         if (this.countdownOverlay) this.countdownOverlay.style.display = "flex";
+        const ldrOverlay = document.getElementById("ldrModalCountdown");
+        if (ldrOverlay) ldrOverlay.style.display = "flex";
 
         let count = this.countdownSeconds;
         if (count <= 1) {
           if (this.countdownOverlay) this.countdownOverlay.style.display = "none";
+          if (ldrOverlay) ldrOverlay.style.display = "none";
           if (this.posePill) this.posePill.style.display = "none";
           resolve();
           return;
@@ -1136,12 +1499,16 @@
 
         const tick = () => {
           if (this.countdownDigit) this.countdownDigit.textContent = count;
+          const ldrDigit = document.getElementById("ldrCountdownDigit");
+          if (ldrDigit) ldrDigit.textContent = count;
+
           if (count > 0) {
             this.play("beep", count === 1 ? 880 : 440, 0.09);
             count--;
             setTimeout(tick, 1000);
           } else {
             if (this.countdownOverlay) this.countdownOverlay.style.display = "none";
+            if (ldrOverlay) ldrOverlay.style.display = "none";
             if (this.posePill) this.posePill.style.display = "none";
             resolve();
           }
@@ -1151,11 +1518,14 @@
     }
 
     triggerFlash() {
-      if (!this.flashEnabled || !this.flashEl) return;
-      this.flashEl.classList.remove("camera-flash-active");
-      void this.flashEl.offsetWidth;
-      this.flashEl.classList.add("camera-flash-active");
-      setTimeout(() => this.flashEl?.classList.remove("camera-flash-active"), 400);
+      if (!this.flashEnabled) return;
+      const flashes = [this.flashEl, document.getElementById("ldrModalFlash")].filter(Boolean);
+      flashes.forEach((flash) => {
+        flash.classList.remove("camera-flash-active");
+        void flash.offsetWidth;
+        flash.classList.add("camera-flash-active");
+        setTimeout(() => flash.classList.remove("camera-flash-active"), 400);
+      });
     }
 
     captureFrame() {
@@ -1172,7 +1542,7 @@
         canvas.height = H;
 
         // Left Half: Local Partner
-        const localVideo = this.videoLocalEl || this.videoEl;
+        const localVideo = document.getElementById("ldrVideoFeedLocal") || this.videoLocalEl || this.videoEl;
         if (localVideo && localVideo.videoWidth) {
           const vw = localVideo.videoWidth, vh = localVideo.videoHeight;
           const cropW = Math.min(vw, vh * (W / 2) / H);
@@ -1193,7 +1563,7 @@
         }
 
         // Right Half: Remote Partner
-        const remoteVideo = this.videoRemoteEl;
+        const remoteVideo = document.getElementById("ldrVideoFeedRemote") || this.videoRemoteEl;
         if (remoteVideo && remoteVideo.videoWidth && remoteVideo.srcObject) {
           const rvw = remoteVideo.videoWidth, rvh = remoteVideo.videoHeight;
           const rcropW = Math.min(rvw, rvh * (W / 2) / H);
@@ -1269,7 +1639,10 @@
     }
 
     updateRetryBudgetUi() {
-      const retryBtn = document.getElementById("btnRetryExtraSet");
+      const retryBtns = [
+        document.getElementById("btnRetryExtraSet"),
+        document.getElementById("btnLdrModalRetryExtra")
+      ].filter(Boolean);
       const badge = document.getElementById("retryBudgetBadge");
       const retriesRemaining = Math.max(0, this.retryBudget - this.retryCount);
 
@@ -1277,41 +1650,51 @@
         badge.textContent = `${retriesRemaining} Retry Left (${retriesRemaining}/${this.retryBudget})`;
         badge.classList.toggle("exhausted", retriesRemaining === 0);
       }
-      if (retryBtn) {
+      retryBtns.forEach((retryBtn) => {
         retryBtn.disabled = (retriesRemaining === 0);
         retryBtn.innerHTML = retriesRemaining > 0
           ? `<span>🔄 Retake Extra Set (${retriesRemaining} try left)</span>`
           : `<span>🚫 No Retries Left</span>`;
-      }
+      });
     }
 
     renderCandidateCards() {
-      if (!this.selectionCandidatesGrid) return;
       const targetCount = this.getShotCount();
+      const grids = [
+        this.selectionCandidatesGrid,
+        document.getElementById("ldrModalCandidatesGrid")
+      ].filter(Boolean);
 
-      this.selectionCandidatesGrid.innerHTML = this.candidatePhotos.map((src, idx) => {
-        const selPos = this.selectedCandidateIndices.indexOf(idx);
-        const isSelected = selPos !== -1;
-        const badgeText = isSelected ? String(selPos + 1) : "";
-        return `
-          <div class="candidate-card ${isSelected ? 'selected' : ''}" data-cand-idx="${idx}" tabindex="0">
-            <img src="${src}" alt="Candidate ${idx + 1}">
-            <span class="candidate-order-badge">${badgeText}</span>
-            <span class="candidate-time-tag">Shot ${idx + 1}</span>
-          </div>
-        `;
-      }).join("");
+      grids.forEach((grid) => {
+        grid.innerHTML = this.candidatePhotos.map((src, idx) => {
+          const selPos = this.selectedCandidateIndices.indexOf(idx);
+          const isSelected = selPos !== -1;
+          const badgeText = isSelected ? String(selPos + 1) : "";
+          return `
+            <div class="candidate-card ${isSelected ? 'selected' : ''}" data-cand-idx="${idx}" tabindex="0">
+              <img src="${src}" alt="Candidate ${idx + 1}">
+              <span class="candidate-order-badge">${badgeText}</span>
+              <span class="candidate-time-tag">Shot ${idx + 1}</span>
+            </div>
+          `;
+        }).join("");
 
-      this.selectionCandidatesGrid.querySelectorAll(".candidate-card").forEach((card) => {
-        card.addEventListener("click", () => {
-          const idx = Number(card.dataset.candIdx);
-          this.toggleCandidateSelection(idx);
+        grid.querySelectorAll(".candidate-card").forEach((card) => {
+          card.addEventListener("click", () => {
+            const idx = Number(card.dataset.candIdx);
+            this.toggleCandidateSelection(idx);
+          });
         });
       });
 
-      if (this.btnConfirmSelection) {
-        const isReady = (this.selectedCandidateIndices.length === targetCount);
-        this.btnConfirmSelection.disabled = !isReady;
+      const isReady = (this.selectedCandidateIndices.length === targetCount);
+      if (this.btnConfirmSelection) this.btnConfirmSelection.disabled = !isReady;
+      const modalConfirmBtn = document.getElementById("btnLdrConfirmSelection");
+      if (modalConfirmBtn) modalConfirmBtn.disabled = !isReady;
+
+      const counterText = document.getElementById("ldrSelectionCounterText");
+      if (counterText) {
+        counterText.textContent = `Select ${targetCount} photos (${this.selectedCandidateIndices.length}/${targetCount} chosen)`;
       }
     }
 
@@ -1583,6 +1966,17 @@
       });
 
       this.renderStickers();
+
+      const modalStripContainer = document.getElementById("ldrModalStripContainer");
+      if (modalStripContainer) {
+        modalStripContainer.className = this.stripContainer.className;
+        modalStripContainer.innerHTML = this.stripContainer.innerHTML;
+      }
+      const ejectTray = document.getElementById("ldrModalEjectTray");
+      if (ejectTray) {
+        ejectTray.className = "photobooth-eject-tray";
+        ejectTray.innerHTML = `<div class="${this.stripContainer.className}">${this.stripContainer.innerHTML}</div>`;
+      }
     }
 
     setFrameOverlay(overlayId) {
@@ -2298,9 +2692,13 @@
       return canvas;
     }
 
+    getPaintCanvases() {
+      return [this.paintCanvas, document.getElementById("ldrModalPaintCanvas")].filter(Boolean);
+    }
+
     initPaintEngine() {
       this.paintCanvas = document.getElementById("photoboothPaintCanvas");
-      if (!this.paintCanvas) return;
+      const modalCanvas = document.getElementById("ldrModalPaintCanvas");
 
       document.querySelectorAll(".color-swatch-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -2311,9 +2709,9 @@
         });
       });
 
-      document.querySelectorAll(".size-chip-btn").forEach((btn) => {
+      document.querySelectorAll(".size-chip-btn, .brush-size-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
-          document.querySelectorAll(".size-chip-btn").forEach(b => b.classList.remove("active"));
+          document.querySelectorAll(".size-chip-btn, .brush-size-btn").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
           this.paintSize = Number(btn.dataset.size) || 6;
           this.play("beep", 500, 0.03);
@@ -2322,131 +2720,156 @@
 
       document.getElementById("btnPaintUndo")?.addEventListener("click", () => this.undoPaintStroke());
       document.getElementById("btnPaintClear")?.addEventListener("click", () => this.clearPaintCanvas());
+      document.getElementById("btnLdrModalUndoPaint")?.addEventListener("click", () => this.undoPaintStroke());
+      document.getElementById("btnLdrModalClearPaint")?.addEventListener("click", () => this.clearPaintCanvas());
+      document.getElementById("btnLdrModalPrintStrip")?.addEventListener("click", () => this.setLdrStage("print", false));
 
       let currentStroke = null;
 
-      const getCanvasCoords = (e) => {
-        const rect = this.paintCanvas.getBoundingClientRect();
-        if (!rect.width || !rect.height) return { x: 0, y: 0 };
-        const touch = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
-        const clientX = touch ? touch.clientX : e.clientX;
-        const clientY = touch ? touch.clientY : e.clientY;
-        const x = (clientX - rect.left) / rect.width;
-        const y = (clientY - rect.top) / rect.height;
-        return { x: Math.max(0, Math.min(1, x)), y: Math.max(0, Math.min(1, y)) };
-      };
-
-      const onStart = (e) => {
-        if (this.currentDecoTab !== "paint") return;
-        if (e.cancelable) e.preventDefault();
-        this.isPainting = true;
-        if (e.pointerId) this.paintCanvas.setPointerCapture?.(e.pointerId);
-        const p = getCanvasCoords(e);
-        currentStroke = {
-          color: this.paintColor,
-          size: this.paintSize,
-          points: [p]
+      const bindCanvas = (canvas) => {
+        if (!canvas) return;
+        const getCanvasCoords = (e) => {
+          const rect = canvas.getBoundingClientRect();
+          if (!rect.width || !rect.height) return { x: 0, y: 0 };
+          const touch = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
+          const clientX = touch ? touch.clientX : e.clientX;
+          const clientY = touch ? touch.clientY : e.clientY;
+          const x = (clientX - rect.left) / rect.width;
+          const y = (clientY - rect.top) / rect.height;
+          return { x: Math.max(0, Math.min(1, x)), y: Math.max(0, Math.min(1, y)) };
         };
-        this.drawStrokePoint(p, this.paintColor, this.paintSize);
-      };
 
-      const onMove = (e) => {
-        if (!this.isPainting || !currentStroke) return;
-        if (e.cancelable) e.preventDefault();
-        const p = getCanvasCoords(e);
-        const prev = currentStroke.points[currentStroke.points.length - 1];
-        currentStroke.points.push(p);
-        this.drawStrokeLine(prev, p, this.paintColor, this.paintSize);
-      };
+        const onStart = (e) => {
+          if (!this.isLdrMode && this.currentDecoTab !== "paint") return;
+          if (e.cancelable) e.preventDefault();
+          this.isPainting = true;
+          if (e.pointerId) canvas.setPointerCapture?.(e.pointerId);
+          const p = getCanvasCoords(e);
+          currentStroke = {
+            color: this.paintColor,
+            size: this.paintSize,
+            points: [p]
+          };
+          this.drawStrokePoint(p, this.paintColor, this.paintSize);
+        };
 
-      const onEnd = () => {
-        if (!this.isPainting || !currentStroke) return;
-        this.isPainting = false;
-        if (currentStroke.points.length > 0) {
-          this.paintStrokes.push(currentStroke);
-          if (this.isLdrMode && this.ldrManager) {
-            this.ldrManager.send("PAINT_STROKE", { stroke: currentStroke });
+        const onMove = (e) => {
+          if (!this.isPainting || !currentStroke) return;
+          if (e.cancelable) e.preventDefault();
+          const p = getCanvasCoords(e);
+          const prev = currentStroke.points[currentStroke.points.length - 1];
+          currentStroke.points.push(p);
+          this.drawStrokeLine(prev, p, this.paintColor, this.paintSize);
+        };
+
+        const onEnd = () => {
+          if (!this.isPainting || !currentStroke) return;
+          this.isPainting = false;
+          if (currentStroke.points.length > 0) {
+            this.paintStrokes.push(currentStroke);
+            if (this.isLdrMode && this.ldrManager) {
+              this.ldrManager.send("PAINT_STROKE", { stroke: currentStroke });
+            }
           }
-        }
-        currentStroke = null;
+          currentStroke = null;
+        };
+
+        canvas.addEventListener("pointerdown", onStart);
+        canvas.addEventListener("pointermove", onMove);
+        canvas.addEventListener("pointerup", onEnd);
+        canvas.addEventListener("pointercancel", onEnd);
+
+        canvas.addEventListener("touchstart", onStart, { passive: false });
+        canvas.addEventListener("touchmove", onMove, { passive: false });
+        canvas.addEventListener("touchend", onEnd, { passive: false });
+        canvas.addEventListener("touchcancel", onEnd, { passive: false });
       };
 
-      this.paintCanvas.addEventListener("pointerdown", onStart);
-      this.paintCanvas.addEventListener("pointermove", onMove);
-      this.paintCanvas.addEventListener("pointerup", onEnd);
-      this.paintCanvas.addEventListener("pointercancel", onEnd);
-
-      this.paintCanvas.addEventListener("touchstart", onStart, { passive: false });
-      this.paintCanvas.addEventListener("touchmove", onMove, { passive: false });
-      this.paintCanvas.addEventListener("touchend", onEnd, { passive: false });
-      this.paintCanvas.addEventListener("touchcancel", onEnd, { passive: false });
+      bindCanvas(this.paintCanvas);
+      bindCanvas(modalCanvas);
 
       window.addEventListener("resize", () => this.resizePaintCanvas());
       window.addEventListener("orientationchange", () => setTimeout(() => this.resizePaintCanvas(), 100));
     }
 
     resizePaintCanvas() {
-      if (!this.paintCanvas) return;
-      const container = document.getElementById("photoboothStripOuter") || document.getElementById("photoboothStripContainer");
-      if (!container) return;
-
-      const rect = container.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
-      this.paintCanvas.width = Math.floor(rect.width * dpr);
-      this.paintCanvas.height = Math.floor(rect.height * dpr);
-      this.paintCanvas.style.width = `${rect.width}px`;
-      this.paintCanvas.style.height = `${rect.height}px`;
-
+      if (this.paintCanvas) {
+        const container = document.getElementById("photoboothStripOuter") || document.getElementById("photoboothStripContainer");
+        if (container) {
+          const rect = container.getBoundingClientRect();
+          this.paintCanvas.width = Math.floor(rect.width * dpr);
+          this.paintCanvas.height = Math.floor(rect.height * dpr);
+          this.paintCanvas.style.width = `${rect.width}px`;
+          this.paintCanvas.style.height = `${rect.height}px`;
+        }
+      }
+      const modalCanvas = document.getElementById("ldrModalPaintCanvas");
+      if (modalCanvas) {
+        const container = document.getElementById("ldrModalStripContainer") || document.getElementById("ldrModalDecoCanvasWrap");
+        if (container) {
+          const rect = container.getBoundingClientRect();
+          modalCanvas.width = Math.floor(rect.width * dpr);
+          modalCanvas.height = Math.floor(rect.height * dpr);
+          modalCanvas.style.width = `${rect.width}px`;
+          modalCanvas.style.height = `${rect.height}px`;
+        }
+      }
       this.redrawPaintCanvas();
     }
 
     drawStrokePoint(p, color, size) {
-      if (!this.paintCanvas) return;
-      const ctx = this.paintCanvas.getContext("2d");
-      const w = this.paintCanvas.width, h = this.paintCanvas.height;
-      const scale = w / 360;
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(p.x * w, p.y * h, (size * scale) / 2, 0, Math.PI * 2);
-      ctx.fill();
+      this.getPaintCanvases().forEach((canvas) => {
+        const ctx = canvas.getContext("2d");
+        const w = canvas.width, h = canvas.height;
+        const scale = w / 360;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(p.x * w, p.y * h, (size * scale) / 2, 0, Math.PI * 2);
+        ctx.fill();
+      });
     }
 
     drawStrokeLine(p1, p2, color, size) {
-      if (!this.paintCanvas) return;
-      const ctx = this.paintCanvas.getContext("2d");
-      const w = this.paintCanvas.width, h = this.paintCanvas.height;
-      const scale = w / 360;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = size * scale;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.beginPath();
-      ctx.moveTo(p1.x * w, p1.y * h);
-      ctx.lineTo(p2.x * w, p2.y * h);
-      ctx.stroke();
+      this.getPaintCanvases().forEach((canvas) => {
+        const ctx = canvas.getContext("2d");
+        const w = canvas.width, h = canvas.height;
+        const scale = w / 360;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = size * scale;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.beginPath();
+        ctx.moveTo(p1.x * w, p1.y * h);
+        ctx.lineTo(p2.x * w, p2.y * h);
+        ctx.stroke();
+      });
     }
 
     drawStrokeOnCanvas(stroke) {
-      if (!this.paintCanvas || !stroke || !stroke.points || stroke.points.length === 0) return;
-      const ctx = this.paintCanvas.getContext("2d");
-      const w = this.paintCanvas.width, h = this.paintCanvas.height;
-      const scale = w / 360;
-      ctx.strokeStyle = stroke.color;
-      ctx.lineWidth = stroke.size * scale;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.beginPath();
-      ctx.moveTo(stroke.points[0].x * w, stroke.points[0].y * h);
-      for (let i = 1; i < stroke.points.length; i++) {
-        ctx.lineTo(stroke.points[i].x * w, stroke.points[i].y * h);
-      }
-      ctx.stroke();
+      if (!stroke || !stroke.points || stroke.points.length === 0) return;
+      this.getPaintCanvases().forEach((canvas) => {
+        const ctx = canvas.getContext("2d");
+        const w = canvas.width, h = canvas.height;
+        const scale = w / 360;
+        ctx.strokeStyle = stroke.color;
+        ctx.lineWidth = stroke.size * scale;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.beginPath();
+        ctx.moveTo(stroke.points[0].x * w, stroke.points[0].y * h);
+        for (let i = 1; i < stroke.points.length; i++) {
+          ctx.lineTo(stroke.points[i].x * w, stroke.points[i].y * h);
+        }
+        ctx.stroke();
+      });
     }
 
     redrawPaintCanvas() {
-      if (!this.paintCanvas) return;
-      const ctx = this.paintCanvas.getContext("2d");
-      ctx.clearRect(0, 0, this.paintCanvas.width, this.paintCanvas.height);
+      this.getPaintCanvases().forEach((canvas) => {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      });
       this.paintStrokes.forEach(s => this.drawStrokeOnCanvas(s));
     }
 

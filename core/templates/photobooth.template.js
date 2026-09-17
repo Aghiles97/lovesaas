@@ -449,6 +449,301 @@
             </div>
           </div>
         </div>
+
+        <!-- Synchronized Step-by-Step LDR Fullscreen Modal Flow -->
+        <div class="photobooth-ldr-modal" id="photoboothLdrModal" style="display:none;" role="dialog" aria-modal="true" aria-label="Long Distance Relationship Photobooth">
+          <div class="photobooth-ldr-modal-backdrop" id="ldrModalBackdrop"></div>
+          <div class="photobooth-ldr-modal-dialog">
+            
+            <!-- Modal Header: Progress Stepper, Status Pill, Close Button -->
+            <div class="ldr-modal-header">
+              <div class="ldr-stepper" role="tablist" aria-label="LDR Steps">
+                <div class="ldr-step-node active" data-step="lobby" id="ldrStepNodeLobby">
+                  <span class="step-num">1</span>
+                  <span class="step-text">Lobby</span>
+                </div>
+                <div class="ldr-step-line"></div>
+                <div class="ldr-step-node" data-step="setup" id="ldrStepNodeSetup">
+                  <span class="step-num">2</span>
+                  <span class="step-text">Style</span>
+                </div>
+                <div class="ldr-step-line"></div>
+                <div class="ldr-step-node" data-step="capture" id="ldrStepNodeCapture">
+                  <span class="step-num">3</span>
+                  <span class="step-text">Shoot</span>
+                </div>
+                <div class="ldr-step-line"></div>
+                <div class="ldr-step-node" data-step="select" id="ldrStepNodeSelect">
+                  <span class="step-num">4</span>
+                  <span class="step-text">Pick</span>
+                </div>
+                <div class="ldr-step-line"></div>
+                <div class="ldr-step-node" data-step="deco" id="ldrStepNodeDeco">
+                  <span class="step-num">5</span>
+                  <span class="step-text">Doodle</span>
+                </div>
+                <div class="ldr-step-line"></div>
+                <div class="ldr-step-node" data-step="print" id="ldrStepNodePrint">
+                  <span class="step-num">6</span>
+                  <span class="step-text">Print</span>
+                </div>
+              </div>
+
+              <div class="ldr-header-actions">
+                <div class="ldr-live-call-status">
+                  <span class="status-pulse-dot waiting" id="ldrModalPulseDot"></span>
+                  <span id="ldrModalStatusText">Waiting for partner...</span>
+                  <span class="ldr-audio-indicator" id="ldrAudioIndicator" title="Audio connected">🎤 Audio Active</span>
+                </div>
+                <button type="button" class="ldr-modal-close-btn" id="btnLeaveLdrModal" aria-label="Leave Room">
+                  <span>✕ Leave Room</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Mini Docked Video Call Bar for Steps 2, 4, 5 -->
+            <div class="ldr-docked-call-bar" id="ldrDockedCallBar" style="display:none;">
+              <div class="docked-feed docked-feed-local">
+                <video id="photoboothVideoDockedLocal" autoplay playsinline muted></video>
+                <span class="docked-tag">You</span>
+              </div>
+              <div class="docked-feed docked-feed-remote">
+                <video id="photoboothVideoDockedRemote" autoplay playsinline></video>
+                <span class="docked-tag">Partner 💕</span>
+              </div>
+              <div class="docked-call-controls">
+                <span class="docked-call-title">Live Call Active</span>
+                <span class="docked-call-hint">Both talking in real time</span>
+              </div>
+            </div>
+
+            <!-- Modal Content Body -->
+            <div class="ldr-modal-body">
+
+              <!-- Stage 1: Lobby / Waiting Room -->
+              <div class="ldr-stage-panel" id="ldrStageLobby">
+                <div class="ldr-lobby-wrap">
+                  <div class="ldr-lobby-card">
+                    <div class="ldr-lobby-icon">💌</div>
+                    <h3 class="ldr-lobby-title">Invite Your Partner to the Booth</h3>
+                    <p class="ldr-lobby-sub">Send this room link to your partner. Once they open it, you will see each other live, talk with audio, and pick your frame together!</p>
+
+                    <div class="ldr-code-card">
+                      <span class="ldr-code-label">ROOM CODE</span>
+                      <span class="ldr-code-big" id="ldrModalRoomCode">------</span>
+                    </div>
+
+                    <div class="ldr-invite-actions">
+                      <button type="button" id="btnModalCopyInvite" class="btn btn-primary btn-lg">
+                        <span>🔗 Copy Direct Invite Link</span>
+                      </button>
+                      <button type="button" id="btnModalShareInvite" class="btn btn-secondary btn-lg">
+                        <span>📲 Share via App</span>
+                      </button>
+                    </div>
+
+                    <div class="ldr-lobby-pulse-wrap">
+                      <div class="pulse-ring"></div>
+                      <span class="pulse-msg" id="ldrLobbyWaitingMsg">Waiting for your partner to join...</span>
+                    </div>
+
+                    <div class="ldr-self-test-wrap">
+                      <div class="self-test-label">Camera & Microphone Preview</div>
+                      <div class="self-test-feed">
+                        <video id="photoboothVideoLobbyPreview" autoplay playsinline muted></video>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stage 2: Synchronized Frame & Style Selection -->
+              <div class="ldr-stage-panel" id="ldrStageSetup" style="display:none;">
+                <div class="ldr-setup-wrap">
+                  <div class="ldr-stage-header">
+                    <h3>Pick Your Layout & Style Together</h3>
+                    <p>Live synchronized selection. Either partner can choose!</p>
+                  </div>
+
+                  <div class="ldr-setup-grid">
+                    <div class="ldr-setup-section">
+                      <label class="ldr-setup-label">1. Frame Layout</label>
+                      <div class="ldr-layout-picker" id="ldrModalLayoutPicker">
+                        <!-- Populated dynamically or mapped -->
+                      </div>
+                    </div>
+
+                    <div class="ldr-setup-section">
+                      <label class="ldr-setup-label">2. Color & Pattern Theme</label>
+                      <div class="ldr-style-picker" id="ldrModalStylePicker">
+                        <!-- Populated dynamically -->
+                      </div>
+                    </div>
+
+                    <div class="ldr-setup-section">
+                      <label class="ldr-setup-label">3. Couple Inscription Phrase</label>
+                      <div class="ldr-phrase-input-wrap">
+                        <input type="text" id="ldrModalPhraseInput" class="form-input" maxlength="60" placeholder="e.g. Together Forever ♡" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="ldr-stage-actions">
+                    <button type="button" id="btnLdrReadyToShoot" class="btn btn-primary btn-xl">
+                      <span>📸 Ready to Shoot Photos!</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stage 3: Synchronized Capture / Viewfinder -->
+              <div class="ldr-stage-panel" id="ldrStageCapture" style="display:none;">
+                <div class="ldr-capture-wrap">
+                  <div class="ldr-viewfinder-screen">
+                    <div class="viewfinder-split-screen modal-split-viewfinder" id="ldrSplitViewfinder">
+                      <div class="split-feed split-feed-local">
+                        <video id="ldrVideoFeedLocal" autoplay playsinline muted></video>
+                        <span class="split-tag">You (Local)</span>
+                      </div>
+                      <div class="split-feed split-feed-remote">
+                        <video id="ldrVideoFeedRemote" autoplay playsinline></video>
+                        <span class="split-tag">Partner (Live Audio Active 🎤)</span>
+                        <div class="remote-placeholder" id="ldrRemotePlaceholder">
+                          <span class="placeholder-icon">💕</span>
+                          <span class="placeholder-txt">Connecting partner video...</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="photobooth-countdown-overlay" id="ldrModalCountdown" style="display:none;">
+                      <span class="countdown-digit" id="ldrCountdownDigit">3</span>
+                    </div>
+                    <div class="photobooth-flash" id="ldrModalFlash" aria-hidden="true"></div>
+                  </div>
+
+                  <div class="ldr-capture-controls">
+                    <div class="ldr-pose-hint" id="ldrModalPoseHint">✨ Pose 1: Give your biggest smile!</div>
+                    <div class="ldr-shutter-bar">
+                      <button type="button" class="photobooth-shutter-btn" id="btnLdrModalShutter" aria-label="Take synchronized photo burst">
+                        <span class="shutter-inner"></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stage 4: Synchronized Photo Selection Tray -->
+              <div class="ldr-stage-panel" id="ldrStageSelect" style="display:none;">
+                <div class="ldr-select-wrap">
+                  <div class="ldr-stage-header">
+                    <h3>Choose Your Favorite Shots</h3>
+                    <p id="ldrSelectionCounterText">Select photos to place in your frame</p>
+                  </div>
+
+                  <div class="selection-candidates-grid" id="ldrModalCandidatesGrid">
+                    <!-- Rendered dynamically -->
+                  </div>
+
+                  <div class="ldr-stage-actions">
+                    <button type="button" id="btnLdrModalRetryExtra" class="btn btn-secondary">
+                      <span>🔄 Reshoot Extra Set (1 Left)</span>
+                    </button>
+                    <button type="button" id="btnLdrConfirmSelection" class="btn btn-primary btn-xl" disabled>
+                      <span>✨ Next: Doodle & Stickers →</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stage 5: Synchronized Doodle & Deco Studio -->
+              <div class="ldr-stage-panel" id="ldrStageDeco" style="display:none;">
+                <div class="ldr-deco-wrap">
+                  <div class="ldr-stage-header">
+                    <h3>Draw, Sign & Decorate Together</h3>
+                    <p>Your strokes and stickers appear on both screens in real time!</p>
+                  </div>
+
+                  <div class="ldr-deco-workspace">
+                    <div class="ldr-deco-canvas-wrap" id="ldrModalDecoCanvasWrap">
+                      <div class="photobooth-strip-container" id="ldrModalStripContainer"></div>
+                      <canvas class="photobooth-paint-canvas" id="ldrModalPaintCanvas"></canvas>
+                    </div>
+
+                    <div class="ldr-deco-toolbar">
+                      <div class="photobooth-paint-palette" id="ldrModalPaintPalette">
+                        <div class="palette-group">
+                          <label class="palette-lbl">Color</label>
+                          <div class="color-swatches" id="ldrModalColorSwatches">
+                            <button type="button" class="color-swatch-btn active" data-color="#ff2d55" style="background:#ff2d55;" aria-label="Pink"></button>
+                            <button type="button" class="color-swatch-btn" data-color="#ff9500" style="background:#ff9500;" aria-label="Peach"></button>
+                            <button type="button" class="color-swatch-btn" data-color="#ffd60a" style="background:#ffd60a;" aria-label="Yellow"></button>
+                            <button type="button" class="color-swatch-btn" data-color="#30d158" style="background:#30d158;" aria-label="Mint"></button>
+                            <button type="button" class="color-swatch-btn" data-color="#0a84ff" style="background:#0a84ff;" aria-label="Sky"></button>
+                            <button type="button" class="color-swatch-btn" data-color="#bf5af2" style="background:#bf5af2;" aria-label="Lavender"></button>
+                            <button type="button" class="color-swatch-btn" data-color="#ffffff" style="background:#ffffff;" aria-label="White"></button>
+                            <button type="button" class="color-swatch-btn" data-color="#1c1c1e" style="background:#1c1c1e;" aria-label="Ink"></button>
+                          </div>
+                        </div>
+                        <div class="palette-group">
+                          <label class="palette-lbl">Brush</label>
+                          <div class="size-swatches" id="ldrModalSizeSwatches">
+                            <button type="button" class="brush-size-btn" data-size="3">Fine</button>
+                            <button type="button" class="brush-size-btn active" data-size="7">Medium</button>
+                            <button type="button" class="brush-size-btn" data-size="14">Thick</button>
+                          </div>
+                        </div>
+                        <div class="palette-group">
+                          <div class="paint-actions">
+                            <button type="button" class="btn btn-sm btn-ghost" id="btnLdrModalUndoPaint">↩ Undo</button>
+                            <button type="button" class="btn btn-sm btn-ghost" id="btnLdrModalClearPaint">🗑 Clear</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="ldr-stage-actions">
+                    <button type="button" id="btnLdrModalPrintStrip" class="btn btn-primary btn-xl">
+                      <span>🖨️ Print Final Strip!</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stage 6: Keepsake Celebration & Eject -->
+              <div class="ldr-stage-panel" id="ldrStagePrint" style="display:none;">
+                <div class="ldr-print-wrap">
+                  <div class="ldr-stage-header">
+                    <h3>🎉 Your Couple Photo Strip is Ready!</h3>
+                    <p>Taken together with love across the distance.</p>
+                  </div>
+
+                  <div class="ldr-eject-slot-wrap">
+                    <div class="photobooth-machine-slot">
+                      <div class="photobooth-eject-tray" id="ldrModalEjectTray"></div>
+                    </div>
+                  </div>
+
+                  <div class="ldr-stage-actions">
+                    <button type="button" id="btnLdrModalDownload" class="btn btn-primary btn-lg">
+                      <span>💾 Save Photo Strip (PNG)</span>
+                    </button>
+                    <button type="button" id="btnLdrModalShare" class="btn btn-accent btn-lg">
+                      <span>💌 Share With Each Other</span>
+                    </button>
+                    <button type="button" id="btnLdrModalNewSession" class="btn btn-secondary btn-lg">
+                      <span>🔄 Take Another Strip</span>
+                    </button>
+                    <button type="button" id="btnLdrModalFinishExit" class="btn btn-ghost btn-lg">
+                      <span>✕ Finish & Exit Room</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
       </div>
     </section>
     `;

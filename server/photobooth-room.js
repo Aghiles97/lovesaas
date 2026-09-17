@@ -5,7 +5,7 @@ try {
   console.warn("⚠️ [Photobooth] Package 'ws' not installed. WebSocket rooms disabled until npm install.");
 }
 
-const ALLOWED_FIELDS = new Set(["format", "style", "filter", "caption"]);
+const ALLOWED_FIELDS = new Set(["format", "style", "filter", "caption", "stage"]);
 const sanitizeStr = (s, len = 80) => String(s || "").replace(/<[^>]*>/g, "").slice(0, len).trim();
 
 class PhotoboothRoomServer {
@@ -24,6 +24,7 @@ class PhotoboothRoomServer {
         participants: new Map(),
         sseClients: new Set(),
         state: {
+          stage: "lobby",
           format: "classic_3cut",
           style: "style_cyan_stars",
           filter: "vintage_90s",
@@ -165,6 +166,21 @@ class PhotoboothRoomServer {
         senderId: participantId,
         senderName: participantName
       }, sender);
+      return;
+    }
+
+    if (type === "STAGE_CHANGE" || type === "SET_STAGE") {
+      const stage = sanitizeStr(payload?.stage || payload, 20);
+      const VALID_STAGES = new Set(["lobby", "setup", "capture", "select", "deco", "print"]);
+      if (VALID_STAGES.has(stage)) {
+        currentRoom.state.stage = stage;
+        this.broadcastAll(currentRoom, {
+          type: "STAGE_CHANGED",
+          stage,
+          actorId: participantId,
+          actorName: participantName
+        });
+      }
       return;
     }
 

@@ -261,6 +261,20 @@ assert(runtimeContent.includes("startHttpTransport"), "Runtime LdrManager provid
 assert(runtimeContent.includes("EventSource"), "Runtime LdrManager uses native browser EventSource for SSE streaming");
 assert(runtimeContent.includes("useHttp"), "Runtime LdrManager supports dual-mode transport routing");
 
+// --- GATE 14: LDR STEP-BY-STEP MODAL WIZARD & WEBRTC AUDIO REPAIR ---
+console.log("\n--- GATE 14: LDR Step-by-Step Modal Wizard & WebRTC Audio Repair ---");
+const freshTemplate = fs.readFileSync(templatePath, "utf8");
+assert(freshTemplate.includes('id="photoboothLdrModal"'), "Template contains synchronized LDR fullscreen modal");
+assert(freshTemplate.includes('id="ldrStageLobby"') && freshTemplate.includes('id="ldrStageSetup"') && freshTemplate.includes('id="ldrStageCapture"') && freshTemplate.includes('id="ldrStageSelect"') && freshTemplate.includes('id="ldrStageDeco"') && freshTemplate.includes('id="ldrStagePrint"'), "Template contains all 6 discrete wizard stage panels");
+assert(freshTemplate.includes('id="ldrDockedCallBar"') && freshTemplate.includes('id="ldrAudioIndicator"'), "Template contains docked live call bar and active audio badge");
+assert(cssContent.includes("width: 100vw !important") && cssContent.includes("height: 100dvh !important"), "CSS enforces unconstrained 100vw x 100dvh full-screen modal ergonomics on mobile");
+assert(roomContent.includes('"stage"') && roomContent.includes("STAGE_CHANGE"), "Room server supports stage in allowed fields and broadcasts STAGE_CHANGED");
+const freshRuntime = fs.readFileSync(runtimePath, "utf8");
+assert(freshRuntime.includes("openLdrModal") && freshRuntime.includes("closeLdrModal"), "Runtime implements openLdrModal and closeLdrModal");
+assert(freshRuntime.includes("setLdrStage"), "Runtime implements setLdrStage state synchronizer");
+assert(freshRuntime.includes("echoCancellation: true"), "Runtime requests echo-cancelled audio track in LDR mode");
+assert(freshRuntime.includes("localVideos.forEach") && freshRuntime.includes("v.muted = true"), "Runtime mutes all local video feeds preventing feedback loops");
+
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");
 if (passedChecks === totalChecks) {
