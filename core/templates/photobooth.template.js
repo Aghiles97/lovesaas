@@ -584,55 +584,69 @@
 
               <!-- Stage 1: Lobby / Send Code to Partner (Screenshot 2) -->
               <div class="ldr-stage-panel" id="ldrStageLobby" style="display:none;">
-                <div class="ldr-lobby-ambient-bg">
-                  <h2 class="ldr-code-screen-title">Send this code to your partner</h2>
-                  <p class="ldr-code-screen-sub">They type it in, or open your link.</p>
+                <div class="ldr-lobby-waiting-wrap" id="ldrLobbyWaitingWrap">
+                  <div class="ldr-lobby-ambient-bg">
+                    <h2 class="ldr-code-screen-title">Send this code to your partner</h2>
+                    <p class="ldr-code-screen-sub">They type it in, or open your link.</p>
 
-                  <div class="ldr-code-box-card">
-                    <div class="ldr-code-tiles-row" id="ldrCodeTilesContainer">
-                      <span class="ldr-code-tile">-</span>
-                      <span class="ldr-code-tile">-</span>
-                      <span class="ldr-code-tile">-</span>
-                      <span class="ldr-code-tile">-</span>
-                      <span class="ldr-code-tile">-</span>
-                    </div>
-                    <span id="ldrModalRoomCode" style="display:none;"></span>
-
-                    <div class="ldr-code-actions-row">
-                      <button type="button" class="ldr-tile-btn" id="btnModalCopyInvite">Copy link</button>
-                      <button type="button" class="ldr-tile-btn" id="btnModalShareInvite">share ↗</button>
-                    </div>
-
-                    <!-- Waiting pulse before partner connects -->
-                    <div class="ldr-waiting-indicator" id="ldrWaitingStatusWrap">
-                      <span class="ldr-pulse-pink-dot"></span>
-                      <span id="ldrLobbyWaitingMsg">Waiting for your partner...</span>
-                    </div>
-
-                    <!-- Partner Connected Card shown when partner joins -->
-                    <div class="ldr-partner-connected-card" id="ldrPartnerConnectedCard" style="display:none;">
-                      <div class="ldr-connected-tag">💕 Partner Connected & Live!</div>
-                      <div class="ldr-dual-preview-row">
-                        <div class="ldr-preview-feed-box">
-                          <video id="photoboothVideoLobbyPreview" autoplay playsinline muted></video>
-                          <span class="feed-tag">You</span>
-                        </div>
-                        <div class="ldr-preview-feed-box">
-                          <video id="ldrVideoFeedLobbyRemote" autoplay playsinline></video>
-                          <span class="feed-tag">Partner 💕</span>
-                        </div>
+                    <div class="ldr-code-box-card">
+                      <div class="ldr-code-tiles-row" id="ldrCodeTilesContainer">
+                        <span class="ldr-code-tile">-</span>
+                        <span class="ldr-code-tile">-</span>
+                        <span class="ldr-code-tile">-</span>
+                        <span class="ldr-code-tile">-</span>
+                        <span class="ldr-code-tile">-</span>
                       </div>
-                      <button type="button" class="btn btn-primary btn-xl ldr-proceed-setup-btn" id="btnProceedToSetup">
-                        <span>Proceed to Frame & Theme →</span>
-                      </button>
-                    </div>
-                  </div>
+                      <span id="ldrModalRoomCode" style="display:none;"></span>
 
-                  <div class="ldr-code-bottom-links">
-                    <button type="button" class="ldr-link-btn" id="btnLdrPhotosAlone">Take photos alone instead</button>
-                    <button type="button" class="ldr-link-btn" id="btnLdrLeaveRoom">Leave</button>
+                      <div class="ldr-code-actions-row">
+                        <button type="button" class="ldr-tile-btn" id="btnModalCopyInvite">Copy link</button>
+                        <button type="button" class="ldr-tile-btn" id="btnModalShareInvite">share ↗</button>
+                      </div>
+
+                      <!-- Waiting pulse before partner connects -->
+                      <div class="ldr-waiting-indicator" id="ldrWaitingStatusWrap">
+                        <span class="ldr-pulse-pink-dot"></span>
+                        <span id="ldrLobbyWaitingMsg">Waiting for your partner...</span>
+                      </div>
+                    </div>
+
+                    <div class="ldr-code-bottom-links">
+                      <button type="button" class="ldr-link-btn" id="btnLdrPhotosAlone">Take photos alone instead</button>
+                      <button type="button" class="ldr-link-btn" id="btnLdrLeaveRoom">Leave</button>
+                    </div>
                   </div>
                 </div>
+
+                <!-- Clean Connected Screen (Screenshot 2 post-join): Code disappears, both see each other live -->
+                <div class="ldr-partner-connected-card" id="ldrPartnerConnectedCard" style="display:none;">
+                  <div class="ldr-connected-banner">
+                    <span class="ldr-connected-tag">💕 Partner Connected & Live!</span>
+                    <span class="ldr-connected-sub">You are connected. Ready to style your photo strip?</span>
+                  </div>
+                  <div class="ldr-dual-preview-row">
+                    <div class="ldr-preview-feed-box">
+                      <video id="photoboothVideoLobbyPreview" autoplay playsinline muted></video>
+                      <span class="feed-tag">You</span>
+                    </div>
+                    <div class="ldr-preview-feed-box">
+                      <video id="ldrVideoFeedLobbyRemote" autoplay playsinline muted webkit-playsinline></video>
+                      <span class="feed-tag">Partner 💕</span>
+                      <div class="remote-placeholder" id="ldrLobbyRemotePlaceholder" style="display:none;">
+                        <span class="placeholder-icon">💕</span>
+                        <span class="placeholder-txt">Connecting video...</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ldr-proceed-bar">
+                    <button type="button" class="btn btn-primary btn-xl ldr-proceed-setup-btn" id="btnProceedToSetup">
+                      <span>Proceed to Frame & Theme →</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Dedicated Audio Sink for mobile WebRTC audio stream -->
+                <audio id="ldrRemoteAudio" autoplay playsinline style="display:none;"></audio>
               </div>
 
               <!-- Stage 2: Synchronized Frame & Style Selection -->
