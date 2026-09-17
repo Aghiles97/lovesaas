@@ -31,6 +31,12 @@
     const win = (idx) => `<div class="mini-window"><img src="${SAMPLES[idx % SAMPLES.length]}" alt="" class="mini-window-img"></div>`;
     const phraseBlock = (pos, txt) => `<div class="frame-phrase-block pos-${pos}"><span class="frame-phrase-text">${esc(txt || stripCaption)}</span></div>`;
 
+    const getFormatAspect = (fmt = "classic_3cut") => {
+      if (fmt === "classic_3cut" || fmt === "classic_strip") return "strip";
+      if (fmt === "double_6cut" || fmt === "double_8cut" || fmt === "polaroid_single" || fmt === "film_grid" || fmt === "portrait_pair" || fmt === "grid_3x3") return "portrait";
+      return "landscape";
+    };
+
     const renderMiniWindows = (fmt = "classic_3cut", customPhrase = stripCaption) => {
       switch (fmt) {
         case "grid_3x3":
@@ -48,34 +54,34 @@
         case "wide_collage":
         case "asym_collage":
         case "asym_tr_chin":
-          return `<div class="mini-windows-wrap fmt-asym_tr_chin"><div class="asym-cell pos-tl">${win(0)}</div><div class="asym-cell pos-tr chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell pos-bl">${win(1)}</div><div class="asym-cell pos-br">${win(2)}</div></div>`;
+          return `<div class="mini-windows-wrap fmt-asym_tr_chin"><div class="asym-cell">${win(0)}</div><div class="asym-cell chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell">${win(1)}</div><div class="asym-cell">${win(2)}</div></div>`;
         case "asym_br_chin":
-          return `<div class="mini-windows-wrap fmt-asym_br_chin"><div class="asym-cell pos-tl">${win(0)}</div><div class="asym-cell pos-tr">${win(1)}</div><div class="asym-cell pos-bl">${win(2)}</div><div class="asym-cell pos-br chin-cell">${phraseBlock("cell", customPhrase)}</div></div>`;
+          return `<div class="mini-windows-wrap fmt-asym_br_chin"><div class="asym-cell">${win(0)}</div><div class="asym-cell">${win(1)}</div><div class="asym-cell">${win(2)}</div><div class="asym-cell chin-cell">${phraseBlock("cell", customPhrase)}</div></div>`;
         case "asym_tl_chin":
-          return `<div class="mini-windows-wrap fmt-asym_tl_chin"><div class="asym-cell pos-tl chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell pos-tr">${win(0)}</div><div class="asym-cell pos-bl">${win(1)}</div><div class="asym-cell pos-br">${win(2)}</div></div>`;
+          return `<div class="mini-windows-wrap fmt-asym_tl_chin"><div class="asym-cell chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell">${win(0)}</div><div class="asym-cell">${win(1)}</div><div class="asym-cell">${win(2)}</div></div>`;
         case "asym_bl_chin":
-          return `<div class="mini-windows-wrap fmt-asym_bl_chin"><div class="asym-cell pos-tl">${win(0)}</div><div class="asym-cell pos-tr">${win(1)}</div><div class="asym-cell pos-bl chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell pos-br">${win(2)}</div></div>`;
+          return `<div class="mini-windows-wrap fmt-asym_bl_chin"><div class="asym-cell">${win(0)}</div><div class="asym-cell">${win(1)}</div><div class="asym-cell chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell">${win(2)}</div></div>`;
         case "polaroid_single":
           return `<div class="mini-windows-wrap fmt-polaroid_single">${win(0)}</div>${phraseBlock("bottom", customPhrase)}`;
         case "landscape_single":
         case "landscape_hero":
-          return `<div class="mini-windows-wrap fmt-landscape_single">${win(0)}</div>${phraseBlock("bottom", customPhrase)}`;
+          return `<div class="mini-windows-wrap fmt-landscape_single">${win(0)}</div>`;
         case "landscape_toptext":
-          return `${phraseBlock("top", customPhrase)}<div class="mini-windows-wrap fmt-landscape_toptext">${win(0)}${win(1)}</div>`;
+          return `<div class="mini-windows-wrap fmt-landscape_toptext"><div class="toptext-chin-row">${phraseBlock("cell", customPhrase)}</div><div class="toptext-photo-row">${win(0)}${win(1)}</div></div>`;
         case "landscape_lefttext":
-          return `<div class="mini-windows-wrap fmt-landscape_lefttext"><div class="asym-col-left chin-col">${phraseBlock("side", customPhrase)}</div><div class="asym-col-right">${win(0)}${win(1)}</div></div>`;
+          return `<div class="mini-windows-wrap fmt-landscape_lefttext"><div class="asym-col-left chin-col">${phraseBlock("cell", customPhrase)}</div><div class="asym-col-right">${win(0)}${win(1)}</div></div>`;
         case "landscape_2split":
-          return `<div class="mini-windows-wrap fmt-landscape_2split">${win(0)}${win(1)}</div>${phraseBlock("bottom", customPhrase)}`;
+          return `<div class="mini-windows-wrap fmt-landscape_2split"><div class="twosplit-photo-row">${win(0)}${win(1)}</div><div class="twosplit-chin-row">${phraseBlock("cell", customPhrase)}</div></div>`;
         case "hero_split_left":
           return `<div class="mini-windows-wrap fmt-hero_split_left"><div class="hero-top-row"><div class="hero-wide-win">${win(0)}</div><div class="hero-chin-win">${phraseBlock("cell", customPhrase)}</div></div><div class="hero-bottom-row">${win(1)}${win(2)}${win(3)}</div></div>`;
         case "hero_split_right":
           return `<div class="mini-windows-wrap fmt-hero_split_right"><div class="hero-top-row"><div class="hero-chin-win">${phraseBlock("cell", customPhrase)}</div><div class="hero-wide-win">${win(0)}</div></div><div class="hero-bottom-row">${win(1)}${win(2)}${win(3)}</div></div>`;
         case "triptych_3cut":
-          return `<div class="mini-windows-wrap fmt-triptych_3cut">${win(0)}${win(1)}${win(2)}</div>${phraseBlock("bottom", customPhrase)}`;
+          return `<div class="mini-windows-wrap fmt-triptych_3cut"><div class="triptych-photo-row">${win(0)}${win(1)}${win(2)}</div><div class="triptych-chin-row">${phraseBlock("cell", customPhrase)}</div></div>`;
         case "triptych_toptext":
-          return `${phraseBlock("top", customPhrase)}<div class="mini-windows-wrap fmt-triptych_toptext">${win(0)}${win(1)}${win(2)}</div>`;
+          return `<div class="mini-windows-wrap fmt-triptych_toptext"><div class="triptych-chin-row">${phraseBlock("cell", customPhrase)}</div><div class="triptych-photo-row">${win(0)}${win(1)}${win(2)}</div></div>`;
         case "triptych_offset":
-          return `<div class="mini-windows-wrap fmt-triptych_offset"><div class="trip-col">${win(0)}</div><div class="trip-col trip-col-raised">${win(1)}${phraseBlock("center_chin", customPhrase)}</div><div class="trip-col">${win(2)}</div></div>`;
+          return `<div class="mini-windows-wrap fmt-triptych_offset"><div class="trip-col trip-col-side">${win(0)}</div><div class="trip-col trip-col-center">${win(1)}<div class="trip-chin">${phraseBlock("cell", customPhrase)}</div></div><div class="trip-col trip-col-side">${win(2)}</div></div>`;
         case "hero_bottom_right":
           return `<div class="mini-windows-wrap fmt-hero_bottom_right"><div class="hero-top-row">${win(0)}${win(1)}${win(2)}</div><div class="hero-bottom-row"><div class="hero-chin-win">${phraseBlock("cell", customPhrase)}</div><div class="hero-wide-win">${win(3)}</div></div></div>`;
         case "hero_left_stack":
@@ -89,9 +95,9 @@
     const FRAME_CATALOGUE = [
       { id: "classic_3cut", num: 1, title: "1×3 RETRO", desc: "3 Photos • Vertical Strip", aspect: "strip" },
       { id: "classic_strip", num: 2, title: "1×4 CLASSIC", desc: "4 Photos • Classic Strip", aspect: "strip" },
-      { id: "double_6cut", num: 3, title: "2×3 DOUBLE", desc: "6 Photos • Double Strip", aspect: "double" },
-      { id: "double_8cut", num: 4, title: "2×4 DOUBLE", desc: "8 Photos • Wide Double", aspect: "double" },
-      { id: "polaroid_single", num: 5, title: "POLAROID", desc: "1 Photo • Keepsake", aspect: "portrait" },
+      { id: "double_6cut", num: 3, title: "2×3 DOUBLE", desc: "6 Photos • Double Strip", aspect: "portrait" },
+      { id: "double_8cut", num: 4, title: "2×4 DOUBLE", desc: "8 Photos • Double Strip", aspect: "portrait" },
+      { id: "polaroid_single", num: 5, title: "POLAROID", desc: "1 Photo • Portrait Chin", aspect: "portrait" },
       { id: "film_grid", num: 6, title: "2×2 GRID", desc: "4 Photos • Film Grid", aspect: "portrait" },
       { id: "portrait_pair", num: 7, title: "1×2 PAIR", desc: "2 Photos • Portrait Pair", aspect: "portrait" },
       { id: "asym_tr_chin", num: 8, title: "2×2 L-LEFT", desc: "3 Photos • Top-Right Slot", aspect: "landscape" },
@@ -368,58 +374,58 @@
               </div>
 
               <!-- Decorative Border Styles Grid -->
-              <div class="booth-frame-cards-grid ${defaultFormat === 'film_grid' || defaultFormat === 'grid_3x3' ? 'format-is-square' : ''}" id="boothLayoutChips" data-format="${defaultFormat}" role="radiogroup" aria-label="Frame Style">
+              <div class="booth-frame-cards-grid format-aspect-${getFormatAspect(defaultFormat)} ${defaultFormat === 'film_grid' || defaultFormat === 'grid_3x3' ? 'format-is-square' : ''}" id="boothLayoutChips" data-format="${defaultFormat}" data-aspect="${getFormatAspect(defaultFormat)}" role="radiogroup" aria-label="Frame Style">
                 <div class="frame-card-preview ${defaultStyle === 'style_cyan_stars' ? 'active' : ''} layout-chip-btn" data-layout="${defaultFormat}" data-style="style_cyan_stars" tabindex="0">
-                  <div class="frame-mini-strip frame-style-classic">
+                  <div class="frame-mini-strip frame-style-classic format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">
                     ${renderMiniWindows(defaultFormat)}
                   </div>
                   <span class="frame-card-title">CLASSIC STRIP</span>
                 </div>
 
                 <div class="frame-card-preview ${defaultStyle === 'style_floral' ? 'active' : ''} layout-chip-btn" data-layout="${defaultFormat}" data-style="style_floral" tabindex="0">
-                  <div class="frame-mini-strip frame-style-floral">
+                  <div class="frame-mini-strip frame-style-floral format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">
                     ${renderMiniWindows(defaultFormat)}
                   </div>
                   <span class="frame-card-title">FILM GRID</span>
                 </div>
 
                 <div class="frame-card-preview ${defaultStyle === 'style_retro_swirl' ? 'active' : ''} layout-chip-btn" data-layout="${defaultFormat}" data-style="style_retro_swirl" tabindex="0">
-                  <div class="frame-mini-strip frame-style-swirls">
+                  <div class="frame-mini-strip frame-style-swirls format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">
                     ${renderMiniWindows(defaultFormat)}
                   </div>
                   <span class="frame-card-title">PORTRAIT PAIR</span>
                 </div>
 
                 <div class="frame-card-preview ${defaultStyle === 'style_lavender_stripes' ? 'active' : ''} layout-chip-btn" data-layout="${defaultFormat}" data-style="style_lavender_stripes" tabindex="0">
-                  <div class="frame-mini-strip frame-style-stripes">
+                  <div class="frame-mini-strip frame-style-stripes format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">
                     ${renderMiniWindows(defaultFormat)}
                   </div>
                   <span class="frame-card-title">WIDE COLLAGE</span>
                 </div>
 
                 <div class="frame-card-preview ${defaultStyle === 'style_noir_film' ? 'active' : ''} layout-chip-btn" data-layout="${defaultFormat}" data-style="style_noir_film" tabindex="0">
-                  <div class="frame-mini-strip frame-style-noir">
+                  <div class="frame-mini-strip frame-style-noir format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">
                     ${renderMiniWindows(defaultFormat)}
                   </div>
                   <span class="frame-card-title">35MM NOIR</span>
                 </div>
 
                 <div class="frame-card-preview ${defaultStyle === 'style_y2k_pink' ? 'active' : ''} layout-chip-btn" data-layout="${defaultFormat}" data-style="style_y2k_pink" tabindex="0">
-                  <div class="frame-mini-strip frame-style-y2k">
+                  <div class="frame-mini-strip frame-style-y2k format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">
                     ${renderMiniWindows(defaultFormat)}
                   </div>
                   <span class="frame-card-title">Y2K PINK</span>
                 </div>
 
                 <div class="frame-card-preview ${defaultStyle === 'style_newspaper' ? 'active' : ''} layout-chip-btn" data-layout="${defaultFormat}" data-style="style_newspaper" tabindex="0">
-                  <div class="frame-mini-strip frame-style-newspaper">
+                  <div class="frame-mini-strip frame-style-newspaper format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">
                     ${renderMiniWindows(defaultFormat)}
                   </div>
                   <span class="frame-card-title">NEWSPAPER</span>
                 </div>
 
                 <div class="frame-card-preview ${defaultStyle === 'style_minimal_white' ? 'active' : ''} layout-chip-btn" data-layout="${defaultFormat}" data-style="style_minimal_white" tabindex="0">
-                  <div class="frame-mini-strip frame-style-minimal">
+                  <div class="frame-mini-strip frame-style-minimal format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">
                     ${renderMiniWindows(defaultFormat)}
                   </div>
                   <span class="frame-card-title">MINIMAL</span>
@@ -709,8 +715,8 @@
 
                     <div class="ldr-format-cards-grid" id="ldrFormatCardsGrid" role="radiogroup" aria-label="Photo Layout Format">
                       ${FRAME_CATALOGUE.map(item => `
-                      <div class="frame-card-preview ldr-format-card-preview format-aspect-${item.aspect} ${(defaultFormat === item.id || (item.id === 'asym_tr_chin' && (defaultFormat === 'wide_collage' || defaultFormat === 'asym_collage')) || (item.id === 'landscape_single' && defaultFormat === 'landscape_hero')) ? 'active' : ''}" data-format="${item.id}" tabindex="0">
-                        <div class="frame-mini-strip frame-style-minimal format-frame-preview format-${item.aspect}">${renderMiniWindows(item.id)}</div>
+                      <div class="frame-card-preview ldr-format-card-preview format-aspect-${item.aspect} ${(defaultFormat === item.id || (item.id === 'asym_tr_chin' && (defaultFormat === 'wide_collage' || defaultFormat === 'asym_collage')) || (item.id === 'landscape_single' && defaultFormat === 'landscape_hero')) ? 'active' : ''}" data-format="${item.id}" data-aspect="${item.aspect}" tabindex="0">
+                        <div class="frame-mini-strip frame-style-minimal format-frame-preview format-${item.id} format-aspect-${item.aspect}">${renderMiniWindows(item.id)}</div>
                         <div class="ldr-card-meta">
                           <span class="frame-card-title">${item.num}. ${item.title}</span>
                           <span class="frame-card-sub">${item.desc}</span>
@@ -756,37 +762,37 @@
                           <span class="ldr-section-num">1</span>
                           <label class="ldr-setup-label">Decorative Border Theme</label>
                         </div>
-                        <div class="booth-frame-cards-grid ldr-frame-cards-grid ${defaultFormat === 'film_grid' || defaultFormat === 'grid_3x3' ? 'format-is-square' : ''}" id="ldrModalLayoutPicker" data-format="${defaultFormat}" role="radiogroup" aria-label="Frame Style">
+                        <div class="booth-frame-cards-grid ldr-frame-cards-grid format-aspect-${getFormatAspect(defaultFormat)}" id="ldrModalLayoutPicker" data-format="${defaultFormat}" data-aspect="${getFormatAspect(defaultFormat)}" role="radiogroup" aria-label="Frame Style">
                           <div class="frame-card-preview ${defaultStyle === 'style_cyan_stars' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_cyan_stars" tabindex="0">
-                            <div class="frame-mini-strip frame-style-classic">${renderMiniWindows(defaultFormat)}</div>
+                            <div class="frame-mini-strip frame-style-classic format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">${renderMiniWindows(defaultFormat)}</div>
                             <span class="frame-card-title">CYAN STARS</span>
                           </div>
                           <div class="frame-card-preview ${defaultStyle === 'style_floral' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_floral" tabindex="0">
-                            <div class="frame-mini-strip frame-style-floral">${renderMiniWindows(defaultFormat)}</div>
+                            <div class="frame-mini-strip frame-style-floral format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">${renderMiniWindows(defaultFormat)}</div>
                             <span class="frame-card-title">FLORAL TEAL</span>
                           </div>
                           <div class="frame-card-preview ${defaultStyle === 'style_retro_swirl' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_retro_swirl" tabindex="0">
-                            <div class="frame-mini-strip frame-style-swirls">${renderMiniWindows(defaultFormat)}</div>
+                            <div class="frame-mini-strip frame-style-swirls format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">${renderMiniWindows(defaultFormat)}</div>
                             <span class="frame-card-title">RETRO SWIRL</span>
                           </div>
                           <div class="frame-card-preview ${defaultStyle === 'style_lavender_stripes' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_lavender_stripes" tabindex="0">
-                            <div class="frame-mini-strip frame-style-stripes">${renderMiniWindows(defaultFormat)}</div>
+                            <div class="frame-mini-strip frame-style-stripes format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">${renderMiniWindows(defaultFormat)}</div>
                             <span class="frame-card-title">LAVENDER</span>
                           </div>
                           <div class="frame-card-preview ${defaultStyle === 'style_noir_film' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_noir_film" tabindex="0">
-                            <div class="frame-mini-strip frame-style-noir">${renderMiniWindows(defaultFormat)}</div>
+                            <div class="frame-mini-strip frame-style-noir format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">${renderMiniWindows(defaultFormat)}</div>
                             <span class="frame-card-title">35MM NOIR</span>
                           </div>
                           <div class="frame-card-preview ${defaultStyle === 'style_y2k_pink' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_y2k_pink" tabindex="0">
-                            <div class="frame-mini-strip frame-style-y2k">${renderMiniWindows(defaultFormat)}</div>
+                            <div class="frame-mini-strip frame-style-y2k format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">${renderMiniWindows(defaultFormat)}</div>
                             <span class="frame-card-title">Y2K PINK</span>
                           </div>
                           <div class="frame-card-preview ${defaultStyle === 'style_newspaper' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_newspaper" tabindex="0">
-                            <div class="frame-mini-strip frame-style-newspaper">${renderMiniWindows(defaultFormat)}</div>
+                            <div class="frame-mini-strip frame-style-newspaper format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">${renderMiniWindows(defaultFormat)}</div>
                             <span class="frame-card-title">NEWSPAPER</span>
                           </div>
                           <div class="frame-card-preview ${defaultStyle === 'style_minimal_white' ? 'active' : ''} layout-chip-btn ldr-style-chip-btn" data-layout="${defaultFormat}" data-style="style_minimal_white" tabindex="0">
-                            <div class="frame-mini-strip frame-style-minimal">${renderMiniWindows(defaultFormat)}</div>
+                            <div class="frame-mini-strip frame-style-minimal format-${defaultFormat} format-aspect-${getFormatAspect(defaultFormat)}">${renderMiniWindows(defaultFormat)}</div>
                             <span class="frame-card-title">MINIMAL</span>
                           </div>
                         </div>

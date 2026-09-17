@@ -1130,14 +1130,17 @@
       if (p3) p3.style.display = (step === 3) ? "block" : "none";
 
       if (step === 2) {
-        const isSquare = this.currentFormat === "film_grid" || this.currentFormat === "grid_3x3";
+        const aspect = this.getFormatAspect(this.currentFormat);
         const picker = document.getElementById("ldrModalLayoutPicker");
         if (picker) {
           picker.dataset.format = this.currentFormat;
-          picker.classList.toggle("format-is-square", isSquare);
+          picker.dataset.aspect = aspect;
+          picker.className = `booth-frame-cards-grid ldr-frame-cards-grid format-aspect-${aspect} format-is-${aspect}`;
         }
         const miniMarkup = this.getMiniWindowsHtml(this.currentFormat);
         document.querySelectorAll("#ldrModalLayoutPicker .frame-mini-strip").forEach((strip) => {
+          const styleClass = Array.from(strip.classList).find(c => c.startsWith("frame-style-")) || "frame-style-classic";
+          strip.className = `frame-mini-strip ${styleClass} format-aspect-${aspect} format-${this.currentFormat}`;
           strip.innerHTML = miniMarkup;
         });
       } else if (step === 3) {
@@ -1154,9 +1157,10 @@
     renderSelectedStripPreview() {
       const container = document.getElementById("ldrSelectedStripPreview");
       if (!container) return;
-      const fmt = this.currentFormat || "film_grid";
+      const fmt = this.currentFormat || "classic_3cut";
       const style = this.currentStyle || "style_cyan_stars";
-      const caption = this.caption || "Forever & Always ♡";
+      const caption = this.caption || "Together Forever ♡";
+      const aspect = this.getFormatAspect(fmt);
 
       const styleClassMap = {
         style_cyan_stars: "frame-style-classic",
@@ -1172,7 +1176,7 @@
       const miniMarkup = this.getMiniWindowsHtml(fmt);
 
       container.innerHTML = `
-        <div class="frame-mini-strip ${styleClass} format-${fmt} ldr-preview-strip-full">
+        <div class="frame-mini-strip ${styleClass} format-${fmt} format-aspect-${aspect} ldr-preview-strip-full">
           ${miniMarkup}
         </div>
       `;
@@ -1889,10 +1893,16 @@
       }
     }
 
+    getFormatAspect(fmt = "classic_3cut") {
+      if (fmt === "classic_3cut" || fmt === "classic_strip") return "strip";
+      if (fmt === "double_6cut" || fmt === "double_8cut" || fmt === "polaroid_single" || fmt === "film_grid" || fmt === "portrait_pair" || fmt === "grid_3x3") return "portrait";
+      return "landscape";
+    }
+
     getMiniWindowsHtml(fmt) {
       const photos = this.capturedPhotos.length ? this.capturedPhotos : DEFAULT_SAMPLES;
       const filterCss = FILTERS[this.currentFilter]?.css || "none";
-      const customPhrase = this.caption || "Forever & Always ♡";
+      const customPhrase = this.caption || "Together Forever ♡";
       const esc = (s) => (s == null ? "" : String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[c])));
       const win = (idx) => `<div class="mini-window"><img src="${photos[idx % photos.length]}" alt="" class="mini-window-img" style="filter: ${filterCss};"></div>`;
       const phraseBlock = (pos, txt) => `<div class="frame-phrase-block pos-${pos}"><span class="frame-phrase-text">${esc(txt || customPhrase)}</span></div>`;
@@ -1913,34 +1923,34 @@
         case "wide_collage":
         case "asym_collage":
         case "asym_tr_chin":
-          return `<div class="mini-windows-wrap fmt-asym_tr_chin"><div class="asym-cell pos-tl">${win(0)}</div><div class="asym-cell pos-tr chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell pos-bl">${win(1)}</div><div class="asym-cell pos-br">${win(2)}</div></div>`;
+          return `<div class="mini-windows-wrap fmt-asym_tr_chin"><div class="asym-cell">${win(0)}</div><div class="asym-cell chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell">${win(1)}</div><div class="asym-cell">${win(2)}</div></div>`;
         case "asym_br_chin":
-          return `<div class="mini-windows-wrap fmt-asym_br_chin"><div class="asym-cell pos-tl">${win(0)}</div><div class="asym-cell pos-tr">${win(1)}</div><div class="asym-cell pos-bl">${win(2)}</div><div class="asym-cell pos-br chin-cell">${phraseBlock("cell", customPhrase)}</div></div>`;
+          return `<div class="mini-windows-wrap fmt-asym_br_chin"><div class="asym-cell">${win(0)}</div><div class="asym-cell">${win(1)}</div><div class="asym-cell">${win(2)}</div><div class="asym-cell chin-cell">${phraseBlock("cell", customPhrase)}</div></div>`;
         case "asym_tl_chin":
-          return `<div class="mini-windows-wrap fmt-asym_tl_chin"><div class="asym-cell pos-tl chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell pos-tr">${win(0)}</div><div class="asym-cell pos-bl">${win(1)}</div><div class="asym-cell pos-br">${win(2)}</div></div>`;
+          return `<div class="mini-windows-wrap fmt-asym_tl_chin"><div class="asym-cell chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell">${win(0)}</div><div class="asym-cell">${win(1)}</div><div class="asym-cell">${win(2)}</div></div>`;
         case "asym_bl_chin":
-          return `<div class="mini-windows-wrap fmt-asym_bl_chin"><div class="asym-cell pos-tl">${win(0)}</div><div class="asym-cell pos-tr">${win(1)}</div><div class="asym-cell pos-bl chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell pos-br">${win(2)}</div></div>`;
+          return `<div class="mini-windows-wrap fmt-asym_bl_chin"><div class="asym-cell">${win(0)}</div><div class="asym-cell">${win(1)}</div><div class="asym-cell chin-cell">${phraseBlock("cell", customPhrase)}</div><div class="asym-cell">${win(2)}</div></div>`;
         case "polaroid_single":
           return `<div class="mini-windows-wrap fmt-polaroid_single">${win(0)}</div>${phraseBlock("bottom", customPhrase)}`;
         case "landscape_single":
         case "landscape_hero":
-          return `<div class="mini-windows-wrap fmt-landscape_single">${win(0)}</div>${phraseBlock("bottom", customPhrase)}`;
+          return `<div class="mini-windows-wrap fmt-landscape_single">${win(0)}</div>`;
         case "landscape_toptext":
-          return `${phraseBlock("top", customPhrase)}<div class="mini-windows-wrap fmt-landscape_toptext">${win(0)}${win(1)}</div>`;
+          return `<div class="mini-windows-wrap fmt-landscape_toptext"><div class="toptext-chin-row">${phraseBlock("cell", customPhrase)}</div><div class="toptext-photo-row">${win(0)}${win(1)}</div></div>`;
         case "landscape_lefttext":
-          return `<div class="mini-windows-wrap fmt-landscape_lefttext"><div class="asym-col-left chin-col">${phraseBlock("side", customPhrase)}</div><div class="asym-col-right">${win(0)}${win(1)}</div></div>`;
+          return `<div class="mini-windows-wrap fmt-landscape_lefttext"><div class="asym-col-left chin-col">${phraseBlock("cell", customPhrase)}</div><div class="asym-col-right">${win(0)}${win(1)}</div></div>`;
         case "landscape_2split":
-          return `<div class="mini-windows-wrap fmt-landscape_2split">${win(0)}${win(1)}</div>${phraseBlock("bottom", customPhrase)}`;
+          return `<div class="mini-windows-wrap fmt-landscape_2split"><div class="twosplit-photo-row">${win(0)}${win(1)}</div><div class="twosplit-chin-row">${phraseBlock("cell", customPhrase)}</div></div>`;
         case "hero_split_left":
           return `<div class="mini-windows-wrap fmt-hero_split_left"><div class="hero-top-row"><div class="hero-wide-win">${win(0)}</div><div class="hero-chin-win">${phraseBlock("cell", customPhrase)}</div></div><div class="hero-bottom-row">${win(1)}${win(2)}${win(3)}</div></div>`;
         case "hero_split_right":
           return `<div class="mini-windows-wrap fmt-hero_split_right"><div class="hero-top-row"><div class="hero-chin-win">${phraseBlock("cell", customPhrase)}</div><div class="hero-wide-win">${win(0)}</div></div><div class="hero-bottom-row">${win(1)}${win(2)}${win(3)}</div></div>`;
         case "triptych_3cut":
-          return `<div class="mini-windows-wrap fmt-triptych_3cut">${win(0)}${win(1)}${win(2)}</div>${phraseBlock("bottom", customPhrase)}`;
+          return `<div class="mini-windows-wrap fmt-triptych_3cut"><div class="triptych-photo-row">${win(0)}${win(1)}${win(2)}</div><div class="triptych-chin-row">${phraseBlock("cell", customPhrase)}</div></div>`;
         case "triptych_toptext":
-          return `${phraseBlock("top", customPhrase)}<div class="mini-windows-wrap fmt-triptych_toptext">${win(0)}${win(1)}${win(2)}</div>`;
+          return `<div class="mini-windows-wrap fmt-triptych_toptext"><div class="triptych-chin-row">${phraseBlock("cell", customPhrase)}</div><div class="triptych-photo-row">${win(0)}${win(1)}${win(2)}</div></div>`;
         case "triptych_offset":
-          return `<div class="mini-windows-wrap fmt-triptych_offset"><div class="trip-col">${win(0)}</div><div class="trip-col trip-col-raised">${win(1)}${phraseBlock("center_chin", customPhrase)}</div><div class="trip-col">${win(2)}</div></div>`;
+          return `<div class="mini-windows-wrap fmt-triptych_offset"><div class="trip-col trip-col-side">${win(0)}</div><div class="trip-col trip-col-center">${win(1)}<div class="trip-chin">${phraseBlock("cell", customPhrase)}</div></div><div class="trip-col trip-col-side">${win(2)}</div></div>`;
         case "hero_bottom_right":
           return `<div class="mini-windows-wrap fmt-hero_bottom_right"><div class="hero-top-row">${win(0)}${win(1)}${win(2)}</div><div class="hero-bottom-row"><div class="hero-chin-win">${phraseBlock("cell", customPhrase)}</div><div class="hero-wide-win">${win(3)}</div></div></div>`;
         case "hero_left_stack":
@@ -1954,6 +1964,7 @@
     setFormat(fmtKey, isRemote = false) {
       this.currentFormat = fmtKey;
       this.currentLayout = fmtKey;
+      const aspect = this.getFormatAspect(fmtKey);
 
       document.querySelectorAll(".format-pill-btn").forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.format === fmtKey);
@@ -1969,11 +1980,15 @@
       const chips = document.getElementById("boothLayoutChips");
       if (chips) {
         chips.dataset.format = fmtKey;
+        chips.dataset.aspect = aspect;
+        chips.className = `booth-frame-cards-grid format-aspect-${aspect} format-is-${aspect}`;
         chips.classList.toggle("format-is-square", isSquare);
       }
       const ldrPicker = document.getElementById("ldrModalLayoutPicker");
       if (ldrPicker) {
         ldrPicker.dataset.format = fmtKey;
+        ldrPicker.dataset.aspect = aspect;
+        ldrPicker.className = `booth-frame-cards-grid ldr-frame-cards-grid format-aspect-${aspect} format-is-${aspect}`;
         ldrPicker.classList.toggle("format-is-square", isSquare);
       }
       document.querySelectorAll(".layout-chip-btn").forEach((btn) => {
@@ -1982,9 +1997,13 @@
 
       const markup = this.getMiniWindowsHtml(fmtKey);
       document.querySelectorAll("#boothLayoutChips .frame-mini-strip").forEach((strip) => {
+        const styleClass = Array.from(strip.classList).find(c => c.startsWith("frame-style-")) || "frame-style-classic";
+        strip.className = `frame-mini-strip ${styleClass} format-aspect-${aspect} format-${fmtKey}`;
         strip.innerHTML = markup;
       });
       document.querySelectorAll("#ldrModalLayoutPicker .frame-mini-strip").forEach((strip) => {
+        const styleClass = Array.from(strip.classList).find(c => c.startsWith("frame-style-")) || "frame-style-classic";
+        strip.className = `frame-mini-strip ${styleClass} format-aspect-${aspect} format-${fmtKey}`;
         strip.innerHTML = markup;
       });
 
@@ -2593,9 +2612,9 @@
             <span class="photo-idx-badge">#${i + 1}</span>
           </div>
         `).join("")}</div>`;
-      } else if (this.currentFormat === "wide_collage" || this.currentFormat === "asym_collage") {
+      } else if (["asym_tr_chin", "asym_br_chin", "asym_tl_chin", "asym_bl_chin", "wide_collage", "asym_collage"].includes(this.currentFormat)) {
         photosHtml = `
-          <div class="asym-collage-wrap">
+          <div class="asym-collage-wrap fmt-${this.currentFormat}">
             <div class="strip-photo-card asym-hero-card" data-idx="0" title="Tap to swap photo position">
               <img src="${activePhotos[0] || DEFAULT_SAMPLES[0]}" alt="Photobooth Snap 1" style="filter: ${filterCss};">
               <span class="photo-idx-badge">#1</span>
@@ -2610,7 +2629,7 @@
             </div>
           </div>
         `;
-      } else if (this.currentFormat === "polaroid_single" || this.currentFormat === "landscape_hero") {
+      } else if (this.currentFormat === "polaroid_single" || this.currentFormat === "landscape_hero" || this.currentFormat === "landscape_single") {
         photosHtml = `
           <div class="strip-photo-card ${this.currentFormat === 'polaroid_single' ? 'polaroid-single-card' : 'landscape-hero-card'}" data-idx="0">
             <img src="${activePhotos[0] || DEFAULT_SAMPLES[0]}" alt="Photobooth Single" style="filter: ${filterCss};">
@@ -2625,7 +2644,10 @@
         `).join("")}`;
       }
 
-      this.stripContainer.className = `photobooth-strip-container strip-layout-${this.currentLayout} strip-format-${this.currentFormat} strip-style-${this.currentStyle}`;
+      const aspect = this.getFormatAspect(this.currentFormat);
+      this.stripContainer.className = `photobooth-strip-container strip-layout-${this.currentLayout} strip-format-${this.currentFormat} strip-style-${this.currentStyle} format-aspect-${aspect} strip-aspect-${aspect}`;
+      this.stripContainer.dataset.aspect = aspect;
+      this.stripContainer.dataset.format = this.currentFormat;
       this.stripContainer.innerHTML = `
         <div class="strip-whole-frame-overlay overlay-${this.currentOverlay || 'none'}" aria-hidden="true"></div>
         ${this.currentStyle === "style_noir_film" ? `
@@ -2668,6 +2690,8 @@
       const modalStripContainer = document.getElementById("ldrModalStripContainer");
       if (modalStripContainer) {
         modalStripContainer.className = this.stripContainer.className;
+        modalStripContainer.dataset.aspect = aspect;
+        modalStripContainer.dataset.format = this.currentFormat;
         modalStripContainer.innerHTML = this.stripContainer.innerHTML;
       }
       const ejectTray = document.getElementById("ldrModalEjectTray");
