@@ -1,4 +1,9 @@
-const { WebSocketServer } = require("ws");
+let WebSocketServer = null;
+try {
+  ({ WebSocketServer } = require("ws"));
+} catch (e) {
+  console.warn("⚠️ [Photobooth] Package 'ws' not installed. WebSocket rooms disabled until npm install.");
+}
 
 class PhotoboothRoomServer {
   constructor() {
@@ -60,6 +65,10 @@ class PhotoboothRoomServer {
   }
 
   attach(server, path = "/photobooth-ws") {
+    if (!WebSocketServer) {
+      console.warn("⚠️ [Photobooth] WebSocketServer skipped ('ws' module not installed).");
+      return null;
+    }
     const wss = new WebSocketServer({ noServer: true, maxPayload: 2 * 1024 * 1024 });
     const ALLOWED_FIELDS = new Set(["format", "style", "filter", "caption"]);
     const sanitizeStr = (s, len = 80) => String(s || "").replace(/<[^>]*>/g, "").slice(0, len).trim();
