@@ -76,7 +76,7 @@
             <div class="canopy-light-glow"></div>
           </div>
 
-          <div class="section-heading photobooth-header text-center">
+          <div class="section-heading photobooth-header text-center" style="display:none;" aria-hidden="true">
             <span class="section-tag">${esc(tag)}</span>
             <h2 class="section-title">${esc(title)}</h2>
             <p class="section-desc">${esc(desc)}</p>
@@ -379,18 +379,19 @@
                   <span class="frame-card-title">MINIMAL</span>
                 </div>
               </div>
-            </div>
 
-            <div class="photobooth-toolbar">
-              <div class="booth-toolbar-group">
-                <span class="booth-toolbar-label">🎨 Filter:</span>
-                <div class="booth-filter-chips" id="boothFilterChips" role="radiogroup" aria-label="Color Filter">
-                  <button type="button" class="filter-chip-btn ${defaultFilter === 'vintage_90s' ? 'active' : ''}" data-filter="vintage_90s">90s Film</button>
-                  <button type="button" class="filter-chip-btn ${defaultFilter === 'bw_noir' ? 'active' : ''}" data-filter="bw_noir">B&W Noir</button>
-                  <button type="button" class="filter-chip-btn ${defaultFilter === 'golden_sunset' ? 'active' : ''}" data-filter="golden_sunset">Golden Sunset</button>
-                  <button type="button" class="filter-chip-btn ${defaultFilter === 'dreamy_bloom' ? 'active' : ''}" data-filter="dreamy_bloom">Dreamy Bloom</button>
-                  <button type="button" class="filter-chip-btn ${defaultFilter === 'cyberpunk' ? 'active' : ''}" data-filter="cyberpunk">Cyberpunk</button>
-                  <button type="button" class="filter-chip-btn ${defaultFilter === 'natural' ? 'active' : ''}" data-filter="natural">Natural</button>
+              <!-- Filter Toolbar (Step 2: Frame & Filter Setup) -->
+              <div class="photobooth-toolbar">
+                <div class="booth-toolbar-group">
+                  <span class="booth-toolbar-label">🎨 Filter:</span>
+                  <div class="booth-filter-chips" id="boothFilterChips" role="radiogroup" aria-label="Color Filter">
+                    <button type="button" class="filter-chip-btn ${defaultFilter === 'vintage_90s' ? 'active' : ''}" data-filter="vintage_90s">90s Film</button>
+                    <button type="button" class="filter-chip-btn ${defaultFilter === 'bw_noir' ? 'active' : ''}" data-filter="bw_noir">B&W Noir</button>
+                    <button type="button" class="filter-chip-btn ${defaultFilter === 'golden_sunset' ? 'active' : ''}" data-filter="golden_sunset">Golden Sunset</button>
+                    <button type="button" class="filter-chip-btn ${defaultFilter === 'dreamy_bloom' ? 'active' : ''}" data-filter="dreamy_bloom">Dreamy Bloom</button>
+                    <button type="button" class="filter-chip-btn ${defaultFilter === 'cyberpunk' ? 'active' : ''}" data-filter="cyberpunk">Cyberpunk</button>
+                    <button type="button" class="filter-chip-btn ${defaultFilter === 'natural' ? 'active' : ''}" data-filter="natural">Natural</button>
+                  </div>
                 </div>
               </div>
             </div>

@@ -5,16 +5,12 @@
 
 .photobooth-section {
   position: relative;
-  padding: clamp(48px, 6vw, 90px) 16px;
+  padding: clamp(36px, 5vw, 70px) 16px;
   overflow: hidden;
-  background-color: #120b12;
-  background-image:
-    radial-gradient(ellipse at 50% 0%, rgba(255, 175, 120, 0.12) 0%, transparent 60%),
-    radial-gradient(ellipse at 50% 30%, rgba(65, 28, 48, 0.35) 0%, transparent 75%),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.012) 0px, rgba(255, 255, 255, 0.012) 22px, transparent 22px, transparent 44px);
-  transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              background-image 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              filter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  transition: filter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .photobooth-card {
@@ -36,14 +32,25 @@
               box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Background Live Filter Previews (Ultra-Vivid & Dramatic Ambiance) */
+.photobooth-header {
+  display: none !important;
+}
+
+.photobooth-card .photobooth-welcome-screen {
+  min-height: auto;
+  padding: 0;
+}
+
+.photobooth-card .ldr-welcome-wrap {
+  padding: 4px 16px 24px 16px;
+}
+
+/* Background Live Filter Previews (Card Ambiance Only, Zero External Background) */
 .photobooth-section.filter-bg-bw_noir,
 .photobooth-section[data-active-filter="bw_noir"] {
-  background-color: #050507 !important;
-  background-image:
-    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.08) 35%, transparent 70%),
-    radial-gradient(ellipse at 50% 40%, rgba(35, 35, 42, 0.8) 0%, transparent 80%),
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.028) 0px, rgba(255, 255, 255, 0.028) 24px, transparent 24px, transparent 48px) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
 }
 .photobooth-section.filter-bg-bw_noir .photobooth-card,
 .photobooth-section[data-active-filter="bw_noir"] .photobooth-card {
@@ -70,11 +77,9 @@
 
 .photobooth-section.filter-bg-vintage_90s,
 .photobooth-section[data-active-filter="vintage_90s"] {
-  background-color: #1a1008 !important;
-  background-image:
-    radial-gradient(circle at 50% 0%, rgba(220, 140, 60, 0.35) 0%, transparent 65%),
-    radial-gradient(ellipse at 50% 35%, rgba(95, 45, 15, 0.65) 0%, transparent 80%),
-    repeating-linear-gradient(90deg, rgba(255, 200, 120, 0.024) 0px, rgba(255, 200, 120, 0.024) 24px, transparent 24px, transparent 48px) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
 }
 .photobooth-section.filter-bg-vintage_90s .photobooth-card,
 .photobooth-section[data-active-filter="vintage_90s"] .photobooth-card {
@@ -85,11 +90,9 @@
 
 .photobooth-section.filter-bg-golden_sunset,
 .photobooth-section[data-active-filter="golden_sunset"] {
-  background-color: #210d04 !important;
-  background-image:
-    radial-gradient(circle at 50% 0%, rgba(255, 170, 30, 0.45) 0%, rgba(255, 120, 10, 0.2) 40%, transparent 70%),
-    radial-gradient(ellipse at 50% 45%, rgba(135, 50, 10, 0.7) 0%, transparent 80%),
-    repeating-linear-gradient(90deg, rgba(255, 210, 80, 0.026) 0px, rgba(255, 210, 80, 0.026) 24px, transparent 24px, transparent 48px) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
 }
 .photobooth-section.filter-bg-golden_sunset .photobooth-card,
 .photobooth-section[data-active-filter="golden_sunset"] .photobooth-card {
@@ -105,11 +108,9 @@
 
 .photobooth-section.filter-bg-dreamy_bloom,
 .photobooth-section[data-active-filter="dreamy_bloom"] {
-  background-color: #1a081a !important;
-  background-image:
-    radial-gradient(circle at 50% 0%, rgba(255, 130, 210, 0.38) 0%, transparent 65%),
-    radial-gradient(ellipse at 50% 35%, rgba(120, 30, 100, 0.62) 0%, transparent 80%),
-    repeating-linear-gradient(90deg, rgba(255, 180, 240, 0.024) 0px, rgba(255, 180, 240, 0.024) 24px, transparent 24px, transparent 48px) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
 }
 .photobooth-section.filter-bg-dreamy_bloom .photobooth-card,
 .photobooth-section[data-active-filter="dreamy_bloom"] .photobooth-card {
@@ -120,11 +121,9 @@
 
 .photobooth-section.filter-bg-cyberpunk,
 .photobooth-section[data-active-filter="cyberpunk"] {
-  background-color: #040510 !important;
-  background-image:
-    radial-gradient(circle at 20% 0%, rgba(0, 245, 255, 0.35) 0%, transparent 55%),
-    radial-gradient(circle at 80% 10%, rgba(255, 0, 128, 0.38) 0%, transparent 60%),
-    repeating-linear-gradient(90deg, rgba(0, 240, 255, 0.02) 0px, rgba(0, 240, 255, 0.02) 24px, transparent 24px, transparent 48px) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
 }
 .photobooth-section.filter-bg-cyberpunk .photobooth-card,
 .photobooth-section[data-active-filter="cyberpunk"] .photobooth-card {
