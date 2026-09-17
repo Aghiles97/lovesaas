@@ -96,8 +96,7 @@ async function runStaticChecks() {
     { label: 'Hero Primary CTA', pass: html.includes('Start Building Your Website') || html.includes('Go to Builder') || html.includes('Go to Studio') },
     { label: '5 Feature quick tags removed', pass: !html.includes('v2-features-quick-section') },
     { label: '4 Stats counters with dividers', pass: (html.includes('1,280+') || html.includes('380+')) && css.includes('.v2-stat-item:not(:last-child)::after') },
-    { label: 'Review pill', pass: html.includes('4.9/5 from 1,200+ happy couples') || html.includes('4.9/5 from 380+ happy couples') },
-    { label: '3 Romantic template cards', pass: html.includes('v2-template-card') && html.includes('Our Story') },
+    { label: 'Reviews and pricing section sequence', pass: html.indexOf('id="v2Reviews"') < html.indexOf('id="v2Pricing"') && html.indexOf('id="v2Pricing"') < html.indexOf('id="v2Features"') },
     { label: '16+ Modular Widgets section', pass: html.includes('16+ Modular Widgets') && css.includes('.v2-widgets-grid') },
     { label: 'Widget category filter tabs', pass: html.includes('v2-filter-bar') && css.includes('.v2-filter-btn') },
     { label: 'How It Works 3 steps', pass: html.includes('v2-steps-grid') && css.includes('.v2-step-card') },
@@ -186,7 +185,6 @@ async function runBrowserTests() {
         mobileMenu: !!v2.querySelector('.mobile-nav-drawer, #v2MobileMenu'),
         heroCtas: v2.querySelectorAll('.v2-hero-ctas a, .v2-hero-ctas button').length,
         polaroidCards: v2.querySelectorAll('.v2-polaroid-card').length,
-        templateCards: v2.querySelectorAll('.v2-template-card').length,
         widgetCards: v2.querySelectorAll('.v2-widget-card').length,
         filterTabs: v2.querySelectorAll('.v2-filter-btn').length,
         steps: v2.querySelectorAll('.v2-step-card').length,
@@ -254,9 +252,9 @@ async function runBrowserTests() {
     // TEST 7: Interactive Feature - Mobile Drawer Open & Close
     console.log('\n[TEST 7] Testing mobile drawer open & close ...');
     const drawerTest = await cdp.evaluate(`(() => {
-      const hamburger = document.getElementById('btnMobileMenuToggle') || document.getElementById('btnV2Hamburger');
-      const menu = document.getElementById('navLinks') || document.getElementById('v2MobileMenu');
-      const closeBtn = document.getElementById('btnCloseMobileDrawer') || document.getElementById('btnV2CloseMenu');
+      const hamburger = document.getElementById('btnV2Hamburger') || document.getElementById('btnMobileMenuToggle');
+      const menu = document.getElementById('v2MobileMenu') || document.getElementById('navLinks');
+      const closeBtn = document.getElementById('btnV2CloseMenu') || document.getElementById('btnCloseMobileDrawer');
       if (!hamburger || !menu || !closeBtn) return { success: false, reason: 'Missing menu elements' };
 
       hamburger.click();
@@ -363,13 +361,29 @@ async function runBrowserTests() {
     fs.writeFileSync(galleryPath, Buffer.from(galleryShot.data, 'base64'));
     console.log(`Captured ${galleryPath}`);
 
-    // Capture templates showcase section
-    await cdp.evaluate(`document.getElementById('v2Templates').scrollIntoView({ block: 'start' })`);
+    // Capture Pricing suite section
+    await cdp.evaluate(`document.getElementById('v2Pricing').scrollIntoView({ block: 'start' })`);
     await sleep(400);
-    const templatesShot = await cdp.send('Page.captureScreenshot', { format: 'png' });
-    const templatesPath = path.join(ARTIFACTS_DIR, 'qa-v2-templates-contexts.png');
-    fs.writeFileSync(templatesPath, Buffer.from(templatesShot.data, 'base64'));
-    console.log(`Captured ${templatesPath}`);
+    const pricingShot = await cdp.send('Page.captureScreenshot', { format: 'png' });
+    const pricingPath = path.join(ARTIFACTS_DIR, 'qa-v2-pricing.png');
+    fs.writeFileSync(pricingPath, Buffer.from(pricingShot.data, 'base64'));
+    console.log(`Captured ${pricingPath}`);
+
+    // Capture How It Works (3-Stage Gifting Ritual)
+    await cdp.evaluate(`document.getElementById('v2HowItWorks').scrollIntoView({ block: 'start' })`);
+    await sleep(500);
+    const howItWorksShot = await cdp.send('Page.captureScreenshot', { format: 'png' });
+    const howItWorksPath = path.join(ARTIFACTS_DIR, 'qa-v2-howitworks.png');
+    fs.writeFileSync(howItWorksPath, Buffer.from(howItWorksShot.data, 'base64'));
+    console.log(`Captured ${howItWorksPath}`);
+
+    // Capture Reviews (Mobile Chat Proof)
+    await cdp.evaluate(`document.getElementById('v2Reviews').scrollIntoView({ block: 'start' })`);
+    await sleep(600);
+    const reviewsShot = await cdp.send('Page.captureScreenshot', { format: 'png' });
+    const reviewsPath = path.join(ARTIFACTS_DIR, 'qa-v2-reviews-chat.png');
+    fs.writeFileSync(reviewsPath, Buffer.from(reviewsShot.data, 'base64'));
+    console.log(`Captured ${reviewsPath}`);
 
     // Console errors summary
     console.log(`\nConsole Errors detected: ${consoleErrors.length}`);

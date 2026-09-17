@@ -7,6 +7,7 @@ const db = require("./db");
 const auth = require("./auth");
 const r2 = require("./r2");
 const { WIDGET_REGISTRY, PRESETS } = require("../core/widget-registry");
+const { setupPhotoboothWebSocket } = require("./photobooth-room");
 
 const PORT = process.env.SAAS_PORT || 4000;
 const ROOT_DIR = path.join(__dirname, "..");
@@ -1192,6 +1193,19 @@ const server = http.createServer(async (req, res) => {
     return res.end("Theme image not found");
   }
 
+  // GET /api/photobooth/rooms/:code
+  if (pathname.startsWith("/api/photobooth/rooms/") && method === "GET") {
+    const code = pathname.split("/").pop().toUpperCase().trim();
+    const { photoboothRooms } = require("./photobooth-room");
+    const room = photoboothRooms.rooms.get(code);
+    return sendJson(res, 200, {
+      exists: !!room,
+      code,
+      participants: room ? room.participants.size : 0,
+      state: room ? room.state : null
+    });
+  }
+
   // API route 404 fallback (guarantees API responses are always valid JSON)
   if (pathname.startsWith("/api/")) {
     return sendJson(res, 404, { error: `API endpoint not found: ${method} ${pathname}` });
@@ -1205,6 +1219,8 @@ const server = http.createServer(async (req, res) => {
   res.writeHead(404, { "Content-Type": "text/plain" });
   res.end("Not Found");
 });
+
+setupPhotoboothWebSocket(server, "/photobooth-ws");
 
 server.listen(PORT, () => {
   console.log(`====================================================`);

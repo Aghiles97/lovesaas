@@ -167,6 +167,90 @@ for (const filter of requiredFilters) {
   assert(runtimeContent.toLowerCase().includes(filter), "Filter style containing '" + filter + "' defined in runtime");
 }
 
+// --- GATE 8: WHOLE-FRAME OVERLAYS & GRID ARCHITECTURE ---
+console.log("\n--- GATE 8: Whole-Frame Overlays & Grid Architecture ---");
+const templateContent = fs.existsSync(templatePath) ? fs.readFileSync(templatePath, "utf8") : "";
+
+assert(cssContent.includes(".grid-2x2-wrap") && cssContent.includes("grid-template-columns: repeat(2, 1fr)"), "grid-2x2-wrap has true 2x2 CSS grid");
+assert(cssContent.includes(".grid-3x3-wrap") && cssContent.includes("grid-template-columns: repeat(3, 1fr)"), "grid-3x3-wrap has true 3x3 CSS grid");
+assert(cssContent.includes("strip-whole-frame-overlay"), "CSS includes strip-whole-frame-overlay");
+assert(templateContent.includes("boothDecoTabs"), "Template contains boothDecoTabs navigation");
+assert(templateContent.includes("btnClearDeco"), "Template contains btnClearDeco button");
+assert(runtimeContent.includes("WHOLE_FRAME_OVERLAYS"), "Runtime defines WHOLE_FRAME_OVERLAYS");
+assert(runtimeContent.includes("DECO_ITEMS"), "Runtime defines DECO_ITEMS with stamps and washi");
+assert(cssContent.includes("overlay-lace") && cssContent.includes("overlay-film35") && cssContent.includes("overlay-botanical"), "CSS defines whole-frame overlay styles");
+assert(cssContent.includes("sticker-float-bar"), "CSS defines floating sticker action bar");
+
+// --- GATE 9: SQUARE FRAME MORPHING & BACKGROUND FILTER PREVIEWS ---
+console.log("\n--- GATE 9: Square Frame Morphing & Live Filter Background ---");
+assert(cssContent.includes("format-is-square") && cssContent.includes("data-format=\"film_grid\""), "CSS supports format-is-square & data-format for square frames");
+assert(cssContent.includes("filter-bg-bw_noir") && cssContent.includes("data-active-filter=\"bw_noir\""), "CSS defines live B&W noir background filter preview");
+assert(cssContent.includes("filter-bg-golden_sunset") && cssContent.includes("filter-bg-cyberpunk"), "CSS defines sunset & cyberpunk live background filter previews");
+assert(runtimeContent.includes("filter-bg-") && runtimeContent.includes("data.activeFilter") || runtimeContent.includes("dataset.activeFilter"), "Runtime syncs live filter background on section");
+assert(runtimeContent.includes("format-is-square") && runtimeContent.includes("dataset.format"), "Runtime syncs format-is-square dataset on frame cards grid");
+assert(templateContent.includes("filter-bg-${defaultFilter}") && templateContent.includes("format-is-square"), "Template renders initial filter-bg and square format class");
+
+// --- GATE 10: INSCRIPTION PHRASE SPACE & CATALOGUE RATIOS ---
+console.log("\n--- GATE 10: Inscription Phrase Space & Catalogue Ratios ---");
+assert(templateContent.includes("booth-phrase-editor-bar") && templateContent.includes("boothPhraseInput"), "Template includes booth-phrase-editor-bar and boothPhraseInput");
+assert(templateContent.includes("phrase-preset-btn"), "Template includes romantic phrase preset buttons");
+assert(runtimeContent.includes("boothPhraseInput") && runtimeContent.includes("phrase-preset-btn"), "Runtime wires phrase input and preset buttons");
+assert(runtimeContent.includes("updatePhraseDisplays"), "Runtime implements updatePhraseDisplays method");
+assert(runtimeContent.includes("mini-window-img") && runtimeContent.includes("frame-phrase-block"), "Runtime getMiniWindowsHtml produces real photo images and phrase blocks");
+assert(runtimeContent.includes("#boothLayoutChips .mini-window img"), "Runtime applyFilter synchronizes live filter to frame card photos");
+
+const catalogueFormats = ["double_6cut", "double_8cut", "portrait_pair", "polaroid_single", "landscape_2split", "landscape_toptext", "triptych_3cut", "triptych_toptext", "asym_collage"];
+for (const fmt of catalogueFormats) {
+  assert(runtimeContent.includes(fmt) && cssContent.includes(fmt), "Catalogue format " + fmt + " supported in runtime and CSS");
+}
+
+assert(cssContent.includes("strip-phrase-slot") && runtimeContent.includes("strip-phrase-slot"), "strip-phrase-slot supported in CSS and runtime strip rendering");
+assert(cssContent.includes("frame-phrase-block") && cssContent.includes("frame-phrase-text"), "frame-phrase-block typography styled in CSS");
+
+// --- GATE 11: LONG-DISTANCE RELATIONSHIP (LDR) ROOM & PAINT STUDIO ---
+console.log("\n--- GATE 11: Long-Distance Relationship (LDR) & Paint Studio ---");
+const roomServerPath = path.resolve(__dirname, "../server/photobooth-room.js");
+assert(fs.existsSync(roomServerPath), "server/photobooth-room.js exists");
+const serverContent = fs.readFileSync(path.resolve(__dirname, "../server/server.js"), "utf8");
+assert(serverContent.includes("setupPhotoboothWebSocket") && serverContent.includes("/photobooth-ws"), "server.js attaches setupPhotoboothWebSocket on /photobooth-ws");
+assert(serverContent.includes("/api/photobooth/rooms/:code"), "server.js exposes GET /api/photobooth/rooms/:code");
+
+assert(templateContent.includes("booth-mode-selector") && templateContent.includes("btnModeSolo") && templateContent.includes("btnModeLdr"), "Template includes mode selector with Solo and LDR buttons");
+assert(templateContent.includes("booth-ldr-panel") && templateContent.includes("ldrRoomCodeDisplay") && templateContent.includes("btnCopyInviteLink"), "Template includes LDR room invite panel and copy link button");
+assert(templateContent.includes("photobooth-remote-cursor") && templateContent.includes("remoteCursorTag") && templateContent.includes("remoteClickRipple"), "Template includes remote cursor element with partner tag and click ripple");
+assert(templateContent.includes("viewfinder-split-screen") && templateContent.includes("photoboothVideoLocal") && templateContent.includes("photoboothVideoRemote"), "Template includes split-screen viewfinder with local & remote video feeds");
+assert(templateContent.includes("photobooth-selection-tray") && templateContent.includes("selectionCandidatesGrid") && templateContent.includes("btnRetryExtraSet"), "Template includes photo selection tray and retry button");
+assert(templateContent.includes("data-tab=\"paint\"") && templateContent.includes("boothPaintPalette") && templateContent.includes("photoboothPaintCanvas"), "Template includes Paint & Doodle studio tab, palette, and canvas");
+
+assert(cssContent.includes("booth-mode-selector") && cssContent.includes("booth-mode-btn"), "CSS defines mode selector segmented pill");
+assert(cssContent.includes("booth-ldr-panel") && cssContent.includes("ldr-room-code") && cssContent.includes("status-pulse-dot"), "CSS defines LDR room status and pulse animations");
+assert(cssContent.includes("photobooth-remote-cursor") && cssContent.includes("remote-cursor-pointer") && cssContent.includes("remote-click-ripple"), "CSS defines remote cursor and click ripple styles");
+assert(cssContent.includes("viewfinder-split-screen") && cssContent.includes("split-feed-local") && cssContent.includes("split-feed-remote"), "CSS defines side-by-side split viewfinder call screen");
+assert(cssContent.includes("photobooth-selection-tray") && cssContent.includes("candidate-card") && cssContent.includes("candidate-order-badge"), "CSS defines selection tray and candidate cards");
+assert(cssContent.includes("photobooth-paint-palette") && cssContent.includes("color-swatch-btn") && cssContent.includes("photobooth-paint-canvas"), "CSS defines paint palette and canvas overlay");
+
+assert(runtimeContent.includes("class LdrManager"), "Runtime defines LdrManager WebSocket & WebRTC class");
+assert(runtimeContent.includes("switchMode") && runtimeContent.includes("isLdrMode"), "Runtime implements mode switching between solo and LDR");
+assert(runtimeContent.includes("showSelectionTray") && runtimeContent.includes("renderCandidateCards"), "Runtime implements candidate selection tray");
+assert(runtimeContent.includes("toggleCandidateSelection") && runtimeContent.includes("confirmPhotoSelection"), "Runtime handles candidate card selection and confirmation");
+assert(runtimeContent.includes("requestRetryExtraSet") && runtimeContent.includes("retryBudget"), "Runtime enforces 1-retry budget mechanism");
+assert(runtimeContent.includes("initPaintEngine") && runtimeContent.includes("drawStrokeOnCanvas"), "Runtime implements interactive freehand paint engine");
+assert(runtimeContent.includes("undoPaintStroke") && runtimeContent.includes("clearPaintCanvas"), "Runtime provides paint undo and clear controls");
+assert(runtimeContent.includes("paintStrokes") && runtimeContent.includes("generateExportCanvas"), "Runtime composite canvas export integrates paint strokes");
+
+// --- GATE 12: SECURITY HARDENING, MOBILE ERGONOMICS & RESILIENCE ---
+console.log("\n--- GATE 12: Security Hardening, Mobile Ergonomics & Resilience ---");
+const roomContent = fs.readFileSync(roomServerPath, "utf8");
+assert(roomContent.includes("maxPayload: 2 * 1024 * 1024"), "Room server enforces 2MB maxPayload limit against buffer overflows");
+assert(roomContent.includes("msgCount > 75"), "Room server enforces connection message rate limiting");
+assert(roomContent.includes("ALLOWED_FIELDS") && roomContent.includes("sanitizeStr"), "Room server enforces whitelist fields and prototype pollution prevention");
+assert(roomContent.includes("filter(n => Number.isInteger(n)"), "Room server validates candidate photo index types and bounds");
+assert(cssContent.includes(".photobooth-paint-canvas {\n  position: absolute;\n  inset: 0;\n  width: 100%;\n  height: 100%;\n  pointer-events: none;\n  z-index: 15;\n  border-radius: inherit;\n  touch-action: none;"), "Paint canvas enforces touch-action: none preventing mobile viewport scroll gestures");
+assert(cssContent.includes("color-swatch-btn::after"), "Mobile touch swatches include 44px+ hit targets via pseudo-element expansion");
+assert(runtimeContent.includes("unlockAudio"), "Runtime implements iOS Web Audio auto-unlock on first touch/pointer event");
+assert(runtimeContent.includes("touchstart") && runtimeContent.includes("touchmove") && runtimeContent.includes("touchcancel"), "Runtime paint engine binds passive:false touch events for smooth mobile finger drawing");
+assert(runtimeContent.includes("reconnectTimer") && runtimeContent.includes("Reconnecting to room..."), "Runtime LdrManager implements automatic socket reconnection on network drops");
+
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");
 if (passedChecks === totalChecks) {
@@ -175,3 +259,5 @@ if (passedChecks === totalChecks) {
   console.error("\n❌ SOME CHECKS FAILED (" + (totalChecks - passedChecks) + " issues)\n");
   process.exitCode = 1;
 }
+
+

@@ -1233,7 +1233,7 @@ const DEFAULT_SECTIONS_DATA = {
   photobooth: {
     tag: "Vintage Photobooth 📸",
     title: "Capture Our Sweet Moments",
-    desc: "Pick a retro frame, strike your cutest poses, and print a personalized love strip keepsake!",
+    desc: "Strike your cutest poses and print a personalized retro love strip!",
     boothSubheading: "PICK A FRAME INSIDE THE BOOTH",
     defaultLayout: "classic_strip",
     defaultFilter: "vintage_90s",
