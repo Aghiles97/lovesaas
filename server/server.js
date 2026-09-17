@@ -1109,6 +1109,11 @@ const server = http.createServer(async (req, res) => {
     return serveFile(res, path.join(ROOT_DIR, "public", "viewer.html"));
   }
 
+  // Dedicated Standalone Photobooth route (/photobooth, /photobooth/:code, /booth, /booth/:code)
+  if (pathname === "/photobooth" || pathname.startsWith("/photobooth/") || pathname === "/booth" || pathname.startsWith("/booth/")) {
+    return serveFile(res, path.join(ROOT_DIR, "public", "photobooth.html"));
+  }
+
   // Stream media (images, audio, uploads, demo) directly from Cloudflare R2
   const isR2Media = pathname.startsWith("/images/") || pathname.startsWith("/audio/") || pathname.startsWith("/uploads/") || pathname.startsWith("/demo/");
   if (isR2Media && r2.isR2Configured) {

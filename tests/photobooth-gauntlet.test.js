@@ -288,6 +288,19 @@ assert(freshRuntime.includes("renderLdrCodeTiles"), "Runtime implements renderLd
 assert(freshRuntime.includes('"welcome"') && freshRuntime.includes("btnProceedToSetup"), "Runtime supports welcome stage and wires proceed to setup button");
 assert(!freshRuntime.includes('setTimeout(() => {\n            if (this.session.isLdrMode) {\n              this.session.setLdrStage("setup"'), "Runtime does not auto-advance on partner join, waits for proceed click");
 
+// --- GATE 16: DEDICATED STANDALONE WEB PAGE & SEGREGATED INVITE ROUTING ---
+console.log("\n--- GATE 16: Dedicated Standalone Web Page & Segregated Invite Routing ---");
+const standalonePath = path.resolve(__dirname, "../public/photobooth.html");
+assert(fs.existsSync(standalonePath), "public/photobooth.html exists as dedicated standalone page");
+const standaloneContent = fs.readFileSync(standalonePath, "utf8");
+assert(standaloneContent.includes('id="photoboothMount"') && standaloneContent.includes('id="photoboothSessionEnded"'), "photobooth.html contains mount container and session ended screen");
+assert(standaloneContent.includes("IS_STANDALONE_PHOTOBOOTH = true"), "photobooth.html sets IS_STANDALONE_PHOTOBOOTH flag");
+const updatedServerContent = fs.readFileSync(path.resolve(__dirname, "../server/server.js"), "utf8");
+assert(updatedServerContent.includes('pathname === "/photobooth"') && updatedServerContent.includes("photobooth.html"), "server.js routes /photobooth and /booth to photobooth.html");
+assert(freshRuntime.includes("origin}/photobooth?room="), "Runtime generates invite links pointing to /photobooth?room=");
+assert(freshRuntime.includes("IS_STANDALONE_PHOTOBOOTH") && freshRuntime.includes("photoboothSessionEnded"), "Runtime reveals session ended screen on standalone page close");
+assert(freshRuntime.includes("window.location.replace(`/photobooth?room="), "Runtime redirects guest on viewer page to dedicated /photobooth URL");
+
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");
 if (passedChecks === totalChecks) {

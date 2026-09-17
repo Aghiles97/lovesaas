@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Photobooth · 인생네컷</title>
+  <meta name="description" content="One photo strip, both of you in it, taken from two places at once.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/widgets/photobooth.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100vw;
+      height: 100dvh;
+      overflow: hidden;
+      background: #0d0c13;
+      color: #fff;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    #photoboothMount {
+      width: 100vw;
+      height: 100dvh;
+      display: flex;
+    }
+    .photobooth-section {
+      display: none !important;
+    }
+    .photobooth-ldr-modal {
+      display: flex !important;
+      z-index: 1000 !important;
+    }
+    .photobooth-ended-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: radial-gradient(circle at center, #1b1622 0%, #0d0c13 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .photobooth-ended-card {
+      max-width: 440px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 36px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+    .ended-icon {
+      font-size: 48px;
+      margin-bottom: 4px;
+    }
+    .ended-title {
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+    .ended-subtitle {
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.65);
+      line-height: 1.5;
+    }
+    .ended-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      margin-top: 12px;
+    }
+    .ended-btn {
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: 9999px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+    .ended-btn-primary {
+      background: #ff4d88;
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(255, 77, 136, 0.35);
+    }
+    .ended-btn-primary:hover {
+      background: #ff3377;
+    }
+    .ended-btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .ended-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+  </style>
+</head>
+<body>
+  <div id="photoboothMount"></div>
+
+  <div id="photoboothSessionEnded" class="photobooth-ended-screen" style="display: none;">
+    <div class="photobooth-ended-card">
+      <div class="ended-icon">📸💕</div>
+      <h2 class="ended-title">Photobooth Session Finished</h2>
+      <p class="ended-subtitle">Thanks for making memories together across the distance. You can safely close this browser window.</p>
+      <div class="ended-actions">
+        <button type="button" class="ended-btn ended-btn-primary" id="btnEndedRestart">Start a New Room</button>
+        <button type="button" class="ended-btn ended-btn-secondary" id="btnEndedClose">Close Window</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/core/templates/photobooth.template.js"></script>
+  <script src="/public/js/widgets/photobooth.runtime.js"></script>
+  <script>
+    window.IS_STANDALONE_PHOTOBOOTH = true;
+    (function() {
+      const mount = document.getElementById("photoboothMount");
+      if (typeof window.WIDGET_TEMPLATES !== "undefined" && window.WIDGET_TEMPLATES["photobooth"]) {
+        mount.innerHTML = window.WIDGET_TEMPLATES["photobooth"]({}, {});
+      }
+      const booth = window.setupPhotobooth ? window.setupPhotobooth({}, {}) : null;
+
+      const url = new URL(window.location.href);
+      const roomMatch = window.location.pathname.match(/^\/(?:photobooth|booth)\/([a-zA-Z0-9_-]+)/);
+      const roomCode = url.searchParams.get("room") || url.searchParams.get("code") || url.searchParams.get("booth_room") || (roomMatch ? roomMatch[1] : null);
+
+      if (booth) {
+        if (roomCode) {
+          booth.openLdrModal(roomCode.trim().toUpperCase());
+        } else {
+          booth.openLdrModal();
+        }
+      }
+
+      document.getElementById("btnEndedRestart")?.addEventListener("click", () => {
+        document.getElementById("photoboothSessionEnded").style.display = "none";
+        if (booth) booth.openLdrModal();
+      });
+
+      document.getElementById("btnEndedClose")?.addEventListener("click", () => {
+        window.close();
+        setTimeout(() => {
+          alert("You can close this tab now.");
+        }, 300);
+      });
+    })();
+  </script>
+</body>
+</html>

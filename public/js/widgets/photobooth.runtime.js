@@ -709,8 +709,13 @@
 
       if (typeof window !== "undefined" && window.location) {
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has("booth_room")) {
-          this.switchMode("ldr", urlParams.get("booth_room"));
+        if (urlParams.has("booth_room") || urlParams.has("room")) {
+          const rCode = urlParams.get("booth_room") || urlParams.get("room");
+          if (!window.IS_STANDALONE_PHOTOBOOTH) {
+            window.location.replace(`/photobooth?room=${encodeURIComponent(rCode)}`);
+            return;
+          }
+          this.switchMode("ldr", rCode);
         }
       }
     }
@@ -775,6 +780,10 @@
           url.searchParams.delete("booth_room");
           window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : ""));
         }
+        if (url.searchParams.has("room")) {
+          url.searchParams.delete("room");
+          window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : ""));
+        }
       }
       if (this.ldrManager) {
         this.ldrManager.disconnect();
@@ -788,6 +797,11 @@
       if (this.remoteCursorEl) this.remoteCursorEl.style.display = "none";
       const dockedBar = document.getElementById("ldrDockedCallBar");
       if (dockedBar) dockedBar.style.display = "none";
+
+      if (typeof window !== "undefined" && window.IS_STANDALONE_PHOTOBOOTH) {
+        const endedScreen = document.getElementById("photoboothSessionEnded");
+        if (endedScreen) endedScreen.style.display = "flex";
+      }
 
       this.play("beep", 440, 0.05);
       this.startCamera();
@@ -987,7 +1001,7 @@
 
     copyInviteLink() {
       if (!this.ldrManager || !this.ldrManager.roomCode) return;
-      const url = `${window.location.origin}${window.location.pathname}?booth_room=${this.ldrManager.roomCode}`;
+      const url = `${window.location.origin}/photobooth?room=${encodeURIComponent(this.ldrManager.roomCode)}`;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
           const btns = [
@@ -1023,7 +1037,7 @@
       document.getElementById("btnModalCopyInvite")?.addEventListener("click", () => this.copyInviteLink());
       document.getElementById("btnModalShareInvite")?.addEventListener("click", () => {
         if (!this.ldrManager || !this.ldrManager.roomCode) return;
-        const url = `${window.location.origin}${window.location.pathname}?booth_room=${this.ldrManager.roomCode}`;
+        const url = `${window.location.origin}/photobooth?room=${encodeURIComponent(this.ldrManager.roomCode)}`;
         if (navigator.share) {
           navigator.share({
             title: "Join my Photobooth room 💕",
