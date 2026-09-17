@@ -354,6 +354,7 @@
           if (state.style) this.session.setStyle(state.style, true);
           if (state.filter) this.session.applyFilter(state.filter, true);
           if (state.caption) this.session.updatePhraseDisplays(state.caption, true);
+          if (state.setupSubStep) this.session.setSetupSubStep(Number(state.setupSubStep), true);
           if (state.strokes) {
             this.session.paintStrokes = [...state.strokes];
             this.session.redrawPaintCanvas();
@@ -453,14 +454,30 @@
       }
 
       if (type === "REMOTE_CURSOR") {
-        const cursor = document.getElementById("photoboothRemoteCursor");
+        let cursor = document.getElementById("photoboothRemoteCursor");
         if (cursor) {
+          if (cursor.parentElement !== document.body) {
+            document.body.appendChild(cursor);
+          }
           cursor.style.display = "flex";
-          cursor.style.left = `${msg.x * 100}%`;
-          cursor.style.top = `${msg.y * 100}%`;
+          cursor.style.position = "fixed";
+          cursor.style.left = `${msg.x * 100}vw`;
+          cursor.style.top = `${msg.y * 100}vh`;
+          cursor.style.zIndex = "2147483647";
+          cursor.style.pointerEvents = "none";
         }
         const tag = document.getElementById("remoteCursorTag");
         if (tag && msg.senderName) tag.textContent = msg.senderName;
+        return;
+      }
+
+      if (type === "REMOTE_CLICK") {
+        const ripple = document.getElementById("remoteClickRipple");
+        if (ripple) {
+          ripple.classList.remove("rippling");
+          void ripple.offsetWidth;
+          ripple.classList.add("rippling");
+        }
         return;
       }
 
@@ -476,6 +493,7 @@
         else if (action === "SET_STYLE" && value) this.session.setStyle(value, true);
         else if (action === "SET_FILTER" && value) this.session.applyFilter(value, true);
         else if (action === "SET_CAPTION" && value) this.session.updatePhraseDisplays(value, true);
+        else if (action === "SET_SETUP_SUBSTEP" && value) this.session.setSetupSubStep(Number(value), true);
         return;
       }
 
@@ -1070,7 +1088,73 @@
       }
     }
 
+    setSetupSubStep(step, isRemote = false) {
+      this.currentSetupSubStep = step;
+      const p1 = document.getElementById("ldrSetupStepFormat");
+      const p2 = document.getElementById("ldrSetupStepTheme");
+      const p3 = document.getElementById("ldrSetupStepCaption");
+      if (p1) p1.style.display = (step === 1) ? "block" : "none";
+      if (p2) p2.style.display = (step === 2) ? "block" : "none";
+      if (p3) p3.style.display = (step === 3) ? "block" : "none";
+
+      if (step === 2) {
+        const isSquare = this.currentFormat === "film_grid" || this.currentFormat === "grid_3x3";
+        const picker = document.getElementById("ldrModalLayoutPicker");
+        if (picker) {
+          picker.dataset.format = this.currentFormat;
+          picker.classList.toggle("format-is-square", isSquare);
+        }
+        const miniMarkup = this.getMiniWindowsHtml(this.currentFormat);
+        document.querySelectorAll("#ldrModalLayoutPicker .frame-mini-strip").forEach((strip) => {
+          strip.innerHTML = miniMarkup;
+        });
+      } else if (step === 3) {
+        this.renderSelectedStripPreview();
+      }
+
+      this.play("beep", 660, 0.04);
+
+      if (!isRemote && this.ldrManager) {
+        this.ldrManager.sendAction("SET_SETUP_SUBSTEP", "setupSubStep", step);
+      }
+    }
+
+    renderSelectedStripPreview() {
+      const container = document.getElementById("ldrSelectedStripPreview");
+      if (!container) return;
+      const fmt = this.currentFormat || "film_grid";
+      const style = this.currentStyle || "style_cyan_stars";
+      const caption = this.caption || "Forever & Always ♡";
+
+      const styleClassMap = {
+        style_cyan_stars: "frame-style-classic",
+        style_floral: "frame-style-floral",
+        style_retro_swirl: "frame-style-swirls",
+        style_lavender_stripes: "frame-style-stripes",
+        style_noir_film: "frame-style-noir",
+        style_y2k_pink: "frame-style-y2k",
+        style_newspaper: "frame-style-newspaper",
+        style_minimal_white: "frame-style-minimal"
+      };
+      const styleClass = styleClassMap[style] || "frame-style-classic";
+      const miniMarkup = this.getMiniWindowsHtml(fmt);
+
+      container.innerHTML = `
+        <div class="frame-mini-strip ${styleClass} format-${fmt} ldr-preview-strip-full">
+          ${miniMarkup}
+        </div>
+      `;
+      container.querySelectorAll(".frame-phrase-text").forEach(el => el.textContent = caption);
+    }
+
     initLdrSetupStage() {
+      document.querySelectorAll("#ldrFormatCardsGrid .ldr-format-card-preview").forEach(card => {
+        card.onclick = () => {
+          this.setFormat(card.dataset.format);
+          this.play("beep", 660, 0.04);
+        };
+      });
+
       document.querySelectorAll(".ldr-format-pill-btn").forEach(btn => {
         btn.onclick = () => {
           this.setFormat(btn.dataset.format);
@@ -1105,14 +1189,21 @@
         };
       });
 
-      this.setFormat(this.currentFormat, true);
-      this.setStyle(this.currentStyle, true);
-      this.applyFilter(this.currentFilter, true);
+      document.getElementById("btnFormatBackToLobby")?.addEventListener("click", () => this.setLdrStage("lobby", false));
+      document.getElementById("btnFormatNextToTheme")?.addEventListener("click", () => this.setSetupSubStep(2, false));
+      document.getElementById("btnThemeBackToFormat")?.addEventListener("click", () => this.setSetupSubStep(1, false));
+      document.getElementById("btnThemeNextToCaption")?.addEventListener("click", () => this.setSetupSubStep(3, false));
+      document.getElementById("btnCaptionBackToTheme")?.addEventListener("click", () => this.setSetupSubStep(2, false));
 
       const readyBtn = document.getElementById("btnLdrReadyToShoot");
       if (readyBtn) {
         readyBtn.onclick = () => this.setLdrStage("capture", false);
       }
+
+      this.setFormat(this.currentFormat, true);
+      this.setStyle(this.currentStyle, true);
+      this.applyFilter(this.currentFilter, true);
+      this.setSetupSubStep(this.currentSetupSubStep || 1, true);
     }
 
     initLdrCaptureStage() {
@@ -1399,15 +1490,23 @@
       document.getElementById("btnCopyInviteLink")?.addEventListener("click", () => this.copyInviteLink());
       document.getElementById("btnNewRoomCode")?.addEventListener("click", () => this.generateNewRoom());
 
-      const appEl = document.querySelector(".photobooth-apparatus");
-      appEl?.addEventListener("pointermove", (e) => {
+      window.addEventListener("pointermove", (e) => {
         if (!this.isLdrMode || !this.ldrManager) return;
-        const rect = appEl.getBoundingClientRect();
-        if (!rect.width || !rect.height) return;
-        const x = (e.clientX - rect.left) / rect.width;
-        const y = (e.clientY - rect.top) / rect.height;
+        const w = window.innerWidth, h = window.innerHeight;
+        if (!w || !h) return;
+        const x = e.clientX / w;
+        const y = e.clientY / h;
         this.ldrManager.sendCursor(Math.max(0, Math.min(1, x)), Math.max(0, Math.min(1, y)));
-      });
+      }, { passive: true });
+
+      window.addEventListener("pointerdown", (e) => {
+        if (!this.isLdrMode || !this.ldrManager) return;
+        const w = window.innerWidth, h = window.innerHeight;
+        if (!w || !h) return;
+        const x = e.clientX / w;
+        const y = e.clientY / h;
+        this.ldrManager.send("CURSOR_CLICK", { x, y });
+      }, { passive: true });
 
       this.btnRetryExtraSet?.addEventListener("click", () => this.requestRetryExtraSet());
       this.btnConfirmSelection?.addEventListener("click", () => this.confirmPhotoSelection());
@@ -1663,6 +1762,8 @@
       const stripHdr = document.querySelector(".strip-header-banner span:nth-child(2)");
       if (stripHdr) stripHdr.textContent = this.caption;
 
+      this.renderSelectedStripPreview();
+
       if (this.isLdrMode && !isRemote && this.ldrManager) {
         this.ldrManager.sendAction("SET_CAPTION", "caption", this.caption);
       }
@@ -1697,10 +1798,17 @@
       document.querySelectorAll("#boothLayoutChips .mini-window img").forEach(img => {
         img.style.filter = css;
       });
+      document.querySelectorAll("#ldrFormatCardsGrid .mini-window img").forEach(img => {
+        img.style.filter = css;
+      });
+      document.querySelectorAll("#ldrModalLayoutPicker .mini-window img").forEach(img => {
+        img.style.filter = css;
+      });
       document.querySelectorAll(".filter-chip-btn").forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.filter === filterKey);
       });
       this.renderStrip();
+      this.renderSelectedStripPreview();
 
       if (this.isLdrMode && !isRemote && this.ldrManager) {
         this.ldrManager.sendAction("SET_FILTER", "filter", filterKey);
@@ -1773,6 +1881,9 @@
       document.querySelectorAll(".format-pill-btn").forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.format === fmtKey);
       });
+      document.querySelectorAll("#ldrFormatCardsGrid .ldr-format-card-preview").forEach((card) => {
+        card.classList.toggle("active", card.dataset.format === fmtKey);
+      });
       document.querySelectorAll("#ldrModalLayoutPicker .ldr-choice-card").forEach((card) => {
         card.classList.toggle("active", card.dataset.format === fmtKey);
       });
@@ -1783,6 +1894,11 @@
         chips.dataset.format = fmtKey;
         chips.classList.toggle("format-is-square", isSquare);
       }
+      const ldrPicker = document.getElementById("ldrModalLayoutPicker");
+      if (ldrPicker) {
+        ldrPicker.dataset.format = fmtKey;
+        ldrPicker.classList.toggle("format-is-square", isSquare);
+      }
       document.querySelectorAll(".layout-chip-btn").forEach((btn) => {
         btn.dataset.layout = fmtKey;
       });
@@ -1791,9 +1907,13 @@
       document.querySelectorAll("#boothLayoutChips .frame-mini-strip").forEach((strip) => {
         strip.innerHTML = markup;
       });
+      document.querySelectorAll("#ldrModalLayoutPicker .frame-mini-strip").forEach((strip) => {
+        strip.innerHTML = markup;
+      });
 
       this.vibrate(15);
       if (this.capturedPhotos.length) this.renderStrip();
+      this.renderSelectedStripPreview();
 
       if (this.isLdrMode && !isRemote && this.ldrManager) {
         this.ldrManager.sendAction("SET_FORMAT", "format", fmtKey);
@@ -1810,6 +1930,7 @@
       });
       this.vibrate(15);
       if (this.capturedPhotos.length) this.renderStrip();
+      this.renderSelectedStripPreview();
 
       if (this.isLdrMode && !isRemote && this.ldrManager) {
         this.ldrManager.sendAction("SET_STYLE", "style", styleKey);

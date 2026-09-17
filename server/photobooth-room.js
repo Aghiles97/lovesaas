@@ -5,7 +5,7 @@ try {
   console.warn("⚠️ [Photobooth] Package 'ws' not installed. WebSocket rooms disabled until npm install.");
 }
 
-const ALLOWED_FIELDS = new Set(["format", "style", "filter", "caption", "stage"]);
+const ALLOWED_FIELDS = new Set(["format", "style", "filter", "caption", "stage", "setupSubStep"]);
 const sanitizeStr = (s, len = 80) => String(s || "").replace(/<[^>]*>/g, "").slice(0, len).trim();
 
 class PhotoboothRoomServer {
@@ -161,6 +161,19 @@ class PhotoboothRoomServer {
       const y = Math.max(0, Math.min(1, Number(payload?.y) || 0));
       this.broadcast(currentRoom, {
         type: "REMOTE_CURSOR",
+        x,
+        y,
+        senderId: participantId,
+        senderName: participantName
+      }, sender);
+      return;
+    }
+
+    if (type === "CURSOR_CLICK") {
+      const x = Math.max(0, Math.min(1, Number(payload?.x) || 0));
+      const y = Math.max(0, Math.min(1, Number(payload?.y) || 0));
+      this.broadcast(currentRoom, {
+        type: "REMOTE_CLICK",
         x,
         y,
         senderId: participantId,
