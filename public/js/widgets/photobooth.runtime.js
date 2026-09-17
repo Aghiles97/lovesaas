@@ -165,12 +165,15 @@
     constructor(session) {
       this.session = session;
       this.ws = null;
+      this.eventSource = null;
+      this.useHttp = false;
       this.roomCode = null;
       this.role = null;
-      this.participantId = null;
+      this.participantId = "p_" + Math.random().toString(36).slice(2, 9);
       this.pc = null;
       this.localStream = null;
       this.lastCursorSend = 0;
+      this.wsAttempts = 0;
     }
 
     connect(code) {
@@ -179,22 +182,41 @@
       const disp = document.getElementById("ldrRoomCodeDisplay");
       if (disp) disp.textContent = this.roomCode;
 
+      if (this.useHttp) {
+        this.startHttpTransport();
+        return;
+      }
+
       if (this.ws) {
         try { this.ws.close(); } catch (e) {}
+        this.ws = null;
       }
 
       const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
       const host = window.location.host || "localhost:4000";
       const wsUrl = `${proto}//${host}/photobooth-ws`;
 
+      let wsConnected = false;
+      const wsFallbackTimeout = setTimeout(() => {
+        if (!wsConnected && !this.manualDisconnect) {
+          console.warn("⚠️ Photobooth: WebSocket handshake timeout. Falling back to HTTP SSE transport.");
+          this.startHttpTransport();
+        }
+      }, 3500);
+
       try {
         this.ws = new WebSocket(wsUrl);
       } catch (err) {
         console.warn("Photobooth WS connect failed:", err);
+        clearTimeout(wsFallbackTimeout);
+        this.startHttpTransport();
         return;
       }
 
       this.ws.onopen = () => {
+        wsConnected = true;
+        clearTimeout(wsFallbackTimeout);
+        this.wsAttempts = 0;
         this.send("JOIN_ROOM", {
           roomCode: this.roomCode,
           payload: { name: this.session.p1 || "Partner 1" }
@@ -208,7 +230,19 @@
         } catch (e) {}
       };
 
+      this.ws.onerror = () => {
+        if (!wsConnected && !this.manualDisconnect) {
+          clearTimeout(wsFallbackTimeout);
+          this.startHttpTransport();
+        }
+      };
+
       this.ws.onclose = () => {
+        clearTimeout(wsFallbackTimeout);
+        if (!wsConnected && !this.manualDisconnect) {
+          this.startHttpTransport();
+          return;
+        }
         const badge = document.getElementById("ldrPartnerStatusText");
         if (badge) badge.textContent = "Reconnecting to room...";
         const dot = document.getElementById("ldrPulseDot");
@@ -216,9 +250,49 @@
         if (this.roomCode && !this.manualDisconnect) {
           clearTimeout(this.reconnectTimer);
           this.reconnectTimer = setTimeout(() => {
-            if (this.roomCode && !this.manualDisconnect) this.connect(this.roomCode);
-          }, 2500);
+            if (this.roomCode && !this.manualDisconnect) {
+              if (++this.wsAttempts >= 2) {
+                this.startHttpTransport();
+              } else {
+                this.connect(this.roomCode);
+              }
+            }
+          }, 2000);
         }
+      };
+    }
+
+    startHttpTransport() {
+      this.useHttp = true;
+      if (this.ws) {
+        try { this.ws.close(); } catch (e) {}
+        this.ws = null;
+      }
+      if (this.eventSource) {
+        try { this.eventSource.close(); } catch (e) {}
+        this.eventSource = null;
+      }
+
+      const sseUrl = `/api/photobooth/rooms/${encodeURIComponent(this.roomCode)}/events?id=${encodeURIComponent(this.participantId)}&name=${encodeURIComponent(this.session.p1 || "Partner")}`;
+      try {
+        this.eventSource = new EventSource(sseUrl);
+      } catch (err) {
+        console.warn("Photobooth SSE connect failed:", err);
+        return;
+      }
+
+      this.eventSource.onmessage = (evt) => {
+        try {
+          const msg = JSON.parse(evt.data);
+          this.handleMessage(msg);
+        } catch (e) {}
+      };
+
+      this.eventSource.onerror = () => {
+        const badge = document.getElementById("ldrPartnerStatusText");
+        if (badge && !this.role) badge.textContent = "Reconnecting to room...";
+        const dot = document.getElementById("ldrPulseDot");
+        if (dot && !this.role) dot.className = "status-pulse-dot waiting";
       };
     }
 
@@ -233,11 +307,26 @@
         try { this.ws.close(); } catch (e) {}
         this.ws = null;
       }
+      if (this.eventSource) {
+        try { this.eventSource.close(); } catch (e) {}
+        this.eventSource = null;
+      }
     }
 
     send(type, payload = {}) {
       if (this.ws && this.ws.readyState === 1) {
         this.ws.send(JSON.stringify({ type, roomCode: this.roomCode, payload }));
+      } else if (this.useHttp && this.roomCode) {
+        fetch(`/api/photobooth/rooms/${encodeURIComponent(this.roomCode)}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type,
+            payload,
+            senderId: this.participantId,
+            senderName: this.session.p1 || "Partner"
+          })
+        }).catch(err => console.warn("LDR HTTP POST failed:", err));
       }
     }
 
@@ -257,6 +346,7 @@
 
       if (type === "ROOM_JOINED") {
         this.role = role;
+        if (msg.participantId) this.participantId = msg.participantId;
         if (state) {
           if (state.format) this.session.setFormat(state.format, true);
           if (state.style) this.session.setStyle(state.style, true);
@@ -269,6 +359,15 @@
         }
         const syncBadge = document.getElementById("ldrSyncBadge");
         if (syncBadge) syncBadge.style.display = "inline-flex";
+        const badge = document.getElementById("ldrPartnerStatusText");
+        const dot = document.getElementById("ldrPulseDot");
+        if (msg.participantCount >= 2) {
+          if (badge) badge.textContent = "Partner connected 💕";
+          if (dot) dot.className = "status-pulse-dot connected";
+        } else {
+          if (badge) badge.textContent = "Waiting for partner...";
+          if (dot) dot.className = "status-pulse-dot waiting";
+        }
         return;
       }
 

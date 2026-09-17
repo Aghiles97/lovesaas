@@ -1193,6 +1193,33 @@ const server = http.createServer(async (req, res) => {
     return res.end("Theme image not found");
   }
 
+  // GET /api/photobooth/rooms/:code/events (SSE Realtime Stream)
+  if (pathname.startsWith("/api/photobooth/rooms/") && pathname.endsWith("/events") && method === "GET") {
+    const parts = pathname.split("/");
+    const code = (parts[parts.length - 2] || "").toUpperCase().trim();
+    const { photoboothRooms } = require("./photobooth-room");
+    const participantId = parsedUrl.query?.id || ("p_" + Math.random().toString(36).slice(2, 9));
+    const participantName = parsedUrl.query?.name || "Partner";
+    return photoboothRooms.registerSseClient(req, res, code, participantId, participantName);
+  }
+
+  // POST /api/photobooth/rooms/:code/messages (HTTP Message Dispatcher)
+  if (pathname.startsWith("/api/photobooth/rooms/") && pathname.endsWith("/messages") && method === "POST") {
+    const parts = pathname.split("/");
+    const code = (parts[parts.length - 2] || "").toUpperCase().trim();
+    const { photoboothRooms } = require("./photobooth-room");
+    try {
+      const body = await parseJsonBody(req);
+      const room = photoboothRooms.getOrCreateRoom(code);
+      const senderId = body.senderId || "anon";
+      const senderName = body.senderName || "Partner";
+      photoboothRooms.handleMessage(room, senderId, senderName, body, senderId);
+      return sendJson(res, 200, { ok: true });
+    } catch (err) {
+      return sendJson(res, 400, { error: err.message || "Invalid JSON" });
+    }
+  }
+
   // GET /api/photobooth/rooms/:code
   if (pathname.startsWith("/api/photobooth/rooms/") && method === "GET") {
     const code = pathname.split("/").pop().toUpperCase().trim();
@@ -1201,7 +1228,7 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, 200, {
       exists: !!room,
       code,
-      participants: room ? room.participants.size : 0,
+      participants: room ? (room.participants.size + (room.sseClients?.size || 0)) : 0,
       state: room ? room.state : null
     });
   }

@@ -251,6 +251,16 @@ assert(runtimeContent.includes("unlockAudio"), "Runtime implements iOS Web Audio
 assert(runtimeContent.includes("touchstart") && runtimeContent.includes("touchmove") && runtimeContent.includes("touchcancel"), "Runtime paint engine binds passive:false touch events for smooth mobile finger drawing");
 assert(runtimeContent.includes("reconnectTimer") && runtimeContent.includes("Reconnecting to room..."), "Runtime LdrManager implements automatic socket reconnection on network drops");
 
+// --- GATE 13: DUAL-TRANSPORT REALTIME RESILIENCE & HTTP SSE FALLBACK ---
+console.log("\n--- GATE 13: Dual-Transport Realtime Resilience & HTTP SSE Fallback ---");
+assert(roomContent.includes("registerSseClient"), "Room server implements registerSseClient for proxy-immune SSE transport");
+assert(roomContent.includes("room.sseClients"), "Room server tracks and broadcasts to sseClients");
+assert(serverContent.includes("/api/photobooth/rooms/") && serverContent.includes("/events"), "server.js mounts SSE event stream route");
+assert(serverContent.includes("/api/photobooth/rooms/") && serverContent.includes("/messages"), "server.js mounts HTTP POST message dispatcher route");
+assert(runtimeContent.includes("startHttpTransport"), "Runtime LdrManager provides seamless HTTP SSE fallback");
+assert(runtimeContent.includes("EventSource"), "Runtime LdrManager uses native browser EventSource for SSE streaming");
+assert(runtimeContent.includes("useHttp"), "Runtime LdrManager supports dual-mode transport routing");
+
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");
 if (passedChecks === totalChecks) {
