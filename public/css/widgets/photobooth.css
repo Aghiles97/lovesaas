@@ -4525,6 +4525,11 @@
   display: flex;
   flex-direction: column;
 }
+.ldr-stage-panel[style*="display: none"],
+.ldr-stage-panel[style*="display:none"],
+.ldr-stage-panel.hidden {
+  display: none !important;
+}
 
 /* Stage 1: Lobby */
 .ldr-lobby-wrap {
@@ -5504,12 +5509,6 @@
   }
 
   /* Step 5: Decorate Together Mobile Optimization */
-  #ldrStageDeco {
-    flex: 1 0 auto !important;
-    min-height: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-  }
   .ldr-deco-wrap {
     width: 100% !important;
     max-width: 100% !important;
