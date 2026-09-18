@@ -2807,14 +2807,14 @@
             <span class="photo-idx-badge">#${i + 1}</span>
           </div>
         `).join("")}</div>`;
-      } else if (this.currentFormat === "landscape_2split" || this.currentFormat === "landscape_toptext") {
+      } else if (this.currentFormat === "landscape_2split" || this.currentFormat === "landscape_toptext" || this.currentFormat === "landscape_lefttext") {
         photosHtml = `${topPhraseHtml}<div class="landscape-2split-wrap">${activePhotos.slice(0, 2).map((src, i) => `
           <div class="strip-photo-card" data-idx="${i}" title="Tap to swap photo position">
             <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
             <span class="photo-idx-badge">#${i + 1}</span>
           </div>
         `).join("")}</div>`;
-      } else if (this.currentFormat === "triptych_3cut" || this.currentFormat === "triptych_toptext") {
+      } else if (this.currentFormat === "triptych_3cut" || this.currentFormat === "triptych_toptext" || this.currentFormat === "triptych_offset") {
         photosHtml = `${topPhraseHtml}<div class="triptych-wrap">${activePhotos.slice(0, 3).map((src, i) => `
           <div class="strip-photo-card" data-idx="${i}" title="Tap to swap photo position">
             <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
@@ -2831,6 +2831,23 @@
             <div class="asym-sub-col">
               ${activePhotos.slice(1, 3).map((src, i) => `
                 <div class="strip-photo-card asym-sub-card" data-idx="${i + 1}" title="Tap to swap photo position">
+                  <img src="${src}" alt="Photobooth Snap ${i + 2}" style="filter: ${filterCss};">
+                  <span class="photo-idx-badge">#${i + 2}</span>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      } else if (["hero_split_left", "hero_split_right", "hero_bottom_right", "hero_left_stack"].includes(this.currentFormat)) {
+        photosHtml = `
+          <div class="hero-split-wrap fmt-${this.currentFormat}">
+            <div class="strip-photo-card hero-main-card" data-idx="0" title="Tap to swap photo position">
+              <img src="${activePhotos[0] || DEFAULT_SAMPLES[0]}" alt="Photobooth Snap 1" style="filter: ${filterCss};">
+              <span class="photo-idx-badge">#1</span>
+            </div>
+            <div class="hero-sub-row">
+              ${activePhotos.slice(1, 4).map((src, i) => `
+                <div class="strip-photo-card hero-sub-card" data-idx="${i + 1}" title="Tap to swap photo position">
                   <img src="${src}" alt="Photobooth Snap ${i + 2}" style="filter: ${filterCss};">
                   <span class="photo-idx-badge">#${i + 2}</span>
                 </div>
@@ -2917,6 +2934,10 @@
         overlayEl.className = `strip-whole-frame-overlay overlay-${overlayId}`;
       } else {
         this.renderStrip();
+      }
+      const modalOverlay = document.getElementById("ldrModalStripContainer")?.querySelector(".strip-whole-frame-overlay");
+      if (modalOverlay) {
+        modalOverlay.className = `strip-whole-frame-overlay overlay-${overlayId}`;
       }
       this.renderStickerPalette();
       this.play("beep", 660, 0.05);
@@ -3727,7 +3748,8 @@
         };
 
         const onStart = (e) => {
-          if (!this.isLdrMode && this.currentDecoTab !== "paint") return;
+          const wrap = canvas.closest(".paint-mode-active");
+          if (!wrap || this.currentDecoTab !== "paint") return;
           if (e.cancelable) e.preventDefault();
           this.isPainting = true;
           if (e.pointerId) canvas.setPointerCapture?.(e.pointerId);
@@ -3742,6 +3764,11 @@
 
         const onMove = (e) => {
           if (!this.isPainting || !currentStroke) return;
+          const wrap = canvas.closest(".paint-mode-active");
+          if (!wrap || this.currentDecoTab !== "paint") {
+            this.isPainting = false;
+            return;
+          }
           if (e.cancelable) e.preventDefault();
           const p = getCanvasCoords(e);
           const prev = currentStroke.points[currentStroke.points.length - 1];
