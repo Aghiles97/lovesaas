@@ -377,6 +377,19 @@ assert(gate21Runtime.includes("initLdrWelcomeStage"), "Runtime implements initLd
 assert(gate21Runtime.includes("this.lastPrintedStripDataUrl"), "Runtime caches last printed strip data URL for instant download and display");
 assert(gate21Css.includes(".ldr-welcome-completed-wrap") && gate21Css.includes(".ldr-completed-strip-img"), "CSS defines responsive keepsake preview and button layout");
 
+// --- GATE 22: Take Another Strip Synchronized Format Selection & Reset Parity ---
+console.log("\n--- GATE 22: Take Another Strip Synchronized Format Selection & Reset Parity ---");
+const gate22Room = fs.readFileSync(path.resolve(__dirname, "../server/photobooth-room.js"), "utf8");
+const gate22Runtime = fs.readFileSync(path.resolve(__dirname, "../public/js/widgets/photobooth.runtime.js"), "utf8");
+
+assert(gate22Room.includes('type === "RESET_NEW_SESSION"') && gate22Room.includes('type: "NEW_SESSION_SYNC"'), "Room server handles RESET_NEW_SESSION and broadcasts NEW_SESSION_SYNC");
+assert(gate22Room.includes('currentRoom.state.setupSubStep = 1') && gate22Room.includes('currentRoom.state.selectedPhotos = []'), "Room server resets room state and restores setupSubStep to 1");
+assert(gate22Runtime.includes("resetToFormatSelection(isRemote = false)"), "Runtime implements resetToFormatSelection session state synchronizer");
+assert(gate22Runtime.includes('newSessionBtn.onclick = () => this.resetToFormatSelection(false)'), "btnLdrModalNewSession wires directly to resetToFormatSelection");
+assert(gate22Runtime.includes('type === "NEW_SESSION_SYNC"') && gate22Runtime.includes("this.session.resetToFormatSelection(true)"), "Runtime ldrManager handles NEW_SESSION_SYNC by executing remote resetToFormatSelection");
+assert(gate22Runtime.includes('this.setSetupSubStep(1, isRemote, true)'), "resetToFormatSelection forces transition to Step 1 (Format Selection)");
+assert(gate22Runtime.includes('setSetupSubStep(step, isRemote = false, force = false)'), "setSetupSubStep supports forced rendering for synchronized resets");
+
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");
 if (passedChecks === totalChecks) {

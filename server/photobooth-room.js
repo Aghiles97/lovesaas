@@ -186,14 +186,39 @@ class PhotoboothRoomServer {
       return;
     }
 
+    if (type === "RESET_NEW_SESSION") {
+      currentRoom.state.stage = "setup";
+      currentRoom.state.setupSubStep = 1;
+      currentRoom.state.selectedPhotos = [];
+      currentRoom.state.strokes = [];
+      currentRoom.state.stickers = [];
+      currentRoom.state.retryCount = 0;
+      this.broadcastAll(currentRoom, {
+        type: "NEW_SESSION_SYNC",
+        stage: "setup",
+        setupSubStep: 1,
+        actorId: participantId,
+        actorName: participantName
+      });
+      return;
+    }
+
     if (type === "STAGE_CHANGE" || type === "SET_STAGE") {
       const stage = sanitizeStr(payload?.stage || payload, 20);
       const VALID_STAGES = new Set(["welcome", "lobby", "setup", "capture", "select", "deco", "print"]);
       if (VALID_STAGES.has(stage)) {
+        if (stage === "setup" && (currentRoom.state.stage === "print" || payload?.setupSubStep === 1)) {
+          currentRoom.state.setupSubStep = 1;
+          currentRoom.state.selectedPhotos = [];
+          currentRoom.state.strokes = [];
+          currentRoom.state.stickers = [];
+          currentRoom.state.retryCount = 0;
+        }
         currentRoom.state.stage = stage;
         this.broadcastAll(currentRoom, {
           type: "STAGE_CHANGED",
           stage,
+          setupSubStep: currentRoom.state.setupSubStep,
           actorId: participantId,
           actorName: participantName
         });

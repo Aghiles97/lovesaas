@@ -489,13 +489,25 @@
         return;
       }
 
+      if (type === "NEW_SESSION_SYNC" || type === "RESET_NEW_SESSION") {
+        this.session.resetToFormatSelection(true);
+        return;
+      }
+
       if (type === "STAGE_CHANGED") {
         if (msg.stage === "select" && this.session.isCapturing) {
           this.session.pendingSelectStage = true;
           return;
         }
+        if (msg.stage === "setup" && (this.session.currentLdrStage === "print" || msg.setupSubStep === 1)) {
+          this.session.resetToFormatSelection(true);
+          return;
+        }
         if (msg.stage) {
           this.session.setLdrStage(msg.stage, true);
+          if (msg.stage === "setup" && msg.setupSubStep) {
+            this.session.setSetupSubStep(Number(msg.setupSubStep), true, true);
+          }
         }
         return;
       }
@@ -1349,8 +1361,8 @@
       }
     }
 
-    setSetupSubStep(step, isRemote = false) {
-      if (this.currentSetupSubStep === step) return;
+    setSetupSubStep(step, isRemote = false, force = false) {
+      if (!force && this.currentSetupSubStep === step) return;
       this.currentSetupSubStep = step;
       const p1 = document.getElementById("ldrSetupStepFormat");
       const p2 = document.getElementById("ldrSetupStepTheme");
@@ -1637,19 +1649,36 @@
         `;
       }
 
-      document.getElementById("btnLdrModalDownload")?.addEventListener("click", () => this.exportStrip(), { once: true });
-      document.getElementById("btnLdrModalShare")?.addEventListener("click", () => this.shareStrip(), { once: true });
-      document.getElementById("btnLdrModalNewSession")?.addEventListener("click", () => {
-        this.retryCount = 0;
-        this.candidatePhotos = [];
-        this.selectedCandidateIndices = [];
-        this.capturedPhotos = [];
-        this.paintStrokes = [];
-        this.stickers = [];
-        this.setLdrStage("setup", false);
-      }, { once: true });
+      const dlBtn = document.getElementById("btnLdrModalDownload");
+      if (dlBtn) dlBtn.onclick = () => this.exportStrip();
+      const shareBtn = document.getElementById("btnLdrModalShare");
+      if (shareBtn) shareBtn.onclick = () => this.shareStrip();
+      const newSessionBtn = document.getElementById("btnLdrModalNewSession");
+      if (newSessionBtn) newSessionBtn.onclick = () => this.resetToFormatSelection(false);
       const finishBtn = document.getElementById("btnLdrModalFinishExit");
       if (finishBtn) finishBtn.onclick = () => this.handleFinishAndExit();
+    }
+
+    resetToFormatSelection(isRemote = false) {
+      this.retryCount = 0;
+      this.candidatePhotos = [];
+      this.selectedCandidateIndices = [];
+      this.capturedPhotos = [];
+      this.paintStrokes = [];
+      this.stickers = [];
+      this.lastPrintedStripDataUrl = null;
+      this.redrawPaintCanvas();
+      this.renderStickers();
+      this.renderCandidateCards();
+      this.updateRetryBudgetUi();
+      this.currentSetupSubStep = 1;
+      this.setLdrStage("setup", isRemote);
+      this.setSetupSubStep(1, isRemote, true);
+      this.play("sparkle");
+
+      if (!isRemote && this.ldrManager) {
+        this.ldrManager.send("RESET_NEW_SESSION", { stage: "setup", setupSubStep: 1 });
+      }
     }
 
     initLdrWelcomeStage() {
@@ -1916,6 +1945,7 @@
       // Stage 1: Lobby controls
       document.getElementById("btnProceedToSetup")?.addEventListener("click", () => {
         this.setLdrStage("setup", false);
+        this.setSetupSubStep(1, false, true);
         this.play("beep", 880, 0.05);
       });
       document.getElementById("btnLdrPhotosAlone")?.addEventListener("click", handleSoloBooth);
