@@ -68,7 +68,14 @@
     const unlockAudio = () => {
       AudioEngine.getCtx();
       const el = document.getElementById("ldrRemoteAudio");
-      if (el && el.srcObject) el.play().catch(() => {});
+      if (el && el.srcObject && el.paused) el.play().catch(() => {});
+      const rVideos = [
+        document.getElementById("photoboothVideoRemote"),
+        document.getElementById("ldrVideoFeedRemote"),
+        document.getElementById("photoboothVideoDockedRemote"),
+        document.getElementById("ldrVideoFeedLobbyRemote")
+      ];
+      rVideos.forEach(v => { if (v && v.srcObject && v.paused) v.play().catch(() => {}); });
     };
     window.addEventListener("touchstart", unlockAudio, { capture: true, passive: true });
     window.addEventListener("pointerdown", unlockAudio, { capture: true, passive: true });
@@ -300,6 +307,14 @@
     disconnect() {
       this.manualDisconnect = true;
       clearTimeout(this.reconnectTimer);
+      if (this.renegotiateTimer) {
+        clearTimeout(this.renegotiateTimer);
+        this.renegotiateTimer = null;
+      }
+      this.isNegotiating = false;
+      this.needRenegotiate = false;
+      this.localStream = null;
+      this.remoteStream = null;
       if (this.pc) {
         try { this.pc.close(); } catch (e) {}
         this.pc = null;
@@ -436,6 +451,14 @@
         if (waitingWrap) waitingWrap.style.display = "flex";
         if (connectedCard) connectedCard.style.display = "none";
 
+        if (this.pc) {
+          try { this.pc.close(); } catch (e) {}
+          this.pc = null;
+        }
+        this.remoteStream = null;
+        this.isNegotiating = false;
+        this.needRenegotiate = false;
+
         const remoteVideos = [
           document.getElementById("photoboothVideoRemote"),
           document.getElementById("ldrVideoFeedRemote"),
@@ -444,9 +467,15 @@
         ];
         remoteVideos.forEach(v => { if (v) v.srcObject = null; });
 
+        const remoteAudio = document.getElementById("ldrRemoteAudio");
+        if (remoteAudio) remoteAudio.srcObject = null;
+        const audioBadge = document.getElementById("ldrAudioIndicator");
+        if (audioBadge) audioBadge.style.display = "none";
+
         const placeholders = [
           document.getElementById("remoteVideoPlaceholder"),
-          document.getElementById("ldrRemotePlaceholder")
+          document.getElementById("ldrRemotePlaceholder"),
+          document.getElementById("ldrLobbyRemotePlaceholder")
         ];
         placeholders.forEach(p => { if (p) p.style.display = "flex"; });
         return;
@@ -506,7 +535,7 @@
       }
 
       if (type === "WEBRTC_SIGNAL") {
-        this.handleWebRtcSignal(msg.signal);
+        this.handleWebRtcSignal(msg.signal || msg.payload?.signal || msg.payload);
         return;
       }
 
@@ -575,8 +604,8 @@
             remoteVideo.playsInline = true;
             remoteVideo.setAttribute("playsinline", "");
             remoteVideo.setAttribute("webkit-playsinline", "");
-            remoteVideo.play().catch(() => {});
           }
+          if (remoteVideo.paused) remoteVideo.play().catch(() => {});
         }
       });
 
@@ -589,8 +618,8 @@
           remoteAudio.playsInline = true;
           remoteAudio.setAttribute("playsinline", "");
           remoteAudio.setAttribute("webkit-playsinline", "");
-          remoteAudio.play().catch(() => {});
         }
+        if (remoteAudio.paused) remoteAudio.play().catch(() => {});
       }
 
       this.routeRemoteAudio(this.remoteStream);
@@ -632,6 +661,7 @@
             const offer = await this.pc.createOffer();
             if (this.pc.signalingState !== "stable") {
               this.isNegotiating = false;
+              this.needRenegotiate = true;
               return;
             }
             await this.pc.setLocalDescription(offer);
@@ -643,6 +673,8 @@
         } else {
           if (!this.isNegotiating && this.pc.signalingState === "stable") {
             this.send("WEBRTC_SIGNAL", { signal: { renegotiateReq: true } });
+          } else {
+            this.needRenegotiate = true;
           }
         }
       }, 300);
@@ -650,6 +682,13 @@
 
     async setupWebRTC(stream) {
       if (typeof RTCPeerConnection === "undefined") return;
+      if (!stream && !this.localStream && this.session) {
+        if (this.session.cameraPromise) {
+          try { await this.session.cameraPromise; } catch (e) {}
+        } else if (!this.session.mediaStream) {
+          try { await this.session.startCamera(); } catch (e) {}
+        }
+      }
       const media = stream || this.localStream || this.session?.mediaStream;
       if (media) this.localStream = media;
 
@@ -680,9 +719,7 @@
         } catch (e) {}
 
         pc.onnegotiationneeded = () => {
-          if (this.role === "host") {
-            this.renegotiate();
-          }
+          this.renegotiate();
         };
 
         pc.onconnectionstatechange = () => {
@@ -692,20 +729,18 @@
         };
 
         pc.ontrack = (evt) => {
-          if (!this.remoteStream) {
+          const incomingStream = (evt.streams && evt.streams[0]) || null;
+          if (incomingStream) {
+            if (!this.remoteStream || this.remoteStream !== incomingStream) {
+              this.remoteStream = incomingStream;
+            }
+          } else if (!this.remoteStream) {
             this.remoteStream = new MediaStream();
           }
-          if (evt.streams && evt.streams[0]) {
-            evt.streams[0].getTracks().forEach(t => {
-              if (!this.remoteStream.getTracks().some(existing => existing.id === t.id)) {
-                this.remoteStream.addTrack(t);
-              }
-            });
-          }
-          if (evt.track && !this.remoteStream.getTracks().some(existing => existing.id === evt.track.id)) {
-            this.remoteStream.addTrack(evt.track);
-          }
           if (evt.track) {
+            if (!this.remoteStream.getTracks().some(t => t.id === evt.track.id)) {
+              try { this.remoteStream.addTrack(evt.track); } catch (e) {}
+            }
             evt.track.onunmute = () => this.attachRemoteStreamToUI();
           }
           this.attachRemoteStreamToUI();
@@ -721,24 +756,28 @@
       if (this.localStream && this.pc) {
         const transceivers = this.pc.getTransceivers ? this.pc.getTransceivers() : [];
         const senders = this.pc.getSenders ? this.pc.getSenders() : [];
+        const matched = new Set();
         this.localStream.getTracks().forEach((track) => {
           let attached = false;
-          transceivers.forEach((t) => {
+          for (const t of transceivers) {
+            if (matched.has(t)) continue;
             const kind = (t.receiver?.track?.kind) || (t.sender?.track?.kind);
-            if (kind === track.kind || !kind) {
+            if (kind === track.kind) {
               try {
                 if (t.direction !== "sendrecv") t.direction = "sendrecv";
                 if (t.sender) {
-                  t.sender.replaceTrack(track).catch(() => {});
+                  if (t.sender.track !== track) t.sender.replaceTrack(track).catch(() => {});
                   attached = true;
+                  matched.add(t);
+                  break;
                 }
               } catch (e) {}
             }
-          });
+          }
           if (!attached) {
             const sender = senders.find(s => s.track && s.track.kind === track.kind);
             if (sender) {
-              sender.replaceTrack(track).catch(() => {});
+              if (sender.track !== track) sender.replaceTrack(track).catch(() => {});
             } else {
               try { this.pc.addTrack(track, this.localStream); } catch (e) {}
             }
@@ -746,13 +785,25 @@
         });
       }
 
-      if (this.role === "host" && this.pc) {
+      if (this.pc) {
         this.renegotiate();
       }
     }
 
     async handleWebRtcSignal(signal) {
       if (!signal) return;
+      if (signal.sdp && signal.sdp.type === "offer") {
+        if (!this.localStream && this.session) {
+          if (this.session.cameraPromise) {
+            try { await this.session.cameraPromise; } catch (e) {}
+          } else if (!this.session.mediaStream) {
+            try { await this.session.startCamera(); } catch (e) {}
+          }
+          if (this.session.mediaStream) {
+            this.localStream = this.session.mediaStream;
+          }
+        }
+      }
       if (!this.pc) {
         await this.setupWebRTC(this.localStream || this.session?.mediaStream);
       }
@@ -778,22 +829,45 @@
           }
 
           if (this.pc.getReceivers) {
-            if (!this.remoteStream) this.remoteStream = new MediaStream();
             this.pc.getReceivers().forEach((r) => {
-              if (r.track && !this.remoteStream.getTracks().some(t => t.id === r.track.id)) {
-                this.remoteStream.addTrack(r.track);
-              }
               if (r.track) {
+                if (this.remoteStream && !this.remoteStream.getTracks().some(t => t.id === r.track.id)) {
+                  try { this.remoteStream.addTrack(r.track); } catch (e) {}
+                }
                 r.track.onunmute = () => this.attachRemoteStreamToUI();
               }
             });
           }
 
           if (signal.sdp.type === "offer") {
+            if (this.localStream && this.pc) {
+              const transceivers = this.pc.getTransceivers ? this.pc.getTransceivers() : [];
+              const matched = new Set();
+              this.localStream.getTracks().forEach((track) => {
+                for (const t of transceivers) {
+                  if (matched.has(t)) continue;
+                  const kind = (t.receiver?.track?.kind) || (t.sender?.track?.kind);
+                  if (kind === track.kind) {
+                    try {
+                      if (t.direction !== "sendrecv") t.direction = "sendrecv";
+                      if (t.sender && t.sender.track !== track) {
+                        t.sender.replaceTrack(track).catch(() => {});
+                      }
+                      matched.add(t);
+                    } catch (e) {}
+                    break;
+                  }
+                }
+              });
+            }
             const answer = await this.pc.createAnswer();
             await this.pc.setLocalDescription(answer);
             this.send("WEBRTC_SIGNAL", { signal: { sdp: this.pc.localDescription } });
             this.attachRemoteStreamToUI();
+            if (this.needRenegotiate) {
+              this.needRenegotiate = false;
+              this.renegotiate();
+            }
           } else if (signal.sdp.type === "answer") {
             this.isNegotiating = false;
             if (this.needRenegotiate) {
@@ -978,7 +1052,7 @@
         this.ldrManager = new LdrManager(this);
       }
 
-      if (!this.mediaStream) {
+      if (!this.mediaStream || !this.mediaStream.getAudioTracks().length) {
         this.startCamera();
       }
 
@@ -1699,90 +1773,103 @@
     }
 
     async startCamera() {
+      if (this.cameraPromise) return this.cameraPromise;
       this.stopCamera();
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        if (this.fallbackWrap) this.fallbackWrap.style.display = "flex";
-        return;
-      }
-      try {
-        const needsAudio = Boolean(this.isLdrMode);
-        let stream = null;
-        const attempts = [
-          {
-            video: { facingMode: this.facingMode, width: { ideal: 1280 }, height: { ideal: 960 } },
-            audio: needsAudio ? { echoCancellation: true, noiseSuppression: true } : false
-          },
-          {
-            video: { facingMode: this.facingMode },
-            audio: needsAudio
-          },
-          {
-            video: true,
-            audio: needsAudio
-          },
-          {
-            video: true,
-            audio: false
-          }
-        ];
-
-        for (let i = 0; i < attempts.length; i++) {
-          try {
-            stream = await navigator.mediaDevices.getUserMedia(attempts[i]);
-            if (stream) break;
-          } catch (e) {
-            if (i === attempts.length - 1) throw e;
-          }
+      this.cameraPromise = (async () => {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          if (this.fallbackWrap) this.fallbackWrap.style.display = "flex";
+          return;
         }
-        this.mediaStream = stream;
+        try {
+          const needsAudio = Boolean(this.isLdrMode);
+          let stream = null;
+          const attempts = [
+            {
+              video: { facingMode: this.facingMode, width: { ideal: 1280 }, height: { ideal: 960 } },
+              audio: needsAudio ? { echoCancellation: true, noiseSuppression: true } : false
+            },
+            {
+              video: { facingMode: this.facingMode },
+              audio: needsAudio
+            },
+            {
+              video: true,
+              audio: needsAudio
+            },
+            {
+              video: true,
+              audio: false
+            }
+          ];
 
-        const localVideos = [
-          this.videoLocalEl,
-          document.getElementById("photoboothVideoLobbyPreview"),
-          document.getElementById("ldrVideoFeedLocal"),
-          document.getElementById("photoboothVideoDockedLocal")
-        ];
-        localVideos.forEach((v) => {
-          if (v) {
-            v.muted = true;
-            v.volume = 0;
-            v.playsInline = true;
-            v.setAttribute("playsinline", "");
-            v.setAttribute("webkit-playsinline", "");
-            v.srcObject = stream;
-            v.classList.toggle("facing-environment", this.facingMode === "environment");
-            v.play().catch(() => {});
+          for (let i = 0; i < attempts.length; i++) {
+            try {
+              stream = await navigator.mediaDevices.getUserMedia(attempts[i]);
+              if (stream) break;
+            } catch (e) {
+              if (i === attempts.length - 1) throw e;
+            }
           }
-        });
+          this.mediaStream = stream;
 
-        if (this.isLdrMode) {
-          if (this.viewfinderSplitScreen) this.viewfinderSplitScreen.style.display = "grid";
-          if (this.videoEl) this.videoEl.style.display = "none";
-          if (this.ldrManager) {
-            this.ldrManager.setupWebRTC(stream);
+          const localVideos = [
+            this.videoLocalEl,
+            document.getElementById("photoboothVideoLobbyPreview"),
+            document.getElementById("ldrVideoFeedLocal"),
+            document.getElementById("photoboothVideoDockedLocal")
+          ];
+          localVideos.forEach((v) => {
+            if (v) {
+              v.muted = true;
+              v.volume = 0;
+              v.playsInline = true;
+              v.setAttribute("playsinline", "");
+              v.setAttribute("webkit-playsinline", "");
+              v.srcObject = stream;
+              v.classList.toggle("facing-environment", this.facingMode === "environment");
+              v.play().catch(() => {});
+            }
+          });
+
+          if (this.isLdrMode) {
+            if (this.viewfinderSplitScreen) {
+              this.viewfinderSplitScreen.style.display = "grid";
+              this.viewfinderSplitScreen.parentElement?.classList.add("has-split-view");
+            }
+            if (this.videoEl) this.videoEl.style.display = "none";
+            if (this.ldrManager) {
+              this.ldrManager.setupWebRTC(stream);
+            }
+          } else {
+            if (this.viewfinderSplitScreen) {
+              this.viewfinderSplitScreen.style.display = "none";
+              this.viewfinderSplitScreen.parentElement?.classList.remove("has-split-view");
+            }
+            if (this.videoEl) {
+              this.videoEl.style.display = "block";
+              this.videoEl.muted = true;
+              this.videoEl.volume = 0;
+              this.videoEl.playsInline = true;
+              this.videoEl.setAttribute("playsinline", "");
+              this.videoEl.setAttribute("webkit-playsinline", "");
+              this.videoEl.srcObject = stream;
+              this.videoEl.classList.toggle("facing-environment", this.facingMode === "environment");
+              await this.videoEl.play();
+            }
           }
-        } else {
-          if (this.viewfinderSplitScreen) this.viewfinderSplitScreen.style.display = "none";
-          if (this.videoEl) {
-            this.videoEl.style.display = "block";
-            this.videoEl.muted = true;
-            this.videoEl.volume = 0;
-            this.videoEl.playsInline = true;
-            this.videoEl.setAttribute("playsinline", "");
-            this.videoEl.setAttribute("webkit-playsinline", "");
-            this.videoEl.srcObject = stream;
-            this.videoEl.classList.toggle("facing-environment", this.facingMode === "environment");
-            await this.videoEl.play();
-          }
+          if (this.fallbackWrap) this.fallbackWrap.style.display = "none";
+        } catch (err) {
+          console.warn("Photobooth Camera Access Failed:", err);
+          if (this.fallbackWrap) this.fallbackWrap.style.display = "flex";
         }
-        if (this.fallbackWrap) this.fallbackWrap.style.display = "none";
-      } catch (err) {
-        console.warn("Photobooth Camera Access Failed:", err);
-        if (this.fallbackWrap) this.fallbackWrap.style.display = "flex";
-      }
+      })().finally(() => {
+        this.cameraPromise = null;
+      });
+      return this.cameraPromise;
     }
 
     stopCamera() {
+      this.cameraPromise = null;
       if (this.mediaStream) {
         try {
           this.mediaStream.getTracks().forEach((t) => t.stop());
@@ -1797,7 +1884,10 @@
         document.getElementById("photoboothVideoDockedLocal")
       ];
       localVideos.forEach(v => { if (v) v.srcObject = null; });
-      if (this.viewfinderSplitScreen) this.viewfinderSplitScreen.style.display = "none";
+      if (this.viewfinderSplitScreen) {
+        this.viewfinderSplitScreen.style.display = "none";
+        this.viewfinderSplitScreen.parentElement?.classList.remove("has-split-view");
+      }
       if (this.videoEl) this.videoEl.style.display = "block";
     }
 

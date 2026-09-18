@@ -191,7 +191,7 @@
 
           <div class="photobooth-apparatus" data-default-layout="${esc(defaultLayout)}" data-default-format="${esc(defaultFormat)}" data-default-style="${esc(defaultStyle)}" data-default-filter="${esc(defaultFilter)}" data-strip-caption="${esc(stripCaption)}" data-strip-location="${esc(stripLocation)}" data-sfx="${sfxEnabled}">
             <div class="photobooth-flash" id="photoboothFlash" aria-hidden="true"></div>
-            <audio id="ldrRemoteAudio" autoplay playsinline webkit-playsinline style="position:fixed; top:-9999px; left:-9999px; opacity:0.001; pointer-events:none;"></audio>
+            <audio id="ldrRemoteAudio" autoplay playsinline webkit-playsinline style="position:fixed; bottom:0; left:0; width:1px; height:1px; opacity:0.001; pointer-events:none;"></audio>
 
             <!-- Remote Partner Floating Cursor -->
             <div class="photobooth-remote-cursor" id="photoboothRemoteCursor" style="display:none;" aria-hidden="true">
@@ -241,7 +241,7 @@
                     <span class="split-tag">You (Local)</span>
                   </div>
                   <div class="split-feed split-feed-remote">
-                    <video id="photoboothVideoRemote" autoplay playsinline webkit-playsinline></video>
+                    <video id="photoboothVideoRemote" autoplay playsinline webkit-playsinline muted></video>
                     <span class="split-tag">Partner (Live)</span>
                     <div class="remote-placeholder" id="remoteVideoPlaceholder">
                       <span class="placeholder-icon">💕</span>
@@ -535,7 +535,7 @@
                   <span class="docked-tag">You</span>
                 </div>
                 <div class="docked-feed docked-feed-remote">
-                  <video id="photoboothVideoDockedRemote" autoplay playsinline webkit-playsinline></video>
+                  <video id="photoboothVideoDockedRemote" autoplay playsinline webkit-playsinline muted></video>
                   <span class="docked-tag">Partner 💕</span>
                 </div>
               </div>
@@ -647,7 +647,7 @@
                       <span class="feed-tag">You</span>
                     </div>
                     <div class="ldr-preview-feed-box">
-                      <video id="ldrVideoFeedLobbyRemote" autoplay playsinline webkit-playsinline></video>
+                      <video id="ldrVideoFeedLobbyRemote" autoplay playsinline webkit-playsinline muted></video>
                       <span class="feed-tag">Partner 💕</span>
                       <div class="remote-placeholder" id="ldrLobbyRemotePlaceholder" style="display:none;">
                         <span class="placeholder-icon">💕</span>
@@ -794,23 +794,25 @@
                       <p class="ldr-stage-sub">Shown live on your selected frame format and decorative theme.</p>
                     </div>
 
-                    <div class="ldr-caption-step-split">
-                      <div class="ldr-caption-preview-col">
-                        <div class="ldr-live-selected-strip-card" id="ldrSelectedStripPreview">
-                          <!-- Dynamically populated live preview of frame + style + filter + phrase -->
+                    <div class="ldr-setup-content-scroll">
+                      <div class="ldr-caption-step-split">
+                        <div class="ldr-caption-preview-col">
+                          <div class="ldr-live-selected-strip-card" id="ldrSelectedStripPreview">
+                            <!-- Dynamically populated live preview of frame + style + filter + phrase -->
+                          </div>
                         </div>
-                      </div>
 
-                      <div class="ldr-caption-controls-col">
-                        <div class="booth-phrase-editor-bar ldr-phrase-editor-bar">
-                          <label class="ldr-setup-label">Write on your strip</label>
-                          <input type="text" id="ldrModalPhraseInput" class="booth-phrase-input form-input" maxlength="42" value="${esc(stripCaption)}" placeholder="Write something lovely on your strip..." />
-                          <div class="phrase-presets">
-                            <button type="button" class="phrase-preset-btn" data-phrase="Forever &amp; Always ♡">Forever &amp; Always ♡</button>
-                            <button type="button" class="phrase-preset-btn" data-phrase="You + Me = Love ✨">You + Me = Love ✨</button>
-                            <button type="button" class="phrase-preset-btn" data-phrase="Best Day Ever 📸">Best Day Ever 📸</button>
-                            <button type="button" class="phrase-preset-btn" data-phrase="To The Moon &amp; Back 🌙">To The Moon &amp; Back 🌙</button>
-                            <button type="button" class="phrase-preset-btn" data-phrase="Together Forever 💕">Together Forever 💕</button>
+                        <div class="ldr-caption-controls-col">
+                          <div class="booth-phrase-editor-bar ldr-phrase-editor-bar">
+                            <label class="ldr-setup-label">Write on your strip</label>
+                            <input type="text" id="ldrModalPhraseInput" class="booth-phrase-input form-input" maxlength="42" value="${esc(stripCaption)}" placeholder="Write something lovely on your strip..." />
+                            <div class="phrase-presets">
+                              <button type="button" class="phrase-preset-btn" data-phrase="Forever &amp; Always ♡">Forever &amp; Always ♡</button>
+                              <button type="button" class="phrase-preset-btn" data-phrase="You + Me = Love ✨">You + Me = Love ✨</button>
+                              <button type="button" class="phrase-preset-btn" data-phrase="Best Day Ever 📸">Best Day Ever 📸</button>
+                              <button type="button" class="phrase-preset-btn" data-phrase="To The Moon &amp; Back 🌙">To The Moon &amp; Back 🌙</button>
+                              <button type="button" class="phrase-preset-btn" data-phrase="Together Forever 💕">Together Forever 💕</button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -864,7 +866,7 @@
                         <span class="split-tag">You (Local)</span>
                       </div>
                       <div class="split-feed split-feed-remote">
-                        <video id="ldrVideoFeedRemote" autoplay playsinline webkit-playsinline></video>
+                        <video id="ldrVideoFeedRemote" autoplay playsinline webkit-playsinline muted></video>
                         <span class="split-tag">Partner 💕 (Live Audio 🎤)</span>
                         <div class="remote-placeholder" id="ldrRemotePlaceholder">
                           <span class="placeholder-icon">💕</span>

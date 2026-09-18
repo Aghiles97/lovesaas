@@ -223,7 +223,7 @@ class PhotoboothRoomServer {
       this.broadcast(currentRoom, {
         type: "WEBRTC_SIGNAL",
         senderId: participantId,
-        signal: payload?.signal
+        signal: payload?.signal || payload || data?.signal
       }, sender);
       return;
     }
