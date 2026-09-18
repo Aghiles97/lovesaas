@@ -169,11 +169,17 @@
       this.localStream = null;
       this.lastCursorSend = 0;
       this.wsAttempts = 0;
+      this.isNegotiating = false;
+      this.renegotiateTimer = null;
     }
 
     connect(code) {
       this.manualDisconnect = false;
-      this.roomCode = (code || "").toUpperCase();
+      const cleanCode = (code || "").toUpperCase();
+      if (cleanCode && this.roomCode === cleanCode && this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+        return;
+      }
+      this.roomCode = cleanCode;
       const disp = document.getElementById("ldrRoomCodeDisplay");
       if (disp) disp.textContent = this.roomCode;
 
@@ -562,29 +568,29 @@
       ];
       remoteVideos.forEach((remoteVideo) => {
         if (remoteVideo) {
-          if (remoteVideo.srcObject !== this.remoteStream || hasTracks) {
+          if (remoteVideo.srcObject !== this.remoteStream) {
             remoteVideo.srcObject = this.remoteStream;
+            remoteVideo.muted = true;
+            remoteVideo.volume = 0;
+            remoteVideo.playsInline = true;
+            remoteVideo.setAttribute("playsinline", "");
+            remoteVideo.setAttribute("webkit-playsinline", "");
+            remoteVideo.play().catch(() => {});
           }
-          remoteVideo.muted = true;
-          remoteVideo.volume = 0;
-          remoteVideo.playsInline = true;
-          remoteVideo.setAttribute("playsinline", "");
-          remoteVideo.setAttribute("webkit-playsinline", "");
-          remoteVideo.play().catch(() => {});
         }
       });
 
       const remoteAudio = document.getElementById("ldrRemoteAudio");
       if (remoteAudio) {
-        if (remoteAudio.srcObject !== this.remoteStream || hasTracks) {
+        if (remoteAudio.srcObject !== this.remoteStream) {
           remoteAudio.srcObject = this.remoteStream;
+          remoteAudio.muted = false;
+          remoteAudio.volume = 1.0;
+          remoteAudio.playsInline = true;
+          remoteAudio.setAttribute("playsinline", "");
+          remoteAudio.setAttribute("webkit-playsinline", "");
+          remoteAudio.play().catch(() => {});
         }
-        remoteAudio.muted = false;
-        remoteAudio.volume = 1.0;
-        remoteAudio.playsInline = true;
-        remoteAudio.setAttribute("playsinline", "");
-        remoteAudio.setAttribute("webkit-playsinline", "");
-        remoteAudio.play().catch(() => {});
       }
 
       this.routeRemoteAudio(this.remoteStream);
@@ -605,30 +611,41 @@
       }
     }
 
-    async renegotiate() {
-      if (!this.pc) return;
-      if (this.role === "host") {
-        if (this.pc.signalingState !== "stable") {
-          this.needRenegotiate = true;
-          return;
-        }
-        try {
-          if (this.localStream) {
-            const transceivers = this.pc.getTransceivers ? this.pc.getTransceivers() : [];
-            transceivers.forEach(t => {
-              try { if (t.direction !== "sendrecv") t.direction = "sendrecv"; } catch (e) {}
-            });
+    renegotiate() {
+      if (!this.pc || this.manualDisconnect) return;
+      if (this.renegotiateTimer) clearTimeout(this.renegotiateTimer);
+      this.renegotiateTimer = setTimeout(async () => {
+        if (!this.pc || this.manualDisconnect) return;
+        if (this.role === "host") {
+          if (this.pc.signalingState !== "stable" || this.isNegotiating) {
+            this.needRenegotiate = true;
+            return;
           }
-          const offer = await this.pc.createOffer();
-          if (this.pc.signalingState !== "stable") return;
-          await this.pc.setLocalDescription(offer);
-          this.send("WEBRTC_SIGNAL", { signal: { sdp: this.pc.localDescription } });
-        } catch (err) {
-          console.warn("WebRTC Renegotiate failed:", err);
+          this.isNegotiating = true;
+          try {
+            if (this.localStream) {
+              const transceivers = this.pc.getTransceivers ? this.pc.getTransceivers() : [];
+              transceivers.forEach(t => {
+                try { if (t.direction !== "sendrecv") t.direction = "sendrecv"; } catch (e) {}
+              });
+            }
+            const offer = await this.pc.createOffer();
+            if (this.pc.signalingState !== "stable") {
+              this.isNegotiating = false;
+              return;
+            }
+            await this.pc.setLocalDescription(offer);
+            this.send("WEBRTC_SIGNAL", { signal: { sdp: this.pc.localDescription } });
+          } catch (err) {
+            console.warn("WebRTC Renegotiate failed:", err);
+            this.isNegotiating = false;
+          }
+        } else {
+          if (!this.isNegotiating && this.pc.signalingState === "stable") {
+            this.send("WEBRTC_SIGNAL", { signal: { renegotiateReq: true } });
+          }
         }
-      } else {
-        this.send("WEBRTC_SIGNAL", { signal: { renegotiateReq: true } });
-      }
+      }, 300);
     }
 
     async setupWebRTC(stream) {
@@ -663,7 +680,9 @@
         } catch (e) {}
 
         pc.onnegotiationneeded = () => {
-          this.renegotiate();
+          if (this.role === "host") {
+            this.renegotiate();
+          }
         };
 
         pc.onconnectionstatechange = () => {
@@ -725,7 +744,6 @@
             }
           }
         });
-        this.renegotiate();
       }
 
       if (this.role === "host" && this.pc) {
@@ -742,16 +760,15 @@
       try {
         if (signal.renegotiateReq) {
           if (this.role === "host") {
-            if (this.pc.signalingState !== "stable") {
-              this.needRenegotiate = true;
-            } else {
-              this.renegotiate();
-            }
+            this.renegotiate();
           }
           return;
         }
 
         if (signal.sdp) {
+          if (signal.sdp.type === "offer" && this.pc.signalingState !== "stable") {
+            try { await this.pc.setLocalDescription({ type: "rollback" }); } catch (e) {}
+          }
           await this.pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
           if (this.pendingIceCandidates && this.pendingIceCandidates.length) {
             for (const cand of this.pendingIceCandidates) {
@@ -760,51 +777,25 @@
             this.pendingIceCandidates = [];
           }
 
-          if (!this.remoteStream) this.remoteStream = new MediaStream();
-          const receivers = this.pc.getReceivers ? this.pc.getReceivers() : [];
-          receivers.forEach((r) => {
-            if (r.track && !this.remoteStream.getTracks().some(t => t.id === r.track.id)) {
-              this.remoteStream.addTrack(r.track);
-            }
-            if (r.track) {
-              r.track.onunmute = () => this.attachRemoteStreamToUI();
-            }
-          });
-          this.attachRemoteStreamToUI();
+          if (this.pc.getReceivers) {
+            if (!this.remoteStream) this.remoteStream = new MediaStream();
+            this.pc.getReceivers().forEach((r) => {
+              if (r.track && !this.remoteStream.getTracks().some(t => t.id === r.track.id)) {
+                this.remoteStream.addTrack(r.track);
+              }
+              if (r.track) {
+                r.track.onunmute = () => this.attachRemoteStreamToUI();
+              }
+            });
+          }
 
           if (signal.sdp.type === "offer") {
-            if (this.localStream) {
-              const transceivers = this.pc.getTransceivers ? this.pc.getTransceivers() : [];
-              const senders = this.pc.getSenders ? this.pc.getSenders() : [];
-              this.localStream.getTracks().forEach((track) => {
-                let attached = false;
-                transceivers.forEach((t) => {
-                  const kind = (t.receiver?.track?.kind) || (t.sender?.track?.kind);
-                  if (kind === track.kind || !kind) {
-                    try {
-                      if (t.direction !== "sendrecv") t.direction = "sendrecv";
-                      if (t.sender) {
-                        t.sender.replaceTrack(track).catch(() => {});
-                        attached = true;
-                      }
-                    } catch (e) {}
-                  }
-                });
-                if (!attached) {
-                  const sender = senders.find(s => s.track && s.track.kind === track.kind);
-                  if (sender) {
-                    sender.replaceTrack(track).catch(() => {});
-                  } else {
-                    try { this.pc.addTrack(track, this.localStream); } catch (e) {}
-                  }
-                }
-              });
-            }
             const answer = await this.pc.createAnswer();
             await this.pc.setLocalDescription(answer);
             this.send("WEBRTC_SIGNAL", { signal: { sdp: this.pc.localDescription } });
             this.attachRemoteStreamToUI();
           } else if (signal.sdp.type === "answer") {
+            this.isNegotiating = false;
             if (this.needRenegotiate) {
               this.needRenegotiate = false;
               this.renegotiate();
@@ -987,14 +978,21 @@
         this.ldrManager = new LdrManager(this);
       }
 
-      this.startCamera();
+      if (!this.mediaStream) {
+        this.startCamera();
+      }
 
       if (customCode) {
-        this.renderLdrCodeTiles(customCode);
-        this.ldrManager.connect(customCode);
-        this.setLdrStage("lobby", false);
+        const cleanCode = customCode.trim().toUpperCase();
+        this.renderLdrCodeTiles(cleanCode);
+        this.ldrManager.connect(cleanCode);
+        if (this.currentLdrStage !== "setup" && this.currentLdrStage !== "capture" && this.currentLdrStage !== "select" && this.currentLdrStage !== "deco" && this.currentLdrStage !== "print") {
+          this.setLdrStage("lobby", false);
+        }
       } else {
-        this.setLdrStage("welcome", false);
+        if (!this.currentLdrStage) {
+          this.setLdrStage("welcome", false);
+        }
       }
       this.play("beep", 660, 0.05);
     }
@@ -1086,6 +1084,7 @@
     }
 
     setLdrStage(stage, isRemote = false) {
+      if (this.currentLdrStage === stage) return;
       this.currentLdrStage = stage;
       const stages = ["welcome", "lobby", "setup", "capture", "select", "deco", "print"];
       stages.forEach((s) => {
@@ -1140,6 +1139,7 @@
     }
 
     setSetupSubStep(step, isRemote = false) {
+      if (this.currentSetupSubStep === step) return;
       this.currentSetupSubStep = step;
       const p1 = document.getElementById("ldrSetupStepFormat");
       const p2 = document.getElementById("ldrSetupStepTheme");

@@ -166,7 +166,7 @@
       const roomMatch = window.location.pathname.match(/^\/(?:photobooth|booth)\/([a-zA-Z0-9_-]+)/);
       const roomCode = url.searchParams.get("room") || url.searchParams.get("code") || url.searchParams.get("booth_room") || (roomMatch ? roomMatch[1] : null);
 
-      if (booth) {
+      if (booth && !booth.isLdrMode) {
         if (roomCode) {
           booth.openLdrModal(roomCode.trim().toUpperCase());
         } else {
