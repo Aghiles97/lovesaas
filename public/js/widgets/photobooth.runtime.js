@@ -1064,12 +1064,22 @@
       }
       this.retryCount = 0;
 
-      if (typeof window !== "undefined" && window.IS_STANDALONE_PHOTOBOOTH) {
-        const endedScreen = document.getElementById("photoboothSessionEnded");
-        if (endedScreen) endedScreen.style.display = "flex";
+      if (this.capturedPhotos && this.capturedPhotos.length > 0) {
+        if (typeof window !== "undefined" && window.IS_STANDALONE_PHOTOBOOTH) {
+          document.body.classList.add("photobooth-show-review");
+          const endedScreen = document.getElementById("photoboothSessionEnded");
+          if (endedScreen) endedScreen.style.display = "none";
+        }
         this.stopCamera();
+        this.showReview();
       } else {
-        this.startCamera();
+        if (typeof window !== "undefined" && window.IS_STANDALONE_PHOTOBOOTH) {
+          const endedScreen = document.getElementById("photoboothSessionEnded");
+          if (endedScreen) endedScreen.style.display = "flex";
+          this.stopCamera();
+        } else {
+          this.startCamera();
+        }
       }
 
       this.play("beep", 440, 0.05);
@@ -2548,8 +2558,10 @@
     }
 
     showReview() {
+      const hero = document.getElementById("photoboothHero");
       const frameSection = document.getElementById("photoboothFrameSection");
       const viewfinder = document.getElementById("photoboothViewfinder");
+      if (hero) hero.style.display = "none";
       if (viewfinder) viewfinder.style.display = "none";
       if (frameSection) frameSection.style.display = "none";
       if (this.selectionTray) this.selectionTray.style.display = "none";
@@ -2562,6 +2574,19 @@
     }
 
     retake() {
+      if (typeof window !== "undefined" && window.IS_STANDALONE_PHOTOBOOTH) {
+        document.body.classList.remove("photobooth-show-review");
+        if (this.reviewWorkspace) this.reviewWorkspace.style.display = "none";
+        if (this.selectionTray) this.selectionTray.style.display = "none";
+        this.capturedPhotos = [];
+        this.candidatePhotos = [];
+        this.selectedCandidateIndices = [];
+        this.paintStrokes = [];
+        this.openLdrModal();
+        return;
+      }
+      const hero = document.getElementById("photoboothHero");
+      if (hero) hero.style.display = "";
       if (this.reviewWorkspace) this.reviewWorkspace.style.display = "none";
       if (this.selectionTray) this.selectionTray.style.display = "none";
       this.openCamera();

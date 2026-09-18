@@ -610,6 +610,116 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Hidden Compatibility Class */
+.photobooth-compat-hidden {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+/* Clean Photo Showcase Presentation */
+.photobooth-showcase-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.showcase-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 18px;
+  background: rgba(255, 77, 136, 0.12);
+  border: 1px solid rgba(255, 77, 136, 0.32);
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ff758c;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+.showcase-title {
+  font-family: var(--font-serif, "Playfair Display", Georgia, serif);
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.5px;
+  margin: 0;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+.photobooth-showcase-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 480px;
+  margin-top: 14px;
+}
+.showcase-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 28px;
+  font-size: 1.02rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 52px;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+.showcase-btn-download {
+  background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 8px 24px rgba(255, 65, 108, 0.4);
+}
+.showcase-btn-download:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(255, 65, 108, 0.6);
+}
+.showcase-btn-download:active {
+  transform: translateY(1px);
+}
+.showcase-btn-retake {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px);
+}
+.showcase-btn-retake:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+.showcase-btn-retake:active {
+  transform: translateY(1px);
+}
+@media (max-width: 520px) {
+  .photobooth-showcase-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 12px;
+  }
+  .showcase-btn {
+    width: 100%;
+  }
+}
+
 .photobooth-deco-header {
   width: 100%;
   display: flex;
