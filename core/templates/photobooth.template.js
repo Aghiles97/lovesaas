@@ -297,41 +297,58 @@
               <div class="ldr-welcome-wrap">
                 <div class="ldr-welcome-pill"><span>💕 Long Distance · Photobooth for Two</span></div>
                 <h1 class="ldr-welcome-title">Photobooth</h1>
-                <p class="ldr-welcome-sub">One synchronized vintage photo strip, both of you in it — taken together from anywhere in the world.</p>
+                <p class="ldr-welcome-sub" id="primaryWelcomeSub">One synchronized vintage photo strip, both of you in it — taken together from anywhere in the world.</p>
 
-                <button type="button" class="ldr-menu-card ldr-card-dark" id="btnPrimaryStartRoom">
-                  <div class="ldr-card-left">
-                    <span class="ldr-card-icon">📸</span>
-                    <div class="ldr-card-texts">
-                      <span class="ldr-card-title">Start a room</span>
-                      <span class="ldr-card-sub">with your partner</span>
+                <div class="ldr-welcome-choices" id="primaryWelcomeChoices">
+                  <button type="button" class="ldr-menu-card ldr-card-dark" id="btnPrimaryStartRoom">
+                    <div class="ldr-card-left">
+                      <span class="ldr-card-icon">📸</span>
+                      <div class="ldr-card-texts">
+                        <span class="ldr-card-title">Start a room</span>
+                        <span class="ldr-card-sub">with your partner</span>
+                      </div>
+                    </div>
+                    <span class="ldr-card-arrow">→</span>
+                  </button>
+
+                  <button type="button" class="ldr-menu-card ldr-card-light" id="btnPrimaryJoinRoom">
+                    <div class="ldr-card-left">
+                      <span class="ldr-card-icon">💌</span>
+                      <div class="ldr-card-texts">
+                        <span class="ldr-card-title">Join a room</span>
+                        <span class="ldr-card-sub">with a code</span>
+                      </div>
+                    </div>
+                    <span class="ldr-card-arrow">→</span>
+                  </button>
+
+                  <div class="ldr-inline-join-form" id="primaryInlineJoinForm" style="display:none;">
+                    <div class="ldr-join-input-group">
+                      <input type="text" id="primaryInputJoinCode" class="ldr-join-input" placeholder="5-LETTER CODE" maxlength="6" autocomplete="off" spellcheck="false" />
+                      <button type="button" class="btn btn-primary" id="btnPrimarySubmitJoin">Join</button>
                     </div>
                   </div>
-                  <span class="ldr-card-arrow">→</span>
-                </button>
 
-                <button type="button" class="ldr-menu-card ldr-card-light" id="btnPrimaryJoinRoom">
-                  <div class="ldr-card-left">
-                    <span class="ldr-card-icon">💌</span>
-                    <div class="ldr-card-texts">
-                      <span class="ldr-card-title">Join a room</span>
-                      <span class="ldr-card-sub">with a code</span>
-                    </div>
-                  </div>
-                  <span class="ldr-card-arrow">→</span>
-                </button>
-
-                <div class="ldr-inline-join-form" id="primaryInlineJoinForm" style="display:none;">
-                  <div class="ldr-join-input-group">
-                    <input type="text" id="primaryInputJoinCode" class="ldr-join-input" placeholder="5-LETTER CODE" maxlength="6" autocomplete="off" spellcheck="false" />
-                    <button type="button" class="btn btn-primary" id="btnPrimarySubmitJoin">Join</button>
+                  <div class="ldr-sub-actions-row">
+                    <button type="button" class="ldr-pill-btn" id="btnPrimarySoloBooth">
+                      <span>📷 Solo Booth</span>
+                    </button>
                   </div>
                 </div>
 
-                <div class="ldr-sub-actions-row">
-                  <button type="button" class="ldr-pill-btn" id="btnPrimarySoloBooth">
-                    <span>📷 Solo Booth</span>
-                  </button>
+                <!-- Completed Keepsake View (shown after Finish & Exit) -->
+                <div class="ldr-welcome-completed-wrap" id="primaryWelcomeCompletedWrap" style="display:none;">
+                  <div class="ldr-welcome-strip-card">
+                    <div class="ldr-welcome-strip-preview" id="primaryWelcomeStripPreview"></div>
+                  </div>
+                  <div class="ldr-welcome-completed-actions">
+                    <button type="button" class="btn btn-primary btn-lg" id="btnPrimaryWelcomeDownload">
+                      <span>💾 Save Photo Strip</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-lg" id="btnPrimaryWelcomeNew">
+                      <span>🔄 Take New Picture</span>
+                    </button>
+                  </div>
                 </div>
 
                 <button type="button" class="ldr-text-back-btn" id="btnPrimaryBackWebsite">
@@ -556,41 +573,58 @@
                 <div class="ldr-welcome-wrap">
                   <div class="ldr-welcome-pill"><span>💕 Long Distance · Photobooth for Two</span></div>
                   <h1 class="ldr-welcome-title">Photobooth</h1>
-                  <p class="ldr-welcome-sub">One synchronized vintage photo strip, both of you in it — taken together from anywhere in the world.</p>
+                  <p class="ldr-welcome-sub" id="ldrWelcomeSub">One synchronized vintage photo strip, both of you in it — taken together from anywhere in the world.</p>
 
-                  <button type="button" class="ldr-menu-card ldr-card-dark" id="btnLdrStartRoom">
-                    <div class="ldr-card-left">
-                      <span class="ldr-card-icon">📸</span>
-                      <div class="ldr-card-texts">
-                        <span class="ldr-card-title">Start a room</span>
-                        <span class="ldr-card-sub">with your partner</span>
+                  <div class="ldr-welcome-choices" id="ldrWelcomeChoices">
+                    <button type="button" class="ldr-menu-card ldr-card-dark" id="btnLdrStartRoom">
+                      <div class="ldr-card-left">
+                        <span class="ldr-card-icon">📸</span>
+                        <div class="ldr-card-texts">
+                          <span class="ldr-card-title">Start a room</span>
+                          <span class="ldr-card-sub">with your partner</span>
+                        </div>
+                      </div>
+                      <span class="ldr-card-arrow">→</span>
+                    </button>
+
+                    <button type="button" class="ldr-menu-card ldr-card-light" id="btnLdrJoinRoom">
+                      <div class="ldr-card-left">
+                        <span class="ldr-card-icon">💌</span>
+                        <div class="ldr-card-texts">
+                          <span class="ldr-card-title">Join a room</span>
+                          <span class="ldr-card-sub">with a code</span>
+                        </div>
+                      </div>
+                      <span class="ldr-card-arrow">→</span>
+                    </button>
+
+                    <div class="ldr-inline-join-form" id="ldrInlineJoinForm" style="display:none;">
+                      <div class="ldr-join-input-group">
+                        <input type="text" id="ldrInputJoinCode" class="ldr-join-input" placeholder="5-LETTER CODE" maxlength="6" autocomplete="off" spellcheck="false" />
+                        <button type="button" class="btn btn-primary" id="btnSubmitJoinCode">Join</button>
                       </div>
                     </div>
-                    <span class="ldr-card-arrow">→</span>
-                  </button>
 
-                  <button type="button" class="ldr-menu-card ldr-card-light" id="btnLdrJoinRoom">
-                    <div class="ldr-card-left">
-                      <span class="ldr-card-icon">💌</span>
-                      <div class="ldr-card-texts">
-                        <span class="ldr-card-title">Join a room</span>
-                        <span class="ldr-card-sub">with a code</span>
-                      </div>
-                    </div>
-                    <span class="ldr-card-arrow">→</span>
-                  </button>
-
-                  <div class="ldr-inline-join-form" id="ldrInlineJoinForm" style="display:none;">
-                    <div class="ldr-join-input-group">
-                      <input type="text" id="ldrInputJoinCode" class="ldr-join-input" placeholder="5-LETTER CODE" maxlength="6" autocomplete="off" spellcheck="false" />
-                      <button type="button" class="btn btn-primary" id="btnSubmitJoinCode">Join</button>
+                    <div class="ldr-sub-actions-row">
+                      <button type="button" class="ldr-pill-btn" id="btnLdrJustMe">
+                        <span>📷 Solo Booth</span>
+                      </button>
                     </div>
                   </div>
 
-                  <div class="ldr-sub-actions-row">
-                    <button type="button" class="ldr-pill-btn" id="btnLdrJustMe">
-                      <span>📷 Solo Booth</span>
-                    </button>
+                  <!-- Completed Keepsake View (shown after Finish & Exit) -->
+                  <div class="ldr-welcome-completed-wrap" id="ldrWelcomeCompletedWrap" style="display:none;">
+                    <div class="ldr-welcome-strip-card">
+                      <div class="ldr-welcome-strip-preview" id="ldrWelcomeStripPreview"></div>
+                    </div>
+                    <div class="ldr-welcome-completed-actions">
+                      <button type="button" class="btn btn-primary btn-lg" id="btnWelcomeDownloadStrip">
+                        <span>💾 Save Photo Strip</span>
+                      </button>
+                      <button type="button" class="btn btn-secondary btn-lg" id="btnWelcomeNewPicture">
+                        <span>🔄 Take New Picture</span>
+                      </button>
+                    </div>
                   </div>
 
                   <button type="button" class="ldr-text-back-btn" id="btnLdrBackAll">

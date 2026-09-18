@@ -363,6 +363,20 @@ assert(decoRuntime.includes('document.querySelectorAll(".strip-stickers-layer")'
 assert(decoRuntime.includes('await this.generateExportCanvas()') && decoRuntime.includes('eject-printed-strip-img'), "Runtime renders high-fidelity composite strip into keepsake eject tray");
 assert(decoRuntime.includes('Lace Hearts') && decoRuntime.includes('Sweethearts') && decoRuntime.includes('Rose Gold'), "Runtime includes polished romantic decoration items");
 
+// --- GATE 21: Finish & Exit Room Keepsake View & Action Dual-Buttons ---
+console.log("\n--- GATE 21: Finish & Exit Room Keepsake View & Action Dual-Buttons ---");
+const gate21Template = fs.readFileSync(path.resolve(__dirname, "../core/templates/photobooth.template.js"), "utf8");
+const gate21Runtime = fs.readFileSync(path.resolve(__dirname, "../public/js/widgets/photobooth.runtime.js"), "utf8");
+const gate21Css = fs.readFileSync(path.resolve(__dirname, "../public/css/widgets/photobooth.css"), "utf8");
+
+assert(gate21Template.includes('id="ldrWelcomeCompletedWrap"') && gate21Template.includes('id="ldrWelcomeStripPreview"'), "Template contains welcome keepsake strip preview container");
+assert(gate21Template.includes('id="btnWelcomeDownloadStrip"') && gate21Template.includes('id="btnWelcomeNewPicture"'), "Template contains Save/Download and Take New Picture dual buttons");
+assert(gate21Template.includes('id="ldrWelcomeChoices"'), "Template groups initial room selection cards in ldrWelcomeChoices");
+assert(gate21Runtime.includes("handleFinishAndExit"), "Runtime implements handleFinishAndExit handler");
+assert(gate21Runtime.includes("initLdrWelcomeStage"), "Runtime implements initLdrWelcomeStage state synchronizer");
+assert(gate21Runtime.includes("this.lastPrintedStripDataUrl"), "Runtime caches last printed strip data URL for instant download and display");
+assert(gate21Css.includes(".ldr-welcome-completed-wrap") && gate21Css.includes(".ldr-completed-strip-img"), "CSS defines responsive keepsake preview and button layout");
+
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");
 if (passedChecks === totalChecks) {

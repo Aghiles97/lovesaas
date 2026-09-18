@@ -1337,7 +1337,8 @@
         this.ldrManager.attachRemoteStreamToUI();
       }
 
-      if (stage === "setup") this.initLdrSetupStage();
+      if (stage === "welcome") this.initLdrWelcomeStage();
+      else if (stage === "setup") this.initLdrSetupStage();
       else if (stage === "capture") this.initLdrCaptureStage();
       else if (stage === "select") this.initLdrSelectStage();
       else if (stage === "deco") this.initLdrDecoStage();
@@ -1628,6 +1629,7 @@
         ejectTray.innerHTML = `<div style="color:rgba(255,255,255,0.7); font-size:14px; padding:20px; text-align:center;">Printing your keepsake strip... ✨</div>`;
         const canvas = await this.generateExportCanvas();
         const dataUrl = canvas.toDataURL("image/png");
+        this.lastPrintedStripDataUrl = dataUrl;
         ejectTray.innerHTML = `
           <div class="photobooth-eject-preview-wrap" style="text-align:center; padding:10px 0;">
             <img src="${dataUrl}" class="eject-printed-strip-img" alt="Your Couple Photo Strip" style="max-height:480px; width:auto; max-width:88vw; margin:0 auto; display:block; border-radius:6px; box-shadow:0 16px 40px rgba(0,0,0,0.6);" />
@@ -1646,7 +1648,129 @@
         this.stickers = [];
         this.setLdrStage("setup", false);
       }, { once: true });
-      document.getElementById("btnLdrModalFinishExit")?.addEventListener("click", () => this.closeLdrModal(), { once: true });
+      const finishBtn = document.getElementById("btnLdrModalFinishExit");
+      if (finishBtn) finishBtn.onclick = () => this.handleFinishAndExit();
+    }
+
+    initLdrWelcomeStage() {
+      const welcomeChoices = document.getElementById("ldrWelcomeChoices");
+      const welcomeCompleted = document.getElementById("ldrWelcomeCompletedWrap");
+      const welcomeSub = document.getElementById("ldrWelcomeSub");
+      const primaryChoices = document.getElementById("primaryWelcomeChoices");
+      const primaryCompleted = document.getElementById("primaryWelcomeCompletedWrap");
+      const primarySub = document.getElementById("primaryWelcomeSub");
+
+      if (this.lastPrintedStripDataUrl) {
+        const previewImg = `<img src="${this.lastPrintedStripDataUrl}" class="ldr-completed-strip-img" alt="Our Couple Photo Strip" />`;
+        const welcomePreview = document.getElementById("ldrWelcomeStripPreview");
+        if (welcomePreview) welcomePreview.innerHTML = previewImg;
+        const primaryPreview = document.getElementById("primaryWelcomeStripPreview");
+        if (primaryPreview) primaryPreview.innerHTML = previewImg;
+
+        if (welcomeChoices) welcomeChoices.style.display = "none";
+        if (welcomeCompleted) welcomeCompleted.style.display = "flex";
+        if (primaryChoices) primaryChoices.style.display = "none";
+        if (primaryCompleted) primaryCompleted.style.display = "flex";
+
+        if (welcomeSub) welcomeSub.textContent = "Your couple photo strip is ready! Save your keepsake below, or start a new session.";
+        if (primarySub) primarySub.textContent = "Your couple photo strip is ready! Save your keepsake below, or start a new session.";
+      } else {
+        if (welcomeChoices) welcomeChoices.style.display = "flex";
+        if (welcomeCompleted) welcomeCompleted.style.display = "none";
+        if (primaryChoices) primaryChoices.style.display = "flex";
+        if (primaryCompleted) primaryCompleted.style.display = "none";
+
+        if (welcomeSub) welcomeSub.textContent = "One synchronized vintage photo strip, both of you in it — taken together from anywhere in the world.";
+        if (primarySub) primarySub.textContent = "One synchronized vintage photo strip, both of you in it — taken together from anywhere in the world.";
+      }
+
+      const downloadBtns = [
+        document.getElementById("btnWelcomeDownloadStrip"),
+        document.getElementById("btnPrimaryWelcomeDownload")
+      ];
+      downloadBtns.forEach(btn => {
+        if (!btn) return;
+        btn.onclick = () => {
+          if (this.lastPrintedStripDataUrl) {
+            const link = document.createElement("a");
+            link.download = "photobooth-strip.png";
+            link.href = this.lastPrintedStripDataUrl;
+            link.click();
+          } else {
+            this.exportStrip();
+          }
+          this.play("sparkle");
+        };
+      });
+
+      const newPicBtns = [
+        document.getElementById("btnWelcomeNewPicture"),
+        document.getElementById("btnPrimaryWelcomeNew")
+      ];
+      newPicBtns.forEach(btn => {
+        if (!btn) return;
+        btn.onclick = () => {
+          this.capturedPhotos = [];
+          this.candidatePhotos = [];
+          this.selectedCandidateIndices = [];
+          this.paintStrokes = [];
+          this.stickers = [];
+          this.retryCount = 0;
+          this.lastPrintedStripDataUrl = null;
+
+          if (welcomeCompleted) welcomeCompleted.style.display = "none";
+          if (welcomeChoices) welcomeChoices.style.display = "flex";
+          if (primaryCompleted) primaryCompleted.style.display = "none";
+          if (primaryChoices) primaryChoices.style.display = "flex";
+
+          if (welcomeSub) welcomeSub.textContent = "One synchronized vintage photo strip, both of you in it — taken together from anywhere in the world.";
+          if (primarySub) primarySub.textContent = "One synchronized vintage photo strip, both of you in it — taken together from anywhere in the world.";
+          this.play("beep", 660, 0.05);
+        };
+      });
+    }
+
+    async handleFinishAndExit() {
+      if (this.ldrManager) {
+        this.ldrManager.disconnect();
+        this.ldrManager = null;
+      }
+      if (typeof window !== "undefined" && window.history && window.history.replaceState) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("booth_room");
+        url.searchParams.delete("room");
+        window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : ""));
+      }
+
+      this.stopCamera();
+      this.isCapturing = false;
+      if (this.countdownTimer) {
+        clearTimeout(this.countdownTimer);
+        this.countdownTimer = null;
+      }
+      this.retryCount = 0;
+
+      if (!this.lastPrintedStripDataUrl) {
+        try {
+          const canvas = await this.generateExportCanvas();
+          this.lastPrintedStripDataUrl = canvas.toDataURL("image/png");
+        } catch (e) {}
+      }
+
+      const modal = document.getElementById("photoboothLdrModal");
+      if (modal) {
+        modal.classList.add("is-active");
+        modal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
+      const dockedBar = document.getElementById("ldrDockedCallBar");
+      if (dockedBar) dockedBar.style.display = "none";
+      const appHeader = document.getElementById("ldrAppHeader");
+      if (appHeader) appHeader.classList.remove("has-docked-call");
+
+      this.currentLdrStage = null;
+      this.setLdrStage("welcome", false);
+      this.play("sparkle");
     }
 
     generateRoomCode() {
