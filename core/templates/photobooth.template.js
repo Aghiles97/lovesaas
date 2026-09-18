@@ -974,7 +974,7 @@
                   </div>
 
                   <div class="ldr-deco-workspace">
-                    <div class="ldr-deco-canvas-wrap paint-mode-active" id="ldrModalDecoCanvasWrap">
+                    <div class="ldr-deco-canvas-wrap" id="ldrModalDecoCanvasWrap">
                       <div class="photobooth-strip-container" id="ldrModalStripContainer"></div>
                       <canvas class="photobooth-paint-canvas" id="ldrModalPaintCanvas"></canvas>
                     </div>

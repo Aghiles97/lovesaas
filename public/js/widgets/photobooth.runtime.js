@@ -67,7 +67,19 @@
   if (typeof window !== "undefined") {
     const unlockAudio = () => {
       AudioEngine.getCtx();
-      const el = document.getElementById("ldrRemoteAudio");
+      let el = document.getElementById("ldrRemoteAudio");
+      if (!el && typeof document !== "undefined") {
+        el = document.createElement("audio");
+        el.id = "ldrRemoteAudio";
+        el.autoplay = true;
+        el.playsInline = true;
+        el.setAttribute("playsinline", "");
+        el.setAttribute("webkit-playsinline", "");
+        el.style.cssText = "position:fixed; bottom:0; left:0; width:1px; height:1px; opacity:0.001; pointer-events:none; z-index:-1;";
+        document.body.appendChild(el);
+      } else if (el && el.parentElement !== document.body) {
+        document.body.appendChild(el);
+      }
       if (el && el.srcObject && el.paused) el.play().catch(() => {});
       const rVideos = [
         document.getElementById("photoboothVideoRemote"),
@@ -394,7 +406,15 @@
           if (lobbyWaitingWrap) lobbyWaitingWrap.style.display = "none";
           if (waitingWrap) waitingWrap.style.display = "none";
           if (connectedCard) connectedCard.style.display = "flex";
-          this.setupWebRTC(this.localStream || this.session?.mediaStream);
+          const localPreview = document.getElementById("photoboothVideoLobbyPreview");
+          const curStream = this.localStream || this.session?.mediaStream;
+          if (localPreview && curStream && localPreview.srcObject !== curStream) {
+            localPreview.srcObject = curStream;
+            localPreview.muted = true;
+            localPreview.play().catch(() => {});
+          }
+          this.setupWebRTC(curStream);
+          this.attachRemoteStreamToUI();
         }
 
         if (state?.stage && state.stage !== "welcome" && this.session) {
@@ -420,8 +440,16 @@
         if (lobbyWaitingWrap) lobbyWaitingWrap.style.display = "none";
         if (waitingWrap) waitingWrap.style.display = "none";
         if (connectedCard) connectedCard.style.display = "flex";
+        const localPreview = document.getElementById("photoboothVideoLobbyPreview");
+        const curStream = this.localStream || this.session?.mediaStream;
+        if (localPreview && curStream && localPreview.srcObject !== curStream) {
+          localPreview.srcObject = curStream;
+          localPreview.muted = true;
+          localPreview.play().catch(() => {});
+        }
 
-        this.setupWebRTC(this.localStream || this.session?.mediaStream);
+        this.setupWebRTC(curStream);
+        this.attachRemoteStreamToUI();
 
         this.session.play("sparkle");
         return;
@@ -588,7 +616,10 @@
 
     attachRemoteStreamToUI() {
       if (!this.remoteStream) return;
-      const hasTracks = this.remoteStream.getTracks().length > 0;
+      const audioTracks = this.remoteStream.getAudioTracks ? this.remoteStream.getAudioTracks() : [];
+      const videoTracks = this.remoteStream.getVideoTracks ? this.remoteStream.getVideoTracks() : [];
+      const hasTracks = (audioTracks.length + videoTracks.length) > 0;
+
       const remoteVideos = [
         document.getElementById("photoboothVideoRemote"),
         document.getElementById("ldrVideoFeedRemote"),
@@ -597,7 +628,15 @@
       ];
       remoteVideos.forEach((remoteVideo) => {
         if (remoteVideo) {
-          if (remoteVideo.srcObject !== this.remoteStream) {
+          const curTracks = (remoteVideo.srcObject && remoteVideo.srcObject.getVideoTracks) ? remoteVideo.srcObject.getVideoTracks() : [];
+          if (videoTracks.length > 0 && (!remoteVideo.srcObject || !curTracks.some(t => t.id === videoTracks[0].id))) {
+            remoteVideo.srcObject = this.remoteStream;
+            remoteVideo.muted = true;
+            remoteVideo.volume = 0;
+            remoteVideo.playsInline = true;
+            remoteVideo.setAttribute("playsinline", "");
+            remoteVideo.setAttribute("webkit-playsinline", "");
+          } else if (!remoteVideo.srcObject && this.remoteStream) {
             remoteVideo.srcObject = this.remoteStream;
             remoteVideo.muted = true;
             remoteVideo.volume = 0;
@@ -609,15 +648,33 @@
         }
       });
 
-      const remoteAudio = document.getElementById("ldrRemoteAudio");
+      let remoteAudio = document.getElementById("ldrRemoteAudio");
+      if (!remoteAudio && typeof document !== "undefined") {
+        remoteAudio = document.createElement("audio");
+        remoteAudio.id = "ldrRemoteAudio";
+        remoteAudio.autoplay = true;
+        remoteAudio.playsInline = true;
+        remoteAudio.setAttribute("playsinline", "");
+        remoteAudio.setAttribute("webkit-playsinline", "");
+        remoteAudio.style.cssText = "position:fixed; bottom:0; left:0; width:1px; height:1px; opacity:0.001; pointer-events:none; z-index:-1;";
+        document.body.appendChild(remoteAudio);
+      }
       if (remoteAudio) {
-        if (remoteAudio.srcObject !== this.remoteStream) {
+        if (remoteAudio.parentElement !== document.body) {
+          document.body.appendChild(remoteAudio);
+        }
+        const curAudioTracks = (remoteAudio.srcObject && remoteAudio.srcObject.getAudioTracks) ? remoteAudio.srcObject.getAudioTracks() : [];
+        if (audioTracks.length > 0 && (!remoteAudio.srcObject || !curAudioTracks.some(t => t.id === audioTracks[0].id))) {
           remoteAudio.srcObject = this.remoteStream;
           remoteAudio.muted = false;
           remoteAudio.volume = 1.0;
           remoteAudio.playsInline = true;
           remoteAudio.setAttribute("playsinline", "");
           remoteAudio.setAttribute("webkit-playsinline", "");
+        } else if (!remoteAudio.srcObject && this.remoteStream) {
+          remoteAudio.srcObject = this.remoteStream;
+          remoteAudio.muted = false;
+          remoteAudio.volume = 1.0;
         }
         if (remoteAudio.paused) remoteAudio.play().catch(() => {});
       }
@@ -652,12 +709,6 @@
           }
           this.isNegotiating = true;
           try {
-            if (this.localStream) {
-              const transceivers = this.pc.getTransceivers ? this.pc.getTransceivers() : [];
-              transceivers.forEach(t => {
-                try { if (t.direction !== "sendrecv") t.direction = "sendrecv"; } catch (e) {}
-              });
-            }
             const offer = await this.pc.createOffer();
             if (this.pc.signalingState !== "stable") {
               this.isNegotiating = false;
@@ -671,7 +722,7 @@
             this.isNegotiating = false;
           }
         } else {
-          if (!this.isNegotiating && this.pc.signalingState === "stable") {
+          if (this.hasEstablishedConnection && !this.isNegotiating && this.pc.signalingState === "stable") {
             this.send("WEBRTC_SIGNAL", { signal: { renegotiateReq: true } });
           } else {
             this.needRenegotiate = true;
@@ -682,111 +733,105 @@
 
     async setupWebRTC(stream) {
       if (typeof RTCPeerConnection === "undefined") return;
-      if (!stream && !this.localStream && this.session) {
-        if (this.session.cameraPromise) {
-          try { await this.session.cameraPromise; } catch (e) {}
-        } else if (!this.session.mediaStream) {
-          try { await this.session.startCamera(); } catch (e) {}
+      if (this.isSettingUpWebRtc) return;
+      this.isSettingUpWebRtc = true;
+      try {
+        if (!stream && !this.localStream && this.session) {
+          if (this.session.cameraPromise) {
+            try { await this.session.cameraPromise; } catch (e) {}
+          } else if (!this.session.mediaStream) {
+            try { await this.session.startCamera(); } catch (e) {}
+          }
         }
-      }
-      const media = stream || this.localStream || this.session?.mediaStream;
-      if (media) this.localStream = media;
+        const media = stream || this.localStream || this.session?.mediaStream;
+        if (media) this.localStream = media;
 
-      if (!this.pc) {
-        const pc = new RTCPeerConnection({
-          iceServers: [
-            { urls: "stun:stun.l.google.com:19302" },
-            { urls: "stun:stun1.l.google.com:19302" },
-            { urls: "stun:stun2.l.google.com:19302" },
-            { urls: "stun:stun.cloudflare.com:3478" },
-            {
-              urls: [
-                "turn:openrelay.metered.ca:80",
-                "turn:openrelay.metered.ca:443",
-                "turn:openrelay.metered.ca:443?transport=tcp"
-              ],
-              username: "openrelay",
-              credential: "openrelay"
+        if (!this.pc) {
+          const pc = new RTCPeerConnection({
+            iceServers: [
+              { urls: "stun:stun.l.google.com:19302" },
+              { urls: "stun:stun1.l.google.com:19302" },
+              { urls: "stun:stun2.l.google.com:19302" },
+              { urls: "stun:stun.cloudflare.com:3478" },
+              {
+                urls: [
+                  "turn:openrelay.metered.ca:80",
+                  "turn:openrelay.metered.ca:443",
+                  "turn:openrelay.metered.ca:443?transport=tcp"
+                ],
+                username: "openrelayproject",
+                credential: "openrelayproject"
+              }
+            ]
+          });
+          this.pc = pc;
+          this.pendingIceCandidates = [];
+
+          pc.onnegotiationneeded = () => {
+            this.renegotiate();
+          };
+
+          pc.onconnectionstatechange = () => {
+            if (pc.connectionState === "connected") {
+              this.hasEstablishedConnection = true;
+              this.attachRemoteStreamToUI();
             }
-          ]
-        });
-        this.pc = pc;
-        this.pendingIceCandidates = [];
+          };
 
-        try {
-          pc.addTransceiver("video", { direction: "sendrecv" });
-          pc.addTransceiver("audio", { direction: "sendrecv" });
-        } catch (e) {}
+          pc.oniceconnectionstatechange = () => {
+            if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
+              this.hasEstablishedConnection = true;
+              this.attachRemoteStreamToUI();
+            }
+          };
 
-        pc.onnegotiationneeded = () => {
-          this.renegotiate();
-        };
-
-        pc.onconnectionstatechange = () => {
-          if (pc.connectionState === "connected") {
-            this.attachRemoteStreamToUI();
-          }
-        };
-
-        pc.ontrack = (evt) => {
-          const incomingStream = (evt.streams && evt.streams[0]) || null;
-          if (incomingStream) {
-            if (!this.remoteStream || this.remoteStream !== incomingStream) {
+          pc.ontrack = (evt) => {
+            const incomingStream = (evt.streams && evt.streams[0]) || null;
+            if (incomingStream) {
               this.remoteStream = incomingStream;
+            } else {
+              if (!this.remoteStream) {
+                this.remoteStream = new MediaStream();
+              }
+              if (evt.track && !this.remoteStream.getTracks().some(t => t.id === evt.track.id)) {
+                try { this.remoteStream.addTrack(evt.track); } catch (e) {}
+              }
             }
-          } else if (!this.remoteStream) {
-            this.remoteStream = new MediaStream();
-          }
-          if (evt.track) {
-            if (!this.remoteStream.getTracks().some(t => t.id === evt.track.id)) {
-              try { this.remoteStream.addTrack(evt.track); } catch (e) {}
+            if (evt.track) {
+              evt.track.onunmute = () => this.attachRemoteStreamToUI();
             }
-            evt.track.onunmute = () => this.attachRemoteStreamToUI();
-          }
-          this.attachRemoteStreamToUI();
-        };
+            this.attachRemoteStreamToUI();
+          };
 
-        pc.onicecandidate = (evt) => {
-          if (evt.candidate) {
-            this.send("WEBRTC_SIGNAL", { signal: { candidate: evt.candidate } });
-          }
-        };
-      }
+          pc.onicecandidate = (evt) => {
+            if (evt.candidate) {
+              this.send("WEBRTC_SIGNAL", { signal: { candidate: evt.candidate } });
+            }
+          };
+        }
 
-      if (this.localStream && this.pc) {
-        const transceivers = this.pc.getTransceivers ? this.pc.getTransceivers() : [];
-        const senders = this.pc.getSenders ? this.pc.getSenders() : [];
-        const matched = new Set();
-        this.localStream.getTracks().forEach((track) => {
-          let attached = false;
-          for (const t of transceivers) {
-            if (matched.has(t)) continue;
-            const kind = (t.receiver?.track?.kind) || (t.sender?.track?.kind);
-            if (kind === track.kind) {
+        if (this.localStream && this.pc) {
+          const senders = this.pc.getSenders ? this.pc.getSenders() : [];
+          this.localStream.getTracks().forEach((track) => {
+            const sender = senders.find(s => s.track && s.track.kind === track.kind) ||
+                           senders.find(s => !s.track && s.kind === track.kind);
+            if (sender) {
+              if (sender.track !== track) {
+                sender.replaceTrack(track).catch(() => {});
+              }
+            } else {
               try {
-                if (t.direction !== "sendrecv") t.direction = "sendrecv";
-                if (t.sender) {
-                  if (t.sender.track !== track) t.sender.replaceTrack(track).catch(() => {});
-                  attached = true;
-                  matched.add(t);
-                  break;
-                }
+                this.pc.addTrack(track, this.localStream);
               } catch (e) {}
             }
-          }
-          if (!attached) {
-            const sender = senders.find(s => s.track && s.track.kind === track.kind);
-            if (sender) {
-              if (sender.track !== track) sender.replaceTrack(track).catch(() => {});
-            } else {
-              try { this.pc.addTrack(track, this.localStream); } catch (e) {}
-            }
-          }
-        });
-      }
+          });
+        }
 
-      if (this.pc) {
-        this.renegotiate();
+        if (this.pc) {
+          this.renegotiate();
+        }
+      } finally {
+        this.isSettingUpWebRtc = false;
       }
     }
 
@@ -823,7 +868,7 @@
           await this.pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
           if (this.pendingIceCandidates && this.pendingIceCandidates.length) {
             for (const cand of this.pendingIceCandidates) {
-              try { await this.pc.addIceCandidate(new RTCIceCandidate(cand)); } catch (e) {}
+              try { await this.pc.addIceCandidate(cand); } catch (e) {}
             }
             this.pendingIceCandidates = [];
           }
@@ -841,28 +886,25 @@
 
           if (signal.sdp.type === "offer") {
             if (this.localStream && this.pc) {
-              const transceivers = this.pc.getTransceivers ? this.pc.getTransceivers() : [];
-              const matched = new Set();
+              const senders = this.pc.getSenders ? this.pc.getSenders() : [];
               this.localStream.getTracks().forEach((track) => {
-                for (const t of transceivers) {
-                  if (matched.has(t)) continue;
-                  const kind = (t.receiver?.track?.kind) || (t.sender?.track?.kind);
-                  if (kind === track.kind) {
-                    try {
-                      if (t.direction !== "sendrecv") t.direction = "sendrecv";
-                      if (t.sender && t.sender.track !== track) {
-                        t.sender.replaceTrack(track).catch(() => {});
-                      }
-                      matched.add(t);
-                    } catch (e) {}
-                    break;
+                const sender = senders.find(s => s.track && s.track.kind === track.kind) ||
+                               senders.find(s => !s.track && s.kind === track.kind);
+                if (sender) {
+                  if (sender.track !== track) {
+                    sender.replaceTrack(track).catch(() => {});
                   }
+                } else {
+                  try {
+                    this.pc.addTrack(track, this.localStream);
+                  } catch (e) {}
                 }
               });
             }
             const answer = await this.pc.createAnswer();
             await this.pc.setLocalDescription(answer);
             this.send("WEBRTC_SIGNAL", { signal: { sdp: this.pc.localDescription } });
+            this.hasEstablishedConnection = true;
             this.attachRemoteStreamToUI();
             if (this.needRenegotiate) {
               this.needRenegotiate = false;
@@ -870,6 +912,7 @@
             }
           } else if (signal.sdp.type === "answer") {
             this.isNegotiating = false;
+            this.hasEstablishedConnection = true;
             if (this.needRenegotiate) {
               this.needRenegotiate = false;
               this.renegotiate();
@@ -879,7 +922,7 @@
         } else if (signal.candidate) {
           if (this.pc.remoteDescription && this.pc.remoteDescription.type) {
             try {
-              await this.pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+              await this.pc.addIceCandidate(signal.candidate);
             } catch (err) {}
           } else {
             if (!this.pendingIceCandidates) this.pendingIceCandidates = [];
@@ -1041,6 +1084,19 @@
         modal.classList.add("is-active");
         modal.style.display = "flex";
         document.body.style.overflow = "hidden";
+      }
+      let remoteAudio = document.getElementById("ldrRemoteAudio");
+      if (!remoteAudio && typeof document !== "undefined") {
+        remoteAudio = document.createElement("audio");
+        remoteAudio.id = "ldrRemoteAudio";
+        remoteAudio.autoplay = true;
+        remoteAudio.playsInline = true;
+        remoteAudio.setAttribute("playsinline", "");
+        remoteAudio.setAttribute("webkit-playsinline", "");
+        remoteAudio.style.cssText = "position:fixed; bottom:0; left:0; width:1px; height:1px; opacity:0.001; pointer-events:none; z-index:-1;";
+        document.body.appendChild(remoteAudio);
+      } else if (remoteAudio && remoteAudio.parentElement !== document.body) {
+        document.body.appendChild(remoteAudio);
       }
       this.btnModeSolo?.classList.remove("active");
       this.btnModeLdr?.classList.add("active");
@@ -1388,9 +1444,21 @@
     }
 
     initLdrDecoStage() {
+      this.currentDecoTab = "stickers";
       this.renderStrip();
-      this.renderLdrStickerPalette();
+      this.renderLdrStickerPalette("stickers");
       this.initPaintEngine();
+
+      const wrap = document.getElementById("ldrModalDecoCanvasWrap");
+      if (wrap) wrap.classList.remove("paint-mode-active");
+      const paintPalette = document.getElementById("ldrModalPaintPalette");
+      if (paintPalette) paintPalette.style.display = "none";
+      const stickerTray = document.querySelector(".photobooth-sticker-tray.ldr-sticker-tray");
+      if (stickerTray) stickerTray.style.display = "block";
+      document.querySelectorAll("#ldrModalDecoTabs .deco-tab-btn").forEach(t => {
+        t.classList.toggle("active", t.dataset.tab === "stickers");
+      });
+
       setTimeout(() => this.resizePaintCanvas(), 60);
 
       document.getElementById("btnDecoBackToSelect")?.addEventListener("click", () => this.setLdrStage("select", false));
@@ -1400,12 +1468,19 @@
           document.querySelectorAll("#ldrModalDecoTabs .deco-tab-btn").forEach(t => t.classList.remove("active"));
           tab.classList.add("active");
           const tabKey = tab.dataset.tab;
+          this.currentDecoTab = tabKey;
           const isPaint = tabKey === "paint";
           const paintPalette = document.getElementById("ldrModalPaintPalette");
           if (paintPalette) paintPalette.style.display = isPaint ? "flex" : "none";
+          const stickerTray = document.querySelector(".photobooth-sticker-tray.ldr-sticker-tray");
+          if (stickerTray) stickerTray.style.display = isPaint ? "none" : "block";
           const wrap = document.getElementById("ldrModalDecoCanvasWrap");
           if (wrap) wrap.classList.toggle("paint-mode-active", isPaint);
-          this.renderLdrStickerPalette(tabKey);
+          if (isPaint) {
+            this.resizePaintCanvas();
+          } else {
+            this.renderLdrStickerPalette(tabKey);
+          }
           this.play("beep", 550, 0.04);
         };
       });
@@ -1439,11 +1514,18 @@
       `).join("");
       palette.querySelectorAll(".sticker-item-btn").forEach(btn => {
         btn.onclick = () => {
-          this.addSticker({
-            type: btn.dataset.type,
-            val: btn.dataset.val,
-            itemKey: btn.dataset.key
-          });
+          if (btn.dataset.type === "frame") {
+            this.setFrameOverlay(btn.dataset.val);
+            if (this.isLdrMode && this.ldrManager) {
+              this.ldrManager.send("SET_OVERLAY", { overlay: btn.dataset.val });
+            }
+          } else {
+            this.addSticker({
+              type: btn.dataset.type,
+              val: btn.dataset.val,
+              itemKey: btn.dataset.key
+            });
+          }
         };
       });
     }
