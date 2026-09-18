@@ -301,6 +301,15 @@ assert(freshRuntime.includes("origin}/photobooth?room="), "Runtime generates inv
 assert(freshRuntime.includes("IS_STANDALONE_PHOTOBOOTH") && freshRuntime.includes("photoboothSessionEnded"), "Runtime reveals session ended screen on standalone page close");
 assert(freshRuntime.includes("window.location.replace(`/photobooth?room="), "Runtime redirects guest on viewer page to dedicated /photobooth URL");
 
+// --- GATE 17: BURST SYNCHRONIZATION, SNAPSHOT SYNC & FLASH GUARD ---
+console.log("\n--- GATE 17: Burst Synchronization, Snapshot Sync & Flash Guard ---");
+const latestRuntime = fs.readFileSync(path.resolve(__dirname, "../public/js/widgets/photobooth.runtime.js"), "utf8");
+assert(latestRuntime.includes("pendingSelectStage = true"), "Runtime guards against premature select stage transition while capturing");
+assert(latestRuntime.includes("REMOTE_PHOTO_SNAPSHOT"), "Runtime handles REMOTE_PHOTO_SNAPSHOT to synchronize candidate photos");
+assert(latestRuntime.includes('this.currentLdrStage !== "capture"'), "Runtime suppresses camera flash outside capture stage");
+assert(latestRuntime.includes('PHOTO_SNAPSHOT') && latestRuntime.includes('role === "host"'), "Host broadcasts authoritative PHOTO_SNAPSHOT");
+assert(latestRuntime.includes('SYNC_PHOTO_SELECTION'), "Runtime synchronizes photo selections across partners");
+
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");
 if (passedChecks === totalChecks) {

@@ -36,14 +36,14 @@
     if (pb.countdownSeconds === undefined) pb.countdownSeconds = 3;
     if (pb.sfxEnabled === undefined) pb.sfxEnabled = true;
     if (pb.hapticsEnabled === undefined) pb.hapticsEnabled = true;
-    if (pb.showDate === undefined) pb.showDate = true;
-    if (pb.dateStampEnabled === undefined) pb.dateStampEnabled = true;
+    if (pb.showDate === undefined) pb.showDate = false;
+    if (pb.dateStampEnabled === undefined) pb.dateStampEnabled = false;
     if (pb.filmGrainEnabled === undefined) pb.filmGrainEnabled = true;
     if (pb.flashEnabled === undefined) pb.flashEnabled = true;
     if (pb.isMirror === undefined) pb.isMirror = true;
     if (pb.allowStickers === undefined) pb.allowStickers = true;
     if (!pb.stripCaption) pb.stripCaption = `${pb.partner1} & ${pb.partner2} ♡ Forever`;
-    if (!pb.stripLocation) pb.stripLocation = "PARIS • 2026";
+    if (!pb.stripLocation) pb.stripLocation = "";
     if (!Array.isArray(pb.samplePhotos) || !pb.samplePhotos.length) {
       pb.samplePhotos = [
         "/public/images/landing-v2/avatar-couple-1.jpg",

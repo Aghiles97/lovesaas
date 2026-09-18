@@ -13,7 +13,7 @@
     const defaultStyle = pb.defaultStyle || "style_cyan_stars";
     const defaultFilter = pb.defaultFilter || "vintage_90s";
     const stripCaption = pb.stripCaption || (p1 + " & " + p2 + " ♡ Forever");
-    const stripLocation = pb.stripLocation || "PARIS • 2026";
+    const stripLocation = pb.stripLocation || "";
     const sfxEnabled = pb.sfxEnabled !== false;
 
     const SAMPLES = [

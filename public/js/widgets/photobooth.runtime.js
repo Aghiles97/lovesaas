@@ -481,8 +481,24 @@
       }
 
       if (type === "STAGE_CHANGED") {
+        if (msg.stage === "select" && this.session.isCapturing) {
+          this.session.pendingSelectStage = true;
+          return;
+        }
         if (msg.stage) {
           this.session.setLdrStage(msg.stage, true);
+        }
+        return;
+      }
+
+      if (type === "REMOTE_PHOTO_SNAPSHOT") {
+        const { photoIndex, imageData } = msg;
+        if (imageData && typeof photoIndex === "number") {
+          this.session.candidatePhotos[photoIndex] = imageData;
+          this.session.capturedPhotos[photoIndex] = imageData;
+          if (this.session.currentLdrStage === "select" || !this.session.isCapturing) {
+            this.session.renderCandidateCards();
+          }
         }
         return;
       }
@@ -971,10 +987,10 @@
       this.p1 = this.config.partner1 || this.hero.partner1 || "Alex";
       this.p2 = this.config.partner2 || this.hero.partner2 || "Sam";
       this.caption = this.config.stripCaption || ds.stripCaption || `${this.p1} & ${this.p2} ♡ Forever`;
-      this.location = this.config.stripLocation || ds.stripLocation || "PARIS • 2026";
+      this.location = this.config.stripLocation || ds.stripLocation || "";
       this.sfxEnabled = this.config.sfxEnabled !== false;
       this.hapticsEnabled = this.config.hapticsEnabled !== false;
-      this.showDate = this.config.showDate !== false;
+      this.showDate = Boolean(this.config.showDate);
 
       this.currentFilter = this.config.defaultFilter || ds.defaultFilter || "vintage_90s";
       this.currentFormat = this.config.defaultFormat || ds.defaultFormat || ds.defaultLayout || "classic_3cut";
@@ -986,7 +1002,7 @@
       this.isMirror = true;
       this.flashEnabled = true;
       this.filmGrainEnabled = true;
-      this.dateStampEnabled = true;
+      this.dateStampEnabled = Boolean(this.config.dateStampEnabled);
 
       this.facingMode = "user";
       this.mediaStream = null;
@@ -1453,6 +1469,11 @@
         for (let i = 0; i < Math.min(targetCount, this.candidatePhotos.length); i++) {
           this.selectedCandidateIndices.push(i);
         }
+        if (this.isLdrMode && this.ldrManager && this.ldrManager.role === "host") {
+          this.ldrManager.send("SYNC_PHOTO_SELECTION", {
+            selectedIndices: this.selectedCandidateIndices
+          });
+        }
       }
       this.renderCandidateCards();
       document.getElementById("btnSelectBackToCapture")?.addEventListener("click", () => this.setLdrStage("capture", false));
@@ -1470,6 +1491,10 @@
     }
 
     initLdrDecoStage() {
+      if (this.selectedCandidateIndices.length) {
+        const selected = this.selectedCandidateIndices.map(i => this.candidatePhotos[i]).filter(Boolean);
+        if (selected.length) this.capturedPhotos = [...selected];
+      }
       this.currentDecoTab = "stickers";
       this.renderStrip();
       this.renderLdrStickerPalette("stickers");
@@ -2348,6 +2373,7 @@
     async runBurstSequence(totalShots) {
       if (this.isCapturing) return;
       this.isCapturing = true;
+      const baseIdx = (!this.retryCount) ? 0 : this.candidatePhotos.length;
       if (!this.retryCount) {
         this.capturedPhotos = [];
         this.candidatePhotos = [];
@@ -2360,7 +2386,7 @@
         if (!this.isCapturing) break;
         await this.runShotCountdown(i, totalShots);
         if (!this.isCapturing) break;
-        this.captureFrame();
+        this.captureFrame(baseIdx + i);
         this.updateBurstProgress(i + 1, totalShots);
         if (i < totalShots - 1) {
           const ldrHint = document.getElementById("ldrModalPoseHint");
@@ -2377,7 +2403,9 @@
         this.stopCamera();
       }
       if (this.isLdrMode) {
+        this.pendingSelectStage = false;
         this.setLdrStage("select", false);
+        this.initLdrSelectStage();
       } else {
         this.showSelectionTray();
       }
@@ -2435,6 +2463,7 @@
 
     triggerFlash() {
       if (!this.flashEnabled) return;
+      if (this.isLdrMode && this.currentLdrStage !== "capture") return;
       const flashes = [this.flashEl, document.getElementById("ldrModalFlash")].filter(Boolean);
       flashes.forEach((flash) => {
         flash.classList.remove("camera-flash-active");
@@ -2444,7 +2473,7 @@
       });
     }
 
-    captureFrame() {
+    captureFrame(shotIndex) {
       this.play("shutter");
       this.vibrate(35);
       this.triggerFlash();
@@ -2457,7 +2486,8 @@
         canvas.width = W;
         canvas.height = H;
 
-        // Left Half: Local Partner
+        const isGuest = Boolean(this.ldrManager && this.ldrManager.role === "guest");
+
         const candidateLocalVideos = [
           document.getElementById("ldrVideoFeedLocal"),
           this.videoLocalEl,
@@ -2465,60 +2495,115 @@
           this.videoEl
         ].filter(Boolean);
         const localVideo = candidateLocalVideos.find(v => v.videoWidth > 0) || candidateLocalVideos[0];
-        if (localVideo && localVideo.videoWidth) {
-          const vw = localVideo.videoWidth || 640, vh = localVideo.videoHeight || 480;
-          const cropW = Math.min(vw, vh * (W / 2) / H);
-          const cropH = cropW * H / (W / 2);
-          const sx = (vw - cropW) / 2, sy = (vh - cropH) / 2;
-          ctx.save();
-          if (this.isMirror && this.facingMode === "user") {
-            ctx.translate(W / 2, 0);
-            ctx.scale(-1, 1);
-            ctx.drawImage(localVideo, sx, sy, cropW, cropH, 0, 0, W / 2, H);
-          } else {
-            ctx.drawImage(localVideo, sx, sy, cropW, cropH, 0, 0, W / 2, H);
-          }
-          ctx.restore();
-        } else {
-          ctx.fillStyle = "#2c1524";
-          ctx.fillRect(0, 0, W / 2, H);
-        }
 
-        // Right Half: Remote Partner
         const candidateRemoteVideos = [
           document.getElementById("ldrVideoFeedRemote"),
           this.videoRemoteEl,
           document.getElementById("photoboothVideoDockedRemote")
         ].filter(Boolean);
         const remoteVideo = candidateRemoteVideos.find(v => v.videoWidth > 0 && v.srcObject) || candidateRemoteVideos[0];
-        if (remoteVideo && remoteVideo.videoWidth && remoteVideo.srcObject) {
-          const rvw = remoteVideo.videoWidth || 640, rvh = remoteVideo.videoHeight || 480;
-          const rcropW = Math.min(rvw, rvh * (W / 2) / H);
-          const rcropH = rcropW * H / (W / 2);
-          const rsx = (rvw - rcropW) / 2, rsy = (rvh - rcropH) / 2;
-          ctx.drawImage(remoteVideo, rsx, rsy, rcropW, rcropH, W / 2, 0, W / 2, H);
-        } else {
-          const grad = ctx.createRadialGradient(3 * W / 4, H / 2, 10, 3 * W / 4, H / 2, 250);
-          grad.addColorStop(0, "#4a1c32");
-          grad.addColorStop(1, "#150918");
-          ctx.fillStyle = grad;
-          ctx.fillRect(W / 2, 0, W / 2, H);
 
-          ctx.fillStyle = "rgba(255,255,255,0.9)";
-          ctx.font = "bold 32px sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText("💕", 3 * W / 4, H / 2 - 10);
-          ctx.font = "bold 16px sans-serif";
-          ctx.fillText(this.p2 || "Partner", 3 * W / 4, H / 2 + 30);
+        // Left Half: Host (Local if Host, Remote if Guest)
+        if (!isGuest) {
+          if (localVideo && localVideo.videoWidth) {
+            const vw = localVideo.videoWidth || 640, vh = localVideo.videoHeight || 480;
+            const cropW = Math.min(vw, vh * (W / 2) / H);
+            const cropH = cropW * H / (W / 2);
+            const sx = (vw - cropW) / 2, sy = (vh - cropH) / 2;
+            ctx.save();
+            if (this.isMirror && this.facingMode === "user") {
+              ctx.translate(W / 2, 0);
+              ctx.scale(-1, 1);
+              ctx.drawImage(localVideo, sx, sy, cropW, cropH, 0, 0, W / 2, H);
+            } else {
+              ctx.drawImage(localVideo, sx, sy, cropW, cropH, 0, 0, W / 2, H);
+            }
+            ctx.restore();
+          } else {
+            ctx.fillStyle = "#2c1524";
+            ctx.fillRect(0, 0, W / 2, H);
+          }
+        } else {
+          if (remoteVideo && remoteVideo.videoWidth && remoteVideo.srcObject) {
+            const rvw = remoteVideo.videoWidth || 640, rvh = remoteVideo.videoHeight || 480;
+            const rcropW = Math.min(rvw, rvh * (W / 2) / H);
+            const rcropH = rcropW * H / (W / 2);
+            const rsx = (rvw - rcropW) / 2, rsy = (rvh - rcropH) / 2;
+            ctx.drawImage(remoteVideo, rsx, rsy, rcropW, rcropH, 0, 0, W / 2, H);
+          } else {
+            const grad = ctx.createRadialGradient(W / 4, H / 2, 10, W / 4, H / 2, 250);
+            grad.addColorStop(0, "#4a1c32");
+            grad.addColorStop(1, "#150918");
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, W / 2, H);
+            ctx.fillStyle = "rgba(255,255,255,0.9)";
+            ctx.font = "bold 32px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("💕", W / 4, H / 2 - 10);
+            ctx.font = "bold 16px sans-serif";
+            ctx.fillText(this.p1 || "Host", W / 4, H / 2 + 30);
+          }
+        }
+
+        // Right Half: Guest (Remote if Host, Local if Guest)
+        if (!isGuest) {
+          if (remoteVideo && remoteVideo.videoWidth && remoteVideo.srcObject) {
+            const rvw = remoteVideo.videoWidth || 640, rvh = remoteVideo.videoHeight || 480;
+            const rcropW = Math.min(rvw, rvh * (W / 2) / H);
+            const rcropH = rcropW * H / (W / 2);
+            const rsx = (rvw - rcropW) / 2, rsy = (rvh - rcropH) / 2;
+            ctx.drawImage(remoteVideo, rsx, rsy, rcropW, rcropH, W / 2, 0, W / 2, H);
+          } else {
+            const grad = ctx.createRadialGradient(3 * W / 4, H / 2, 10, 3 * W / 4, H / 2, 250);
+            grad.addColorStop(0, "#4a1c32");
+            grad.addColorStop(1, "#150918");
+            ctx.fillStyle = grad;
+            ctx.fillRect(W / 2, 0, W / 2, H);
+            ctx.fillStyle = "rgba(255,255,255,0.9)";
+            ctx.font = "bold 32px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("💕", 3 * W / 4, H / 2 - 10);
+            ctx.font = "bold 16px sans-serif";
+            ctx.fillText(this.p2 || "Partner", 3 * W / 4, H / 2 + 30);
+          }
+        } else {
+          if (localVideo && localVideo.videoWidth) {
+            const vw = localVideo.videoWidth || 640, vh = localVideo.videoHeight || 480;
+            const cropW = Math.min(vw, vh * (W / 2) / H);
+            const cropH = cropW * H / (W / 2);
+            const sx = (vw - cropW) / 2, sy = (vh - cropH) / 2;
+            ctx.save();
+            if (this.isMirror && this.facingMode === "user") {
+              ctx.translate(W, 0);
+              ctx.scale(-1, 1);
+              ctx.drawImage(localVideo, sx, sy, cropW, cropH, 0, 0, W / 2, H);
+            } else {
+              ctx.drawImage(localVideo, sx, sy, cropW, cropH, W / 2, 0, W / 2, H);
+            }
+            ctx.restore();
+          } else {
+            ctx.fillStyle = "#2c1524";
+            ctx.fillRect(W / 2, 0, W / 2, H);
+          }
         }
 
         // Vertical Seam Divider
         ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
         ctx.fillRect(W / 2 - 1, 0, 2, H);
 
-        const shotData = canvas.toDataURL("image/jpeg", 0.92);
-        this.candidatePhotos.push(shotData);
-        this.capturedPhotos.push(shotData);
+        const shotData = canvas.toDataURL("image/jpeg", 0.90);
+        const targetIdx = (typeof shotIndex === "number") ? shotIndex : this.candidatePhotos.length;
+        if (!isGuest || !this.candidatePhotos[targetIdx]) {
+          this.candidatePhotos[targetIdx] = shotData;
+          this.capturedPhotos[targetIdx] = shotData;
+        }
+
+        if (this.ldrManager && this.ldrManager.role === "host") {
+          this.ldrManager.send("PHOTO_SNAPSHOT", {
+            photoIndex: targetIdx,
+            imageData: shotData
+          });
+        }
       } else {
         const video = this.videoEl;
         const vw = video?.videoWidth || 640;
@@ -2801,100 +2886,100 @@
       const pad = (n) => String(n).padStart(2, "0");
       const dateDigital = `'${String(now.getFullYear()).slice(-2)} ${pad(now.getMonth() + 1)} ${pad(now.getDate())}`;
 
-      let photosHtml = "";
-      const isTopText = this.currentFormat === "landscape_toptext" || this.currentFormat === "triptych_toptext";
-      const topPhraseHtml = isTopText ? `<div class="strip-phrase-slot pos-top"><span class="strip-phrase-display">${this.caption}</span></div>` : "";
+      const esc = (s) => (s == null ? "" : String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[c])));
+      const card = (idx) => `
+        <div class="strip-photo-card" data-idx="${idx}" title="Tap to swap photo position">
+          <img src="${activePhotos[idx % activePhotos.length] || DEFAULT_SAMPLES[idx % DEFAULT_SAMPLES.length]}" alt="Photobooth Snap ${idx + 1}" style="filter: ${filterCss};">
+          <span class="photo-idx-badge">#${idx + 1}</span>
+        </div>
+      `;
+      const chinBlock = (cls = "cell") => `
+        <div class="strip-chin-cell pos-${cls}"><span class="strip-phrase-display">${esc(this.caption || "Together Forever ♡")}</span></div>
+      `;
 
-      if (this.currentFormat === "film_grid") {
-        photosHtml = `<div class="grid-2x2-wrap">${activePhotos.map((src, i) => `
-          <div class="strip-photo-card" data-idx="${i}" title="Tap to swap photo position">
-            <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
-            <span class="photo-idx-badge">#${i + 1}</span>
-          </div>
-        `).join("")}</div>`;
-      } else if (this.currentFormat === "grid_3x3") {
-        photosHtml = `<div class="grid-3x3-wrap">${activePhotos.map((src, i) => `
-          <div class="strip-photo-card" data-idx="${i}" title="Tap to swap photo position">
-            <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
-            <span class="photo-idx-badge">#${i + 1}</span>
-          </div>
-        `).join("")}</div>`;
-      } else if (this.currentFormat === "double_6cut") {
-        photosHtml = `<div class="grid-double-6-wrap">${activePhotos.map((src, i) => `
-          <div class="strip-photo-card" data-idx="${i}" title="Tap to swap photo position">
-            <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
-            <span class="photo-idx-badge">#${i + 1}</span>
-          </div>
-        `).join("")}</div>`;
-      } else if (this.currentFormat === "double_8cut") {
-        photosHtml = `<div class="grid-double-8-wrap">${activePhotos.map((src, i) => `
-          <div class="strip-photo-card" data-idx="${i}" title="Tap to swap photo position">
-            <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
-            <span class="photo-idx-badge">#${i + 1}</span>
-          </div>
-        `).join("")}</div>`;
-      } else if (this.currentFormat === "landscape_2split" || this.currentFormat === "landscape_toptext" || this.currentFormat === "landscape_lefttext") {
-        photosHtml = `${topPhraseHtml}<div class="landscape-2split-wrap">${activePhotos.slice(0, 2).map((src, i) => `
-          <div class="strip-photo-card" data-idx="${i}" title="Tap to swap photo position">
-            <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
-            <span class="photo-idx-badge">#${i + 1}</span>
-          </div>
-        `).join("")}</div>`;
-      } else if (this.currentFormat === "triptych_3cut" || this.currentFormat === "triptych_toptext" || this.currentFormat === "triptych_offset") {
-        photosHtml = `${topPhraseHtml}<div class="triptych-wrap">${activePhotos.slice(0, 3).map((src, i) => `
-          <div class="strip-photo-card" data-idx="${i}" title="Tap to swap photo position">
-            <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
-            <span class="photo-idx-badge">#${i + 1}</span>
-          </div>
-        `).join("")}</div>`;
-      } else if (["asym_tr_chin", "asym_br_chin", "asym_tl_chin", "asym_bl_chin", "wide_collage", "asym_collage"].includes(this.currentFormat)) {
-        photosHtml = `
-          <div class="asym-collage-wrap fmt-${this.currentFormat}">
-            <div class="strip-photo-card asym-hero-card" data-idx="0" title="Tap to swap photo position">
-              <img src="${activePhotos[0] || DEFAULT_SAMPLES[0]}" alt="Photobooth Snap 1" style="filter: ${filterCss};">
-              <span class="photo-idx-badge">#1</span>
-            </div>
-            <div class="asym-sub-col">
-              ${activePhotos.slice(1, 3).map((src, i) => `
-                <div class="strip-photo-card asym-sub-card" data-idx="${i + 1}" title="Tap to swap photo position">
-                  <img src="${src}" alt="Photobooth Snap ${i + 2}" style="filter: ${filterCss};">
-                  <span class="photo-idx-badge">#${i + 2}</span>
-                </div>
-              `).join("")}
-            </div>
-          </div>
-        `;
-      } else if (["hero_split_left", "hero_split_right", "hero_bottom_right", "hero_left_stack"].includes(this.currentFormat)) {
-        photosHtml = `
-          <div class="hero-split-wrap fmt-${this.currentFormat}">
-            <div class="strip-photo-card hero-main-card" data-idx="0" title="Tap to swap photo position">
-              <img src="${activePhotos[0] || DEFAULT_SAMPLES[0]}" alt="Photobooth Snap 1" style="filter: ${filterCss};">
-              <span class="photo-idx-badge">#1</span>
-            </div>
-            <div class="hero-sub-row">
-              ${activePhotos.slice(1, 4).map((src, i) => `
-                <div class="strip-photo-card hero-sub-card" data-idx="${i + 1}" title="Tap to swap photo position">
-                  <img src="${src}" alt="Photobooth Snap ${i + 2}" style="filter: ${filterCss};">
-                  <span class="photo-idx-badge">#${i + 2}</span>
-                </div>
-              `).join("")}
-            </div>
-          </div>
-        `;
-      } else if (this.currentFormat === "polaroid_single" || this.currentFormat === "landscape_hero" || this.currentFormat === "landscape_single") {
-        photosHtml = `
-          <div class="strip-photo-card ${this.currentFormat === 'polaroid_single' ? 'polaroid-single-card' : 'landscape-hero-card'}" data-idx="0">
-            <img src="${activePhotos[0] || DEFAULT_SAMPLES[0]}" alt="Photobooth Single" style="filter: ${filterCss};">
-          </div>
-        `;
-      } else {
-        photosHtml = `${activePhotos.map((src, i) => `
-          <div class="strip-photo-card" data-idx="${i}" title="Tap to swap photo position">
-            <img src="${src}" alt="Photobooth Snap ${i + 1}" style="filter: ${filterCss};">
-            <span class="photo-idx-badge">#${i + 1}</span>
-          </div>
-        `).join("")}`;
+      let photosHtml = "";
+      switch (this.currentFormat) {
+        case "grid_3x3":
+          photosHtml = `<div class="strip-layout-wrap grid-3x3-wrap fmt-grid_3x3">${Array(9).fill(0).map((_, i) => card(i)).join("")}</div>`;
+          break;
+        case "film_grid":
+          photosHtml = `<div class="strip-layout-wrap grid-2x2-wrap fmt-film_grid">${Array(4).fill(0).map((_, i) => card(i)).join("")}</div>`;
+          break;
+        case "classic_strip":
+          photosHtml = `<div class="strip-layout-wrap fmt-classic_strip">${Array(4).fill(0).map((_, i) => card(i)).join("")}</div>`;
+          break;
+        case "double_6cut":
+          photosHtml = `<div class="strip-layout-wrap grid-double-6-wrap fmt-double_6cut">${Array(6).fill(0).map((_, i) => card(i)).join("")}</div>`;
+          break;
+        case "double_8cut":
+          photosHtml = `<div class="strip-layout-wrap grid-double-8-wrap fmt-double_8cut">${Array(8).fill(0).map((_, i) => card(i)).join("")}</div>`;
+          break;
+        case "portrait_pair":
+          photosHtml = `<div class="strip-layout-wrap fmt-portrait_pair">${card(0)}${card(1)}</div>`;
+          break;
+        case "wide_collage":
+        case "asym_collage":
+        case "asym_tr_chin":
+          photosHtml = `<div class="strip-layout-wrap fmt-asym_tr_chin"><div class="asym-cell">${card(0)}</div><div class="asym-cell chin-cell">${chinBlock("cell")}</div><div class="asym-cell">${card(1)}</div><div class="asym-cell">${card(2)}</div></div>`;
+          break;
+        case "asym_br_chin":
+          photosHtml = `<div class="strip-layout-wrap fmt-asym_br_chin"><div class="asym-cell">${card(0)}</div><div class="asym-cell">${card(1)}</div><div class="asym-cell">${card(2)}</div><div class="asym-cell chin-cell">${chinBlock("cell")}</div></div>`;
+          break;
+        case "asym_tl_chin":
+          photosHtml = `<div class="strip-layout-wrap fmt-asym_tl_chin"><div class="asym-cell chin-cell">${chinBlock("cell")}</div><div class="asym-cell">${card(0)}</div><div class="asym-cell">${card(1)}</div><div class="asym-cell">${card(2)}</div></div>`;
+          break;
+        case "asym_bl_chin":
+          photosHtml = `<div class="strip-layout-wrap fmt-asym_bl_chin"><div class="asym-cell">${card(0)}</div><div class="asym-cell">${card(1)}</div><div class="asym-cell chin-cell">${chinBlock("cell")}</div><div class="asym-cell">${card(2)}</div></div>`;
+          break;
+        case "polaroid_single":
+          photosHtml = `<div class="strip-layout-wrap fmt-polaroid_single">${card(0)}</div>`;
+          break;
+        case "landscape_single":
+        case "landscape_hero":
+          photosHtml = `<div class="strip-layout-wrap fmt-landscape_single">${card(0)}</div>`;
+          break;
+        case "landscape_toptext":
+          photosHtml = `<div class="strip-layout-wrap fmt-landscape_toptext"><div class="toptext-chin-row chin-cell">${chinBlock("cell")}</div><div class="toptext-photo-row">${card(0)}${card(1)}</div></div>`;
+          break;
+        case "landscape_lefttext":
+          photosHtml = `<div class="strip-layout-wrap fmt-landscape_lefttext"><div class="asym-col-left chin-col chin-cell">${chinBlock("cell")}</div><div class="asym-col-right">${card(0)}${card(1)}</div></div>`;
+          break;
+        case "landscape_2split":
+          photosHtml = `<div class="strip-layout-wrap fmt-landscape_2split"><div class="twosplit-photo-row">${card(0)}${card(1)}</div><div class="twosplit-chin-row chin-cell">${chinBlock("cell")}</div></div>`;
+          break;
+        case "hero_split_left":
+          photosHtml = `<div class="strip-layout-wrap fmt-hero_split_left"><div class="hero-top-row"><div class="hero-wide-win">${card(0)}</div><div class="hero-chin-win chin-cell">${chinBlock("cell")}</div></div><div class="hero-bottom-row">${card(1)}${card(2)}${card(3)}</div></div>`;
+          break;
+        case "hero_split_right":
+          photosHtml = `<div class="strip-layout-wrap fmt-hero_split_right"><div class="hero-top-row"><div class="hero-chin-win chin-cell">${chinBlock("cell")}</div><div class="hero-wide-win">${card(0)}</div></div><div class="hero-bottom-row">${card(1)}${card(2)}${card(3)}</div></div>`;
+          break;
+        case "hero_bottom_right":
+          photosHtml = `<div class="strip-layout-wrap fmt-hero_bottom_right"><div class="hero-top-row">${card(0)}${card(1)}${card(2)}</div><div class="hero-bottom-row"><div class="hero-chin-win chin-cell">${chinBlock("cell")}</div><div class="hero-wide-win">${card(3)}</div></div></div>`;
+          break;
+        case "hero_left_stack":
+          photosHtml = `<div class="strip-layout-wrap fmt-hero_left_stack"><div class="hero-col-left"><div class="hero-large-win">${card(0)}</div><div class="hero-chin-win chin-cell">${chinBlock("cell")}</div></div><div class="hero-col-right">${card(1)}${card(2)}${card(3)}</div></div>`;
+          break;
+        case "triptych_3cut":
+          photosHtml = `<div class="strip-layout-wrap fmt-triptych_3cut"><div class="triptych-photo-row">${card(0)}${card(1)}${card(2)}</div><div class="triptych-chin-row chin-cell">${chinBlock("cell")}</div></div>`;
+          break;
+        case "triptych_toptext":
+          photosHtml = `<div class="strip-layout-wrap fmt-triptych_toptext"><div class="triptych-chin-row chin-cell">${chinBlock("cell")}</div><div class="triptych-photo-row">${card(0)}${card(1)}${card(2)}</div></div>`;
+          break;
+        case "triptych_offset":
+          photosHtml = `<div class="strip-layout-wrap fmt-triptych_offset"><div class="trip-col trip-col-side">${card(0)}</div><div class="trip-col trip-col-center">${card(1)}<div class="trip-chin chin-cell">${chinBlock("cell")}</div></div><div class="trip-col trip-col-side">${card(2)}</div></div>`;
+          break;
+        case "classic_3cut":
+        default:
+          photosHtml = `<div class="strip-layout-wrap fmt-classic_3cut">${card(0)}${card(1)}${card(2)}</div>`;
+          break;
       }
+
+      const hasIntegratedChin = [
+        "asym_tr_chin", "asym_br_chin", "asym_tl_chin", "asym_bl_chin", "wide_collage", "asym_collage",
+        "landscape_toptext", "landscape_lefttext", "landscape_2split",
+        "hero_split_left", "hero_split_right", "hero_bottom_right", "hero_left_stack",
+        "triptych_3cut", "triptych_toptext", "triptych_offset"
+      ].includes(this.currentFormat);
 
       const aspect = this.getFormatAspect(this.currentFormat);
       this.stripContainer.className = `photobooth-strip-container strip-layout-${this.currentLayout} strip-format-${this.currentFormat} strip-style-${this.currentStyle} format-aspect-${aspect} strip-aspect-${aspect}`;
@@ -2914,8 +2999,8 @@
         </div>
         ${photosHtml}
         <div class="strip-footer-meta">
-          <div class="strip-caption-txt strip-phrase-slot"><span class="strip-phrase-display">${this.caption}</span></div>
-          <div class="strip-sub-txt">${this.location}${this.showDate ? ` • ${dateStr}` : ""}</div>
+          <div class="strip-caption-txt strip-phrase-slot" style="${hasIntegratedChin ? 'display:none;' : ''}"><span class="strip-phrase-display">${this.caption}</span></div>
+          ${[this.location, this.showDate ? dateStr : null].filter(Boolean).length ? `<div class="strip-sub-txt">${[this.location, this.showDate ? dateStr : null].filter(Boolean).join(" • ")}</div>` : ""}
           ${this.dateStampEnabled ? `<div class="strip-date-stamp-digital">${dateDigital}</div>` : ""}
           <div class="strip-barcode-line">||| | || |||| | ||| | ||</div>
         </div>
@@ -3222,30 +3307,30 @@
       const dimensions = {
         classic_strip: { w: 320, h: 260 + count * 220 },
         classic_3cut: { w: 320, h: 260 + 3 * 220 },
-        double_6cut: { w: 460, h: 680 },
-        double_8cut: { w: 460, h: 860 },
-        film_grid: { w: 460, h: 500 },
-        grid_3x3: { w: 480, h: 520 },
-        portrait_pair: { w: 340, h: 720 },
-        wide_collage: { w: 540, h: 360 },
-        asym_collage: { w: 540, h: 360 },
-        asym_tr_chin: { w: 540, h: 360 },
-        asym_br_chin: { w: 540, h: 360 },
-        asym_tl_chin: { w: 540, h: 360 },
-        asym_bl_chin: { w: 540, h: 360 },
-        polaroid_single: { w: 340, h: 440 },
-        landscape_hero: { w: 540, h: 360 },
-        landscape_single: { w: 540, h: 360 },
-        landscape_2split: { w: 540, h: 360 },
-        landscape_toptext: { w: 540, h: 360 },
-        landscape_lefttext: { w: 540, h: 360 },
-        hero_split_left: { w: 540, h: 360 },
-        hero_split_right: { w: 540, h: 360 },
-        triptych_3cut: { w: 540, h: 360 },
-        triptych_toptext: { w: 540, h: 360 },
-        triptych_offset: { w: 540, h: 360 },
-        hero_bottom_right: { w: 540, h: 360 },
-        hero_left_stack: { w: 540, h: 360 }
+        double_6cut: { w: 460, h: 620 },
+        double_8cut: { w: 460, h: 780 },
+        film_grid: { w: 460, h: 540 },
+        grid_3x3: { w: 480, h: 560 },
+        portrait_pair: { w: 340, h: 580 },
+        wide_collage: { w: 540, h: 440 },
+        asym_collage: { w: 540, h: 440 },
+        asym_tr_chin: { w: 540, h: 440 },
+        asym_br_chin: { w: 540, h: 440 },
+        asym_tl_chin: { w: 540, h: 440 },
+        asym_bl_chin: { w: 540, h: 440 },
+        polaroid_single: { w: 340, h: 460 },
+        landscape_hero: { w: 540, h: 440 },
+        landscape_single: { w: 540, h: 440 },
+        landscape_2split: { w: 540, h: 440 },
+        landscape_toptext: { w: 540, h: 440 },
+        landscape_lefttext: { w: 540, h: 440 },
+        hero_split_left: { w: 540, h: 440 },
+        hero_split_right: { w: 540, h: 440 },
+        triptych_3cut: { w: 540, h: 440 },
+        triptych_toptext: { w: 540, h: 440 },
+        triptych_offset: { w: 540, h: 440 },
+        hero_bottom_right: { w: 540, h: 440 },
+        hero_left_stack: { w: 540, h: 440 }
       };
       const dim = dimensions[this.currentFormat] || dimensions[this.currentLayout] || dimensions.classic_strip;
       const scale = 2;
@@ -3576,9 +3661,12 @@
       ctx.fillStyle = theme.text;
       ctx.font = `bold 15px ${theme.font}`;
       ctx.fillText(this.caption, dim.w / 2, dim.h - 48);
-      ctx.fillStyle = theme.sub;
-      ctx.font = "11px sans-serif";
-      ctx.fillText(`${this.location}${this.showDate ? ` • ${dateStr}` : ""}`, dim.w / 2, dim.h - 32);
+      const subTxt = [this.location, this.showDate ? dateStr : null].filter(Boolean).join(" • ");
+      if (subTxt) {
+        ctx.fillStyle = theme.sub;
+        ctx.font = "11px sans-serif";
+        ctx.fillText(subTxt, dim.w / 2, dim.h - 32);
+      }
       ctx.font = "9px monospace";
       ctx.fillStyle = theme.sub;
       ctx.fillText("||| | || |||| | ||| | ||", dim.w / 2, dim.h - 18);

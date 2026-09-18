@@ -1238,10 +1238,10 @@ const DEFAULT_SECTIONS_DATA = {
     defaultLayout: "classic_strip",
     defaultFilter: "vintage_90s",
     stripCaption: "Alex & Sam ♡ Forever",
-    stripLocation: "PARIS • 2026",
+    stripLocation: "",
     sfxEnabled: true,
     hapticsEnabled: true,
-    showDate: true,
+    showDate: false,
     allowStickers: true,
     samplePhotos: [
       "/public/images/landing-v2/avatar-couple-1.jpg",
