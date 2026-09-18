@@ -113,9 +113,15 @@
   const WHOLE_FRAME_OVERLAYS = [
     { id: "none", name: "Clean", icon: "◻️" },
     { id: "lace", name: "Lace Hearts", icon: "🤍" },
+    { id: "film35", name: "35mm Film", icon: "🎞️" },
     { id: "botanical", name: "Gold Floral", icon: "🌿" },
+    { id: "airmail", name: "Vintage Airmail", icon: "✈️" },
     { id: "y2k_wings", name: "Angel Wings", icon: "🪽" },
-    { id: "celestial", name: "Starry Night", icon: "🌙" }
+    { id: "editorial", name: "Love Chronicle", icon: "📰" },
+    { id: "celestial", name: "Starry Night", icon: "🌙" },
+    { id: "blush_hearts", name: "Blush Hearts", icon: "💖" },
+    { id: "glitter_gold", name: "Golden Glow", icon: "✨" },
+    { id: "polaroid_film", name: "Retro Instant", icon: "📷" }
   ];
 
   const DECO_ITEMS = {
@@ -1600,23 +1606,35 @@
         return;
       }
       if (palette.parentElement) palette.parentElement.style.display = "block";
-      let items = [];
-      if (tab === "stickers") {
-        items = DECO_ITEMS.stickers || [];
-      } else if (tab === "frames") {
-        items = WHOLE_FRAME_OVERLAYS.map(f => ({ id: f.id, type: "frame", val: f.id, label: f.icon || f.name }));
+
+      if (tab === "frames") {
+        palette.className = "sticker-palette ldr-overlay-palette";
+        palette.innerHTML = WHOLE_FRAME_OVERLAYS.map(f => {
+          const isActive = (this.currentOverlay || "none") === f.id;
+          return `
+            <button type="button" class="sticker-item-btn overlay-chip-btn ${isActive ? 'active-overlay' : ''}" data-type="frame" data-val="${f.id}" data-key="${f.id}" title="${f.name}">
+              <span class="overlay-icon">${f.icon}</span>
+              <span class="overlay-name">${f.name}</span>
+            </button>
+          `;
+        }).join("");
       } else {
-        items = DECO_ITEMS[tab] || [];
+        palette.className = "sticker-palette";
+        const items = (tab === "stickers") ? (DECO_ITEMS.stickers || []) : (DECO_ITEMS[tab] || []);
+        palette.innerHTML = items.map(item => `
+          <button type="button" class="sticker-item-btn" data-type="${item.type || 'emoji'}" data-val="${item.val || item.icon || item.text || ''}" data-key="${item.id}">
+            <span class="sticker-thumb">${item.val || item.icon || item.label || item.text || item.name || '✨'}</span>
+          </button>
+        `).join("");
       }
-      palette.innerHTML = items.map(item => `
-        <button type="button" class="sticker-item-btn" data-type="${item.type || 'emoji'}" data-val="${item.val || item.icon || item.text || ''}" data-key="${item.id}">
-          <span class="sticker-thumb">${item.val || item.icon || item.label || item.text || item.name || '✨'}</span>
-        </button>
-      `).join("");
+
       palette.querySelectorAll(".sticker-item-btn").forEach(btn => {
         btn.onclick = () => {
           if (btn.dataset.type === "frame") {
             this.setFrameOverlay(btn.dataset.val);
+            palette.querySelectorAll(".sticker-item-btn").forEach(b => {
+              b.classList.toggle("active-overlay", b.dataset.val === btn.dataset.val);
+            });
             if (this.isLdrMode && this.ldrManager) {
               this.ldrManager.send("SET_OVERLAY", { overlay: btn.dataset.val });
             }
@@ -1667,6 +1685,10 @@
       this.paintStrokes = [];
       this.stickers = [];
       this.lastPrintedStripDataUrl = null;
+      this.currentFilter = "natural";
+      this.applyFilter("natural", isRemote);
+      this.currentOverlay = "none";
+      this.setFrameOverlay("none");
       this.redrawPaintCanvas();
       this.renderStickers();
       this.renderCandidateCards();
@@ -1677,7 +1699,7 @@
       this.play("sparkle");
 
       if (!isRemote && this.ldrManager) {
-        this.ldrManager.send("RESET_NEW_SESSION", { stage: "setup", setupSubStep: 1 });
+        this.ldrManager.send("RESET_NEW_SESSION", { stage: "setup", setupSubStep: 1, filter: "natural", overlay: "none" });
       }
     }
 
@@ -2333,6 +2355,9 @@
       document.querySelectorAll("#ldrModalLayoutPicker .mini-window img").forEach(img => {
         img.style.filter = css;
       });
+      document.querySelectorAll(".candidate-card img").forEach(img => {
+        img.style.filter = css;
+      });
       document.querySelectorAll(".filter-chip-btn").forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.filter === filterKey);
       });
@@ -2907,6 +2932,7 @@
     renderCandidateCards() {
       const targetCount = this.getShotCount();
       const totalCandidates = this.candidatePhotos.length;
+      const filterCss = FILTERS[this.currentFilter]?.css || "none";
       const grids = [
         this.selectionCandidatesGrid,
         document.getElementById("ldrModalCandidatesGrid")
@@ -2919,7 +2945,7 @@
           const badgeText = isSelected ? String(selPos + 1) : "";
           return `
             <div class="candidate-card ${isSelected ? 'selected' : ''}" data-cand-idx="${idx}" tabindex="0">
-              <img src="${src}" alt="Candidate ${idx + 1}">
+              <img src="${src}" alt="Candidate ${idx + 1}" style="filter: ${filterCss};">
               <span class="candidate-order-badge">${badgeText}</span>
               <span class="candidate-time-tag">Shot ${idx + 1}</span>
             </div>
@@ -3996,6 +4022,27 @@
           ctx.fillStyle = "#f9d776";
           ctx.font = "11px sans-serif";
           ctx.fillText("☾ ✦ ★", 30, 20);
+        } else if (this.currentOverlay === "blush_hearts") {
+          ctx.strokeStyle = "#ff758c";
+          ctx.lineWidth = 4;
+          ctx.strokeRect(6, 6, dim.w - 12, dim.h - 12);
+          ctx.fillStyle = "#ff758c";
+          ctx.font = "bold 12px sans-serif";
+          ctx.fillText("♡ ♡ ♡", dim.w / 2, 20);
+        } else if (this.currentOverlay === "glitter_gold") {
+          ctx.strokeStyle = "#ffd700";
+          ctx.lineWidth = 3;
+          ctx.strokeRect(6, 6, dim.w - 12, dim.h - 12);
+          ctx.fillStyle = "#ffd700";
+          ctx.font = "bold 12px sans-serif";
+          ctx.fillText("✧ ★ ✧", dim.w / 2, 20);
+        } else if (this.currentOverlay === "polaroid_film") {
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 6;
+          ctx.strokeRect(3, 3, dim.w - 6, dim.h - 6);
+          ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+          ctx.font = "bold 8px monospace";
+          ctx.fillText("INSTANT MEMORY", dim.w / 2, dim.h - 10);
         }
         ctx.restore();
       }

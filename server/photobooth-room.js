@@ -189,6 +189,8 @@ class PhotoboothRoomServer {
     if (type === "RESET_NEW_SESSION") {
       currentRoom.state.stage = "setup";
       currentRoom.state.setupSubStep = 1;
+      currentRoom.state.filter = "natural";
+      currentRoom.state.overlay = "none";
       currentRoom.state.selectedPhotos = [];
       currentRoom.state.strokes = [];
       currentRoom.state.stickers = [];
@@ -197,6 +199,8 @@ class PhotoboothRoomServer {
         type: "NEW_SESSION_SYNC",
         stage: "setup",
         setupSubStep: 1,
+        filter: "natural",
+        overlay: "none",
         actorId: participantId,
         actorName: participantName
       });
@@ -209,6 +213,8 @@ class PhotoboothRoomServer {
       if (VALID_STAGES.has(stage)) {
         if (stage === "setup" && (currentRoom.state.stage === "print" || payload?.setupSubStep === 1)) {
           currentRoom.state.setupSubStep = 1;
+          currentRoom.state.filter = "natural";
+          currentRoom.state.overlay = "none";
           currentRoom.state.selectedPhotos = [];
           currentRoom.state.strokes = [];
           currentRoom.state.stickers = [];

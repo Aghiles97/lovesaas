@@ -390,6 +390,25 @@ assert(gate22Runtime.includes('type === "NEW_SESSION_SYNC"') && gate22Runtime.in
 assert(gate22Runtime.includes('this.setSetupSubStep(1, isRemote, true)'), "resetToFormatSelection forces transition to Step 1 (Format Selection)");
 assert(gate22Runtime.includes('setSetupSubStep(step, isRemote = false, force = false)'), "setSetupSubStep supports forced rendering for synchronized resets");
 
+// --- GATE 23: 6-Step Wizard Numbering, Filter Candidate Rendering & Clean Overlays ---
+console.log("\n--- GATE 23: 6-Step Wizard Numbering, Filter Candidate Rendering & Clean Overlays ---");
+const gate23Template = fs.readFileSync(path.resolve(__dirname, "../core/templates/photobooth.template.js"), "utf8");
+const gate23Runtime = fs.readFileSync(path.resolve(__dirname, "../public/js/widgets/photobooth.runtime.js"), "utf8");
+const gate23Css = fs.readFileSync(path.resolve(__dirname, "../public/css/widgets/photobooth.css"), "utf8");
+
+assert(gate23Template.includes("Step 1 of 6 • Layout Format"), "Wizard badge displays Step 1 of 6");
+assert(gate23Template.includes("Step 2 of 6 • Border &amp; Filter"), "Wizard badge displays Step 2 of 6");
+assert(gate23Template.includes("Step 3 of 6 • Couple Inscription"), "Wizard badge displays Step 3 of 6");
+assert(gate23Template.includes("Step 4 of 6 • Select Shots"), "Wizard badge displays Step 4 of 6");
+assert(gate23Template.includes("Step 5 of 6 • Decorate Together"), "Wizard badge displays Step 5 of 6");
+assert(gate23Template.includes("Step 6 of 6 • Keepsake Ready"), "Wizard badge displays Step 6 of 6");
+assert(!gate23Template.includes("Your strokes and stickers appear on both screens in real time!"), "Strokes and stickers subtitle removed from Step 5");
+assert(!gate23Template.includes('data-tab="stamps"') && !gate23Template.includes('data-tab="washi"'), "Stamps and washi tabs removed from Step 5 navigation");
+assert(gate23Runtime.includes('style="filter: ${filterCss};"'), "Candidate selection cards render with selected filter");
+assert(gate23Runtime.includes('this.currentFilter = "natural"') && gate23Runtime.includes('this.applyFilter("natural"'), "resetToFormatSelection restarts filter to natural (zero)");
+assert(gate23Runtime.includes('overlay-chip-btn') && gate23Runtime.includes('overlay-name'), "Overlay chips render descriptive names and icons");
+assert(gate23Css.includes(".overlay-blush_hearts") && gate23Css.includes(".overlay-glitter_gold"), "CSS provides styling for expanded overlays");
+
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");
 if (passedChecks === totalChecks) {

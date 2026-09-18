@@ -540,8 +540,8 @@
               <div class="ldr-header-left">
                 <div class="ldr-live-call-status" id="ldrModalLiveCallStatus">
                   <span class="status-pulse-dot waiting" id="ldrModalPulseDot"></span>
-                  <span id="ldrModalStatusText">Long Distance Photobooth</span>
-                  <span class="ldr-audio-indicator" id="ldrAudioIndicator" style="display:none;" title="Audio connected">🎤 Audio Active</span>
+                  <span id="ldrModalStatusText">Photobooth</span>
+                  <span class="ldr-audio-indicator" id="ldrAudioIndicator" style="display:none !important;" title="Audio connected">🎤 Audio Active</span>
                 </div>
               </div>
 
@@ -672,8 +672,8 @@
                 <!-- Clean Connected Screen (Screenshot 2 post-join): Code disappears, both see each other live -->
                 <div class="ldr-partner-connected-card" id="ldrPartnerConnectedCard" style="display:none;">
                   <div class="ldr-connected-banner">
-                    <span class="ldr-connected-tag">💕 Partner Connected & Live!</span>
-                    <span class="ldr-connected-sub">You are connected. Ready to style your photo strip?</span>
+                    <span class="ldr-connected-tag"><span class="status-pulse-dot connected"></span> Connected</span>
+                    <span class="ldr-connected-sub">Ready to style your photo strip?</span>
                   </div>
                   <div class="ldr-dual-preview-row">
                     <div class="ldr-preview-feed-box">
@@ -682,9 +682,9 @@
                     </div>
                     <div class="ldr-preview-feed-box">
                       <video id="ldrVideoFeedLobbyRemote" autoplay playsinline webkit-playsinline muted></video>
-                      <span class="feed-tag">Partner 💕</span>
+                      <span class="feed-tag">Partner</span>
                       <div class="remote-placeholder" id="ldrLobbyRemotePlaceholder" style="display:none;">
-                        <span class="placeholder-icon">💕</span>
+                        <span class="placeholder-icon">📸</span>
                         <span class="placeholder-txt">Connecting video...</span>
                       </div>
                     </div>
@@ -704,7 +704,7 @@
                   <!-- Sub-step 1: Photo Layout Format with Real Frames -->
                   <div class="ldr-setup-substep" id="ldrSetupStepFormat">
                     <div class="ldr-stage-header">
-                      <span class="ldr-step-badge">Step 1 of 3 • Layout Format</span>
+                      <span class="ldr-step-badge">Step 1 of 6 • Layout Format</span>
                       <h3 class="ldr-stage-title">Choose Photo Layout Format</h3>
                     </div>
 
@@ -746,7 +746,7 @@
                   <!-- Sub-step 2: Decorative Border Theme & Color Filter -->
                   <div class="ldr-setup-substep" id="ldrSetupStepTheme" style="display:none;">
                     <div class="ldr-stage-header">
-                      <span class="ldr-step-badge">Step 2 of 3 • Border &amp; Filter</span>
+                      <span class="ldr-step-badge">Step 2 of 6 • Border &amp; Filter</span>
                       <h3 class="ldr-stage-title">Pick Border Theme &amp; Color Tone</h3>
                       <p class="ldr-stage-sub">Select a decorative border artwork and vintage tone for your strip.</p>
                     </div>
@@ -823,7 +823,7 @@
                   <!-- Sub-step 3: Couple Inscription with Live Strip Preview -->
                   <div class="ldr-setup-substep" id="ldrSetupStepCaption" style="display:none;">
                     <div class="ldr-stage-header">
-                      <span class="ldr-step-badge">Step 3 of 3 • Couple Inscription</span>
+                      <span class="ldr-step-badge">Step 3 of 6 • Couple Inscription</span>
                       <h3 class="ldr-stage-title">Your Custom Couple Inscription</h3>
                       <p class="ldr-stage-sub">Shown live on your selected frame format and decorative theme.</p>
                     </div>
@@ -967,15 +967,12 @@
                   <div class="ldr-stage-header">
                     <span class="ldr-step-badge">Step 5 of 6 • Decorate Together</span>
                     <h3 class="ldr-stage-title">Draw, Sign &amp; Decorate Together</h3>
-                    <p class="ldr-stage-sub">Your strokes and stickers appear on both screens in real time!</p>
                   </div>
 
                   <!-- Deco Navigation Tabs -->
                   <div class="photobooth-deco-tabs" id="ldrModalDecoTabs" role="tablist" aria-label="Deco Categories">
                     <button type="button" class="deco-tab-btn active" data-tab="stickers" role="tab">✨ Stickers</button>
                     <button type="button" class="deco-tab-btn" data-tab="frames" role="tab">🖼️ Overlays</button>
-                    <button type="button" class="deco-tab-btn" data-tab="stamps" role="tab">🏷️ Love Stamps</button>
-                    <button type="button" class="deco-tab-btn" data-tab="washi" role="tab">🩹 Tape</button>
                     <button type="button" class="deco-tab-btn" data-tab="paint" role="tab">🎨 Paint &amp; Doodle</button>
                   </div>
 
@@ -1029,7 +1026,7 @@
               <div class="ldr-stage-panel" id="ldrStagePrint" style="display:none;">
                 <div class="ldr-print-wrap">
                   <div class="ldr-stage-header">
-                    <span class="ldr-step-badge">🎉 Keepsake Ready</span>
+                    <span class="ldr-step-badge">Step 6 of 6 • Keepsake Ready</span>
                     <h3 class="ldr-stage-title">Your Couple Photo Strip is Ready!</h3>
                     <p class="ldr-stage-sub">Taken together with love across the distance.</p>
                   </div>
@@ -1057,6 +1054,20 @@
                 </div>
               </div>
 
+            </div>
+          </div>
+
+          <!-- Exit Warning Confirmation Box -->
+          <div class="ldr-exit-confirm-modal" id="ldrExitConfirmModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="ldrExitDialogTitle">
+            <div class="ldr-exit-confirm-backdrop" id="ldrExitConfirmBackdrop"></div>
+            <div class="ldr-exit-confirm-dialog">
+              <div class="ldr-exit-confirm-icon">⚠️</div>
+              <h3 class="ldr-exit-confirm-title" id="ldrExitDialogTitle">Leave Photobooth?</h3>
+              <p class="ldr-exit-confirm-text">Are you sure you want to leave? Your current session will end and any unsaved photos will be lost.</p>
+              <div class="ldr-exit-confirm-actions">
+                <button type="button" class="btn btn-secondary btn-exit-stay" id="btnExitConfirmCancel">No, Stay</button>
+                <button type="button" class="btn btn-danger btn-exit-leave" id="btnExitConfirmLeave">Yes, Leave</button>
+              </div>
             </div>
           </div>
         </div>
