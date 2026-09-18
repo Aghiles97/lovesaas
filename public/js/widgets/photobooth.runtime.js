@@ -112,50 +112,46 @@
 
   const WHOLE_FRAME_OVERLAYS = [
     { id: "none", name: "Clean", icon: "◻️" },
-    { id: "lace", name: "Lace & Hearts", icon: "🤍" },
-    { id: "film35", name: "35mm Kodak", icon: "🎞️" },
-    { id: "botanical", name: "Gold Leaf", icon: "🌿" },
-    { id: "airmail", name: "Airmail Post", icon: "✈️" },
-    { id: "y2k_wings", name: "Y2K Sparkle", icon: "🪽" },
-    { id: "editorial", name: "Gazette", icon: "📰" },
-    { id: "celestial", name: "Celestial", icon: "🌙" }
+    { id: "lace", name: "Lace Hearts", icon: "🤍" },
+    { id: "botanical", name: "Gold Floral", icon: "🌿" },
+    { id: "y2k_wings", name: "Angel Wings", icon: "🪽" },
+    { id: "celestial", name: "Starry Night", icon: "🌙" }
   ];
 
   const DECO_ITEMS = {
     stamps: [
       { id: "wax_seal_heart", type: "stamp", label: "Wax Seal", icon: "🔴", text: "♡" },
-      { id: "postmark_paris", type: "stamp", label: "Paris Postmark", icon: "📮", text: "PARIS" },
-      { id: "stamp_airmail", type: "stamp", label: "Airmail Stamp", icon: "📬", text: "PAR AVION" },
       { id: "stamp_certified", type: "stamp", label: "Certified Love", icon: "💮", text: "100% LOVE" },
-      { id: "stamp_photomaton", type: "stamp", label: "Photomaton", icon: "🏷️", text: "PARIS '26" }
+      { id: "stamp_forever", type: "stamp", label: "Forever ♡", icon: "💌", text: "FOREVER" },
+      { id: "stamp_sweethearts", type: "stamp", label: "Sweethearts", icon: "💖", text: "SWEET ♡ HEARTS" }
     ],
     washi: [
-      { id: "washi_rose", type: "washi", label: "Rose Gold", icon: "✨" },
-      { id: "washi_gingham", type: "washi", label: "Gingham", icon: "🌸" },
-      { id: "washi_kraft", type: "washi", label: "Kraft Paper", icon: "📜" },
-      { id: "washi_corners", type: "washi", label: "Brass Corners", icon: "📐" }
+      { id: "washi_rose", type: "washi", label: "Rose Gold", icon: "🎀" },
+      { id: "washi_gingham", type: "washi", label: "Blush Gingham", icon: "🌸" },
+      { id: "washi_glitter", type: "washi", label: "Gold Glitter", icon: "✨" },
+      { id: "washi_lavender", type: "washi", label: "Soft Lavender", icon: "💜" }
     ],
     stickers: [
       { id: "stk_heart_sparkle", type: "emoji", val: "💖" },
+      { id: "stk_two_hearts", type: "emoji", val: "💕" },
       { id: "stk_heart_hands", type: "emoji", val: "🫶" },
       { id: "stk_kiss", type: "emoji", val: "💋" },
+      { id: "stk_love_letter", type: "emoji", val: "💌" },
+      { id: "stk_ring", type: "emoji", val: "💍" },
+      { id: "stk_rose", type: "emoji", val: "🌹" },
+      { id: "stk_bouquet", type: "emoji", val: "💐" },
       { id: "stk_bow", type: "emoji", val: "🎀" },
       { id: "stk_sparkles", type: "emoji", val: "✨" },
+      { id: "stk_gold_star", type: "emoji", val: "⭐" },
       { id: "stk_cherry_blossom", type: "emoji", val: "🌸" },
       { id: "stk_cherries", type: "emoji", val: "🍒" },
-      { id: "stk_love_letter", type: "emoji", val: "💌" },
-      { id: "stk_teddy", type: "emoji", val: "🧸" },
-      { id: "stk_ring", type: "emoji", val: "💍" },
-      { id: "stk_crown", type: "emoji", val: "👑" },
       { id: "stk_cheers", type: "emoji", val: "🥂" },
-      { id: "stk_rose", type: "emoji", val: "🌹" },
-      { id: "stk_dove", type: "emoji", val: "🕊️" },
-      { id: "stk_film_frames", type: "emoji", val: "🎞️" },
-      { id: "stk_gold_star", type: "emoji", val: "⭐" },
-      { id: "stk_croissant", type: "emoji", val: "🥐" },
-      { id: "stk_bouquet", type: "emoji", val: "💐" },
-      { id: "stk_cupcake", type: "emoji", val: "🧁" },
-      { id: "stk_strawberry", type: "emoji", val: "🍓" }
+      { id: "stk_teddy", type: "emoji", val: "🧸" },
+      { id: "stk_white_heart", type: "emoji", val: "🤍" },
+      { id: "stk_fire_heart", type: "emoji", val: "❤️‍🔥" },
+      { id: "stk_love_face", type: "emoji", val: "🥰" },
+      { id: "stk_dizzy_star", type: "emoji", val: "💫" },
+      { id: "stk_magic", type: "emoji", val: "🪄" }
     ]
   };
 
@@ -383,6 +379,11 @@
           if (state.caption) this.session.updatePhraseDisplays(state.caption, true);
           if (state.setupSubStep) this.session.setSetupSubStep(Number(state.setupSubStep), true);
           if (state.timerSeconds !== undefined) this.session.setTimerSeconds(Number(state.timerSeconds), true);
+          if (state.overlay) this.session.setFrameOverlay(state.overlay);
+          if (Array.isArray(state.stickers)) {
+            this.session.stickers = [...state.stickers];
+            this.session.renderStickers();
+          }
           if (state.strokes) {
             this.session.paintStrokes = [...state.strokes];
             this.session.redrawPaintCanvas();
@@ -652,6 +653,21 @@
       if (type === "PAINT_STATE_RESET") {
         this.session.paintStrokes = [...(msg.strokes || [])];
         this.session.redrawPaintCanvas();
+        return;
+      }
+
+      if (type === "REMOTE_STICKERS_SYNC") {
+        if (Array.isArray(msg.stickers)) {
+          this.session.stickers = [...msg.stickers];
+          this.session.renderStickers();
+        }
+        return;
+      }
+
+      if (type === "REMOTE_OVERLAY_SYNC") {
+        if (msg.overlay) {
+          this.session.setFrameOverlay(msg.overlay);
+        }
         return;
       }
     }
@@ -1602,15 +1618,21 @@
       });
     }
 
-    initLdrPrintStage() {
-      this.renderStrip();
+    async initLdrPrintStage() {
       this.play("sparkle");
       this.play("filmMotor");
       this.vibrate([40, 60, 40]);
 
       const ejectTray = document.getElementById("ldrModalEjectTray");
-      if (ejectTray && this.stripContainer) {
-        ejectTray.innerHTML = `<div class="${this.stripContainer.className}">${this.stripContainer.innerHTML}</div>`;
+      if (ejectTray) {
+        ejectTray.innerHTML = `<div style="color:rgba(255,255,255,0.7); font-size:14px; padding:20px; text-align:center;">Printing your keepsake strip... ✨</div>`;
+        const canvas = await this.generateExportCanvas();
+        const dataUrl = canvas.toDataURL("image/png");
+        ejectTray.innerHTML = `
+          <div class="photobooth-eject-preview-wrap" style="text-align:center; padding:10px 0;">
+            <img src="${dataUrl}" class="eject-printed-strip-img" alt="Your Couple Photo Strip" style="max-height:480px; width:auto; max-width:88vw; margin:0 auto; display:block; border-radius:6px; box-shadow:0 16px 40px rgba(0,0,0,0.6);" />
+          </div>
+        `;
       }
 
       document.getElementById("btnLdrModalDownload")?.addEventListener("click", () => this.exportStrip(), { once: true });
@@ -1621,6 +1643,7 @@
         this.selectedCandidateIndices = [];
         this.capturedPhotos = [];
         this.paintStrokes = [];
+        this.stickers = [];
         this.setLdrStage("setup", false);
       }, { once: true });
       document.getElementById("btnLdrModalFinishExit")?.addEventListener("click", () => this.closeLdrModal(), { once: true });
@@ -3192,8 +3215,10 @@
 
     addSticker(item) {
       if (item.type === "frame") {
-        this.currentOverlay = item.itemKey || item.id || "none";
-        this.renderStrip();
+        this.setFrameOverlay(item.itemKey || item.id || "none");
+        if (this.isLdrMode && this.ldrManager) {
+          this.ldrManager.send("SET_OVERLAY", { overlay: this.currentOverlay });
+        }
         this.play("beep", 660, 0.04);
         return;
       }
@@ -3202,7 +3227,7 @@
         id,
         type: item.type || "emoji",
         val: item.val || item.text || item.id,
-        itemKey: item.id,
+        itemKey: item.itemKey || item.id,
         x: 35 + Math.random() * 30,
         y: 25 + Math.random() * 40,
         scale: 1,
@@ -3211,91 +3236,98 @@
       this.stickers.push(sticker);
       this.selectedStickerId = id;
       this.renderStickers();
+      if (this.isLdrMode && this.ldrManager) {
+        this.ldrManager.send("SYNC_STICKERS", { stickers: this.stickers });
+      }
     }
 
     renderStickers() {
-      const layer = document.getElementById("stripStickersLayer");
-      if (!layer) return;
-      layer.innerHTML = "";
+      const layers = document.querySelectorAll(".strip-stickers-layer");
+      if (!layers.length) return;
 
-      this.stickers.forEach((s) => {
-        const el = document.createElement("div");
-        const isSelected = this.selectedStickerId === s.id;
-        el.className = `photobooth-deco-sticker type-${s.type} ${isSelected ? "selected-sticker" : ""}`;
-        el.dataset.id = s.id;
-        el.style.left = `${s.x}%`;
-        el.style.top = `${s.y}%`;
-        el.style.transform = `translate(-50%, -50%) rotate(${s.rot}deg) scale(${s.scale})`;
+      layers.forEach((layer) => {
+        layer.innerHTML = "";
 
-        let contentHtml = "";
-        if (s.type === "emoji") {
-          contentHtml = `<span style="font-size:32px;">${s.val}</span>`;
-        } else if (s.type === "stamp") {
-          if (s.itemKey === "wax_seal_heart") {
-            contentHtml = `<div class="deco-item-wax">♡</div>`;
-          } else if (s.itemKey === "postmark_paris") {
-            contentHtml = `<div class="deco-item-postmark"><span>PARIS RP</span><span>14.02.26</span><span>AMOUR</span></div>`;
-          } else if (s.itemKey === "stamp_airmail") {
-            contentHtml = `<div class="deco-item-airmail_stamp"><span>✈ PAR AVION</span><span>0.70 €</span></div>`;
-          } else if (s.itemKey === "stamp_certified") {
-            contentHtml = `<div class="deco-item-certified"><span>CERTIFIED</span><span>♡</span><span>100% LOVE</span></div>`;
-          } else {
-            contentHtml = `<div class="deco-item-photomaton">PHOTO-AUTOMATIQUE PARIS</div>`;
+        this.stickers.forEach((s) => {
+          const el = document.createElement("div");
+          const isSelected = this.selectedStickerId === s.id;
+          el.className = `photobooth-deco-sticker type-${s.type} ${isSelected ? "selected-sticker" : ""}`;
+          el.dataset.id = s.id;
+          el.style.left = `${s.x}%`;
+          el.style.top = `${s.y}%`;
+          el.style.transform = `translate(-50%, -50%) rotate(${s.rot}deg) scale(${s.scale})`;
+
+          let contentHtml = "";
+          if (s.type === "emoji" || !s.type) {
+            contentHtml = `<span style="font-size:32px; line-height:1; user-select:none;">${s.val || s.emoji || '💖'}</span>`;
+          } else if (s.type === "stamp") {
+            if (s.itemKey === "wax_seal_heart") {
+              contentHtml = `<div class="deco-item-wax">♡</div>`;
+            } else if (s.itemKey === "stamp_certified") {
+              contentHtml = `<div class="deco-item-certified"><span>CERTIFIED</span><span>♡</span><span>100% LOVE</span></div>`;
+            } else if (s.itemKey === "stamp_forever") {
+              contentHtml = `<div class="deco-item-certified" style="border-color:#ff2d55; color:#ff2d55;"><span>FOREVER</span><span>♡</span><span>&amp; ALWAYS</span></div>`;
+            } else {
+              contentHtml = `<div class="deco-item-certified" style="border-color:#d4af37; color:#d4af37;"><span>SWEET</span><span>♡</span><span>HEARTS</span></div>`;
+            }
+          } else if (s.type === "washi") {
+            if (s.itemKey === "washi_rose") {
+              contentHtml = `<div class="deco-washi-tape washi-rose"></div>`;
+            } else if (s.itemKey === "washi_gingham") {
+              contentHtml = `<div class="deco-washi-tape washi-gingham"></div>`;
+            } else if (s.itemKey === "washi_glitter") {
+              contentHtml = `<div class="deco-washi-tape washi-glitter" style="background:linear-gradient(135deg, #ffd700, #ffb703, #ffeaa7); opacity:0.85;"></div>`;
+            } else {
+              contentHtml = `<div class="deco-washi-tape washi-lavender" style="background:rgba(212,176,229,0.85); border:1px dashed rgba(255,255,255,0.6);"></div>`;
+            }
           }
-        } else if (s.type === "washi") {
-          if (s.itemKey === "washi_rose") {
-            contentHtml = `<div class="deco-washi-tape washi-rose"></div>`;
-          } else if (s.itemKey === "washi_gingham") {
-            contentHtml = `<div class="deco-washi-tape washi-gingham"></div>`;
-          } else if (s.itemKey === "washi_kraft") {
-            contentHtml = `<div class="deco-washi-tape washi-kraft"></div>`;
-          } else {
-            contentHtml = `<div class="washi-corners"></div>`;
+
+          let floatingBarHtml = "";
+          if (isSelected) {
+            floatingBarHtml = `
+              <div class="sticker-float-bar">
+                <button type="button" class="float-btn float-btn-minus" data-act="minus" title="Smaller">−</button>
+                <button type="button" class="float-btn float-btn-plus" data-act="plus" title="Larger">+</button>
+                <button type="button" class="float-btn float-btn-rot" data-act="rot" title="Rotate 45°">↻</button>
+                <button type="button" class="float-btn float-btn-del" data-act="del" title="Remove">🗑</button>
+              </div>
+            `;
           }
-        }
 
-        let floatingBarHtml = "";
-        if (isSelected) {
-          floatingBarHtml = `
-            <div class="sticker-float-bar">
-              <button type="button" class="float-btn float-btn-minus" data-act="minus" title="Smaller">−</button>
-              <button type="button" class="float-btn float-btn-plus" data-act="plus" title="Larger">+</button>
-              <button type="button" class="float-btn float-btn-rot" data-act="rot" title="Rotate 45°">↻</button>
-              <button type="button" class="float-btn float-btn-del" data-act="del" title="Remove">🗑</button>
-            </div>
-          `;
-        }
+          el.innerHTML = contentHtml + floatingBarHtml;
+          el.addEventListener("pointerdown", (e) => this.onStickerPointerDown(e, s, el));
+          layer.appendChild(el);
+        });
 
-        el.innerHTML = contentHtml + floatingBarHtml;
-        el.addEventListener("pointerdown", (e) => this.onStickerPointerDown(e, s, el));
-        layer.appendChild(el);
-      });
-
-      layer.querySelectorAll(".float-btn").forEach((btn) => {
-        btn.addEventListener("pointerdown", (e) => {
-          e.stopPropagation();
-          const act = btn.dataset.act;
-          const s = this.stickers.find(stk => stk.id === this.selectedStickerId);
-          if (!s) return;
-          if (act === "minus") {
-            s.scale = Math.max(0.5, Number((s.scale - 0.15).toFixed(2)));
-            this.renderStickers();
-            this.play("beep", 400, 0.04);
-          } else if (act === "plus") {
-            s.scale = Math.min(2.5, Number((s.scale + 0.15).toFixed(2)));
-            this.renderStickers();
-            this.play("beep", 600, 0.04);
-          } else if (act === "rot") {
-            s.rot = (s.rot + 45) % 360;
-            this.renderStickers();
-            this.play("beep", 520, 0.04);
-          } else if (act === "del") {
-            this.stickers = this.stickers.filter(stk => stk.id !== s.id);
-            this.selectedStickerId = null;
-            this.renderStickers();
-            this.play("beep", 350, 0.05);
-          }
-          this.vibrate(15);
+        layer.querySelectorAll(".float-btn").forEach((btn) => {
+          btn.addEventListener("pointerdown", (e) => {
+            e.stopPropagation();
+            const act = btn.dataset.act;
+            const s = this.stickers.find(stk => stk.id === this.selectedStickerId);
+            if (!s) return;
+            if (act === "minus") {
+              s.scale = Math.max(0.5, Number((s.scale - 0.15).toFixed(2)));
+              this.renderStickers();
+              this.play("beep", 400, 0.04);
+            } else if (act === "plus") {
+              s.scale = Math.min(2.5, Number((s.scale + 0.15).toFixed(2)));
+              this.renderStickers();
+              this.play("beep", 600, 0.04);
+            } else if (act === "rot") {
+              s.rot = (s.rot + 45) % 360;
+              this.renderStickers();
+              this.play("beep", 520, 0.04);
+            } else if (act === "del") {
+              this.stickers = this.stickers.filter(stk => stk.id !== s.id);
+              this.selectedStickerId = null;
+              this.renderStickers();
+              this.play("beep", 350, 0.05);
+            }
+            this.vibrate(15);
+            if (this.isLdrMode && this.ldrManager) {
+              this.ldrManager.send("SYNC_STICKERS", { stickers: this.stickers });
+            }
+          });
         });
       });
     }
@@ -3311,7 +3343,7 @@
         if (newEl) el = newEl;
       }
 
-      const container = this.stripContainer;
+      const container = el.closest(".photobooth-strip-container") || document.getElementById("ldrModalStripContainer") || this.stripContainer;
       if (!container) return;
       const rect = container.getBoundingClientRect();
       const startX = e.clientX;
@@ -3335,6 +3367,9 @@
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerup", onUp);
         window.removeEventListener("pointercancel", onUp);
+        if (this.isLdrMode && this.ldrManager) {
+          this.ldrManager.send("SYNC_STICKERS", { stickers: this.stickers });
+        }
       };
 
       window.addEventListener("pointermove", onMove);
@@ -3890,33 +3925,6 @@
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText("♡", 0, 0);
-          } else if (s.itemKey === "postmark_paris") {
-            ctx.strokeStyle = "#b71c1c";
-            ctx.lineWidth = 2;
-            ctx.setLineDash([4, 3]);
-            ctx.beginPath();
-            ctx.arc(0, 0, 26, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            ctx.fillStyle = "#b71c1c";
-            ctx.font = "bold 7px monospace";
-            ctx.textAlign = "center";
-            ctx.fillText("PARIS RP", 0, -8);
-            ctx.fillText("14.02.26", 0, 2);
-            ctx.fillText("AMOUR", 0, 12);
-          } else if (s.itemKey === "stamp_airmail") {
-            ctx.fillStyle = "#0077b6";
-            ctx.fillRect(-26, -18, 52, 36);
-            ctx.strokeStyle = "#ffffff";
-            ctx.lineWidth = 1.5;
-            ctx.setLineDash([2, 2]);
-            ctx.strokeRect(-24, -16, 48, 32);
-            ctx.setLineDash([]);
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "bold 7px monospace";
-            ctx.textAlign = "center";
-            ctx.fillText("✈ PAR AVION", 0, -2);
-            ctx.fillText("0.70 €", 0, 9);
           } else if (s.itemKey === "stamp_certified") {
             ctx.fillStyle = "#d4af37";
             ctx.beginPath();
@@ -3931,14 +3939,35 @@
             ctx.textAlign = "center";
             ctx.fillText("CERTIFIED", 0, -6);
             ctx.fillText("♡ LOVE", 0, 6);
-          } else {
-            ctx.fillStyle = "#111111";
-            ctx.fillRect(-35, -12, 70, 24);
-            ctx.fillStyle = "#eeeeee";
-            ctx.font = "bold 7px monospace";
+          } else if (s.itemKey === "stamp_forever") {
+            ctx.strokeStyle = "#ff2d55";
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 3]);
+            ctx.beginPath();
+            ctx.arc(0, 0, 24, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = "rgba(255, 45, 85, 0.1)";
+            ctx.fill();
+            ctx.fillStyle = "#ff2d55";
+            ctx.font = "bold 8px monospace";
             ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText("PHOTOMATON", 0, 0);
+            ctx.fillText("FOREVER", 0, -7);
+            ctx.fillText("♡", 0, 1);
+            ctx.fillText("& ALWAYS", 0, 9);
+          } else {
+            ctx.strokeStyle = "#d4af37";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, 24, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.fillStyle = "rgba(212, 175, 55, 0.1)";
+            ctx.fill();
+            ctx.fillStyle = "#d4af37";
+            ctx.font = "bold 8px monospace";
+            ctx.textAlign = "center";
+            ctx.fillText("SWEET", 0, -5);
+            ctx.fillText("HEARTS ♡", 0, 6);
           }
         } else if (s.type === "washi") {
           if (s.itemKey === "washi_rose") {
@@ -3949,17 +3978,18 @@
           } else if (s.itemKey === "washi_gingham") {
             ctx.fillStyle = "rgba(255, 105, 180, 0.7)";
             ctx.fillRect(-40, -10, 80, 20);
-          } else if (s.itemKey === "washi_kraft") {
-            ctx.fillStyle = "#c5a059";
+          } else if (s.itemKey === "washi_glitter") {
+            const g = ctx.createLinearGradient(-40, -10, 40, 10);
+            g.addColorStop(0, "#ffd700");
+            g.addColorStop(0.5, "#ffb703");
+            g.addColorStop(1, "#ffeaa7");
+            ctx.fillStyle = g;
             ctx.fillRect(-40, -10, 80, 20);
           } else {
-            ctx.fillStyle = "#d4af37";
-            ctx.beginPath();
-            ctx.moveTo(-15, -15);
-            ctx.lineTo(15, -15);
-            ctx.lineTo(-15, 15);
-            ctx.closePath();
-            ctx.fill();
+            ctx.fillStyle = "rgba(212, 176, 229, 0.85)";
+            ctx.fillRect(-40, -10, 80, 20);
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
+            ctx.strokeRect(-40, -10, 80, 20);
           }
         }
         ctx.restore();
@@ -3967,7 +3997,7 @@
 
       // Render Paint Strokes onto High-Res Final Strip
       if (this.paintStrokes && this.paintStrokes.length > 0) {
-        const getPt = (p) => Array.isArray(p) ? { x: p[0], y: p[1] } : (p || { x: 0, y: 0 });
+        const getPt = (p) => (Array.isArray(p) ? { x: Number(p[0]) || 0, y: Number(p[1]) || 0 } : { x: Number(p?.x) || 0, y: Number(p?.y) || 0 });
         const strokeScale = dim.w / 360;
         this.paintStrokes.forEach((stroke) => {
           if (!stroke || !stroke.points || stroke.points.length === 0) return;
@@ -4155,7 +4185,7 @@
 
     drawStrokeOnCanvas(stroke) {
       if (!stroke || !stroke.points || stroke.points.length === 0) return;
-      const getPt = (p) => Array.isArray(p) ? { x: p[0], y: p[1] } : (p || { x: 0, y: 0 });
+      const getPt = (p) => (Array.isArray(p) ? { x: Number(p[0]) || 0, y: Number(p[1]) || 0 } : { x: Number(p?.x) || 0, y: Number(p?.y) || 0 });
       this.getPaintCanvases().forEach((canvas) => {
         const ctx = canvas.getContext("2d");
         const w = canvas.width, h = canvas.height;

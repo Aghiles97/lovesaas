@@ -348,6 +348,21 @@ assert(timingRuntime.includes('action === "SET_TIMER"') && timingRuntime.include
 assert(timingRuntime.includes('msg.timerSeconds !== undefined') && timingRuntime.includes("this.session.setTimerSeconds(Number(msg.timerSeconds)"), "Runtime BURST_START_SYNC enforces identical timerSeconds before capture");
 assert(timingRuntime.includes('state.timerSeconds !== undefined'), "Runtime ROOM_JOINED synchronizes initial room timerSeconds");
 
+// --- GATE 20: Real-Time Sticker Sync, Deco Studio Polish & Keepsake Composite ---
+console.log("\n--- GATE 20: Real-Time Sticker Sync, Deco Studio Polish & Keepsake Composite ---");
+const decoRoom = fs.readFileSync(path.resolve(__dirname, "../server/photobooth-room.js"), "utf8");
+const decoRuntime = fs.readFileSync(path.resolve(__dirname, "../public/js/widgets/photobooth.runtime.js"), "utf8");
+const decoTemplate = fs.readFileSync(path.resolve(__dirname, "../core/templates/photobooth.template.js"), "utf8");
+
+assert(decoRoom.includes('type === "SYNC_STICKERS"') && decoRoom.includes('type: "REMOTE_STICKERS_SYNC"'), "Room server synchronizes stickers across participants");
+assert(decoRoom.includes('type === "SET_OVERLAY"') && decoRoom.includes('type: "REMOTE_OVERLAY_SYNC"'), "Room server synchronizes whole frame overlays");
+assert(decoRoom.includes('typeof p?.x === "number"') && decoRoom.includes('parseCoord'), "Room server parseCoord supports both object and array coordinates");
+assert(decoRuntime.includes('this.ldrManager.send("SYNC_STICKERS"') && decoRuntime.includes('type === "REMOTE_STICKERS_SYNC"'), "Runtime implements bidirectional sticker synchronization");
+assert(decoRuntime.includes('type === "REMOTE_OVERLAY_SYNC"'), "Runtime handles remote overlay sync");
+assert(decoRuntime.includes('document.querySelectorAll(".strip-stickers-layer")'), "Runtime renders stickers in modal strip container");
+assert(decoRuntime.includes('await this.generateExportCanvas()') && decoRuntime.includes('eject-printed-strip-img'), "Runtime renders high-fidelity composite strip into keepsake eject tray");
+assert(decoRuntime.includes('Lace Hearts') && decoRuntime.includes('Sweethearts') && decoRuntime.includes('Rose Gold'), "Runtime includes polished romantic decoration items");
+
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");
 if (passedChecks === totalChecks) {

@@ -536,7 +536,7 @@
                 </div>
                 <div class="docked-feed docked-feed-remote">
                   <video id="photoboothVideoDockedRemote" autoplay playsinline webkit-playsinline muted></video>
-                  <span class="docked-tag">Partner 💕</span>
+                  <span class="docked-tag">Partner</span>
                 </div>
               </div>
 
@@ -939,9 +939,9 @@
                   <!-- Deco Navigation Tabs -->
                   <div class="photobooth-deco-tabs" id="ldrModalDecoTabs" role="tablist" aria-label="Deco Categories">
                     <button type="button" class="deco-tab-btn active" data-tab="stickers" role="tab">✨ Stickers</button>
-                    <button type="button" class="deco-tab-btn" data-tab="frames" role="tab">🖼️ Whole Frames</button>
-                    <button type="button" class="deco-tab-btn" data-tab="stamps" role="tab">🏷️ Postal &amp; Wax</button>
-                    <button type="button" class="deco-tab-btn" data-tab="washi" role="tab">🩹 Washi Tape</button>
+                    <button type="button" class="deco-tab-btn" data-tab="frames" role="tab">🖼️ Overlays</button>
+                    <button type="button" class="deco-tab-btn" data-tab="stamps" role="tab">🏷️ Love Stamps</button>
+                    <button type="button" class="deco-tab-btn" data-tab="washi" role="tab">🩹 Tape</button>
                     <button type="button" class="deco-tab-btn" data-tab="paint" role="tab">🎨 Paint &amp; Doodle</button>
                   </div>
 

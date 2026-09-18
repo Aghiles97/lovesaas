@@ -34,7 +34,9 @@ class PhotoboothRoomServer {
           selectedPhotos: [],
           retryCount: 0,
           maxRetries: 1,
-          strokes: []
+          strokes: [],
+          stickers: [],
+          overlay: "none"
         }
       });
     }
@@ -286,13 +288,15 @@ class PhotoboothRoomServer {
     if (type === "PAINT_STROKE") {
       const raw = payload?.stroke;
       if (raw && Array.isArray(raw.points) && raw.points.length > 0) {
+        const parseCoord = (p) => {
+          const x = (typeof p?.x === "number") ? p.x : (Number(p?.[0]) || 0);
+          const y = (typeof p?.y === "number") ? p.y : (Number(p?.[1]) || 0);
+          return [Math.max(0, Math.min(1, x)), Math.max(0, Math.min(1, y))];
+        };
         const safeStroke = {
           color: sanitizeStr(raw.color, 16) || "#ff2d55",
           size: Math.min(Math.max(Number(raw.size) || 6, 1), 50),
-          points: raw.points.slice(0, 400).map(p => [
-            Math.max(0, Math.min(1, Number(p?.[0]) || 0)),
-            Math.max(0, Math.min(1, Number(p?.[1]) || 0))
-          ])
+          points: raw.points.slice(0, 400).map(parseCoord)
         };
         currentRoom.state.strokes.push(safeStroke);
         if (currentRoom.state.strokes.length > 500) currentRoom.state.strokes.shift();
@@ -317,6 +321,38 @@ class PhotoboothRoomServer {
         type: "PAINT_STATE_RESET",
         strokes: currentRoom.state.strokes
       });
+      return;
+    }
+
+    if (type === "SYNC_STICKERS") {
+      const raw = Array.isArray(payload?.stickers) ? payload.stickers : [];
+      const safeStickers = raw.slice(0, 50).map((s) => ({
+        id: sanitizeStr(s.id, 24) || ("stk_" + Math.random().toString(36).slice(2, 8)),
+        type: sanitizeStr(s.type, 16) || "emoji",
+        val: sanitizeStr(s.val || s.emoji, 32) || "💖",
+        itemKey: sanitizeStr(s.itemKey, 32) || "",
+        x: Math.max(0, Math.min(100, Number(s.x) || 50)),
+        y: Math.max(0, Math.min(100, Number(s.y) || 50)),
+        scale: Math.max(0.3, Math.min(3.0, Number(s.scale) || 1)),
+        rot: Math.max(-360, Math.min(360, Number(s.rot) || 0))
+      }));
+      currentRoom.state.stickers = safeStickers;
+      this.broadcast(currentRoom, {
+        type: "REMOTE_STICKERS_SYNC",
+        stickers: safeStickers,
+        senderId: participantId
+      }, sender);
+      return;
+    }
+
+    if (type === "SET_OVERLAY") {
+      const overlay = sanitizeStr(payload?.overlay, 32) || "none";
+      currentRoom.state.overlay = overlay;
+      this.broadcast(currentRoom, {
+        type: "REMOTE_OVERLAY_SYNC",
+        overlay,
+        senderId: participantId
+      }, sender);
       return;
     }
 
