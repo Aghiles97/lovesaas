@@ -310,6 +310,28 @@ assert(latestRuntime.includes('this.currentLdrStage !== "capture"'), "Runtime su
 assert(latestRuntime.includes('PHOTO_SNAPSHOT') && latestRuntime.includes('role === "host"'), "Host broadcasts authoritative PHOTO_SNAPSHOT");
 assert(latestRuntime.includes('SYNC_PHOTO_SELECTION'), "Runtime synchronizes photo selections across partners");
 
+// --- GATE 18: 22-FORMAT LAYOUT & CHIN SLOT PARITY ---
+console.log("\n--- GATE 18: 22-Format Layout & Chin Slot Parity ---");
+const fullRuntime = fs.readFileSync(path.resolve(__dirname, "../public/js/widgets/photobooth.runtime.js"), "utf8");
+const fullCss = fs.readFileSync(path.resolve(__dirname, "../public/css/widgets/photobooth.css"), "utf8");
+
+const expectedFormats = [
+  "classic_3cut", "classic_strip", "double_6cut", "double_8cut", "polaroid_single",
+  "film_grid", "portrait_pair", "asym_tr_chin", "asym_br_chin", "asym_tl_chin",
+  "asym_bl_chin", "landscape_single", "landscape_toptext", "landscape_lefttext",
+  "landscape_2split", "hero_split_left", "hero_split_right", "triptych_3cut",
+  "triptych_toptext", "triptych_offset", "hero_bottom_right", "hero_left_stack"
+];
+
+expectedFormats.forEach(fmt => {
+  assert(fullRuntime.includes(`fmt-${fmt}`), `renderStrip outputs exact format wrapper for ${fmt}`);
+});
+
+assert(fullRuntime.includes("hasIntegratedChin") && fullRuntime.includes("strip-chin-cell"), "renderStrip embeds chin cell and hides duplicate footer phrase");
+assert(fullRuntime.includes("drawChin(") && fullRuntime.includes("drawCover("), "generateExportCanvas implements explicit chin and photo slot geometry");
+assert(fullCss.includes(".strip-layout-wrap.fmt-portrait_pair .strip-photo-card") && fullCss.includes("aspect-ratio: 4 / 3"), "portrait_pair output cards enforce 4:3 landscape ratio to prevent partner crop");
+assert(fullCss.includes(".strip-layout-wrap.fmt-classic_3cut") && fullCss.includes(".strip-layout-wrap.fmt-polaroid_single"), "photobooth.css styles strip-layout-wrap cards for single, strip, and double formats");
+
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");
 if (passedChecks === totalChecks) {
@@ -318,5 +340,6 @@ if (passedChecks === totalChecks) {
   console.error("\n❌ SOME CHECKS FAILED (" + (totalChecks - passedChecks) + " issues)\n");
   process.exitCode = 1;
 }
+
 
 

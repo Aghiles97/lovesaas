@@ -3430,49 +3430,149 @@
         ctx.strokeRect(x, y, w, h);
       };
 
+      const drawChin = (x, y, w, h, txt = this.caption) => {
+        ctx.save();
+        ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+        if (ctx.roundRect) {
+          ctx.beginPath();
+          ctx.roundRect(x, y, w, h, 4);
+          ctx.fill();
+        } else {
+          ctx.fillRect(x, y, w, h);
+        }
+        ctx.fillStyle = "#ffffff";
+        ctx.font = `italic bold ${Math.max(10, Math.min(15, Math.floor(h * 0.26)))}px ${theme.font}`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        const phrase = (txt || "Together Forever ♡").trim();
+        const words = phrase.split(" ");
+        if (words.length > 2 && w < 170) {
+          const mid = Math.ceil(words.length / 2);
+          ctx.fillText(words.slice(0, mid).join(" "), x + w / 2, y + h / 2 - 7);
+          ctx.fillText(words.slice(mid).join(" "), x + w / 2, y + h / 2 + 7);
+        } else {
+          ctx.fillText(phrase, x + w / 2, y + h / 2);
+        }
+        ctx.restore();
+      };
+
       const isNoir = this.currentStyle === "style_noir_film";
       const sideMargin = isNoir ? 28 : 18;
 
       if (this.currentFormat === "polaroid_single") {
         const sz = dim.w - 48;
         drawCover(loadedImages[0], 24, 44, sz, sz);
+      } else if (this.currentFormat === "film_grid") {
+        const gap = 10;
+        const pw = (dim.w - sideMargin * 2 - gap) / 2;
+        const ph = pw;
+        [0, 1, 2, 3].forEach(i => {
+          const col = i % 2;
+          const row = Math.floor(i / 2);
+          drawCover(loadedImages[i], sideMargin + col * (pw + gap), 44 + row * (ph + gap), pw, ph);
+        });
+      } else if (this.currentFormat === "grid_3x3") {
+        const gap = 8;
+        const pw = (dim.w - sideMargin * 2 - gap * 2) / 3;
+        const ph = pw;
+        for (let i = 0; i < 9; i++) {
+          const col = i % 3;
+          const row = Math.floor(i / 3);
+          drawCover(loadedImages[i], sideMargin + col * (pw + gap), 44 + row * (ph + gap), pw, ph);
+        }
+      } else if (this.currentFormat === "double_6cut") {
+        const gap = 10;
+        const pw = (dim.w - sideMargin * 2 - gap) / 2;
+        const ph = (dim.h - 130 - gap * 2) / 3;
+        for (let i = 0; i < 6; i++) {
+          const col = i % 2;
+          const row = Math.floor(i / 2);
+          drawCover(loadedImages[i], sideMargin + col * (pw + gap), 44 + row * (ph + gap), pw, ph);
+        }
+      } else if (this.currentFormat === "double_8cut") {
+        const gap = 8;
+        const pw = (dim.w - sideMargin * 2 - gap) / 2;
+        const ph = (dim.h - 130 - gap * 3) / 4;
+        for (let i = 0; i < 8; i++) {
+          const col = i % 2;
+          const row = Math.floor(i / 2);
+          drawCover(loadedImages[i], sideMargin + col * (pw + gap), 44 + row * (ph + gap), pw, ph);
+        }
+      } else if (this.currentFormat === "portrait_pair") {
+        const gap = 12;
+        const pw = dim.w - sideMargin * 2;
+        const ph = (dim.h - 130 - gap) / 2;
+        drawCover(loadedImages[0], sideMargin, 44, pw, ph);
+        drawCover(loadedImages[1], sideMargin, 44 + ph + gap, pw, ph);
       } else if (this.currentFormat === "landscape_hero" || this.currentFormat === "landscape_single") {
         const pw = dim.w - sideMargin * 2;
         const ph = dim.h - 130;
         drawCover(loadedImages[0], sideMargin, 44, pw, ph);
-      } else if (this.currentFormat === "landscape_2split" || this.currentFormat === "landscape_toptext") {
-        const gap = 12;
-        const pw = (dim.w - sideMargin * 2 - gap) / 2;
-        const ph = dim.h - 130;
-        const startY = this.currentFormat === "landscape_toptext" ? 56 : 44;
-        drawCover(loadedImages[0], sideMargin, startY, pw, ph);
-        drawCover(loadedImages[1], sideMargin + pw + gap, startY, pw, ph);
-      } else if (this.currentFormat === "landscape_lefttext") {
-        const leftW = (dim.w - sideMargin * 2) * 0.42;
-        const rightW = (dim.w - sideMargin * 2) * 0.58 - 10;
-        const ph = (dim.h - 130 - 10) / 2;
-        drawCover(loadedImages[0], sideMargin + leftW + 10, 44, rightW, ph);
-        drawCover(loadedImages[1], sideMargin + leftW + 10, 44 + ph + 10, rightW, ph);
-      } else if (this.currentFormat === "triptych_3cut" || this.currentFormat === "triptych_toptext") {
+      } else if (this.currentFormat === "landscape_toptext") {
         const gap = 10;
-        const pw = (dim.w - sideMargin * 2 - gap * 2) / 3;
-        const ph = dim.h - 130;
-        const startY = this.currentFormat === "triptych_toptext" ? 56 : 44;
-        drawCover(loadedImages[0], sideMargin, startY, pw, ph);
-        drawCover(loadedImages[1], sideMargin + pw + gap, startY, pw, ph);
-        drawCover(loadedImages[2], sideMargin + (pw + gap) * 2, startY, pw, ph);
+        const totalW = dim.w - sideMargin * 2;
+        const chinH = (dim.h - 130 - gap) * 0.28;
+        const photoH = (dim.h - 130 - gap) * 0.72;
+        const pw = (totalW - gap) / 2;
+        drawChin(sideMargin, 44, totalW, chinH);
+        drawCover(loadedImages[0], sideMargin, 44 + chinH + gap, pw, photoH);
+        drawCover(loadedImages[1], sideMargin + pw + gap, 44 + chinH + gap, pw, photoH);
+      } else if (this.currentFormat === "landscape_2split") {
+        const gap = 10;
+        const totalW = dim.w - sideMargin * 2;
+        const photoH = (dim.h - 130 - gap) * 0.72;
+        const chinH = (dim.h - 130 - gap) * 0.28;
+        const pw = (totalW - gap) / 2;
+        drawCover(loadedImages[0], sideMargin, 44, pw, photoH);
+        drawCover(loadedImages[1], sideMargin + pw + gap, 44, pw, photoH);
+        drawChin(sideMargin, 44 + photoH + gap, totalW, chinH);
+      } else if (this.currentFormat === "landscape_lefttext") {
+        const gap = 10;
+        const totalW = dim.w - sideMargin * 2;
+        const totalH = dim.h - 130;
+        const leftW = (totalW - gap) * 0.42;
+        const rightW = totalW - gap - leftW;
+        const ph = (totalH - gap) / 2;
+        drawChin(sideMargin, 44, leftW, totalH);
+        drawCover(loadedImages[0], sideMargin + leftW + gap, 44, rightW, ph);
+        drawCover(loadedImages[1], sideMargin + leftW + gap, 44 + ph + gap, rightW, ph);
+      } else if (this.currentFormat === "triptych_3cut") {
+        const gap = 10;
+        const totalW = dim.w - sideMargin * 2;
+        const photoH = (dim.h - 130 - gap) * 0.74;
+        const chinH = (dim.h - 130 - gap) * 0.26;
+        const pw = (totalW - gap * 2) / 3;
+        drawCover(loadedImages[0], sideMargin, 44, pw, photoH);
+        drawCover(loadedImages[1], sideMargin + pw + gap, 44, pw, photoH);
+        drawCover(loadedImages[2], sideMargin + (pw + gap) * 2, 44, pw, photoH);
+        drawChin(sideMargin, 44 + photoH + gap, totalW, chinH);
+      } else if (this.currentFormat === "triptych_toptext") {
+        const gap = 10;
+        const totalW = dim.w - sideMargin * 2;
+        const chinH = (dim.h - 130 - gap) * 0.26;
+        const photoH = (dim.h - 130 - gap) * 0.74;
+        const pw = (totalW - gap * 2) / 3;
+        drawChin(sideMargin, 44, totalW, chinH);
+        drawCover(loadedImages[0], sideMargin, 44 + chinH + gap, pw, photoH);
+        drawCover(loadedImages[1], sideMargin + pw + gap, 44 + chinH + gap, pw, photoH);
+        drawCover(loadedImages[2], sideMargin + (pw + gap) * 2, 44 + chinH + gap, pw, photoH);
       } else if (this.currentFormat === "triptych_offset") {
         const gap = 10;
-        const pw = (dim.w - sideMargin * 2 - gap * 2) / 3;
-        const ph = dim.h - 130;
-        drawCover(loadedImages[0], sideMargin, 44 + 20, pw, ph - 20);
-        drawCover(loadedImages[1], sideMargin + pw + gap, 44, pw, ph - 35);
-        drawCover(loadedImages[2], sideMargin + (pw + gap) * 2, 44 + 20, pw, ph - 20);
+        const totalW = dim.w - sideMargin * 2;
+        const totalH = dim.h - 130;
+        const pw = (totalW - gap * 2) / 3;
+        const centerPhotoH = (totalH - gap) * 0.72;
+        const chinH = (totalH - gap) * 0.28;
+        drawCover(loadedImages[0], sideMargin, 44, pw, totalH);
+        drawCover(loadedImages[1], sideMargin + pw + gap, 44, pw, centerPhotoH);
+        drawChin(sideMargin + pw + gap, 44 + centerPhotoH + gap, pw, chinH);
+        drawCover(loadedImages[2], sideMargin + (pw + gap) * 2, 44, pw, totalH);
       } else if (this.currentFormat === "asym_tr_chin" || this.currentFormat === "wide_collage" || this.currentFormat === "asym_collage") {
         const gap = 10;
         const pw = (dim.w - sideMargin * 2 - gap) / 2;
         const ph = (dim.h - 130 - gap) / 2;
         drawCover(loadedImages[0], sideMargin, 44, pw, ph);
+        drawChin(sideMargin + pw + gap, 44, pw, ph);
         drawCover(loadedImages[1], sideMargin, 44 + ph + gap, pw, ph);
         drawCover(loadedImages[2], sideMargin + pw + gap, 44 + ph + gap, pw, ph);
       } else if (this.currentFormat === "asym_br_chin") {
@@ -3482,10 +3582,12 @@
         drawCover(loadedImages[0], sideMargin, 44, pw, ph);
         drawCover(loadedImages[1], sideMargin + pw + gap, 44, pw, ph);
         drawCover(loadedImages[2], sideMargin, 44 + ph + gap, pw, ph);
+        drawChin(sideMargin + pw + gap, 44 + ph + gap, pw, ph);
       } else if (this.currentFormat === "asym_tl_chin") {
         const gap = 10;
         const pw = (dim.w - sideMargin * 2 - gap) / 2;
         const ph = (dim.h - 130 - gap) / 2;
+        drawChin(sideMargin, 44, pw, ph);
         drawCover(loadedImages[0], sideMargin + pw + gap, 44, pw, ph);
         drawCover(loadedImages[1], sideMargin, 44 + ph + gap, pw, ph);
         drawCover(loadedImages[2], sideMargin + pw + gap, 44 + ph + gap, pw, ph);
@@ -3495,6 +3597,7 @@
         const ph = (dim.h - 130 - gap) / 2;
         drawCover(loadedImages[0], sideMargin, 44, pw, ph);
         drawCover(loadedImages[1], sideMargin + pw + gap, 44, pw, ph);
+        drawChin(sideMargin, 44 + ph + gap, pw, ph);
         drawCover(loadedImages[2], sideMargin + pw + gap, 44 + ph + gap, pw, ph);
       } else if (this.currentFormat === "hero_split_left") {
         const gap = 10;
@@ -3502,8 +3605,10 @@
         const topH = (dim.h - 130 - gap) * 0.58;
         const botH = (dim.h - 130 - gap) * 0.42;
         const heroW = (totalW - gap) * (2 / 3);
+        const chinW = (totalW - gap) * (1 / 3);
         const subW = (totalW - gap * 2) / 3;
         drawCover(loadedImages[0], sideMargin, 44, heroW, topH);
+        drawChin(sideMargin + heroW + gap, 44, chinW, topH);
         drawCover(loadedImages[1], sideMargin, 44 + topH + gap, subW, botH);
         drawCover(loadedImages[2], sideMargin + subW + gap, 44 + topH + gap, subW, botH);
         drawCover(loadedImages[3], sideMargin + (subW + gap) * 2, 44 + topH + gap, subW, botH);
@@ -3512,9 +3617,10 @@
         const totalW = dim.w - sideMargin * 2;
         const topH = (dim.h - 130 - gap) * 0.58;
         const botH = (dim.h - 130 - gap) * 0.42;
-        const heroW = (totalW - gap) * (2 / 3);
         const chinW = (totalW - gap) * (1 / 3);
+        const heroW = (totalW - gap) * (2 / 3);
         const subW = (totalW - gap * 2) / 3;
+        drawChin(sideMargin, 44, chinW, topH);
         drawCover(loadedImages[0], sideMargin + chinW + gap, 44, heroW, topH);
         drawCover(loadedImages[1], sideMargin, 44 + topH + gap, subW, botH);
         drawCover(loadedImages[2], sideMargin + subW + gap, 44 + topH + gap, subW, botH);
@@ -3525,11 +3631,12 @@
         const topH = (dim.h - 130 - gap) * 0.42;
         const botH = (dim.h - 130 - gap) * 0.58;
         const subW = (totalW - gap * 2) / 3;
-        const heroW = (totalW - gap) * (2 / 3);
         const chinW = (totalW - gap) * (1 / 3);
+        const heroW = (totalW - gap) * (2 / 3);
         drawCover(loadedImages[0], sideMargin, 44, subW, topH);
         drawCover(loadedImages[1], sideMargin + subW + gap, 44, subW, topH);
         drawCover(loadedImages[2], sideMargin + (subW + gap) * 2, 44, subW, topH);
+        drawChin(sideMargin, 44 + topH + gap, chinW, botH);
         drawCover(loadedImages[3], sideMargin + chinW + gap, 44 + topH + gap, heroW, botH);
       } else if (this.currentFormat === "hero_left_stack") {
         const gap = 10;
@@ -3537,9 +3644,11 @@
         const totalH = dim.h - 130;
         const leftW = (totalW - gap) * 0.62;
         const rightW = (totalW - gap) * 0.38;
-        const heroH = totalH * 0.72;
+        const heroH = totalH * 0.70;
+        const chinH = totalH - gap - heroH;
         const subH = (totalH - gap * 2) / 3;
         drawCover(loadedImages[0], sideMargin, 44, leftW, heroH);
+        drawChin(sideMargin, 44 + heroH + gap, leftW, chinH);
         drawCover(loadedImages[1], sideMargin + leftW + gap, 44, rightW, subH);
         drawCover(loadedImages[2], sideMargin + leftW + gap, 44 + subH + gap, rightW, subH);
         drawCover(loadedImages[3], sideMargin + leftW + gap, 44 + (subH + gap) * 2, rightW, subH);
@@ -3656,11 +3765,20 @@
         ctx.restore();
       }
 
+      const hasIntegratedChin = [
+        "asym_tr_chin", "asym_br_chin", "asym_tl_chin", "asym_bl_chin", "wide_collage", "asym_collage",
+        "landscape_toptext", "landscape_lefttext", "landscape_2split",
+        "hero_split_left", "hero_split_right", "hero_bottom_right", "hero_left_stack",
+        "triptych_3cut", "triptych_toptext", "triptych_offset"
+      ].includes(this.currentFormat);
+
       ctx.save();
       ctx.textAlign = "center";
       ctx.fillStyle = theme.text;
-      ctx.font = `bold 15px ${theme.font}`;
-      ctx.fillText(this.caption, dim.w / 2, dim.h - 48);
+      if (!hasIntegratedChin) {
+        ctx.font = `bold 15px ${theme.font}`;
+        ctx.fillText(this.caption, dim.w / 2, dim.h - 48);
+      }
       const subTxt = [this.location, this.showDate ? dateStr : null].filter(Boolean).join(" • ");
       if (subTxt) {
         ctx.fillStyle = theme.sub;
