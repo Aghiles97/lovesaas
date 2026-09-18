@@ -331,6 +331,22 @@ assert(fullRuntime.includes("hasIntegratedChin") && fullRuntime.includes("strip-
 assert(fullRuntime.includes("drawChin(") && fullRuntime.includes("drawCover("), "generateExportCanvas implements explicit chin and photo slot geometry");
 assert(fullCss.includes(".strip-layout-wrap.fmt-portrait_pair .strip-photo-card") && fullCss.includes("aspect-ratio: 4 / 3"), "portrait_pair output cards enforce 4:3 landscape ratio to prevent partner crop");
 assert(fullCss.includes(".strip-layout-wrap.fmt-classic_3cut") && fullCss.includes(".strip-layout-wrap.fmt-polaroid_single"), "photobooth.css styles strip-layout-wrap cards for single, strip, and double formats");
+assert(fullCss.includes(".format-frame-preview .fmt-double_8cut") && fullCss.includes("repeat(4, minmax(0, 1fr))"), "preview cards use responsive 1fr rows for double_8cut preventing top photo cropping");
+assert(fullCss.includes(".format-frame-preview .fmt-double_6cut") && fullCss.includes("repeat(3, minmax(0, 1fr))"), "preview cards use responsive 1fr rows for double_6cut preventing top photo cropping");
+assert(fullCss.includes(".format-frame-preview .mini-windows-wrap") && fullCss.includes("flex: 1 1 0"), "mini-windows-wrap uses flex: 1 1 0 to adapt cleanly to card preview height");
+
+// --- GATE 19: SYNCHRONIZED SHOT TIMING & COUNTDOWN PARITY ---
+console.log("\n--- GATE 19: Synchronized Shot Timing (Countdown Parity) ---");
+const timingRoom = fs.readFileSync(path.resolve(__dirname, "../server/photobooth-room.js"), "utf8");
+const timingRuntime = fs.readFileSync(path.resolve(__dirname, "../public/js/widgets/photobooth.runtime.js"), "utf8");
+
+assert(timingRoom.includes('"timerSeconds"'), "Room server ALLOWED_FIELDS includes timerSeconds");
+assert(timingRoom.includes('field === "timerSeconds"'), "Room server ACTION_CLICK updates state.timerSeconds");
+assert(timingRoom.includes('currentRoom.state.timerSeconds = timerSeconds'), "Room server BURST_START_REQ persists and broadcasts timerSeconds");
+assert(timingRuntime.includes("setTimerSeconds(sec"), "Runtime PhotoboothSession implements setTimerSeconds method");
+assert(timingRuntime.includes('action === "SET_TIMER"') && timingRuntime.includes("setTimerSeconds(Number(value)"), "Runtime ACTION_APPLIED applies SET_TIMER to both participants");
+assert(timingRuntime.includes('msg.timerSeconds !== undefined') && timingRuntime.includes("this.session.setTimerSeconds(Number(msg.timerSeconds)"), "Runtime BURST_START_SYNC enforces identical timerSeconds before capture");
+assert(timingRuntime.includes('state.timerSeconds !== undefined'), "Runtime ROOM_JOINED synchronizes initial room timerSeconds");
 
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");

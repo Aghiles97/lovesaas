@@ -5,7 +5,7 @@ try {
   console.warn("⚠️ [Photobooth] Package 'ws' not installed. WebSocket rooms disabled until npm install.");
 }
 
-const ALLOWED_FIELDS = new Set(["format", "style", "filter", "caption", "stage", "setupSubStep"]);
+const ALLOWED_FIELDS = new Set(["format", "style", "filter", "caption", "stage", "setupSubStep", "timerSeconds"]);
 const sanitizeStr = (s, len = 80) => String(s || "").replace(/<[^>]*>/g, "").slice(0, len).trim();
 
 class PhotoboothRoomServer {
@@ -30,6 +30,7 @@ class PhotoboothRoomServer {
           style: "style_cyan_stars",
           filter: "vintage_90s",
           caption: "Together Forever ♡",
+          timerSeconds: 3,
           selectedPhotos: [],
           retryCount: 0,
           maxRetries: 1,
@@ -203,6 +204,8 @@ class PhotoboothRoomServer {
       if (field && ALLOWED_FIELDS.has(field) && value !== undefined) {
         if (field === "setupSubStep") {
           currentRoom.state[field] = Math.min(3, Math.max(1, parseInt(value, 10) || 1));
+        } else if (field === "timerSeconds") {
+          currentRoom.state[field] = Math.max(0, parseInt(value, 10) || 0);
         } else {
           currentRoom.state[field] = (typeof value === "string") ? sanitizeStr(value, field === "caption" ? 80 : 32) : value;
         }
@@ -229,12 +232,14 @@ class PhotoboothRoomServer {
     }
 
     if (type === "BURST_START_REQ") {
+      const timerSeconds = (payload?.timerSeconds !== undefined) ? (parseInt(payload.timerSeconds, 10) || 0) : (currentRoom.state.timerSeconds ?? 3);
+      currentRoom.state.timerSeconds = timerSeconds;
       this.broadcastAll(currentRoom, {
         type: "BURST_START_SYNC",
         initiatorId: participantId,
         timestamp: Date.now(),
         shotCount: payload?.shotCount || 6,
-        timerSeconds: payload?.timerSeconds || 3
+        timerSeconds
       });
       return;
     }

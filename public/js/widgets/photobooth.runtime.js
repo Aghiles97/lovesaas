@@ -382,6 +382,7 @@
           if (state.filter) this.session.applyFilter(state.filter, true);
           if (state.caption) this.session.updatePhraseDisplays(state.caption, true);
           if (state.setupSubStep) this.session.setSetupSubStep(Number(state.setupSubStep), true);
+          if (state.timerSeconds !== undefined) this.session.setTimerSeconds(Number(state.timerSeconds), true);
           if (state.strokes) {
             this.session.paintStrokes = [...state.strokes];
             this.session.redrawPaintCanvas();
@@ -595,10 +596,14 @@
         else if (action === "SET_FILTER" && value) this.session.applyFilter(value, true);
         else if (action === "SET_CAPTION" && value) this.session.updatePhraseDisplays(value, true);
         else if (action === "SET_SETUP_SUBSTEP" && value) this.session.setSetupSubStep(Number(value), true);
+        else if (action === "SET_TIMER" && value !== undefined) this.session.setTimerSeconds(Number(value), true);
         return;
       }
 
       if (type === "BURST_START_SYNC") {
+        if (msg.timerSeconds !== undefined) {
+          this.session.setTimerSeconds(Number(msg.timerSeconds), true);
+        }
         this.session.runBurstSequence(msg.shotCount);
         return;
       }
@@ -1454,9 +1459,7 @@
       this.updateBurstProgress(0, this.getTrialCount());
       document.querySelectorAll(".ldr-timer-chip").forEach(chip => {
         chip.onclick = () => {
-          document.querySelectorAll(".ldr-timer-chip").forEach(c => c.classList.remove("active"));
-          chip.classList.add("active");
-          this.countdownSeconds = Number(chip.dataset.timer) || 3;
+          this.setTimerSeconds(Number(chip.dataset.timer) || 0);
           this.play("beep", 600, 0.03);
         };
       });
@@ -1819,11 +1822,9 @@
         this.renderStrip();
       });
 
-      document.querySelectorAll(".pro-chip-btn").forEach((btn) => {
+      document.querySelectorAll(".pro-chip-btn[data-timer]").forEach((btn) => {
         btn.addEventListener("click", () => {
-          document.querySelectorAll(".pro-chip-btn").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-          this.countdownSeconds = Number(btn.dataset.timer) || 3;
+          this.setTimerSeconds(Number(btn.dataset.timer) || 0);
           this.vibrate(15);
         });
       });
@@ -2278,6 +2279,17 @@
       }
     }
 
+    setTimerSeconds(sec, isRemote = false) {
+      const val = (sec !== undefined && !isNaN(Number(sec))) ? Number(sec) : 3;
+      this.countdownSeconds = val;
+      document.querySelectorAll(".ldr-timer-chip, .booth-timer-picker .pro-chip-btn[data-timer]").forEach((btn) => {
+        btn.classList.toggle("active", Number(btn.dataset.timer) === val);
+      });
+      if (this.isLdrMode && !isRemote && this.ldrManager) {
+        this.ldrManager.sendAction("SET_TIMER", "timerSeconds", val);
+      }
+    }
+
     setLayout(layoutKey) {
       this.setFormat(layoutKey);
     }
@@ -2425,7 +2437,7 @@
         const ldrOverlay = document.getElementById("ldrModalCountdown");
         if (ldrOverlay) ldrOverlay.style.display = "flex";
 
-        let count = Number(this.countdownSeconds) || 3;
+        let count = (this.countdownSeconds !== undefined && !isNaN(Number(this.countdownSeconds))) ? Number(this.countdownSeconds) : 3;
         if (count <= 0) {
           if (this.countdownOverlay) this.countdownOverlay.style.display = "none";
           if (ldrOverlay) ldrOverlay.style.display = "none";
