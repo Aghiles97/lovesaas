@@ -6268,3 +6268,95 @@
 .docked-feed-local video {
   transform: scaleX(-1);
 }
+
+/* Exit Confirmation Warning Modal */
+.ldr-exit-confirm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+.ldr-exit-confirm-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.ldr-exit-confirm-dialog {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 340px;
+  background: rgba(22, 20, 30, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 20px;
+  padding: 24px 20px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+  animation: exitPopIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+@keyframes exitPopIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+.ldr-exit-confirm-icon {
+  font-size: 2rem;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+.ldr-exit-confirm-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 6px 0;
+}
+.ldr-exit-confirm-text {
+  font-size: 0.86rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0 0 20px 0;
+}
+.ldr-exit-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+.btn-exit-stay {
+  height: 44px;
+  min-height: 44px;
+  font-weight: 600;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.88rem;
+}
+.btn-exit-leave {
+  height: 44px;
+  min-height: 44px;
+  font-weight: 600;
+  border-radius: 12px;
+  background: #ff3b30 !important;
+  color: #ffffff !important;
+  border: none !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.88rem;
+}
+.btn-exit-stay:active,
+.btn-exit-leave:active {
+  transform: scale(0.96);
+}

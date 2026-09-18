@@ -409,6 +409,19 @@ assert(gate23Runtime.includes('this.currentFilter = "natural"') && gate23Runtime
 assert(gate23Runtime.includes('overlay-chip-btn') && gate23Runtime.includes('overlay-name'), "Overlay chips render descriptive names and icons");
 assert(gate23Css.includes(".overlay-blush_hearts") && gate23Css.includes(".overlay-glitter_gold"), "CSS provides styling for expanded overlays");
 
+// --- GATE 24: Exit Confirmation Warning Dialog & Mobile Status Dot Parity ---
+console.log("\n--- GATE 24: Exit Confirmation Warning Dialog & Mobile Status Dot Parity ---");
+const gate24Template = fs.readFileSync(path.resolve(__dirname, "../core/templates/photobooth.template.js"), "utf8");
+const gate24Runtime = fs.readFileSync(path.resolve(__dirname, "../public/js/widgets/photobooth.runtime.js"), "utf8");
+const gate24Css = fs.readFileSync(path.resolve(__dirname, "../public/css/widgets/photobooth.css"), "utf8");
+
+assert(gate24Template.includes('id="ldrExitConfirmModal"') && gate24Template.includes('id="btnExitConfirmLeave"'), "Template contains exit warning confirmation modal and action buttons");
+assert(gate24Runtime.includes('handleModalCloseClick()') && gate24Runtime.includes('showExitConfirmDialog()'), "Runtime implements exit warning dialog trigger and handler");
+assert(gate24Runtime.includes('exitToFirstScreen()') && gate24Runtime.includes('setLdrStage("welcome"'), "exitToFirstScreen resets session and navigates to Stage 0 welcome screen");
+assert(gate24Runtime.includes('statusText = (msg.participantCount >= 2) ? "Connected" : "Waiting for partner..."'), "Status text displays clean Connected without heart emoji");
+assert(gate24Css.includes(".ldr-exit-confirm-modal") && gate24Css.includes(".btn-exit-leave"), "CSS styles exit confirmation warning modal");
+assert(gate24Css.includes(".ldr-audio-indicator") && gate24Css.includes("display: none !important"), "CSS hides bulky audio badge for clean green dot mobile ergonomics");
+
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");
 if (passedChecks === totalChecks) {

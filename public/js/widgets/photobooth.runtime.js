@@ -401,7 +401,7 @@
         const modalBadge = document.getElementById("ldrModalStatusText");
         const dot = document.getElementById("ldrPulseDot");
         const modalDot = document.getElementById("ldrModalPulseDot");
-        const statusText = (msg.participantCount >= 2) ? "Partner connected 💕" : "Waiting for partner...";
+        const statusText = (msg.participantCount >= 2) ? "Connected" : "Waiting for partner...";
         if (badge) badge.textContent = statusText;
         if (modalBadge) modalBadge.textContent = statusText;
         const dotClass = (msg.participantCount >= 2) ? "status-pulse-dot connected" : "status-pulse-dot waiting";
@@ -453,9 +453,8 @@
         const modalBadge = document.getElementById("ldrModalStatusText");
         const dot = document.getElementById("ldrPulseDot");
         const modalDot = document.getElementById("ldrModalPulseDot");
-        const partnerName = partner?.name || "Partner";
-        if (badge) badge.textContent = `${partnerName} connected 💕`;
-        if (modalBadge) modalBadge.textContent = `${partnerName} connected 💕`;
+        if (badge) badge.textContent = "Connected";
+        if (modalBadge) modalBadge.textContent = "Connected";
         if (dot) dot.className = "status-pulse-dot connected";
         if (modalDot) modalDot.className = "status-pulse-dot connected";
 
@@ -535,8 +534,8 @@
         const modalBadge = document.getElementById("ldrModalStatusText");
         const dot = document.getElementById("ldrPulseDot");
         const modalDot = document.getElementById("ldrModalPulseDot");
-        if (badge) badge.textContent = "Partner disconnected";
-        if (modalBadge) modalBadge.textContent = "Partner disconnected";
+        if (badge) badge.textContent = "Disconnected";
+        if (modalBadge) modalBadge.textContent = "Disconnected";
         if (dot) dot.className = "status-pulse-dot waiting";
         if (modalDot) modalDot.className = "status-pulse-dot waiting";
 
@@ -1247,6 +1246,98 @@
       this.play("beep", 660, 0.05);
     }
 
+    handleModalCloseClick() {
+      if (this.currentLdrStage === "welcome" && !this.ldrManager && (!this.capturedPhotos || this.capturedPhotos.length === 0)) {
+        if (typeof window !== "undefined" && window.IS_STANDALONE_PHOTOBOOTH) {
+          return;
+        }
+        this.closeLdrModal();
+        return;
+      }
+      this.showExitConfirmDialog();
+    }
+
+    showExitConfirmDialog() {
+      const confirmModal = document.getElementById("ldrExitConfirmModal");
+      if (confirmModal) {
+        confirmModal.style.display = "flex";
+      } else {
+        if (typeof window !== "undefined" && window.confirm("Leave photobooth? Any unsaved photos will be lost.")) {
+          this.exitToFirstScreen();
+        }
+      }
+    }
+
+    hideExitConfirm() {
+      const confirmModal = document.getElementById("ldrExitConfirmModal");
+      if (confirmModal) confirmModal.style.display = "none";
+    }
+
+    exitToFirstScreen() {
+      this.hideExitConfirm();
+      if (this.ldrManager) {
+        this.ldrManager.disconnect();
+        this.ldrManager = null;
+      }
+      this.stopCamera();
+      this.isLdrMode = false;
+      this.isCapturing = false;
+      if (this.countdownTimer) {
+        clearTimeout(this.countdownTimer);
+        this.countdownTimer = null;
+      }
+      this.capturedPhotos = [];
+      this.selectedPhotos = [];
+      this.stickers = [];
+      this.paintStrokes = [];
+      this.retryCount = 0;
+      this.currentFacingMode = "user";
+
+      if (typeof window !== "undefined" && window.history && window.history.replaceState) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("booth_room");
+        url.searchParams.delete("room");
+        window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : ""));
+      }
+
+      const dockedBar = document.getElementById("ldrDockedCallBar");
+      if (dockedBar) dockedBar.style.display = "none";
+      const connectedCard = document.getElementById("ldrPartnerConnectedCard");
+      if (connectedCard) connectedCard.style.display = "none";
+      const lobbyWaitingWrap = document.getElementById("ldrLobbyWaitingWrap");
+      if (lobbyWaitingWrap) lobbyWaitingWrap.style.display = "";
+      const waitingWrap = document.getElementById("ldrWaitingStatusWrap");
+      if (waitingWrap) waitingWrap.style.display = "";
+      const inlineJoinForm = document.getElementById("ldrInlineJoinForm");
+      if (inlineJoinForm) inlineJoinForm.style.display = "none";
+      const welcomeChoices = document.getElementById("ldrWelcomeChoices");
+      if (welcomeChoices) welcomeChoices.style.display = "flex";
+      const welcomeCompleted = document.getElementById("ldrWelcomeCompletedWrap");
+      if (welcomeCompleted) welcomeCompleted.style.display = "none";
+
+      const modalBadge = document.getElementById("ldrModalStatusText");
+      const modalDot = document.getElementById("ldrModalPulseDot");
+      if (modalBadge) modalBadge.textContent = "Photobooth";
+      if (modalDot) modalDot.className = "status-pulse-dot waiting";
+
+      if (typeof window !== "undefined" && window.IS_STANDALONE_PHOTOBOOTH) {
+        document.body.classList.remove("photobooth-show-review");
+        const endedScreen = document.getElementById("photoboothSessionEnded");
+        if (endedScreen) endedScreen.style.display = "none";
+      }
+
+      const modal = document.getElementById("photoboothLdrModal");
+      if (modal) {
+        modal.classList.add("is-active");
+        modal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
+
+      this.currentLdrStage = null;
+      this.setLdrStage("welcome", false);
+      this.play("beep", 440, 0.05);
+    }
+
     closeLdrModal() {
       const modal = document.getElementById("photoboothLdrModal");
       if (modal) {
@@ -1864,8 +1955,11 @@
     bindControls() {
       this.btnModeSolo?.addEventListener("click", () => this.startSoloSession());
       this.btnModeLdr?.addEventListener("click", () => this.openLdrModal());
-      document.getElementById("btnLeaveLdrModal")?.addEventListener("click", () => this.closeLdrModal());
-      document.getElementById("ldrModalBackdrop")?.addEventListener("click", () => this.closeLdrModal());
+      document.getElementById("btnLeaveLdrModal")?.addEventListener("click", () => this.handleModalCloseClick());
+      document.getElementById("ldrModalBackdrop")?.addEventListener("click", () => this.handleModalCloseClick());
+      document.getElementById("btnExitConfirmCancel")?.addEventListener("click", () => this.hideExitConfirm());
+      document.getElementById("ldrExitConfirmBackdrop")?.addEventListener("click", () => this.hideExitConfirm());
+      document.getElementById("btnExitConfirmLeave")?.addEventListener("click", () => this.exitToFirstScreen());
       document.getElementById("btnModalCopyInvite")?.addEventListener("click", () => this.copyInviteLink());
       document.getElementById("btnModalShareInvite")?.addEventListener("click", () => {
         if (!this.ldrManager || !this.ldrManager.roomCode) return;
@@ -1971,7 +2065,7 @@
         this.play("beep", 880, 0.05);
       });
       document.getElementById("btnLdrPhotosAlone")?.addEventListener("click", handleSoloBooth);
-      document.getElementById("btnLdrLeaveRoom")?.addEventListener("click", () => this.closeLdrModal());
+      document.getElementById("btnLdrLeaveRoom")?.addEventListener("click", () => this.handleModalCloseClick());
 
       document.addEventListener("click", (e) => {
         const target = e.target.closest("button, a");
