@@ -319,6 +319,7 @@
     disconnect() {
       this.manualDisconnect = true;
       clearTimeout(this.reconnectTimer);
+      clearTimeout(this.watchdogTimer);
       if (this.renegotiateTimer) {
         clearTimeout(this.renegotiateTimer);
         this.renegotiateTimer = null;
@@ -415,6 +416,18 @@
           }
           this.setupWebRTC(curStream);
           this.attachRemoteStreamToUI();
+
+          if (this.watchdogTimer) clearTimeout(this.watchdogTimer);
+          this.watchdogTimer = setTimeout(() => {
+            if (!this.hasEstablishedConnection && !this.manualDisconnect) {
+              if (this.role === "host") {
+                this.isNegotiating = false;
+                this.renegotiate();
+              } else {
+                this.send("WEBRTC_SIGNAL", { signal: { renegotiateReq: true } });
+              }
+            }
+          }, 3500);
         }
 
         if (state?.stage && state.stage !== "welcome" && this.session) {
@@ -450,6 +463,18 @@
 
         this.setupWebRTC(curStream);
         this.attachRemoteStreamToUI();
+
+        if (this.watchdogTimer) clearTimeout(this.watchdogTimer);
+        this.watchdogTimer = setTimeout(() => {
+          if (!this.hasEstablishedConnection && !this.manualDisconnect) {
+            if (this.role === "host") {
+              this.isNegotiating = false;
+              this.renegotiate();
+            } else {
+              this.send("WEBRTC_SIGNAL", { signal: { renegotiateReq: true } });
+            }
+          }
+        }, 3500);
 
         this.session.play("sparkle");
         return;
@@ -645,6 +670,7 @@
             remoteVideo.setAttribute("webkit-playsinline", "");
           }
           if (remoteVideo.paused) remoteVideo.play().catch(() => {});
+          remoteVideo.onloadedmetadata = () => remoteVideo.play().catch(() => {});
         }
       });
 
@@ -681,19 +707,17 @@
 
       this.routeRemoteAudio(this.remoteStream);
 
-      if (hasTracks) {
-        const placeholders = [
-          document.getElementById("remoteVideoPlaceholder"),
-          document.getElementById("ldrRemotePlaceholder"),
-          document.getElementById("ldrLobbyRemotePlaceholder")
-        ];
-        placeholders.forEach(p => { if (p) p.style.display = "none"; });
+      const placeholders = [
+        document.getElementById("remoteVideoPlaceholder"),
+        document.getElementById("ldrRemotePlaceholder"),
+        document.getElementById("ldrLobbyRemotePlaceholder")
+      ];
+      placeholders.forEach(p => { if (p) p.style.display = hasTracks ? "none" : "flex"; });
 
-        const audioBadge = document.getElementById("ldrAudioIndicator");
-        if (audioBadge) {
-          audioBadge.style.display = "inline-flex";
-          audioBadge.textContent = "🎤 Audio Active";
-        }
+      const audioBadge = document.getElementById("ldrAudioIndicator");
+      if (audioBadge) {
+        audioBadge.style.display = hasTracks ? "inline-flex" : "none";
+        if (hasTracks) audioBadge.textContent = "🎤 Audio Active";
       }
     }
 
@@ -731,11 +755,10 @@
       }, 300);
     }
 
-    async setupWebRTC(stream) {
-      if (typeof RTCPeerConnection === "undefined") return;
-      if (this.isSettingUpWebRtc) return;
-      this.isSettingUpWebRtc = true;
-      try {
+    setupWebRTC(stream) {
+      if (typeof RTCPeerConnection === "undefined") return Promise.resolve();
+      if (this.setupWebRtcPromise) return this.setupWebRtcPromise;
+      this.setupWebRtcPromise = (async () => {
         if (!stream && !this.localStream && this.session) {
           if (this.session.cameraPromise) {
             try { await this.session.cameraPromise; } catch (e) {}
@@ -752,23 +775,20 @@
               { urls: "stun:stun.l.google.com:19302" },
               { urls: "stun:stun1.l.google.com:19302" },
               { urls: "stun:stun2.l.google.com:19302" },
+              { urls: "stun:stun3.l.google.com:19302" },
+              { urls: "stun:stun4.l.google.com:19302" },
               { urls: "stun:stun.cloudflare.com:3478" },
-              {
-                urls: [
-                  "turn:openrelay.metered.ca:80",
-                  "turn:openrelay.metered.ca:443",
-                  "turn:openrelay.metered.ca:443?transport=tcp"
-                ],
-                username: "openrelayproject",
-                credential: "openrelayproject"
-              }
-            ]
+              { urls: "stun:stun.nextcloud.com:443" }
+            ],
+            iceCandidatePoolSize: 10
           });
           this.pc = pc;
           this.pendingIceCandidates = [];
 
           pc.onnegotiationneeded = () => {
-            this.renegotiate();
+            if (this.role === "host") {
+              this.renegotiate();
+            }
           };
 
           pc.onconnectionstatechange = () => {
@@ -827,18 +847,39 @@
           });
         }
 
-        if (this.pc) {
+        if (this.pc && this.role === "host") {
           this.renegotiate();
         }
-      } finally {
-        this.isSettingUpWebRtc = false;
-      }
+      })().finally(() => {
+        this.setupWebRtcPromise = null;
+      });
+      return this.setupWebRtcPromise;
     }
 
     async handleWebRtcSignal(signal) {
       if (!signal) return;
-      if (signal.sdp && signal.sdp.type === "offer") {
-        if (!this.localStream && this.session) {
+
+      if (signal.candidate) {
+        if (this.pc && this.pc.remoteDescription && this.pc.remoteDescription.type) {
+          try {
+            await this.pc.addIceCandidate(signal.candidate);
+          } catch (err) {}
+        } else {
+          if (!this.pendingIceCandidates) this.pendingIceCandidates = [];
+          this.pendingIceCandidates.push(signal.candidate);
+        }
+        return;
+      }
+
+      if (signal.renegotiateReq) {
+        if (this.role === "host") {
+          this.renegotiate();
+        }
+        return;
+      }
+
+      if (signal.sdp) {
+        if (signal.sdp.type === "offer" && !this.localStream && this.session) {
           if (this.session.cameraPromise) {
             try { await this.session.cameraPromise; } catch (e) {}
           } else if (!this.session.mediaStream) {
@@ -848,24 +889,18 @@
             this.localStream = this.session.mediaStream;
           }
         }
-      }
-      if (!this.pc) {
-        await this.setupWebRTC(this.localStream || this.session?.mediaStream);
-      }
-      if (!this.pc) return;
-      try {
-        if (signal.renegotiateReq) {
-          if (this.role === "host") {
-            this.renegotiate();
-          }
-          return;
-        }
 
-        if (signal.sdp) {
+        if (!this.pc) {
+          await this.setupWebRTC(this.localStream || this.session?.mediaStream);
+        }
+        if (!this.pc) return;
+
+        try {
           if (signal.sdp.type === "offer" && this.pc.signalingState !== "stable") {
             try { await this.pc.setLocalDescription({ type: "rollback" }); } catch (e) {}
           }
           await this.pc.setRemoteDescription(new RTCSessionDescription(signal.sdp));
+
           if (this.pendingIceCandidates && this.pendingIceCandidates.length) {
             for (const cand of this.pendingIceCandidates) {
               try { await this.pc.addIceCandidate(cand); } catch (e) {}
@@ -919,18 +954,9 @@
             }
             this.attachRemoteStreamToUI();
           }
-        } else if (signal.candidate) {
-          if (this.pc.remoteDescription && this.pc.remoteDescription.type) {
-            try {
-              await this.pc.addIceCandidate(signal.candidate);
-            } catch (err) {}
-          } else {
-            if (!this.pendingIceCandidates) this.pendingIceCandidates = [];
-            this.pendingIceCandidates.push(signal.candidate);
-          }
+        } catch (err) {
+          console.warn("WebRTC Signal error:", err);
         }
-      } catch (err) {
-        console.warn("WebRTC Signal error:", err);
       }
     }
   }
