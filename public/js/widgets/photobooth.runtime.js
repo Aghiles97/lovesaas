@@ -408,14 +408,18 @@
           if (lobbyWaitingWrap) lobbyWaitingWrap.style.display = "none";
           if (waitingWrap) waitingWrap.style.display = "none";
           if (connectedCard) connectedCard.style.display = "flex";
-          const localPreview = document.getElementById("photoboothVideoLobbyPreview");
-          const curStream = this.localStream || this.session?.mediaStream;
-          if (localPreview && curStream && localPreview.srcObject !== curStream) {
-            localPreview.srcObject = curStream;
-            localPreview.muted = true;
-            localPreview.play().catch(() => {});
+          if (!this.session.mediaStream) {
+            this.session.startCamera();
+          } else {
+            const curStream = this.localStream || this.session?.mediaStream;
+            const localPreview = document.getElementById("photoboothVideoLobbyPreview");
+            if (localPreview && curStream && localPreview.srcObject !== curStream) {
+              localPreview.srcObject = curStream;
+              localPreview.muted = true;
+              localPreview.play().catch(() => {});
+            }
+            this.setupWebRTC(curStream);
           }
-          this.setupWebRTC(curStream);
           this.attachRemoteStreamToUI();
 
           if (this.watchdogTimer) clearTimeout(this.watchdogTimer);
@@ -454,15 +458,18 @@
         if (lobbyWaitingWrap) lobbyWaitingWrap.style.display = "none";
         if (waitingWrap) waitingWrap.style.display = "none";
         if (connectedCard) connectedCard.style.display = "flex";
-        const localPreview = document.getElementById("photoboothVideoLobbyPreview");
-        const curStream = this.localStream || this.session?.mediaStream;
-        if (localPreview && curStream && localPreview.srcObject !== curStream) {
-          localPreview.srcObject = curStream;
-          localPreview.muted = true;
-          localPreview.play().catch(() => {});
+        if (!this.session.mediaStream) {
+          this.session.startCamera();
+        } else {
+          const curStream = this.localStream || this.session?.mediaStream;
+          const localPreview = document.getElementById("photoboothVideoLobbyPreview");
+          if (localPreview && curStream && localPreview.srcObject !== curStream) {
+            localPreview.srcObject = curStream;
+            localPreview.muted = true;
+            localPreview.play().catch(() => {});
+          }
+          this.setupWebRTC(curStream);
         }
-
-        this.setupWebRTC(curStream);
         this.attachRemoteStreamToUI();
 
         if (this.watchdogTimer) clearTimeout(this.watchdogTimer);
@@ -1103,7 +1110,7 @@
       }
     }
 
-    renderLdrCodeTiles(code) {
+    renderLdrCodeTiles(code, isJoin = false) {
       if (!code) return;
       const container = document.getElementById("ldrCodeTilesContainer");
       if (container) {
@@ -1114,6 +1121,16 @@
         document.getElementById("ldrModalRoomCode")
       ];
       codeEls.forEach(el => { if (el) el.textContent = code; });
+
+      const titleEl = document.querySelector(".ldr-code-screen-title");
+      const subEl = document.querySelector(".ldr-code-screen-sub");
+      if (isJoin) {
+        if (titleEl) titleEl.textContent = "Connecting to room " + code;
+        if (subEl) subEl.textContent = "Waiting for partner connection...";
+      } else {
+        if (titleEl) titleEl.textContent = "Send this code to your partner";
+        if (subEl) subEl.textContent = "They type it in, or open your link.";
+      }
 
       const lobbyWaitingWrap = document.getElementById("ldrLobbyWaitingWrap");
       const connectedCard = document.getElementById("ldrPartnerConnectedCard");
@@ -1155,13 +1172,9 @@
         this.ldrManager = new LdrManager(this);
       }
 
-      if (!this.mediaStream || !this.mediaStream.getAudioTracks().length) {
-        this.startCamera();
-      }
-
       if (customCode) {
         const cleanCode = customCode.trim().toUpperCase();
-        this.renderLdrCodeTiles(cleanCode);
+        this.renderLdrCodeTiles(cleanCode, true);
         this.ldrManager.connect(cleanCode);
         if (this.currentLdrStage !== "setup" && this.currentLdrStage !== "capture" && this.currentLdrStage !== "select" && this.currentLdrStage !== "deco" && this.currentLdrStage !== "print") {
           this.setLdrStage("lobby", false);
@@ -1196,7 +1209,6 @@
       if (dockedBar) dockedBar.style.display = "none";
       const liveCallTag = document.querySelector(".ldr-live-call-tag");
       if (liveCallTag) liveCallTag.innerHTML = '<span class="live-dot"></span><span>SOLO CAMERA BOOTH 📸</span>';
-      this.startCamera();
       this.setLdrStage("setup", false);
       this.play("beep", 660, 0.05);
     }
@@ -1253,7 +1265,7 @@
           if (endedScreen) endedScreen.style.display = "flex";
           this.stopCamera();
         } else {
-          this.startCamera();
+          this.stopCamera();
         }
       }
 
@@ -1263,6 +1275,11 @@
     setLdrStage(stage, isRemote = false) {
       if (this.currentLdrStage === stage) return;
       this.currentLdrStage = stage;
+      if (stage === "welcome") {
+        this.stopCamera();
+      } else if (stage === "capture") {
+        if (!this.mediaStream) this.startCamera();
+      }
       const stages = ["welcome", "lobby", "setup", "capture", "select", "deco", "print"];
       stages.forEach((s) => {
         const node = document.getElementById("ldrStepNode" + s.charAt(0).toUpperCase() + s.slice(1));
@@ -1439,6 +1456,7 @@
     }
 
     initLdrCaptureStage() {
+      if (!this.mediaStream) this.startCamera();
       const shutterBtn = document.getElementById("btnLdrModalShutter");
       if (shutterBtn) {
         shutterBtn.onclick = () => this.startBurst();
@@ -1676,43 +1694,55 @@
       document.getElementById("btnPrimaryStartRoom")?.addEventListener("click", handleStartRoom);
 
       const setupJoinControls = (btnId, formId, inputId, submitId) => {
-        const joinBtn = document.getElementById(btnId);
-        const joinForm = document.getElementById(formId);
-        const joinInput = document.getElementById(inputId);
-        const submitBtn = document.getElementById(submitId);
-
-        joinBtn?.addEventListener("click", (e) => {
+        let lastToggle = 0;
+        const toggleForm = (e) => {
           if (e) { e.preventDefault(); e.stopPropagation(); }
-          if (joinForm) {
-            const isHidden = joinForm.style.display === "none" || !joinForm.style.display;
-            joinForm.style.display = isHidden ? "block" : "none";
-            if (isHidden && joinInput) joinInput.focus();
-          }
-        });
-
-        const doJoin = (e) => {
-          if (e) { e.preventDefault(); e.stopPropagation(); }
-          const code = (joinInput?.value || "").trim().toUpperCase();
-          if (code.length >= 4) {
-            this.openLdrModal(code);
-            this.play("beep", 720, 0.05);
-          } else if (joinInput) {
-            joinInput.focus();
-            joinInput.style.borderColor = "#ff453a";
-            setTimeout(() => { if (joinInput) joinInput.style.borderColor = ""; }, 1500);
+          const now = Date.now();
+          if (now - lastToggle < 250) return;
+          lastToggle = now;
+          const form = document.getElementById(formId);
+          const input = document.getElementById(inputId);
+          if (form) {
+            const isHidden = form.style.display === "none" || !form.style.display;
+            form.style.display = isHidden ? "block" : "none";
+            if (isHidden && input) {
+              input.focus();
+              input.select?.();
+            }
           }
         };
 
+        const doJoin = (e) => {
+          if (e) { e.preventDefault(); e.stopPropagation(); }
+          const input = document.getElementById(inputId);
+          const code = (input?.value || "").trim().toUpperCase();
+          if (code.length >= 4) {
+            this.openLdrModal(code);
+            this.play("beep", 720, 0.05);
+          } else if (input) {
+            input.focus();
+            input.style.borderColor = "#ff453a";
+            setTimeout(() => { if (input) input.style.borderColor = ""; }, 1500);
+          }
+        };
+
+        const joinBtn = document.getElementById(btnId);
+        const submitBtn = document.getElementById(submitId);
+        const joinInput = document.getElementById(inputId);
+
+        joinBtn?.addEventListener("click", toggleForm);
         submitBtn?.addEventListener("click", doJoin);
         joinInput?.addEventListener("keydown", (e) => {
           if (e.key === "Enter") {
             doJoin(e);
           }
         });
+
+        return { toggleForm, doJoin };
       };
 
-      setupJoinControls("btnLdrJoinRoom", "ldrInlineJoinForm", "ldrInputJoinCode", "btnSubmitJoinCode");
-      setupJoinControls("btnPrimaryJoinRoom", "primaryInlineJoinForm", "primaryInputJoinCode", "btnPrimarySubmitJoin");
+      const ldrJoin = setupJoinControls("btnLdrJoinRoom", "ldrInlineJoinForm", "ldrInputJoinCode", "btnSubmitJoinCode");
+      const primaryJoin = setupJoinControls("btnPrimaryJoinRoom", "primaryInlineJoinForm", "primaryInputJoinCode", "btnPrimarySubmitJoin");
 
       const handleSoloBooth = (e) => {
         if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -1753,6 +1783,21 @@
           handleSoloBooth(e);
         } else if (target.id === "btnLdrBackAll" || target.id === "btnPrimaryBackWebsite") {
           handleBackWebsite(e);
+        } else if (target.id === "btnLdrJoinRoom") {
+          ldrJoin.toggleForm(e);
+        } else if (target.id === "btnPrimaryJoinRoom") {
+          primaryJoin.toggleForm(e);
+        } else if (target.id === "btnSubmitJoinCode") {
+          ldrJoin.doJoin(e);
+        } else if (target.id === "btnPrimarySubmitJoin") {
+          primaryJoin.doJoin(e);
+        }
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          if (e.target?.id === "ldrInputJoinCode") ldrJoin.doJoin(e);
+          else if (e.target?.id === "primaryInputJoinCode") primaryJoin.doJoin(e);
         }
       });
 
@@ -4199,6 +4244,12 @@
   }
 
   window.setupPhotobooth = function(data = {}, hero = {}) {
+    if (activeBooth) {
+      if (data && typeof data === "object" && Object.keys(data).length) {
+        Object.assign(activeBooth, data);
+      }
+      return activeBooth;
+    }
     const config = (data && typeof data === "object") ? data : (window.PHOTOBOOTH_DATA || {});
     activeBooth = new PhotoboothSession(config, hero);
     return activeBooth;
