@@ -710,7 +710,6 @@
                     <div class="ldr-stage-header">
                       <span class="ldr-step-badge">Step 1 of 3 • Layout Format</span>
                       <h3 class="ldr-stage-title">Choose Photo Layout Format</h3>
-                      <p class="ldr-stage-sub">Tap any frame to choose your photo arrangement.</p>
                     </div>
 
                     <div class="ldr-format-cards-grid" id="ldrFormatCardsGrid" role="radiogroup" aria-label="Photo Layout Format">
@@ -743,7 +742,7 @@
                         <span>← Return</span>
                       </button>
                       <button type="button" class="btn btn-primary btn-xl" id="btnFormatNextToTheme">
-                        <span>Next: Border &amp; Filter →</span>
+                        <span>Border &amp; Filter</span>
                       </button>
                     </div>
                   </div>
@@ -820,7 +819,7 @@
                         <span>← Return</span>
                       </button>
                       <button type="button" class="btn btn-primary btn-xl" id="btnThemeNextToCaption">
-                        <span>Next: Couple Inscription →</span>
+                        <span>Inscription</span>
                       </button>
                     </div>
                   </div>
@@ -860,7 +859,7 @@
                         <span>← Return</span>
                       </button>
                       <button type="button" id="btnLdrReadyToShoot" class="btn btn-primary btn-xl">
-                        <span>📸 Ready to Shoot Photos →</span>
+                        <span>📸 Shoot Photos</span>
                       </button>
                     </div>
                   </div>
@@ -875,10 +874,6 @@
                     <button type="button" id="btnCaptureBackToSetup" class="btn-nav-back btn-return-sync">
                       <span>← Return</span>
                     </button>
-                    <div class="ldr-live-call-tag">
-                      <span class="live-dot"></span>
-                      <span>LIVE WITH PARTNER 🎤</span>
-                    </div>
                   </div>
 
                   <!-- Camera Pro Controls Bar -->
@@ -896,9 +891,6 @@
                       </button>
                       <button type="button" id="btnToggleMirrorLdr" class="pro-icon-toggle active" title="Toggle Mirror View">
                         <span>🪞</span>
-                      </button>
-                      <button type="button" id="btnToggleFlashModeLdr" class="pro-icon-toggle active" title="Toggle Flash">
-                        <span>⚡</span>
                       </button>
                     </div>
                   </div>

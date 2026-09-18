@@ -39,19 +39,15 @@
     },
     filmMotor() {
       const ctx = this.getCtx(); if (!ctx) return;
-      const now = ctx.currentTime, osc = ctx.createOscillator(), gain = ctx.createGain(), filter = ctx.createBiquadFilter();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(110, now);
-      osc.frequency.linearRampToValueAtTime(150, now + 0.4);
-      osc.frequency.linearRampToValueAtTime(95, now + 1.0);
-      filter.type = "lowpass";
-      filter.frequency.setValueAtTime(550, now);
-      gain.gain.setValueAtTime(0.001, now);
-      gain.gain.linearRampToValueAtTime(0.18, now + 0.1);
-      gain.gain.linearRampToValueAtTime(0.14, now + 0.8);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.05);
-      osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
-      osc.start(now); osc.stop(now + 1.1);
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(587.33, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now); osc.stop(now + 0.2);
     },
     sparkle() {
       const ctx = this.getCtx(); if (!ctx) return;
@@ -73,13 +69,10 @@
       AudioEngine.getCtx();
       const el = document.getElementById("ldrRemoteAudio");
       if (el && el.srcObject) el.play().catch(() => {});
-      window.removeEventListener("touchstart", unlockAudio, true);
-      window.removeEventListener("pointerdown", unlockAudio, true);
-      window.removeEventListener("click", unlockAudio, true);
     };
-    window.addEventListener("touchstart", unlockAudio, { capture: true, once: true, passive: true });
-    window.addEventListener("pointerdown", unlockAudio, { capture: true, once: true, passive: true });
-    window.addEventListener("click", unlockAudio, { capture: true, once: true, passive: true });
+    window.addEventListener("touchstart", unlockAudio, { capture: true, passive: true });
+    window.addEventListener("pointerdown", unlockAudio, { capture: true, passive: true });
+    window.addEventListener("click", unlockAudio, { capture: true, passive: true });
   }
 
   const FILTERS = {
@@ -560,6 +553,7 @@
 
     attachRemoteStreamToUI() {
       if (!this.remoteStream) return;
+      const hasTracks = this.remoteStream.getTracks().length > 0;
       const remoteVideos = [
         document.getElementById("photoboothVideoRemote"),
         document.getElementById("ldrVideoFeedRemote"),
@@ -568,7 +562,7 @@
       ];
       remoteVideos.forEach((remoteVideo) => {
         if (remoteVideo) {
-          if (remoteVideo.srcObject !== this.remoteStream) {
+          if (remoteVideo.srcObject !== this.remoteStream || hasTracks) {
             remoteVideo.srcObject = this.remoteStream;
           }
           remoteVideo.muted = true;
@@ -582,7 +576,7 @@
 
       const remoteAudio = document.getElementById("ldrRemoteAudio");
       if (remoteAudio) {
-        if (remoteAudio.srcObject !== this.remoteStream) {
+        if (remoteAudio.srcObject !== this.remoteStream || hasTracks) {
           remoteAudio.srcObject = this.remoteStream;
         }
         remoteAudio.muted = false;
@@ -590,30 +584,24 @@
         remoteAudio.playsInline = true;
         remoteAudio.setAttribute("playsinline", "");
         remoteAudio.setAttribute("webkit-playsinline", "");
-        remoteAudio.play().catch(() => {
-          const unlockAudio = () => {
-            remoteAudio.play().catch(() => {});
-            document.removeEventListener("click", unlockAudio);
-            document.removeEventListener("touchstart", unlockAudio);
-          };
-          document.addEventListener("click", unlockAudio, { once: true });
-          document.addEventListener("touchstart", unlockAudio, { once: true });
-        });
+        remoteAudio.play().catch(() => {});
       }
 
       this.routeRemoteAudio(this.remoteStream);
 
-      const placeholders = [
-        document.getElementById("remoteVideoPlaceholder"),
-        document.getElementById("ldrRemotePlaceholder"),
-        document.getElementById("ldrLobbyRemotePlaceholder")
-      ];
-      placeholders.forEach(p => { if (p) p.style.display = "none"; });
+      if (hasTracks) {
+        const placeholders = [
+          document.getElementById("remoteVideoPlaceholder"),
+          document.getElementById("ldrRemotePlaceholder"),
+          document.getElementById("ldrLobbyRemotePlaceholder")
+        ];
+        placeholders.forEach(p => { if (p) p.style.display = "none"; });
 
-      const audioBadge = document.getElementById("ldrAudioIndicator");
-      if (audioBadge) {
-        audioBadge.style.display = "inline-flex";
-        audioBadge.textContent = "🎤 Audio Active";
+        const audioBadge = document.getElementById("ldrAudioIndicator");
+        if (audioBadge) {
+          audioBadge.style.display = "inline-flex";
+          audioBadge.textContent = "🎤 Audio Active";
+        }
       }
     }
 
@@ -676,6 +664,12 @@
 
         pc.onnegotiationneeded = () => {
           this.renegotiate();
+        };
+
+        pc.onconnectionstatechange = () => {
+          if (pc.connectionState === "connected") {
+            this.attachRemoteStreamToUI();
+          }
         };
 
         pc.ontrack = (evt) => {
@@ -781,26 +775,41 @@
           if (signal.sdp.type === "offer") {
             if (this.localStream) {
               const transceivers = this.pc.getTransceivers ? this.pc.getTransceivers() : [];
+              const senders = this.pc.getSenders ? this.pc.getSenders() : [];
               this.localStream.getTracks().forEach((track) => {
+                let attached = false;
                 transceivers.forEach((t) => {
                   const kind = (t.receiver?.track?.kind) || (t.sender?.track?.kind);
                   if (kind === track.kind || !kind) {
                     try {
                       if (t.direction !== "sendrecv") t.direction = "sendrecv";
-                      if (t.sender && (!t.sender.track || t.sender.track.id !== track.id)) {
+                      if (t.sender) {
                         t.sender.replaceTrack(track).catch(() => {});
+                        attached = true;
                       }
                     } catch (e) {}
                   }
                 });
+                if (!attached) {
+                  const sender = senders.find(s => s.track && s.track.kind === track.kind);
+                  if (sender) {
+                    sender.replaceTrack(track).catch(() => {});
+                  } else {
+                    try { this.pc.addTrack(track, this.localStream); } catch (e) {}
+                  }
+                }
               });
             }
             const answer = await this.pc.createAnswer();
             await this.pc.setLocalDescription(answer);
             this.send("WEBRTC_SIGNAL", { signal: { sdp: this.pc.localDescription } });
-          } else if (signal.sdp.type === "answer" && this.needRenegotiate) {
-            this.needRenegotiate = false;
-            this.renegotiate();
+            this.attachRemoteStreamToUI();
+          } else if (signal.sdp.type === "answer") {
+            if (this.needRenegotiate) {
+              this.needRenegotiate = false;
+              this.renegotiate();
+            }
+            this.attachRemoteStreamToUI();
           }
         } else if (signal.candidate) {
           if (this.pc.remoteDescription && this.pc.remoteDescription.type) {
@@ -1813,9 +1822,9 @@
     updatePhraseDisplays(text, isRemote = false) {
       if (text != null) this.caption = text;
       const inp = document.getElementById("boothPhraseInput");
-      if (inp && inp.value !== this.caption) inp.value = this.caption;
+      if (inp && inp !== document.activeElement && inp.value !== this.caption) inp.value = this.caption;
       const modalInp = document.getElementById("ldrModalPhraseInput");
-      if (modalInp && modalInp.value !== this.caption) modalInp.value = this.caption;
+      if (modalInp && modalInp !== document.activeElement && modalInp.value !== this.caption) modalInp.value = this.caption;
       document.querySelectorAll(".frame-phrase-text").forEach(el => el.textContent = this.caption);
       document.querySelectorAll(".strip-phrase-display").forEach(el => el.textContent = this.caption);
       const stripCap = document.querySelector(".strip-caption-txt");
@@ -1826,7 +1835,10 @@
       this.renderSelectedStripPreview();
 
       if (this.isLdrMode && !isRemote && this.ldrManager) {
-        this.ldrManager.sendAction("SET_CAPTION", "caption", this.caption);
+        clearTimeout(this._captionDebounce);
+        this._captionDebounce = setTimeout(() => {
+          this.ldrManager.sendAction("SET_CAPTION", "caption", this.caption);
+        }, 150);
       }
     }
 
@@ -3552,15 +3564,17 @@
           currentStroke = null;
         };
 
-        canvas.addEventListener("pointerdown", onStart);
-        canvas.addEventListener("pointermove", onMove);
-        canvas.addEventListener("pointerup", onEnd);
-        canvas.addEventListener("pointercancel", onEnd);
-
-        canvas.addEventListener("touchstart", onStart, { passive: false });
-        canvas.addEventListener("touchmove", onMove, { passive: false });
-        canvas.addEventListener("touchend", onEnd, { passive: false });
-        canvas.addEventListener("touchcancel", onEnd, { passive: false });
+        if (typeof window !== "undefined" && window.PointerEvent) {
+          canvas.addEventListener("pointerdown", onStart);
+          canvas.addEventListener("pointermove", onMove);
+          canvas.addEventListener("pointerup", onEnd);
+          canvas.addEventListener("pointercancel", onEnd);
+        } else {
+          canvas.addEventListener("touchstart", onStart, { passive: false });
+          canvas.addEventListener("touchmove", onMove, { passive: false });
+          canvas.addEventListener("touchend", onEnd, { passive: false });
+          canvas.addEventListener("touchcancel", onEnd, { passive: false });
+        }
       };
 
       bindCanvas(this.paintCanvas);
@@ -3668,14 +3682,16 @@
     clearPaintCanvas() {
       this.paintStrokes = [];
       this.redrawPaintCanvas();
-      this.play("beep", 320, 0.06);
+      this.play("beep", 660, 0.03);
       if (this.isLdrMode && this.ldrManager) {
         this.ldrManager.send("PAINT_CLEAR");
       }
     }
 
-    async exportStrip() {
-      this.play("filmMotor");
+    async exportStrip(suppressSound = false) {
+      if (!suppressSound) {
+        this.play("filmMotor");
+      }
       this.vibrate([30, 40, 30]);
       const canvas = await this.generateExportCanvas();
       const link = document.createElement("a");
@@ -3694,6 +3710,7 @@
               title: "Our Love Photo Strip 📸",
               text: "Look at our sweet photobooth strip!"
             });
+            this.play("sparkle");
             return;
           } catch (e) {}
         }
@@ -3704,10 +3721,11 @@
               text: "Look at our sweet photobooth strip!",
               url: window.location.href
             });
+            this.play("sparkle");
             return;
           } catch (e) {}
         }
-        this.exportStrip();
+        this.exportStrip(false);
       });
     }
   }
