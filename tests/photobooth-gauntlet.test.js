@@ -432,6 +432,13 @@ assert(gate25Server.includes("maxBytes = 2 * 1024 * 1024") && gate25Server.inclu
 assert(gate25Room.includes("loadFromDisk()") && gate25Room.includes("scheduleSave()"), "photobooth-room.js implements disk persistence for active rooms");
 assert(gate25Room.includes("currentRoom.state.candidatePhotos[idx] = img"), "photobooth-room.js caches candidate snapshots in room state");
 assert(gate25Runtime.includes("state.candidatePhotos") && gate25Runtime.includes("state.selectedPhotos"), "Runtime hydrations candidate and selected photos on ROOM_JOINED");
+// --- GATE 26: Network & WebRTC Resilience (TURN Relay, ICE Recovery & Foreground Sync) ---
+console.log("\n--- GATE 26: Network & WebRTC Resilience ---");
+const gate26Runtime = fs.readFileSync(path.resolve(__dirname, "../public/js/widgets/photobooth.runtime.js"), "utf8");
+
+assert(gate26Runtime.includes("turn:openrelay.metered.ca:80") && gate26Runtime.includes("turn:openrelay.metered.ca:443"), "RTCPeerConnection iceServers include TURN relay endpoints for symmetric NAT traversal");
+assert(gate26Runtime.includes("handleIceFailure") && gate26Runtime.includes("restartIce"), "RTCPeerConnection auto-recovers on ICE disconnected or failed state");
+assert(gate26Runtime.includes("visibilitychange") && gate26Runtime.includes("document.visibilityState === \"visible\""), "Runtime implements foreground auto-recovery on visibilitychange for backgrounded tabs");
 
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");

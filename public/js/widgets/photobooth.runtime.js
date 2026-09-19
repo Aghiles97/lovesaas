@@ -852,12 +852,21 @@
               { urls: "stun:stun3.l.google.com:19302" },
               { urls: "stun:stun4.l.google.com:19302" },
               { urls: "stun:stun.cloudflare.com:3478" },
-              { urls: "stun:stun.nextcloud.com:443" }
+              { urls: "stun:stun.nextcloud.com:443" },
+              { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
+              { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
+              { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelayproject", credential: "openrelayproject" }
             ],
             iceCandidatePoolSize: 10
           });
           this.pc = pc;
           this.pendingIceCandidates = [];
+
+          const handleIceFailure = () => {
+            if (this.manualDisconnect) return;
+            try { pc.restartIce?.(); } catch (e) {}
+            this.renegotiate();
+          };
 
           pc.onnegotiationneeded = () => {
             if (this.role === "host") {
@@ -869,6 +878,8 @@
             if (pc.connectionState === "connected") {
               this.hasEstablishedConnection = true;
               this.attachRemoteStreamToUI();
+            } else if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
+              handleIceFailure();
             }
           };
 
@@ -876,6 +887,8 @@
             if (pc.iceConnectionState === "connected" || pc.iceConnectionState === "completed") {
               this.hasEstablishedConnection = true;
               this.attachRemoteStreamToUI();
+            } else if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected") {
+              handleIceFailure();
             }
           };
 
@@ -2249,6 +2262,34 @@
           if (this.selectedStickerId) {
             this.selectedStickerId = null;
             this.renderStickers();
+          }
+        }
+      });
+
+      document.addEventListener("visibilitychange", async () => {
+        if (document.visibilityState === "visible") {
+          const needsCamera = this.isLdrMode ? (this.currentLdrStage && this.currentLdrStage !== "welcome") : (this.stage === "capture" || this.mediaStream);
+          if (needsCamera) {
+            const isDead = !this.mediaStream || !this.mediaStream.getTracks().length || this.mediaStream.getTracks().some(t => t.readyState === "ended" || !t.enabled);
+            if (isDead) {
+              try { await this.startCamera(); } catch (e) {}
+            }
+          }
+          const videos = document.querySelectorAll("video");
+          videos.forEach(v => {
+            if (v.srcObject) {
+              v.play().catch(() => {});
+            }
+          });
+          if (this.ldrManager?.pc) {
+            const pc = this.ldrManager.pc;
+            if (pc.iceConnectionState === "failed" || pc.iceConnectionState === "disconnected" || pc.connectionState === "failed" || pc.connectionState === "disconnected") {
+              try { pc.restartIce?.(); } catch (e) {}
+              this.ldrManager.renegotiate();
+            }
+            if (this.isLdrMode) {
+              this.ldrManager.attachRemoteStreamToUI();
+            }
           }
         }
       });
