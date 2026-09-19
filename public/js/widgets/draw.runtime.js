@@ -73,8 +73,8 @@
   let savedName = "";
   let savedSex = null;
   try {
-    savedName = sessionStorage.getItem("draw_name") || "";
-    savedSex = sessionStorage.getItem("draw_sex") || null;
+    savedName = sessionStorage.getItem("draw_name") || localStorage.getItem("draw_name") || "";
+    savedSex = sessionStorage.getItem("draw_sex") || localStorage.getItem("draw_sex") || null;
   } catch (e) {}
 
   const PROMPT_PACKS = {
@@ -360,8 +360,28 @@
           setupCanvasSize();
           redrawAllStrokes();
         });
+      } else if (stageName === "match_complete") {
+        renderRecapGallery();
+      } else if (stageName === "round_review") {
+        updateRoundReviewUI();
       }
       updateBadges();
+    }
+  }
+
+  function updateRoundReviewUI(roundNum = state.currentRound) {
+    const existing = state.roundHistory.find(r => r.round === roundNum) || state.roundHistory[state.roundHistory.length - 1];
+    if (existing) {
+      if (el.reviewPromptText) el.reviewPromptText.textContent = existing.prompt || state.currentPrompt || "";
+      if (el.reviewMyName) el.reviewMyName.textContent = state.myName || "You";
+      if (el.reviewPartnerName) el.reviewPartnerName.textContent = state.partnerName || "Partner";
+      if (el.reviewMyImg && existing.myImg) el.reviewMyImg.src = existing.myImg;
+      if (el.reviewPartnerImg) el.reviewPartnerImg.src = existing.partnerImg || (state.isSolo ? existing.myImg : "");
+    }
+    if (el.btnNextRound) {
+      const isFinal = roundNum >= state.roundsTotal;
+      const span = el.btnNextRound.querySelector("span");
+      if (span) span.textContent = isFinal ? "Finish Match 🏆" : "Next Round ▷";
     }
   }
 
@@ -408,6 +428,16 @@
     state.roomCode = roomCode.toUpperCase().trim();
     syncRoomUrl(state.roomCode);
     state.participantId = getOrCreateParticipantId(state.roomCode);
+    if (!state.myName || state.myName.startsWith("Partner")) {
+      try {
+        state.myName = sessionStorage.getItem("draw_name") || localStorage.getItem("draw_name") || state.myName;
+      } catch (e) {}
+    }
+    if (!state.mySex) {
+      try {
+        state.mySex = sessionStorage.getItem("draw_sex") || localStorage.getItem("draw_sex") || null;
+      } catch (e) {}
+    }
     const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${wsProto}//${window.location.host}/draw-ws`;
 
@@ -443,7 +473,7 @@
         sendMsg("JOIN_ROOM", {
           roomCode: state.roomCode,
           participantId: state.participantId,
-          name: state.myName
+          name: state.myName || ""
         });
       };
 
@@ -482,7 +512,12 @@
   function setupSseFallback() {
     if (state.sse || state.isSolo) return;
     if (state.ws && state.ws.readyState === WebSocket.OPEN) return;
-    const url = `/api/draw/rooms/${state.roomCode}/events?id=${encodeURIComponent(state.participantId)}&name=${encodeURIComponent(state.myName)}`;
+    if (!state.myName || state.myName.startsWith("Partner")) {
+      try {
+        state.myName = sessionStorage.getItem("draw_name") || localStorage.getItem("draw_name") || state.myName;
+      } catch (e) {}
+    }
+    const url = `/api/draw/rooms/${state.roomCode}/events?id=${encodeURIComponent(state.participantId)}&name=${encodeURIComponent(state.myName || "")}`;
     const sse = new EventSource(url);
     state.sse = sse;
     sse.onmessage = (evt) => {
@@ -516,11 +551,15 @@
       if (msg.state?.profiles) {
         for (const [pid, prof] of Object.entries(msg.state.profiles)) {
           if (pid !== state.participantId && prof?.name) {
-            state.partnerName = prof.name;
+            if (!prof.name.startsWith("Partner") || !state.partnerName || state.partnerName.startsWith("Partner")) {
+              state.partnerName = prof.name;
+            }
             if (prof.sex) state.partnerSex = prof.sex;
             state.partnerReady = !!prof.ready;
           } else if (pid === state.participantId && prof?.name) {
-            state.myName = prof.name;
+            if (!prof.name.startsWith("Partner") || !state.myName || state.myName.startsWith("Partner")) {
+              state.myName = prof.name;
+            }
             if (prof.sex) state.mySex = prof.sex;
             state.myReady = !!prof.ready;
           }
@@ -530,6 +569,20 @@
         if (other && other.name && !other.name.startsWith("Partner")) {
           state.partnerName = other.name;
         }
+      }
+
+      if (!state.myName || state.myName.startsWith("Partner")) {
+        try {
+          const stored = sessionStorage.getItem("draw_name") || localStorage.getItem("draw_name") || "";
+          if (stored) state.myName = stored;
+        } catch (e) {}
+      }
+
+      if (state.myName && !state.myName.startsWith("Partner") && (!msg.state?.profiles?.[state.participantId] || msg.state?.profiles?.[state.participantId]?.name !== state.myName)) {
+        sendMsg("SUBMIT_PROFILE", {
+          name: state.myName,
+          sex: state.mySex || "female"
+        });
       }
 
       // Hydrate state if reconnecting to active session
@@ -566,8 +619,16 @@
         if (msg.state.roundHistory && Array.isArray(msg.state.roundHistory)) {
           msg.state.roundHistory.forEach(srvRound => {
             let existing = state.roundHistory.find(r => r.round === srvRound.round);
-            const srvMy = srvRound.artwork?.[state.participantId] || "";
-            const srvPartner = Object.entries(srvRound.artwork || {}).find(([id]) => id !== state.participantId)?.[1] || "";
+            let srvMy = srvRound.artwork?.[state.participantId] || "";
+            let srvPartner = Object.entries(srvRound.artwork || {}).find(([id]) => id !== state.participantId)?.[1] || "";
+            if (!srvMy && srvRound.strokes) {
+              const mySt = srvRound.strokes[state.participantId] || (state.role === "host" ? srvRound.strokes[Object.keys(srvRound.strokes)[0]] : srvRound.strokes[Object.keys(srvRound.strokes)[1]]);
+              if (mySt && mySt.length > 0) srvMy = exportArtworkDataURL(mySt);
+            }
+            if (!srvPartner && srvRound.strokes) {
+              const partSt = Object.entries(srvRound.strokes).find(([id]) => id !== state.participantId)?.[1] || (state.role === "host" ? srvRound.strokes[Object.keys(srvRound.strokes)[1]] : srvRound.strokes[Object.keys(srvRound.strokes)[0]]);
+              if (partSt && partSt.length > 0) srvPartner = exportArtworkDataURL(partSt);
+            }
             if (!existing) {
               state.roundHistory.push({
                 round: srvRound.round,
@@ -580,9 +641,6 @@
               if (srvPartner) existing.partnerImg = srvPartner;
             }
           });
-          if (state.stage === "match_complete") {
-            renderRecapGallery();
-          }
         }
 
         if (msg.state.stage && msg.state.stage !== "lobby") {
@@ -605,8 +663,8 @@
 
     if (type === "PARTNER_JOINED") {
       state.partnerConnected = true;
-      if (msg.partner) {
-        state.partnerName = msg.partner.name || "Partner";
+      if (msg.partner?.name && (!msg.partner.name.startsWith("Partner") || !state.partnerName || state.partnerName.startsWith("Partner"))) {
+        state.partnerName = msg.partner.name;
         updateBadges();
       }
       if (state.stage === "lobby") {
@@ -924,6 +982,22 @@
 
     if (type === "PLAY_AGAIN_ACCEPTED" || type === "MATCH_RESTARTED") {
       if (el.modalPlayAgain) el.modalPlayAgain.classList.add("hidden");
+      if (msg.profiles) {
+        for (const [pid, prof] of Object.entries(msg.profiles)) {
+          if (pid !== state.participantId && prof?.name) {
+            if (!prof.name.startsWith("Partner") || !state.partnerName || state.partnerName.startsWith("Partner")) {
+              state.partnerName = prof.name;
+            }
+            if (prof.sex) state.partnerSex = prof.sex;
+          } else if (pid === state.participantId && prof?.name) {
+            if (!prof.name.startsWith("Partner") || !state.myName || state.myName.startsWith("Partner")) {
+              state.myName = prof.name;
+            }
+            if (prof.sex) state.mySex = prof.sex;
+          }
+        }
+      }
+      updateBadges();
       state.roundHistory = [];
       state.myStrokes = [];
       state.partnerStrokes = [];
@@ -1438,8 +1512,16 @@
     if (data?.roundHistory && Array.isArray(data.roundHistory)) {
       data.roundHistory.forEach(srvRound => {
         let existing = state.roundHistory.find(r => r.round === srvRound.round);
-        const srvMy = srvRound.artwork?.[state.participantId] || "";
-        const srvPartner = Object.entries(srvRound.artwork || {}).find(([id]) => id !== state.participantId)?.[1] || "";
+        let srvMy = srvRound.artwork?.[state.participantId] || "";
+        let srvPartner = Object.entries(srvRound.artwork || {}).find(([id]) => id !== state.participantId)?.[1] || "";
+        if (!srvMy && srvRound.strokes) {
+          const mySt = srvRound.strokes[state.participantId] || (state.role === "host" ? srvRound.strokes[Object.keys(srvRound.strokes)[0]] : srvRound.strokes[Object.keys(srvRound.strokes)[1]]);
+          if (mySt && mySt.length > 0) srvMy = exportArtworkDataURL(mySt);
+        }
+        if (!srvPartner && srvRound.strokes) {
+          const partSt = Object.entries(srvRound.strokes).find(([id]) => id !== state.participantId)?.[1] || (state.role === "host" ? srvRound.strokes[Object.keys(srvRound.strokes)[1]] : srvRound.strokes[Object.keys(srvRound.strokes)[0]]);
+          if (partSt && partSt.length > 0) srvPartner = exportArtworkDataURL(partSt);
+        }
         if (!existing) {
           state.roundHistory.push({
             round: srvRound.round,
@@ -1478,9 +1560,22 @@
 
   // --- Keepsake Artwork Exporter (High-Res 4:3 Ratio) ---
   function downloadKeepsakeImage() {
+    showToast("Generating keepsake artwork... 🎨");
     const offCanvas = document.createElement("canvas");
-    const count = state.roundHistory.length || 1;
     const isSolo = Boolean(state.isSolo);
+
+    if (!state.roundHistory || state.roundHistory.length === 0) {
+      const myImg = exportArtworkDataURL(state.myStrokes, el.myCanvas);
+      const partnerImg = exportArtworkDataURL(state.partnerStrokes, el.partnerCanvas);
+      state.roundHistory = [{
+        round: state.currentRound || 1,
+        prompt: state.currentPrompt || "Our Drawing",
+        myImg,
+        partnerImg: partnerImg || (isSolo ? myImg : "")
+      }];
+    }
+
+    const count = Math.max(state.roundHistory.length, 1);
     const cardW = isSolo ? 960 : 1400;
     const padW = isSolo ? 800 : 580;
     const padH = Math.round(padW * 0.75);
@@ -1501,17 +1596,39 @@
 
     ctx.fillStyle = "#71717a";
     ctx.font = "20px 'Outfit', sans-serif";
-    ctx.fillText(isSolo ? `${state.myName || "Artist"} · ${new Date().toLocaleDateString()}` : `${state.myName} & ${state.partnerName} · ${new Date().toLocaleDateString()}`, cardW / 2, 108);
+    ctx.fillText(isSolo ? `${state.myName || "Artist"} · ${new Date().toLocaleDateString()}` : `${state.myName || "You"} & ${state.partnerName || "Partner"} · ${new Date().toLocaleDateString()}`, cardW / 2, 108);
 
     let currentY = headerH;
     let pending = 0;
+    let finished = false;
 
-    const checkDone = () => {
-      if (--pending === 0) {
+    const triggerDownload = () => {
+      if (finished) return;
+      finished = true;
+      try {
         const link = document.createElement("a");
         link.download = `${isSolo ? "my" : "our"}-drawings-${Date.now()}.png`;
         link.href = offCanvas.toDataURL("image/png");
+        document.body.appendChild(link);
         link.click();
+        setTimeout(() => {
+          try { link.remove(); } catch (_) {}
+        }, 200);
+        showToast("Keepsake saved to device! 🎨");
+      } catch (err) {
+        console.error("Keepsake download error:", err);
+        showToast("Download failed, please retry 🚫");
+      }
+    };
+
+    setTimeout(() => {
+      if (!finished) triggerDownload();
+    }, 2000);
+
+    const checkDone = () => {
+      pending--;
+      if (pending <= 0) {
+        triggerDownload();
       }
     };
 
@@ -1519,56 +1636,62 @@
       ctx.fillStyle = "#18181b";
       ctx.font = "bold 22px 'Outfit', sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText(`Round ${r.round}: "${r.prompt}"`, 80, currentY + 36);
+      ctx.fillText(`Round ${r.round}: "${r.prompt || ""}"`, 80, currentY + 36);
 
       const yBox = currentY + 54;
-      const img1 = new Image();
-      pending += 1;
-
-      const drawBox = (img, src, x, label) => {
+      const drawBox = (src, x, label) => {
         if (!src) {
           checkDone();
           return;
         }
+        const img = new Image();
+        img.crossOrigin = "anonymous";
         img.onload = () => {
-          ctx.fillStyle = "#ffffff";
-          ctx.fillRect(x, yBox, padW, padH);
-          ctx.strokeStyle = "#18181b";
-          ctx.lineWidth = 3;
-          ctx.strokeRect(x, yBox, padW, padH);
-          ctx.drawImage(img, x, yBox, padW, padH);
-
-          if (label) {
-            ctx.fillStyle = "rgba(0,0,0,0.65)";
-            const textW = ctx.measureText(label).width;
-            ctx.fillRect(x + 12, yBox + 12, textW + 24, 28);
+          try {
             ctx.fillStyle = "#ffffff";
-            ctx.font = "bold 14px 'Outfit', sans-serif";
-            ctx.textAlign = "left";
-            ctx.fillText(label, x + 24, yBox + 31);
+            ctx.fillRect(x, yBox, padW, padH);
+            ctx.strokeStyle = "#18181b";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x, yBox, padW, padH);
+            ctx.drawImage(img, x, yBox, padW, padH);
+
+            if (label) {
+              ctx.fillStyle = "rgba(0,0,0,0.65)";
+              const textW = ctx.measureText(label).width;
+              ctx.fillRect(x + 12, yBox + 12, textW + 24, 28);
+              ctx.fillStyle = "#ffffff";
+              ctx.font = "bold 14px 'Outfit', sans-serif";
+              ctx.textAlign = "left";
+              ctx.fillText(label, x + 24, yBox + 31);
+            }
+          } catch (e) {
+            console.error("Keepsake box render error:", e);
+          } finally {
+            checkDone();
           }
+        };
+        img.onerror = () => {
           checkDone();
         };
-        img.onerror = () => checkDone();
         img.src = src;
       };
 
       if (isSolo) {
-        drawBox(img1, r.myImg, 80);
+        pending += 1;
+        drawBox(r.myImg, 80);
       } else {
         const x1 = 80;
         const x2 = cardW - 80 - padW;
-        drawBox(img1, r.myImg, x1, state.myName || "You");
-        const img2 = new Image();
-        pending += 1;
-        drawBox(img2, r.partnerImg || "", x2, state.partnerName || "Partner");
+        pending += 2;
+        drawBox(r.myImg, x1, state.myName || "You");
+        drawBox(r.partnerImg || "", x2, state.partnerName || "Partner");
       }
 
       currentY += roundH;
     });
 
     if (pending === 0) {
-      checkDone();
+      triggerDownload();
     }
   }
 
@@ -1834,6 +1957,8 @@
       try {
         sessionStorage.setItem("draw_name", name);
         sessionStorage.setItem("draw_sex", state.mySex);
+        localStorage.setItem("draw_name", name);
+        localStorage.setItem("draw_sex", state.mySex);
       } catch (e) {}
       updateBadges();
 

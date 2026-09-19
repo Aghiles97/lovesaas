@@ -402,7 +402,60 @@ class DrawRoomServer {
 
     if (!currentRoom.hostId) currentRoom.hostId = participantId;
     const role = (currentRoom.hostId === participantId) ? "host" : "guest";
-    const name = sanitizeStr(participantName, 24) || currentRoom.state.profiles?.[participantId]?.name || (role === "host" ? "Partner 1" : "Partner 2");
+    let name = sanitizeStr(participantName, 24);
+    if (!name || name.startsWith("Partner")) {
+      name = currentRoom.state.profiles?.[participantId]?.name;
+    }
+    if (!name || name.startsWith("Partner")) {
+      if (role === "guest") {
+        const guestEntry = Object.entries(currentRoom.state.profiles || {}).find(([id]) => id !== currentRoom.hostId);
+        if (guestEntry && guestEntry[1]?.name) {
+          name = guestEntry[1].name;
+          currentRoom.state.profiles[participantId] = { ...guestEntry[1] };
+          if (currentRoom.state.strokes?.[guestEntry[0]]) currentRoom.state.strokes[participantId] = currentRoom.state.strokes[guestEntry[0]];
+          if (currentRoom.state.artwork) {
+            for (const roundArt of Object.values(currentRoom.state.artwork)) {
+              if (roundArt[guestEntry[0]]) roundArt[participantId] = roundArt[guestEntry[0]];
+            }
+          }
+          if (Array.isArray(currentRoom.state.roundHistory)) {
+            for (const rItem of currentRoom.state.roundHistory) {
+              if (rItem.artwork && rItem.artwork[guestEntry[0]]) {
+                rItem.artwork[participantId] = rItem.artwork[guestEntry[0]];
+              }
+              if (rItem.strokes && rItem.strokes[guestEntry[0]]) {
+                rItem.strokes[participantId] = rItem.strokes[guestEntry[0]];
+              }
+            }
+          }
+        }
+      } else if (role === "host") {
+        const hostProfile = currentRoom.state.profiles?.[currentRoom.hostId];
+        if (hostProfile?.name) name = hostProfile.name;
+        if (currentRoom.hostId && currentRoom.hostId !== participantId) {
+          const oldHostId = currentRoom.hostId;
+          currentRoom.hostId = participantId;
+          if (hostProfile) currentRoom.state.profiles[participantId] = { ...hostProfile };
+          if (currentRoom.state.strokes?.[oldHostId]) currentRoom.state.strokes[participantId] = currentRoom.state.strokes[oldHostId];
+          if (currentRoom.state.artwork) {
+            for (const roundArt of Object.values(currentRoom.state.artwork)) {
+              if (roundArt[oldHostId]) roundArt[participantId] = roundArt[oldHostId];
+            }
+          }
+          if (Array.isArray(currentRoom.state.roundHistory)) {
+            for (const rItem of currentRoom.state.roundHistory) {
+              if (rItem.artwork && rItem.artwork[oldHostId]) {
+                rItem.artwork[participantId] = rItem.artwork[oldHostId];
+              }
+              if (rItem.strokes && rItem.strokes[oldHostId]) {
+                rItem.strokes[participantId] = rItem.strokes[oldHostId];
+              }
+            }
+          }
+        }
+      }
+    }
+    name = name || (role === "host" ? "Partner 1" : "Partner 2");
     res._participantId = participantId;
     res._participantName = name;
     res._role = role;
@@ -995,7 +1048,60 @@ class DrawRoomServer {
 
             if (!currentRoom.hostId) currentRoom.hostId = participantId;
             const role = (currentRoom.hostId === participantId) ? "host" : "guest";
-            participantName = sanitizeStr(payload?.name, 24) || currentRoom.state.profiles?.[participantId]?.name || (role === "host" ? "Partner 1" : "Partner 2");
+            let resolvedName = sanitizeStr(payload?.name, 24);
+            if (!resolvedName || resolvedName.startsWith("Partner")) {
+              resolvedName = currentRoom.state.profiles?.[participantId]?.name;
+            }
+            if (!resolvedName || resolvedName.startsWith("Partner")) {
+              if (role === "guest") {
+                const guestEntry = Object.entries(currentRoom.state.profiles || {}).find(([id]) => id !== currentRoom.hostId);
+                if (guestEntry && guestEntry[1]?.name) {
+                  resolvedName = guestEntry[1].name;
+                  currentRoom.state.profiles[participantId] = { ...guestEntry[1] };
+                  if (currentRoom.state.strokes?.[guestEntry[0]]) currentRoom.state.strokes[participantId] = currentRoom.state.strokes[guestEntry[0]];
+                  if (currentRoom.state.artwork) {
+                    for (const roundArt of Object.values(currentRoom.state.artwork)) {
+                      if (roundArt[guestEntry[0]]) roundArt[participantId] = roundArt[guestEntry[0]];
+                    }
+                  }
+                  if (Array.isArray(currentRoom.state.roundHistory)) {
+                    for (const rItem of currentRoom.state.roundHistory) {
+                      if (rItem.artwork && rItem.artwork[guestEntry[0]]) {
+                        rItem.artwork[participantId] = rItem.artwork[guestEntry[0]];
+                      }
+                      if (rItem.strokes && rItem.strokes[guestEntry[0]]) {
+                        rItem.strokes[participantId] = rItem.strokes[guestEntry[0]];
+                      }
+                    }
+                  }
+                }
+              } else if (role === "host") {
+                const hostProfile = currentRoom.state.profiles?.[currentRoom.hostId];
+                if (hostProfile?.name) resolvedName = hostProfile.name;
+                if (currentRoom.hostId && currentRoom.hostId !== participantId) {
+                  const oldHostId = currentRoom.hostId;
+                  currentRoom.hostId = participantId;
+                  if (hostProfile) currentRoom.state.profiles[participantId] = { ...hostProfile };
+                  if (currentRoom.state.strokes?.[oldHostId]) currentRoom.state.strokes[participantId] = currentRoom.state.strokes[oldHostId];
+                  if (currentRoom.state.artwork) {
+                    for (const roundArt of Object.values(currentRoom.state.artwork)) {
+                      if (roundArt[oldHostId]) roundArt[participantId] = roundArt[oldHostId];
+                    }
+                  }
+                  if (Array.isArray(currentRoom.state.roundHistory)) {
+                    for (const rItem of currentRoom.state.roundHistory) {
+                      if (rItem.artwork && rItem.artwork[oldHostId]) {
+                        rItem.artwork[participantId] = rItem.artwork[oldHostId];
+                      }
+                      if (rItem.strokes && rItem.strokes[oldHostId]) {
+                        rItem.strokes[participantId] = rItem.strokes[oldHostId];
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            participantName = resolvedName || (role === "host" ? "Partner 1" : "Partner 2");
             currentRoom.participants.set(ws, { id: participantId, name: participantName, role });
 
             const distinctIds = new Set([

@@ -634,7 +634,70 @@ assert(updatedRuntimeSrc.includes('const cursor = document.getElementById("drawR
 console.log("✅ PASS: Test 16 verified - Remote cursor strictly hidden on lobby and when not paired in room");
 passedTests++;
 
+// --- TEST 17: Reconnect Nickname Recovery, roundHistory Remapping, and Keepsake Artwork Download ---
+console.log("\n--- TEST 17: Reconnect Nickname Recovery, roundHistory Remapping & Keepsake Download ---");
+
+// 1. Verify guest reconnect with generic name recovers original nickname
+const roomCode17 = "RM17_" + (randId % 10000);
+const testRoom17 = drawRooms.getOrCreateRoom(roomCode17);
+testRoom17.hostId = "host_17";
+testRoom17.state.profiles["host_17"] = { name: "HostAlice", sex: "female", ready: true };
+testRoom17.state.profiles["guest_old_17"] = { name: "GuestBob", sex: "male", ready: true };
+testRoom17.state.strokes = {
+  host_17: [{ color: "#000", size: 5, points: [[0.1, 0.1]] }],
+  guest_old_17: [{ color: "#f00", size: 5, points: [[0.2, 0.2]] }]
+};
+testRoom17.state.artwork = {
+  1: {
+    host_17: "data:image/png;base64,hostArt",
+    guest_old_17: "data:image/png;base64,guestArt"
+  }
+};
+testRoom17.state.roundHistory = [
+  {
+    round: 1,
+    prompt: "A cute dog",
+    artwork: {
+      host_17: "data:image/png;base64,hostArt",
+      guest_old_17: "data:image/png;base64,guestArt"
+    },
+    strokes: {
+      host_17: [{ color: "#000", size: 5, points: [[0.1, 0.1]] }],
+      guest_old_17: [{ color: "#f00", size: 5, points: [[0.2, 0.2]] }]
+    }
+  }
+];
+
+// Simulate guest reconnecting with fresh PID and generic "Partner 2"
+const newGuestPid = "guest_reconnected_17";
+const fakeReq = { headers: {}, on: () => {} };
+const sseData = [];
+const fakeRes = {
+  writeHead: () => {},
+  write: (chunk) => sseData.push(chunk),
+  end: () => {}
+};
+
+drawRooms.registerSseClient(fakeReq, fakeRes, roomCode17, newGuestPid, "Partner 2");
+
+// Check that Bob's nickname was preserved
+assert.strictEqual(fakeRes._participantName, "GuestBob", "Server recovered original nickname GuestBob instead of defaulting to Partner 2");
+assert.strictEqual(testRoom17.state.profiles[newGuestPid].name, "GuestBob", "Profile remapped to newGuestPid with GuestBob name");
+assert.strictEqual(testRoom17.state.strokes[newGuestPid].length, 1, "Strokes remapped to newGuestPid");
+assert.strictEqual(testRoom17.state.roundHistory[0].artwork[newGuestPid], "data:image/png;base64,guestArt", "roundHistory artwork remapped to newGuestPid");
+assert.strictEqual(testRoom17.state.roundHistory[0].strokes[newGuestPid].length, 1, "roundHistory strokes remapped to newGuestPid");
+
+// 2. Verify draw.runtime.js has robust Keepsake Artwork download
+const runtimeText = fs.readFileSync(path.join(__dirname, "../public/js/widgets/draw.runtime.js"), "utf8");
+assert(runtimeText.includes("document.body.appendChild(link);"), "link appended to document.body for reliable trigger");
+assert(runtimeText.includes("setTimeout(() => {"), "contains timeout safety fallback");
+assert(runtimeText.includes("showToast(\"Generating keepsake artwork... 🎨\");"), "provides feedback toast when saving artwork");
+assert(runtimeText.includes("stageName === \"match_complete\""), "showStage automatically renders recap gallery on match_complete");
+
+console.log("✅ PASS: Test 17 verified - Reconnect nickname recovery, roundHistory remapping, and Keepsake download verified");
+passedTests++;
+
 console.log("\n=================================================");
-console.log(`ALL ${passedTests}/16 TEST SUITES PASSED!`);
+console.log(`ALL ${passedTests}/17 TEST SUITES PASSED!`);
 console.log("=================================================");
 process.exit(0);
