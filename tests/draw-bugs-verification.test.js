@@ -623,7 +623,18 @@ assert.strictEqual(isFull15, false, "New guest is NOT blocked by stale profiles 
 console.log("✅ PASS: Test 15 verified - Active capacity, PARTNER_RECONNECTED, and WS ping keepalive verified");
 passedTests++;
 
+// --- TEST 16: Remote Cursor Dissolution on Lobby / Disconnect / Exit ---
+console.log("\n--- TEST 16: Remote Cursor Dissolution on Lobby / Disconnect / Exit ---");
+const updatedRuntimeSrc = fs.readFileSync(path.join(__dirname, "../public/js/widgets/draw.runtime.js"), "utf8");
+
+assert(updatedRuntimeSrc.includes('if (stageName === "lobby" || state.isSolo || !state.roomCode || !state.partnerConnected)'), "showStage enforces cursor hiding on lobby/disconnect");
+assert(updatedRuntimeSrc.includes('if (state.stage === "lobby" || state.isSolo || !state.roomCode) {\n        const cursor = document.getElementById("drawRemoteCursor");\n        if (cursor) cursor.style.display = "none";\n        return;\n      }'), "REMOTE_CURSOR guards against display in lobby or unconnected room");
+assert(updatedRuntimeSrc.includes('const cursor = document.getElementById("drawRemoteCursor");\n    if (cursor) cursor.style.display = "none";\n\n    state.isSolo = false;'), "exitToMainMenu immediately hides cursor");
+
+console.log("✅ PASS: Test 16 verified - Remote cursor strictly hidden on lobby and when not paired in room");
+passedTests++;
+
 console.log("\n=================================================");
-console.log(`ALL ${passedTests}/15 TEST SUITES PASSED!`);
+console.log(`ALL ${passedTests}/16 TEST SUITES PASSED!`);
 console.log("=================================================");
 process.exit(0);

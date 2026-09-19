@@ -315,6 +315,12 @@
   function showStage(stageName) {
     state.stage = stageName;
     document.body.classList.toggle("draw-solo-mode", Boolean(state.isSolo));
+
+    if (stageName === "lobby" || state.isSolo || !state.roomCode || !state.partnerConnected) {
+      const cursor = document.getElementById("drawRemoteCursor");
+      if (cursor) cursor.style.display = "none";
+    }
+
     const stages = [
       el.stageLobby,
       el.stageProfile,
@@ -739,6 +745,11 @@
     }
 
     if (type === "REMOTE_CURSOR") {
+      if (state.stage === "lobby" || state.isSolo || !state.roomCode) {
+        const cursor = document.getElementById("drawRemoteCursor");
+        if (cursor) cursor.style.display = "none";
+        return;
+      }
       state.partnerConnected = true;
       let cursor = document.getElementById("drawRemoteCursor");
       if (cursor) {
@@ -780,6 +791,7 @@
     }
 
     if (type === "REMOTE_CLICK") {
+      if (state.stage === "lobby" || state.isSolo || !state.roomCode) return;
       state.partnerConnected = true;
       let cursor = document.getElementById("drawRemoteCursor");
       let posX = `${msg.x * 100}vw`;
@@ -1612,6 +1624,9 @@
       window.history.replaceState({}, "", url.pathname);
     } catch (e) {}
 
+    const cursor = document.getElementById("drawRemoteCursor");
+    if (cursor) cursor.style.display = "none";
+
     state.isSolo = false;
     document.body.classList.remove("draw-solo-mode");
     state.roomCode = null;
@@ -1658,7 +1673,7 @@
     // Live Cursor Tracking & Broadcasting (Figma / Photobooth Parity)
     let lastCursorSend = 0;
     const sendLocalCursor = (e) => {
-      if (state.isSolo || !state.roomCode) return;
+      if (state.isSolo || !state.roomCode || state.stage === "lobby" || !state.partnerConnected) return;
       const now = Date.now();
       if (now - lastCursorSend < 35) return;
       lastCursorSend = now;
@@ -1691,7 +1706,7 @@
     };
 
     const sendLocalClick = (e) => {
-      if (state.isSolo || !state.roomCode) return;
+      if (state.isSolo || !state.roomCode || state.stage === "lobby" || !state.partnerConnected) return;
       const w = window.innerWidth || document.documentElement.clientWidth || 1;
       const h = window.innerHeight || document.documentElement.clientHeight || 1;
       const x = Math.max(0, Math.min(1, e.clientX / w));
