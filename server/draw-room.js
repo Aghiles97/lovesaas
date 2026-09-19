@@ -422,7 +422,7 @@ class DrawRoomServer {
       currentRoom.sseClients.delete(res);
       this.broadcast(currentRoom, {
         type: "PARTNER_LEFT",
-        partnerId,
+        partnerId: participantId,
         partnerName: name,
         remainingCount: currentRoom.participants.size + currentRoom.sseClients.size
       });
