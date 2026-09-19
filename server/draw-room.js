@@ -158,6 +158,7 @@ class DrawRoomServer {
             if (item?.code && (now - Number(item.lastActivity || 0) < TTL)) {
               this.rooms.set(item.code, {
                 code: item.code,
+                hostId: item.hostId || (item.state?.profiles ? Object.keys(item.state.profiles)[0] : null) || null,
                 createdAt: Number(item.createdAt) || now,
                 lastActivity: Number(item.lastActivity) || now,
                 participants: new Map(),
@@ -196,6 +197,7 @@ class DrawRoomServer {
           if (now - (room.lastActivity || 0) < TTL) {
             out.push({
               code,
+              hostId: room.hostId || null,
               createdAt: room.createdAt,
               lastActivity: room.lastActivity,
               state: {
@@ -217,6 +219,7 @@ class DrawRoomServer {
     if (!this.rooms.has(roomCode)) {
       this.rooms.set(roomCode, {
         code: roomCode,
+        hostId: null,
         createdAt: Date.now(),
         lastActivity: Date.now(),
         participants: new Map(),
@@ -387,8 +390,11 @@ class DrawRoomServer {
 
     const distinctIds = new Set([
       ...Array.from(currentRoom.participants.values()).map(p => p.id),
-      ...Array.from(currentRoom.sseClients).map(c => c._participantId)
+      ...Array.from(currentRoom.sseClients).map(c => c._participantId),
+      ...(currentRoom.disconnectTimeouts ? Array.from(currentRoom.disconnectTimeouts.keys()) : []),
+      ...Object.keys(currentRoom.state.profiles || {})
     ]);
+    if (currentRoom.hostId) distinctIds.add(currentRoom.hostId);
     const isExisting = distinctIds.has(participantId) || !!currentRoom.state.profiles?.[participantId];
 
     if (distinctIds.size >= 2 && !isExisting) {
@@ -396,7 +402,8 @@ class DrawRoomServer {
       return res.end();
     }
 
-    const role = (currentRoom.participants.size === 0 && currentRoom.sseClients.size === 0) ? "host" : "guest";
+    if (!currentRoom.hostId) currentRoom.hostId = participantId;
+    const role = (currentRoom.hostId === participantId) ? "host" : "guest";
     const name = sanitizeStr(participantName, 24) || currentRoom.state.profiles?.[participantId]?.name || (role === "host" ? "Partner 1" : "Partner 2");
     res._participantId = participantId;
     res._participantName = name;
@@ -404,7 +411,7 @@ class DrawRoomServer {
 
     currentRoom.sseClients.add(res);
 
-    if ((currentRoom.participants.size + currentRoom.sseClients.size >= 2 || distinctIds.size >= 1) && currentRoom.state.stage === "lobby") {
+    if ((currentRoom.participants.size + currentRoom.sseClients.size >= 2 || distinctIds.size >= 1 || (currentRoom.hostId && currentRoom.hostId !== participantId)) && currentRoom.state.stage === "lobby") {
       currentRoom.state.stage = "profile_setup";
     }
 
@@ -886,8 +893,11 @@ class DrawRoomServer {
 
             const distinctIds = new Set([
               ...Array.from(currentRoom.participants.values()).map(p => p.id),
-              ...Array.from(currentRoom.sseClients).map(c => c._participantId)
+              ...Array.from(currentRoom.sseClients).map(c => c._participantId),
+              ...(currentRoom.disconnectTimeouts ? Array.from(currentRoom.disconnectTimeouts.keys()) : []),
+              ...Object.keys(currentRoom.state.profiles || {})
             ]);
+            if (currentRoom.hostId) distinctIds.add(currentRoom.hostId);
             const isExisting = distinctIds.has(participantId) || !!currentRoom.state.profiles?.[participantId];
 
             if (distinctIds.size >= 2 && !isExisting) {
@@ -895,11 +905,12 @@ class DrawRoomServer {
               return;
             }
 
-            const role = (currentRoom.participants.size === 0 && currentRoom.sseClients.size === 0) ? "host" : "guest";
+            if (!currentRoom.hostId) currentRoom.hostId = participantId;
+            const role = (currentRoom.hostId === participantId) ? "host" : "guest";
             participantName = sanitizeStr(payload?.name, 24) || currentRoom.state.profiles?.[participantId]?.name || (role === "host" ? "Partner 1" : "Partner 2");
             currentRoom.participants.set(ws, { id: participantId, name: participantName, role });
 
-            if ((currentRoom.participants.size + currentRoom.sseClients.size >= 2 || distinctIds.size >= 1) && currentRoom.state.stage === "lobby") {
+            if ((currentRoom.participants.size + (currentRoom.sseClients?.size || 0) >= 2 || distinctIds.size >= 1 || (currentRoom.hostId && currentRoom.hostId !== participantId)) && currentRoom.state.stage === "lobby") {
               currentRoom.state.stage = "profile_setup";
             }
 

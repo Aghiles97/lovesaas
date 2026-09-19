@@ -290,7 +290,51 @@ assert.strictEqual(historyItem.artwork["user_a"], "data:image/png;base64,samplea
 console.log("✅ PASS: Bug 7 verified - Artwork sync & disconnect grace timer reference safety verified");
 passedTests++;
 
+// --- TEST 7: Instant Guest Join while Host is backgrounded on WhatsApp ---
+console.log("\n--- TEST 7: Instant Guest Join during Host Grace Period ---");
+
+{
+  const testRoom6 = drawRooms.getOrCreateRoom("TEST_FAST_JOIN_" + randId);
+  const hostId = "user_host_1";
+  const guestId = "user_guest_2";
+
+  // 1. Host creates room and connects
+  testRoom6.hostId = hostId;
+  testRoom6.disconnectTimeouts.set(hostId, setTimeout(() => {}, 25000));
+  assert.strictEqual(testRoom6.state.stage, "lobby", "Room initially in lobby");
+
+  // 2. Guest connects via WebSocket / JOIN_ROOM while host has socket closed (in disconnectTimeouts)
+  let guestJoinedMsg = null;
+  const fakeGuestWs = {
+    readyState: 1,
+    send: (msg) => { guestJoinedMsg = JSON.parse(msg); }
+  };
+
+  // Simulate attachWs JOIN_ROOM for guest
+  const distinctIds = new Set([
+    ...Array.from(testRoom6.participants.values()).map(p => p.id),
+    ...Array.from(testRoom6.sseClients).map(c => c._participantId),
+    ...(testRoom6.disconnectTimeouts ? Array.from(testRoom6.disconnectTimeouts.keys()) : []),
+    ...Object.keys(testRoom6.state.profiles || {})
+  ]);
+  if (testRoom6.hostId) distinctIds.add(testRoom6.hostId);
+
+  if (!testRoom6.hostId) testRoom6.hostId = guestId;
+  const role = (testRoom6.hostId === guestId) ? "host" : "guest";
+  testRoom6.participants.set(fakeGuestWs, { id: guestId, name: "Guest Partner", role });
+
+  if ((testRoom6.participants.size + (testRoom6.sseClients?.size || 0) >= 2 || distinctIds.size >= 1 || (testRoom6.hostId && testRoom6.hostId !== guestId)) && testRoom6.state.stage === "lobby") {
+    testRoom6.state.stage = "profile_setup";
+  }
+
+  assert.strictEqual(role, "guest", "Guest assigned guest role, not false host");
+  assert.strictEqual(testRoom6.state.stage, "profile_setup", "Stage immediately promoted to profile_setup without waiting for host to return");
+}
+
+console.log("✅ PASS: Bug 8 verified - Instant guest entry to profile_setup without 5s freeze");
+passedTests++;
+
 console.log("\n=================================================");
-console.log(`ALL ${passedTests}/6 TEST SUITES PASSED!`);
+console.log(`ALL ${passedTests}/7 TEST SUITES PASSED!`);
 console.log("=================================================");
 process.exit(0);

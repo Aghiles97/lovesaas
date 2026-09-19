@@ -284,11 +284,20 @@
         try { state.ws.close(); } catch (e) {}
         state.ws = null;
       }
+      let wsConnected = false;
+      const wsFallbackTimeout = setTimeout(() => {
+        if (!wsConnected && !state.isSolo) {
+          setupSseFallback();
+        }
+      }, 2000);
+
       const ws = new WebSocket(wsUrl);
       state.ws = ws;
 
       ws.onopen = () => {
         if (state.ws !== ws) return;
+        wsConnected = true;
+        clearTimeout(wsFallbackTimeout);
         if (state._reconnectTimer) {
           clearTimeout(state._reconnectTimer);
           state._reconnectTimer = null;
@@ -314,11 +323,13 @@
 
       ws.onerror = () => {
         if (state.ws !== ws) return;
+        clearTimeout(wsFallbackTimeout);
         setupSseFallback();
       };
 
       ws.onclose = () => {
         if (state.ws !== ws) return;
+        clearTimeout(wsFallbackTimeout);
         setupSseFallback();
         if (state.roomCode && !state.isSolo && !state._reconnectTimer) {
           state._reconnectTimer = setTimeout(() => {
@@ -451,6 +462,10 @@
           showStage(msg.state.stage);
           return;
         }
+      }
+
+      if (el.waitingStatusText && state.stage === "lobby") {
+        el.waitingStatusText.textContent = "Waiting for your partner to join...";
       }
 
       if (state.stage === "lobby" && (msg.participantCount >= 2 || state.role === "guest")) {
@@ -1427,6 +1442,9 @@
         showToast("Please enter a valid room code");
         return;
       }
+      if (el.lobbyInitialView) el.lobbyInitialView.style.display = "none";
+      if (el.lobbyWaitingView) el.lobbyWaitingView.style.display = "block";
+      if (el.waitingStatusText) el.waitingStatusText.textContent = `Connecting to room ${code}...`;
       initNetworking(code);
     });
 
