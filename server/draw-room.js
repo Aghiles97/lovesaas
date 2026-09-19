@@ -626,10 +626,14 @@ class DrawRoomServer {
     // 4. Start Match Click (Transitions to drawing stage, timer pauses until user clicks start on draw page)
     if (type === "START_MATCH") {
       if (currentRoom.state.stage === "drawing") return;
+      if (payload?.packId && PROMPT_PACKS[payload.packId]) {
+        currentRoom.state.selectedPack = payload.packId;
+      }
       currentRoom.state.stage = "drawing";
       currentRoom.state.currentRound = 1;
       currentRoom.state.roundHistory = [];
       currentRoom.state.strokes = {};
+      currentRoom.state.artwork = {};
       currentRoom.usedPrompts = new Set();
       currentRoom.state.currentPrompt = this.getNextPrompt(currentRoom, currentRoom.state.selectedPack);
       currentRoom.state.matchStartedAt = Date.now();
@@ -649,6 +653,7 @@ class DrawRoomServer {
         roundsTotal: currentRoom.state.roundsTotal,
         secondsPerDrawing: currentRoom.state.secondsPerDrawing,
         currentPrompt: currentRoom.state.currentPrompt,
+        selectedPack: currentRoom.state.selectedPack,
         timerRunning: false,
         timerRemaining: currentRoom.state.secondsPerDrawing,
         actorId: participantId,
@@ -676,6 +681,17 @@ class DrawRoomServer {
     // 6. Next Round (after round review, pauses timer until start clicked on draw page)
     if (type === "NEXT_ROUND") {
       if (currentRoom.state.stage !== "round_review") return;
+      if (currentRoom.state.currentRound >= currentRoom.state.roundsTotal) {
+        currentRoom.state.stage = "match_complete";
+        this.scheduleSave();
+        this.broadcastAll(currentRoom, {
+          type: "MATCH_COMPLETED",
+          totalRounds: currentRoom.state.roundsTotal,
+          roundHistory: currentRoom.state.roundHistory,
+          state: currentRoom.state
+        });
+        return;
+      }
       currentRoom.state.currentRound += 1;
       currentRoom.state.stage = "drawing";
       currentRoom.state.strokes = {};

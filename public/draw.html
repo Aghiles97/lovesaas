@@ -133,6 +133,10 @@
           <span class="draw-pulse-dot"></span>
           <span id="profileWaitingText">Waiting for partner to finish profile...</span>
         </div>
+
+        <div style="margin-top: 14px; text-align: center;">
+          <button type="button" class="ldr-text-back-btn btn-exit-setup" style="background: none; border: none; cursor: pointer; color: rgba(255, 255, 255, 0.72);">← Exit to Menu</button>
+        </div>
       </div>
     </div>
 
@@ -196,6 +200,10 @@
         <button type="button" id="btnPackNext" class="draw-btn-next">
           <span>Next ▷</span>
         </button>
+
+        <div style="margin-top: 14px; text-align: center;">
+          <button type="button" class="ldr-text-back-btn btn-exit-setup" style="background: none; border: none; cursor: pointer;">← Exit to Menu</button>
+        </div>
       </div>
     </div>
 
@@ -232,6 +240,10 @@
         <button type="button" id="btnStartDrawing" class="draw-btn-start">
           <span>Start Drawing ▷</span>
         </button>
+
+        <div style="margin-top: 14px; text-align: center;">
+          <button type="button" class="ldr-text-back-btn btn-exit-setup" style="background: none; border: none; cursor: pointer;">← Exit to Menu</button>
+        </div>
       </div>
     </div>
 
@@ -244,6 +256,7 @@
         <!-- Top Header Bar -->
         <header class="draw-arena-header">
           <div class="draw-round-col">
+            <button type="button" id="btnExitDrawing" class="draw-btn-header-exit" title="Exit to Menu">✕ Exit</button>
             <span class="draw-round-ratio"><span id="displayRoundNum">1</span>/<span id="displayRoundTotal">3</span></span>
           </div>
           <div class="draw-prompt-title">
@@ -380,7 +393,7 @@
             </div>
           </div>
 
-          <div class="draw-review-card">
+          <div class="draw-review-card" id="reviewPartnerCard">
             <div class="draw-review-card-header">
               <span class="draw-review-drawer-name" id="reviewPartnerName">Partner</span>
               <span class="draw-pad-badge blue">Pad 2</span>
@@ -395,6 +408,9 @@
           <button type="button" id="btnNextRound" class="draw-btn-start">
             <span>Next Round ▷</span>
           </button>
+          <button type="button" id="btnReviewExit" class="draw-btn-secondary" style="margin-left: 8px;">
+            <span>✕ Exit</span>
+          </button>
         </div>
       </div>
     </div>
@@ -406,7 +422,7 @@
       <div class="draw-review-wrap">
         <div class="draw-brand-badge"><span>🏆 Match Finished</span></div>
         <h2 class="draw-review-title">Our Drawing Keepsake</h2>
-        <div class="draw-review-prompt">Look at all the masterpieces you two created!</div>
+        <div class="draw-review-prompt">Look at all the masterpieces created!</div>
 
         <div class="draw-recap-gallery" id="recapGallery">
           <!-- Populated dynamically with all round drawings -->
@@ -418,6 +434,12 @@
           </button>
           <button type="button" id="btnPlayAgain" class="draw-btn-next">
             <span>Play Again ▷</span>
+          </button>
+          <button type="button" id="btnPlaySoloAgain" class="draw-btn-secondary" style="margin-left: 8px;">
+            <span>Play Solo 👤</span>
+          </button>
+          <button type="button" id="btnExitComplete" class="draw-btn-secondary" style="margin-left: 8px;">
+            <span>✕ Exit</span>
           </button>
         </div>
       </div>

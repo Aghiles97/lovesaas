@@ -77,6 +77,120 @@
     savedSex = sessionStorage.getItem("draw_sex") || null;
   } catch (e) {}
 
+  const PROMPT_PACKS = {
+    animals: {
+      id: "animals",
+      prompts: [
+        "A penguin eating an ice cream cone",
+        "A chonky cat wearing a detective coat",
+        "Two otters holding hands while sleeping",
+        "A golden retriever trying to catch a bubble",
+        "A baby elephant playing in a mud puddle",
+        "A hedgehog wrapped like a warm burrito",
+        "A red panda standing up trying to look scary",
+        "A duck wearing tiny yellow rain boots",
+        "A fluffy llama wearing colorful sunglasses",
+        "A frog sitting under a mushroom umbrella",
+        "A sleepy sloth drinking iced coffee",
+        "A hamster stuffing its cheeks with strawberries",
+        "A bear attempting ballet in a tutu",
+        "A capybara chilling with tiny birds on its head",
+        "A seal doing a happy belly slide",
+        "A corgi doing a high-speed zoomie"
+      ]
+    },
+    food: {
+      id: "food",
+      prompts: [
+        "Our ultimate midnight snack combo",
+        "A giant steaming bowl of ramen with all toppings",
+        "A cheesy pizza slice surfing on a soda wave",
+        "A tower of fluffy pancakes dripping with syrup",
+        "A boba milk tea with too many pearls",
+        "A fancy taco with a happy mustache",
+        "A cute sushi roll doing a backflip",
+        "An overloaded croissant ice cream sandwich",
+        "A warm chocolate chip cookie straight from the oven",
+        "A hot pot feast boiling with goodness",
+        "Our favorite dessert we always fight over",
+        "A donut astronaut drifting in space"
+      ]
+    },
+    random: {
+      id: "random",
+      prompts: [
+        "A toaster launching into outer space",
+        "A lonely cactus looking for a hug",
+        "A cloud raining flowers and confetti",
+        "A teapot that serves dreams instead of tea",
+        "A bicycle made entirely of candy canes",
+        "A haunted vending machine dispensing hugs",
+        "A clock running backwards in slow motion",
+        "A lightbulb having a brilliant realization",
+        "A backpack with robotic legs walking itself",
+        "A pair of sneakers dancing alone at midnight",
+        "A cozy campfire roasting marshmallows for stars",
+        "A flying skateboard powered by rainbows"
+      ]
+    },
+    memories: {
+      id: "memories",
+      prompts: [
+        "The last time we laughed really hard",
+        "Our very first date together",
+        "A cozy lazy Sunday morning in bed",
+        "Our favorite trip or travel getaway",
+        "The meal we made that was an absolute disaster",
+        "The song or moment we danced together",
+        "The inside joke only the two of us understand",
+        "A place we dreamed about visiting together",
+        "The sweetest surprise you ever gave me",
+        "Watching the sunset or stars together",
+        "How we look when we are both sleepy"
+      ]
+    },
+    draw_me: {
+      id: "draw_me",
+      prompts: [
+        "Draw me as a cartoon superhero",
+        "My exact face when I'm hangry",
+        "Draw me right now at this exact moment",
+        "Me wearing a ridiculously fancy royal outfit",
+        "My signature dance move when no one is watching",
+        "Me waking up before my first sip of coffee",
+        "Draw me as an adorable baby animal",
+        "My reaction when you give me an unexpected hug",
+        "Me trying to assemble flat-pack furniture",
+        "The cutest thing about me in your eyes"
+      ]
+    },
+    silly: {
+      id: "silly",
+      prompts: [
+        "A potato with luscious shampoo-commercial hair",
+        "An alien trying to understand human romantic comedy",
+        "A chicken trying to park a sports car",
+        "A drama queen pug having an existential crisis",
+        "A fish trying to ride a bicycle underwater",
+        "A pineapple wearing leather biker gear",
+        "A dinosaur trying to apply eye shadow",
+        "A marshmallow in a panic near a campfire",
+        "A grumpy cat conducting an orchestra",
+        "A pigeon giving a TED talk with supreme confidence"
+      ]
+    }
+  };
+
+  function getRandomPrompt(packId) {
+    const pack = PROMPT_PACKS[packId] || PROMPT_PACKS.animals;
+    if (!state.usedSoloPrompts) state.usedSoloPrompts = new Set();
+    const available = pack.prompts.filter(p => !state.usedSoloPrompts.has(p));
+    const pool = available.length > 0 ? available : pack.prompts;
+    const chosen = pool[Math.floor(Math.random() * pool.length)];
+    state.usedSoloPrompts.add(chosen);
+    return chosen;
+  }
+
   // --- App State ---
   const state = {
     roomCode: null,
@@ -89,6 +203,7 @@
     partnerSex: null,
     myReady: false,
     partnerReady: false,
+    partnerConnected: true,
     stage: "lobby",
     selectedPack: "memories",
     roundsTotal: 3,
@@ -179,15 +294,20 @@
     reviewMyImg: document.getElementById("reviewMyImg"),
     reviewPartnerImg: document.getElementById("reviewPartnerImg"),
     btnNextRound: document.getElementById("btnNextRound"),
+    btnReviewExit: document.getElementById("btnReviewExit"),
 
     recapGallery: document.getElementById("recapGallery"),
     btnDownloadKeepsake: document.getElementById("btnDownloadKeepsake"),
-    btnPlayAgain: document.getElementById("btnPlayAgain")
+    btnPlayAgain: document.getElementById("btnPlayAgain"),
+    btnPlaySoloAgain: document.getElementById("btnPlaySoloAgain"),
+    btnExitComplete: document.getElementById("btnExitComplete"),
+    btnExitDrawing: document.getElementById("btnExitDrawing")
   };
 
   // --- Stage Switching ---
   function showStage(stageName) {
     state.stage = stageName;
+    document.body.classList.toggle("draw-solo-mode", Boolean(state.isSolo));
     const stages = [
       el.stageLobby,
       el.stageProfile,
@@ -476,6 +596,7 @@
     }
 
     if (type === "PARTNER_JOINED") {
+      state.partnerConnected = true;
       if (msg.partner) {
         state.partnerName = msg.partner.name || "Partner";
         updateBadges();
@@ -492,6 +613,7 @@
         state.partnerName = msg.profile?.name || "Partner";
         state.partnerSex = msg.profile?.sex || "female";
         state.partnerReady = true;
+        state.partnerConnected = true;
         updateBadges();
       }
       updateProfileReadyUI();
@@ -504,6 +626,7 @@
     }
 
     if (type === "PROFILES_COMPLETED") {
+      state.partnerConnected = true;
       if (msg.profiles) {
         for (const [pid, prof] of Object.entries(msg.profiles)) {
           if (pid !== state.participantId) {
@@ -524,6 +647,7 @@
     }
 
     if (type === "PARTNER_LEFT") {
+      state.partnerConnected = false;
       showToast(`${state.partnerName} disconnected`);
       const cursor = document.getElementById("drawRemoteCursor");
       if (cursor) cursor.style.display = "none";
@@ -1133,16 +1257,17 @@
       row.className = "draw-recap-round-row";
       row.innerHTML = `
         <div class="draw-recap-prompt-label">Round ${r.round}: "${r.prompt}"</div>
-        <div class="draw-recap-drawings">
+        <div class="draw-recap-drawings ${state.isSolo ? "solo" : ""}">
           <div class="draw-review-card">
             <div class="draw-review-card-header">
               <span class="draw-review-drawer-name">${state.myName || "You"}</span>
-              <span class="draw-pad-badge pink">Pad 1</span>
+              <span class="draw-pad-badge pink">${state.isSolo ? "Solo" : "Pad 1"}</span>
             </div>
             <div class="draw-review-canvas-box">
               <img src="${r.myImg || ""}" alt="Drawing 1" />
             </div>
           </div>
+          ${!state.isSolo ? `
           <div class="draw-review-card">
             <div class="draw-review-card-header">
               <span class="draw-review-drawer-name">${state.partnerName || "Partner"}</span>
@@ -1151,7 +1276,7 @@
             <div class="draw-review-canvas-box">
               <img src="${r.partnerImg || r.myImg || ""}" alt="Drawing 2" />
             </div>
-          </div>
+          </div>` : ""}
         </div>
       `;
       el.recapGallery.appendChild(row);
@@ -1209,7 +1334,8 @@
   function downloadKeepsakeImage() {
     const offCanvas = document.createElement("canvas");
     const count = state.roundHistory.length || 1;
-    const cardW = 800;
+    const isSolo = Boolean(state.isSolo);
+    const cardW = isSolo ? 520 : 800;
     const roundH = 340;
     const headerH = 120;
     const footerH = 60;
@@ -1223,11 +1349,11 @@
     ctx.fillStyle = "#18181b";
     ctx.font = "bold 28px 'Outfit', sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText("Our Drawings Together 💕", cardW / 2, 54);
+    ctx.fillText(isSolo ? "My Drawings 💕" : "Our Drawings Together 💕", cardW / 2, 54);
 
     ctx.fillStyle = "#71717a";
     ctx.font = "16px 'Outfit', sans-serif";
-    ctx.fillText(`${state.myName} & ${state.partnerName} · ${new Date().toLocaleDateString()}`, cardW / 2, 84);
+    ctx.fillText(isSolo ? `${state.myName || "Artist"} · ${new Date().toLocaleDateString()}` : `${state.myName} & ${state.partnerName} · ${new Date().toLocaleDateString()}`, cardW / 2, 84);
 
     let currentY = headerH;
     let pending = 0;
@@ -1235,13 +1361,13 @@
     const checkDone = () => {
       if (--pending === 0) {
         const link = document.createElement("a");
-        link.download = `our-drawings-${Date.now()}.png`;
+        link.download = `${isSolo ? "my" : "our"}-drawings-${Date.now()}.png`;
         link.href = offCanvas.toDataURL("image/png");
         link.click();
       }
     };
 
-    const padW = 340;
+    const padW = isSolo ? 440 : 340;
     const padH = 240;
 
     [...state.roundHistory].sort((a, b) => a.round - b.round).forEach((r) => {
@@ -1252,8 +1378,7 @@
 
       const yBox = currentY + 40;
       const img1 = new Image();
-      const img2 = new Image();
-      pending += 2;
+      pending += 1;
 
       const drawBox = (img, src, x) => {
         if (!src) {
@@ -1274,27 +1399,34 @@
       };
 
       drawBox(img1, r.myImg, 40);
-      drawBox(img2, r.partnerImg || r.myImg, 420);
+
+      if (!isSolo) {
+        const img2 = new Image();
+        pending += 1;
+        drawBox(img2, r.partnerImg || r.myImg, 420);
+      }
 
       currentY += roundH;
     });
 
     if (pending === 0) {
-      const link = document.createElement("a");
-      link.download = `our-drawings-${Date.now()}.png`;
-      link.href = offCanvas.toDataURL("image/png");
-      link.click();
+      checkDone();
     }
   }
 
   // --- Solo Mode Simulator ---
   let soloTimer = null;
-  function startSoloMatch() {
+  function startSoloMatch(roundNum = 1) {
     state.isSolo = true;
+    document.body.classList.add("draw-solo-mode");
     state.timerRunning = false;
-    state.currentRound = 1;
-    state.currentPrompt = "The last time we laughed really hard";
-    state.roundHistory = [];
+    state.currentRound = roundNum;
+    state.currentPrompt = getRandomPrompt(state.selectedPack);
+    if (roundNum === 1) {
+      state.roundHistory = [];
+      state.usedSoloPrompts = new Set();
+      state.usedSoloPrompts.add(state.currentPrompt);
+    }
     state.myStrokes = [];
     state.partnerStrokes = [];
     state.myRedoStack = [];
@@ -1307,6 +1439,50 @@
     showStage("drawing");
 
     if (soloTimer) { clearInterval(soloTimer); soloTimer = null; }
+  }
+
+  function exitToMainMenu() {
+    if (state.stage === "drawing" && !window.confirm("Are you sure you want to exit? Current drawing progress will be lost. 🎨")) {
+      return;
+    }
+    if (soloTimer) {
+      clearInterval(soloTimer);
+      soloTimer = null;
+    }
+    if (state.ws) {
+      try { state.ws.close(); } catch (e) {}
+      state.ws = null;
+    }
+    if (state.sse) {
+      try { state.sse.close(); } catch (e) {}
+      state.sse = null;
+    }
+    localStorage.removeItem("draw_last_room");
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("room");
+      window.history.replaceState({}, "", url.pathname);
+    } catch (e) {}
+
+    state.isSolo = false;
+    document.body.classList.remove("draw-solo-mode");
+    state.roomCode = null;
+    state.myReady = false;
+    state.partnerReady = false;
+    state.partnerConnected = false;
+    state.currentRound = 1;
+    state.roundHistory = [];
+    state.myStrokes = [];
+    state.partnerStrokes = [];
+    state.myRedoStack = [];
+    state.isEraser = false;
+    clearLocalCanvas();
+
+    if (el.lobbyInitialView) el.lobbyInitialView.style.display = "block";
+    if (el.lobbyInlineJoinForm) el.lobbyInlineJoinForm.style.display = "none";
+    if (el.lobbyWaitingView) el.lobbyWaitingView.style.display = "none";
+
+    showStage("lobby");
   }
 
   function triggerStartRoundTimer() {
@@ -1586,9 +1762,9 @@
       el.btnStartDrawing.disabled = true;
       setTimeout(() => { if (el.btnStartDrawing) el.btnStartDrawing.disabled = false; }, 2000);
       if (state.isSolo) {
-        startSoloMatch();
+        startSoloMatch(1);
       } else {
-        sendMsg("START_MATCH");
+        sendMsg("START_MATCH", { packId: state.selectedPack });
       }
     });
 
@@ -1696,14 +1872,16 @@
       setTimeout(() => { if (el.btnNextRound) el.btnNextRound.disabled = false; }, 2000);
       if (state.isSolo) {
         if (state.currentRound < state.roundsTotal) {
-          state.currentRound += 1;
-          state.currentPrompt = "A cute puppy wearing sunglasses";
-          startSoloMatch();
+          startSoloMatch(state.currentRound + 1);
         } else {
           onMatchCompleted();
         }
       } else {
-        sendMsg("NEXT_ROUND");
+        if (state.currentRound >= state.roundsTotal) {
+          onMatchCompleted();
+        } else {
+          sendMsg("NEXT_ROUND");
+        }
       }
     });
 
@@ -1712,7 +1890,7 @@
       downloadKeepsakeImage();
     });
 
-    // Play Again
+    // Play Again (Multiplayer or Solo)
     el.btnPlayAgain?.addEventListener("click", () => {
       if (!window.confirm("Are you sure you saved your artwork and want to play again? 💕")) {
         return;
@@ -1720,8 +1898,39 @@
       if (state.isSolo) {
         showStage("pack_select");
       } else {
+        if (state.partnerConnected === false) {
+          if (window.confirm("Your partner disconnected. Would you like to switch to Solo mode?")) {
+            state.isSolo = true;
+            document.body.classList.add("draw-solo-mode");
+            showStage("pack_select");
+            return;
+          }
+        }
         sendMsg("RESTART_MATCH");
       }
+    });
+
+    // Play Solo Again
+    el.btnPlaySoloAgain?.addEventListener("click", () => {
+      if (!window.confirm("Start a new game in Solo mode? 💕")) return;
+      state.isSolo = true;
+      document.body.classList.add("draw-solo-mode");
+      state.roundHistory = [];
+      state.myStrokes = [];
+      state.partnerStrokes = [];
+      state.myRedoStack = [];
+      state.currentRound = 1;
+      clearCanvas(el.myCanvas, ctx.my);
+      clearCanvas(el.partnerCanvas, ctx.partner);
+      showStage("pack_select");
+    });
+
+    // Exit to Main Menu Buttons
+    el.btnExitDrawing?.addEventListener("click", exitToMainMenu);
+    el.btnReviewExit?.addEventListener("click", exitToMainMenu);
+    el.btnExitComplete?.addEventListener("click", exitToMainMenu);
+    document.querySelectorAll(".btn-exit-setup").forEach(btn => {
+      btn.addEventListener("click", exitToMainMenu);
     });
 
     // Resize

@@ -972,6 +972,27 @@ body:has(#stageProfile.active) {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
+}
+
+.draw-btn-header-exit {
+  background: #ebecef;
+  border: 1px solid #d4d4d8;
+  color: #52525b;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.draw-btn-header-exit:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #ef4444;
 }
 
 .draw-round-ratio {
@@ -1747,4 +1768,42 @@ body:has(#stageProfile.active) {
 @keyframes drawClickPingAnim {
   0% { transform: scale(0.2); opacity: 1; }
   100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Solo Mode Isolation */
+body.draw-solo-mode #partnerPadCard,
+body.draw-solo-mode .draw-pad-partner,
+body.draw-solo-mode .draw-poke-bar,
+body.draw-solo-mode .draw-poke-subtitle,
+body.draw-solo-mode #myPadBadge,
+body.draw-solo-mode .partner-pad-tap-hint,
+body.draw-solo-mode #reviewPartnerCard,
+body.draw-solo-mode #profilePartnerStatus,
+body.draw-solo-mode #profileWaitingWrap,
+body.draw-solo-mode .ldr-welcome-pill,
+body.draw-solo-mode .draw-recap-drawings.solo .draw-review-card:nth-child(2) {
+  display: none !important;
+}
+
+body.draw-solo-mode .draw-canvases-grid {
+  justify-content: center !important;
+}
+
+body.draw-solo-mode .draw-canvases-grid .draw-pad-card {
+  width: min(580px, calc(100vw - 32px)) !important;
+  height: min(435px, calc((100vw - 32px) * 0.75)) !important;
+  max-height: 52vh !important;
+  margin: 0 auto !important;
+}
+
+body.draw-solo-mode .draw-review-grid {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  max-width: 480px !important;
+  margin: 0 auto !important;
+}
+
+body.draw-solo-mode .draw-review-grid .draw-review-card {
+  width: min(480px, 100%) !important;
 }

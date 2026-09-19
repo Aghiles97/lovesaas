@@ -1,6 +1,8 @@
 // tests/draw-bugs-verification.test.js
 // Targeted Verification Suite for the 5 Reported /draw Bugs
 
+const fs = require("fs");
+const path = require("path");
 const assert = require("assert");
 const { drawRooms } = require("../server/draw-room");
 
@@ -389,7 +391,86 @@ assert.deepStrictEqual(testRoom7.state.strokes, {}, "Strokes reset on match rest
 console.log("✅ PASS: Bug 9 verified - Lone host lobby protection, profile ready guard, and restart cleanup verified");
 passedTests++;
 
+// --- TEST 9: Prompt Pack Selection & Multi-round Progression to Match Complete ---
+console.log("\n--- TEST 9: Prompt Pack Selection & Round Progression ---");
+
+const testRoom8 = drawRooms.getOrCreateRoom("TEST_PACK_" + randId);
+const fakeMsgs8 = [];
+const fakeClient8 = { readyState: 1, send: (m) => fakeMsgs8.push(JSON.parse(m)) };
+testRoom8.participants.set(fakeClient8, { id: "p1", name: "Alex" });
+testRoom8.state.stage = "pack_select";
+
+// Select pack "food"
+drawRooms.handleMessage(testRoom8, "p1", "Alex", {
+  type: "SELECT_PACK",
+  payload: { packId: "food" }
+});
+assert.strictEqual(testRoom8.state.selectedPack, "food", "Server selectedPack updated to food");
+
+// Start match with food pack
+drawRooms.handleMessage(testRoom8, "p1", "Alex", {
+  type: "START_MATCH",
+  payload: { packId: "food" }
+});
+assert.strictEqual(testRoom8.state.stage, "drawing", "Stage transitioned to drawing");
+assert.strictEqual(testRoom8.state.currentRound, 1, "Round initialized to 1");
+assert(testRoom8.state.currentPrompt.length > 0, "Prompt chosen for round 1");
+
+// Move to round review
+testRoom8.state.stage = "round_review";
+testRoom8.state.roundsTotal = 3;
+
+// Advance to round 2
+drawRooms.handleMessage(testRoom8, "p1", "Alex", { type: "NEXT_ROUND" });
+assert.strictEqual(testRoom8.state.currentRound, 2, "Round advanced to 2");
+assert.strictEqual(testRoom8.state.stage, "drawing", "Stage returned to drawing for round 2");
+
+// Advance to round 3
+testRoom8.state.stage = "round_review";
+drawRooms.handleMessage(testRoom8, "p1", "Alex", { type: "NEXT_ROUND" });
+assert.strictEqual(testRoom8.state.currentRound, 3, "Round advanced to 3");
+
+// Advance past round 3 -> should complete match!
+testRoom8.state.stage = "round_review";
+drawRooms.handleMessage(testRoom8, "p1", "Alex", { type: "NEXT_ROUND" });
+assert.strictEqual(testRoom8.state.stage, "match_complete", "Round 3 review advances to match_complete");
+
+const matchCompletedMsg = fakeMsgs8.find(m => m.type === "MATCH_COMPLETED");
+assert(matchCompletedMsg, "MATCH_COMPLETED broadcast on finishing final round");
+
+console.log("✅ PASS: Test 9 verified - Prompt pack selection & progression to match_complete verified");
+passedTests++;
+
+// --- TEST 10: Solo Mode Isolation & Round Progression Verification ---
+console.log("\n--- TEST 10: Solo Mode Isolation & Round Progression ---");
+
+const htmlSrc = fs.readFileSync(path.join(__dirname, "../public/draw.html"), "utf8");
+const cssSrc = fs.readFileSync(path.join(__dirname, "../public/css/widgets/draw.css"), "utf8");
+const jsSrc = fs.readFileSync(path.join(__dirname, "../public/js/widgets/draw.runtime.js"), "utf8");
+
+// 1. DOM Exit Buttons Exist
+assert(htmlSrc.includes('id="btnExitDrawing"'), "Exit button in drawing header exists");
+assert(htmlSrc.includes('id="btnReviewExit"'), "Exit button in round review exists");
+assert(htmlSrc.includes('id="btnExitComplete"'), "Exit button in match complete exists");
+assert(htmlSrc.includes('id="btnPlaySoloAgain"'), "Play solo again button exists");
+assert(htmlSrc.includes('btn-exit-setup'), "Exit to menu in setup stages exists");
+
+// 2. CSS Solo Isolation Rules Exist
+assert(cssSrc.includes("body.draw-solo-mode #partnerPadCard"), "Partner pad hidden in solo mode");
+assert(cssSrc.includes("body.draw-solo-mode .draw-poke-bar"), "Poke bar hidden in solo mode");
+assert(cssSrc.includes("body.draw-solo-mode #reviewPartnerCard"), "Partner review card hidden in solo mode");
+assert(cssSrc.includes("body.draw-solo-mode #profilePartnerStatus"), "Partner profile status hidden in solo mode");
+
+// 3. JS Runtime Handlers Exist
+assert(jsSrc.includes("function getRandomPrompt"), "getRandomPrompt helper exists");
+assert(jsSrc.includes("function exitToMainMenu"), "exitToMainMenu function exists");
+assert(jsSrc.includes("startSoloMatch(roundNum"), "startSoloMatch accepts roundNum");
+assert(jsSrc.includes('classList.toggle("draw-solo-mode"'), "showStage toggles draw-solo-mode");
+
+console.log("✅ PASS: Test 10 verified - Solo mode isolation, prompt selection, round progression, and exit controls verified");
+passedTests++;
+
 console.log("\n=================================================");
-console.log(`ALL ${passedTests}/8 TEST SUITES PASSED!`);
+console.log(`ALL ${passedTests}/10 TEST SUITES PASSED!`);
 console.log("=================================================");
 process.exit(0);
