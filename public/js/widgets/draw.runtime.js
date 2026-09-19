@@ -452,6 +452,13 @@
         cursor.style.display = "flex";
         cursor.style.left = `${msg.x * 100}vw`;
         cursor.style.top = `${msg.y * 100}vh`;
+        if (msg.sex === "male") {
+          cursor.classList.remove("pink");
+          cursor.classList.add("blue");
+        } else {
+          cursor.classList.remove("blue");
+          cursor.classList.add("pink");
+        }
       }
       const tag = document.getElementById("remoteCursorTag");
       if (tag) tag.textContent = msg.senderName || state.partnerName || "Partner";
@@ -459,19 +466,31 @@
     }
 
     if (type === "REMOTE_CLICK") {
+      let cursor = document.getElementById("drawRemoteCursor");
+      if (cursor) {
+        if (cursor.parentElement !== document.body) {
+          document.body.appendChild(cursor);
+        }
+        cursor.style.display = "flex";
+        if (typeof msg.x === "number" && typeof msg.y === "number") {
+          cursor.style.left = `${msg.x * 100}vw`;
+          cursor.style.top = `${msg.y * 100}vh`;
+        }
+        if (msg.sex === "male") {
+          cursor.classList.remove("pink");
+          cursor.classList.add("blue");
+        } else {
+          cursor.classList.remove("blue");
+          cursor.classList.add("pink");
+        }
+      }
       const ripple = document.getElementById("remoteClickRipple");
       if (ripple) {
-        if (typeof msg.x === "number" && typeof msg.y === "number") {
-          const cursor = document.getElementById("drawRemoteCursor");
-          if (cursor) {
-            cursor.style.left = `${msg.x * 100}vw`;
-            cursor.style.top = `${msg.y * 100}vh`;
-          }
-        }
         ripple.classList.remove("rippling");
         void ripple.offsetWidth;
         ripple.classList.add("rippling");
       }
+      triggerRemoteClickPing(msg.x, msg.y, msg.sex);
       return;
     }
 
@@ -552,6 +571,18 @@
     const s = seconds % 60;
     el.displayTimer.textContent = `${m}:${s < 10 ? "0" : ""}${s}`;
     el.displayTimer.classList.toggle("urgent", seconds <= 15);
+  }
+
+  function triggerRemoteClickPing(nx, ny, sex) {
+    if (typeof nx !== "number" || typeof ny !== "number") return;
+    const ping = document.createElement("div");
+    ping.className = `draw-click-ping ${sex === "male" ? "blue" : "pink"}`;
+    ping.style.left = `${nx * 100}vw`;
+    ping.style.top = `${ny * 100}vh`;
+    document.body.appendChild(ping);
+    setTimeout(() => {
+      if (ping.parentElement) ping.parentElement.removeChild(ping);
+    }, 600);
   }
 
   // --- Smooth Canvas 2D Engine ---
@@ -971,24 +1002,31 @@
 
   // --- Event Bindings ---
   function initEvents() {
-    // Live Cursor Tracking & Broadcasting (Photobooth Parity)
+    // Live Cursor Tracking & Broadcasting (Figma / Photobooth Parity)
     let lastCursorSend = 0;
-    window.addEventListener("pointermove", (e) => {
+    const sendLocalCursor = (e) => {
       if (state.isSolo || !state.roomCode) return;
       const now = Date.now();
-      if (now - lastCursorSend < 40) return;
+      if (now - lastCursorSend < 35) return;
       lastCursorSend = now;
-      const x = Math.max(0, Math.min(1, e.clientX / window.innerWidth));
-      const y = Math.max(0, Math.min(1, e.clientY / window.innerHeight));
+      const w = window.innerWidth || document.documentElement.clientWidth || 1;
+      const h = window.innerHeight || document.documentElement.clientHeight || 1;
+      const x = Math.max(0, Math.min(1, e.clientX / w));
+      const y = Math.max(0, Math.min(1, e.clientY / h));
       sendMsg("CURSOR_MOVE", { x, y });
-    }, { passive: true });
+    };
 
-    window.addEventListener("pointerdown", (e) => {
+    const sendLocalClick = (e) => {
       if (state.isSolo || !state.roomCode) return;
-      const x = Math.max(0, Math.min(1, e.clientX / window.innerWidth));
-      const y = Math.max(0, Math.min(1, e.clientY / window.innerHeight));
+      const w = window.innerWidth || document.documentElement.clientWidth || 1;
+      const h = window.innerHeight || document.documentElement.clientHeight || 1;
+      const x = Math.max(0, Math.min(1, e.clientX / w));
+      const y = Math.max(0, Math.min(1, e.clientY / h));
       sendMsg("CURSOR_CLICK", { x, y });
-    }, { passive: true });
+    };
+
+    window.addEventListener("pointermove", sendLocalCursor, { passive: true, capture: true });
+    window.addEventListener("pointerdown", sendLocalClick, { passive: true, capture: true });
 
     // Start Round Timer on Draw Page
     el.btnStartRoundTimer?.addEventListener("click", triggerStartRoundTimer);
@@ -1275,7 +1313,7 @@
     if (initialRoom) {
       state.roomCode = initialRoom.toUpperCase().trim();
       if (el.inputJoinCode) el.inputJoinCode.value = state.roomCode;
-      if (el.lobbyInlineJoinForm) el.lobbyInlineJoinForm.style.display = "block";
+      initNetworking(state.roomCode);
     }
   }
 

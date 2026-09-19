@@ -441,12 +441,16 @@ class DrawRoomServer {
     if (type === "CURSOR_MOVE") {
       const x = Math.max(0, Math.min(1, Number(payload?.x) || 0));
       const y = Math.max(0, Math.min(1, Number(payload?.y) || 0));
+      const profile = currentRoom.state.profiles?.[participantId];
+      const name = profile?.name || data.senderName || participantName || "Partner";
+      const sex = profile?.sex || "female";
       this.broadcast(currentRoom, {
         type: "REMOTE_CURSOR",
         x,
         y,
         senderId: participantId,
-        senderName: participantName
+        senderName: name,
+        sex
       }, sender);
       return;
     }
@@ -454,12 +458,16 @@ class DrawRoomServer {
     if (type === "CURSOR_CLICK") {
       const x = Math.max(0, Math.min(1, Number(payload?.x) || 0));
       const y = Math.max(0, Math.min(1, Number(payload?.y) || 0));
+      const profile = currentRoom.state.profiles?.[participantId];
+      const name = profile?.name || data.senderName || participantName || "Partner";
+      const sex = profile?.sex || "female";
       this.broadcast(currentRoom, {
         type: "REMOTE_CLICK",
         x,
         y,
         senderId: participantId,
-        senderName: participantName
+        senderName: name,
+        sex
       }, sender);
       return;
     }

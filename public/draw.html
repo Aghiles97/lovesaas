@@ -54,7 +54,7 @@
           <div class="ldr-inline-join-form" id="lobbyInlineJoinForm" style="display: none;">
             <div class="ldr-join-input-group">
               <input type="text" id="inputJoinCode" class="ldr-join-input" placeholder="5-LETTER CODE" maxlength="6" autocomplete="off" spellcheck="false" />
-              <button type="button" class="btn btn-primary" id="btnJoinRoomSubmit">Join</button>
+              <button type="button" class="draw-btn-primary draw-btn-sm" id="btnJoinRoomSubmit"><span>join ▷</span></button>
             </div>
           </div>
 
@@ -76,8 +76,8 @@
             <span id="displayRoomCode" class="draw-code-box">-----</span>
           </div>
 
-          <button type="button" id="btnCopyInvite" class="btn btn-primary" style="width: 100%; height: 46px; border-radius: 12px; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 14px; border: none;">
-            <span>🔗 Copy Invite Link</span>
+          <button type="button" id="btnCopyInvite" class="draw-btn-primary" style="width: 100%; height: 46px; margin-bottom: 14px;">
+            <span>🔗 copy invite link ▷</span>
           </button>
 
           <div class="draw-waiting-badge">
@@ -110,18 +110,18 @@
           <div class="draw-input-label" style="margin-bottom: 10px; color: rgba(255, 255, 255, 0.75);">Select Your Pad Theme</div>
           <div class="draw-sex-selector" id="profileSexSelector">
             <button type="button" class="draw-sex-btn cute-female" data-sex="female">
-              <span class="draw-sex-icon">🌸 ♀</span>
+              <span class="draw-sex-icon">♀</span>
               <span class="draw-sex-name">Female</span>
             </button>
             <button type="button" class="draw-sex-btn cute-male" data-sex="male">
-              <span class="draw-sex-icon">🌊 ♂</span>
+              <span class="draw-sex-icon">♂</span>
               <span class="draw-sex-name">Male</span>
             </button>
           </div>
         </div>
 
-        <button type="button" id="btnProfileReady" class="btn btn-primary" style="width: 100%; height: 46px; border-radius: 12px; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: none; margin-top: 0;">
-          <span>I'm Ready ▷</span>
+        <button type="button" id="btnProfileReady" class="draw-btn-primary" style="width: 100%; height: 48px; margin-top: 4px;">
+          <span>ready ▷</span>
         </button>
 
         <div class="draw-waiting-badge" id="profileWaitingWrap" style="display: none; justify-content: center;">
@@ -273,7 +273,7 @@
           <!-- Start Button at Bottom -->
           <div class="draw-bottom-start-wrap" id="bottomStartWrap">
             <button type="button" id="btnStartRoundTimer" class="draw-btn-start-bottom" title="Start round countdown">
-              <span>▶ Start</span>
+              <span>start timer ▷</span>
             </button>
           </div>
 
@@ -363,7 +363,7 @@
 
         <div class="draw-review-actions">
           <button type="button" id="btnNextRound" class="draw-btn-start">
-            <span>Next Round ▷</span>
+            <span>next round ▷</span>
           </button>
         </div>
       </div>
@@ -384,10 +384,10 @@
 
         <div class="draw-review-actions">
           <button type="button" id="btnDownloadKeepsake" class="draw-btn-start">
-            <span>💾 Save Artwork</span>
+            <span>save artwork ▷</span>
           </button>
           <button type="button" id="btnPlayAgain" class="draw-btn-next">
-            <span>Play Again ▷</span>
+            <span>play again ▷</span>
           </button>
         </div>
       </div>
@@ -395,10 +395,12 @@
 
   </div>
 
-  <!-- Remote Partner Floating Cursor (Photobooth Parity) -->
-  <div class="draw-remote-cursor" id="drawRemoteCursor" style="display:none;" aria-hidden="true">
+  <!-- Remote Partner Floating Cursor (Figma/Photobooth Parity) -->
+  <div class="draw-remote-cursor pink" id="drawRemoteCursor" style="display:none;" aria-hidden="true">
     <div class="remote-cursor-pointer">
-      <span class="cursor-icon">✏️</span>
+      <svg class="remote-cursor-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 2L9.5 21.5L13.5 13.5L21.5 9.5L2 2Z" fill="#ff2d55" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
+      </svg>
     </div>
     <div class="remote-cursor-tag" id="remoteCursorTag">Partner</div>
     <div class="remote-click-ripple" id="remoteClickRipple"></div>
