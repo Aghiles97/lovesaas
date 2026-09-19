@@ -441,6 +441,9 @@ class DrawRoomServer {
     if (type === "CURSOR_MOVE") {
       const x = Math.max(0, Math.min(1, Number(payload?.x) || 0));
       const y = Math.max(0, Math.min(1, Number(payload?.y) || 0));
+      const target = typeof payload?.target === "string" ? payload.target : "viewport";
+      const nx = typeof payload?.nx === "number" ? Math.max(0, Math.min(1, payload.nx)) : x;
+      const ny = typeof payload?.ny === "number" ? Math.max(0, Math.min(1, payload.ny)) : y;
       const profile = currentRoom.state.profiles?.[participantId];
       const name = profile?.name || data.senderName || participantName || "Partner";
       const sex = profile?.sex || "female";
@@ -448,6 +451,9 @@ class DrawRoomServer {
         type: "REMOTE_CURSOR",
         x,
         y,
+        target,
+        nx,
+        ny,
         senderId: participantId,
         senderName: name,
         sex
@@ -458,6 +464,9 @@ class DrawRoomServer {
     if (type === "CURSOR_CLICK") {
       const x = Math.max(0, Math.min(1, Number(payload?.x) || 0));
       const y = Math.max(0, Math.min(1, Number(payload?.y) || 0));
+      const target = typeof payload?.target === "string" ? payload.target : "viewport";
+      const nx = typeof payload?.nx === "number" ? Math.max(0, Math.min(1, payload.nx)) : x;
+      const ny = typeof payload?.ny === "number" ? Math.max(0, Math.min(1, payload.ny)) : y;
       const profile = currentRoom.state.profiles?.[participantId];
       const name = profile?.name || data.senderName || participantName || "Partner";
       const sex = profile?.sex || "female";
@@ -465,6 +474,9 @@ class DrawRoomServer {
         type: "REMOTE_CLICK",
         x,
         y,
+        target,
+        nx,
+        ny,
         senderId: participantId,
         senderName: name,
         sex

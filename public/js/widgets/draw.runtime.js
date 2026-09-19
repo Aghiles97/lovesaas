@@ -449,8 +449,26 @@
           document.body.appendChild(cursor);
         }
         cursor.style.display = "flex";
-        cursor.style.left = `${msg.x * 100}vw`;
-        cursor.style.top = `${msg.y * 100}vh`;
+
+        let posX = `${msg.x * 100}vw`;
+        let posY = `${msg.y * 100}vh`;
+
+        if (msg.target === "myPad" && el.partnerPadCard) {
+          const rect = el.partnerPadCard.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            posX = `${rect.left + (msg.nx * rect.width)}px`;
+            posY = `${rect.top + (msg.ny * rect.height)}px`;
+          }
+        } else if (msg.target === "partnerPad" && el.myPadCard) {
+          const rect = el.myPadCard.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            posX = `${rect.left + (msg.nx * rect.width)}px`;
+            posY = `${rect.top + (msg.ny * rect.height)}px`;
+          }
+        }
+
+        cursor.style.left = posX;
+        cursor.style.top = posY;
         if (msg.sex === "male") {
           cursor.classList.remove("pink");
           cursor.classList.add("blue");
@@ -466,15 +484,39 @@
 
     if (type === "REMOTE_CLICK") {
       let cursor = document.getElementById("drawRemoteCursor");
+      let posX = `${msg.x * 100}vw`;
+      let posY = `${msg.y * 100}vh`;
+      let pingX = msg.x;
+      let pingY = msg.y;
+      let isPixel = false;
+
+      if (msg.target === "myPad" && el.partnerPadCard) {
+        const rect = el.partnerPadCard.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          pingX = rect.left + (msg.nx * rect.width);
+          pingY = rect.top + (msg.ny * rect.height);
+          posX = `${pingX}px`;
+          posY = `${pingY}px`;
+          isPixel = true;
+        }
+      } else if (msg.target === "partnerPad" && el.myPadCard) {
+        const rect = el.myPadCard.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          pingX = rect.left + (msg.nx * rect.width);
+          pingY = rect.top + (msg.ny * rect.height);
+          posX = `${pingX}px`;
+          posY = `${pingY}px`;
+          isPixel = true;
+        }
+      }
+
       if (cursor) {
         if (cursor.parentElement !== document.body) {
           document.body.appendChild(cursor);
         }
         cursor.style.display = "flex";
-        if (typeof msg.x === "number" && typeof msg.y === "number") {
-          cursor.style.left = `${msg.x * 100}vw`;
-          cursor.style.top = `${msg.y * 100}vh`;
-        }
+        cursor.style.left = posX;
+        cursor.style.top = posY;
         if (msg.sex === "male") {
           cursor.classList.remove("pink");
           cursor.classList.add("blue");
@@ -489,7 +531,7 @@
         void ripple.offsetWidth;
         ripple.classList.add("rippling");
       }
-      triggerRemoteClickPing(msg.x, msg.y, msg.sex);
+      triggerRemoteClickPing(pingX, pingY, msg.sex, isPixel);
       return;
     }
 
@@ -573,12 +615,12 @@
     el.displayTimer.classList.toggle("urgent", seconds <= 15);
   }
 
-  function triggerRemoteClickPing(nx, ny, sex) {
-    if (typeof nx !== "number" || typeof ny !== "number") return;
+  function triggerRemoteClickPing(x, y, sex, isPixel = false) {
+    if (typeof x !== "number" || typeof y !== "number") return;
     const ping = document.createElement("div");
     ping.className = `draw-click-ping ${sex === "male" ? "blue" : "pink"}`;
-    ping.style.left = `${nx * 100}vw`;
-    ping.style.top = `${ny * 100}vh`;
+    ping.style.left = isPixel ? `${x}px` : `${x * 100}vw`;
+    ping.style.top = isPixel ? `${y}px` : `${y * 100}vh`;
     document.body.appendChild(ping);
     setTimeout(() => {
       if (ping.parentElement) ping.parentElement.removeChild(ping);
@@ -1016,7 +1058,28 @@
       const h = window.innerHeight || document.documentElement.clientHeight || 1;
       const x = Math.max(0, Math.min(1, e.clientX / w));
       const y = Math.max(0, Math.min(1, e.clientY / h));
-      sendMsg("CURSOR_MOVE", { x, y });
+
+      let target = "viewport";
+      let nx = x;
+      let ny = y;
+
+      if (el.myPadCard && el.partnerPadCard) {
+        const myRect = el.myPadCard.getBoundingClientRect();
+        if (e.clientX >= myRect.left && e.clientX <= myRect.right && e.clientY >= myRect.top && e.clientY <= myRect.bottom) {
+          target = "myPad";
+          nx = Math.max(0, Math.min(1, (e.clientX - myRect.left) / myRect.width));
+          ny = Math.max(0, Math.min(1, (e.clientY - myRect.top) / myRect.height));
+        } else {
+          const partnerRect = el.partnerPadCard.getBoundingClientRect();
+          if (e.clientX >= partnerRect.left && e.clientX <= partnerRect.right && e.clientY >= partnerRect.top && e.clientY <= partnerRect.bottom) {
+            target = "partnerPad";
+            nx = Math.max(0, Math.min(1, (e.clientX - partnerRect.left) / partnerRect.width));
+            ny = Math.max(0, Math.min(1, (e.clientY - partnerRect.top) / partnerRect.height));
+          }
+        }
+      }
+
+      sendMsg("CURSOR_MOVE", { x, y, target, nx, ny });
     };
 
     const sendLocalClick = (e) => {
@@ -1025,7 +1088,28 @@
       const h = window.innerHeight || document.documentElement.clientHeight || 1;
       const x = Math.max(0, Math.min(1, e.clientX / w));
       const y = Math.max(0, Math.min(1, e.clientY / h));
-      sendMsg("CURSOR_CLICK", { x, y });
+
+      let target = "viewport";
+      let nx = x;
+      let ny = y;
+
+      if (el.myPadCard && el.partnerPadCard) {
+        const myRect = el.myPadCard.getBoundingClientRect();
+        if (e.clientX >= myRect.left && e.clientX <= myRect.right && e.clientY >= myRect.top && e.clientY <= myRect.bottom) {
+          target = "myPad";
+          nx = Math.max(0, Math.min(1, (e.clientX - myRect.left) / myRect.width));
+          ny = Math.max(0, Math.min(1, (e.clientY - myRect.top) / myRect.height));
+        } else {
+          const partnerRect = el.partnerPadCard.getBoundingClientRect();
+          if (e.clientX >= partnerRect.left && e.clientX <= partnerRect.right && e.clientY >= partnerRect.top && e.clientY <= partnerRect.bottom) {
+            target = "partnerPad";
+            nx = Math.max(0, Math.min(1, (e.clientX - partnerRect.left) / partnerRect.width));
+            ny = Math.max(0, Math.min(1, (e.clientY - partnerRect.top) / partnerRect.height));
+          }
+        }
+      }
+
+      sendMsg("CURSOR_CLICK", { x, y, target, nx, ny });
     };
 
     window.addEventListener("pointermove", sendLocalCursor, { passive: true, capture: true });
