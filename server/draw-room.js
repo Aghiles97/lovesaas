@@ -223,6 +223,7 @@ class DrawRoomServer {
         sseClients: new Set(),
         timerInterval: null,
         usedPrompts: new Set(),
+        disconnectTimeouts: new Map(),
         state: {
           stage: "lobby",
           selectedPack: "animals",
@@ -243,6 +244,7 @@ class DrawRoomServer {
     const room = this.rooms.get(roomCode);
     if (!room.sseClients) room.sseClients = new Set();
     if (!room.usedPrompts) room.usedPrompts = new Set();
+    if (!room.disconnectTimeouts) room.disconnectTimeouts = new Map();
     room.lastActivity = Date.now();
     return room;
   }
@@ -369,26 +371,38 @@ class DrawRoomServer {
     const code = String(roomCode || "").toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 16).trim();
     const currentRoom = this.getOrCreateRoom(code);
 
-    const totalCount = currentRoom.participants.size + currentRoom.sseClients.size;
-    let isExisting = false;
-    for (const c of currentRoom.sseClients) {
-      if (c._participantId === participantId) isExisting = true;
+    if (currentRoom.disconnectTimeouts?.has(participantId)) {
+      clearTimeout(currentRoom.disconnectTimeouts.get(participantId));
+      currentRoom.disconnectTimeouts.delete(participantId);
     }
 
-    if (totalCount >= 2 && !isExisting) {
+    for (const c of currentRoom.sseClients) {
+      if (c._participantId === participantId && c !== res) {
+        try { c.end(); } catch (e) {}
+        currentRoom.sseClients.delete(c);
+      }
+    }
+
+    const distinctIds = new Set([
+      ...Array.from(currentRoom.participants.values()).map(p => p.id),
+      ...Array.from(currentRoom.sseClients).map(c => c._participantId)
+    ]);
+    const isExisting = distinctIds.has(participantId) || !!currentRoom.state.profiles?.[participantId];
+
+    if (distinctIds.size >= 2 && !isExisting) {
       res.write(`data: ${JSON.stringify({ type: "ROOM_FULL", error: "Room has reached max capacity of 2 partners." })}\n\n`);
       return res.end();
     }
 
     const role = (currentRoom.participants.size === 0 && currentRoom.sseClients.size === 0) ? "host" : "guest";
-    const name = sanitizeStr(participantName, 24) || (role === "host" ? "Partner 1" : "Partner 2");
+    const name = sanitizeStr(participantName, 24) || currentRoom.state.profiles?.[participantId]?.name || (role === "host" ? "Partner 1" : "Partner 2");
     res._participantId = participantId;
     res._participantName = name;
     res._role = role;
 
     currentRoom.sseClients.add(res);
 
-    if (currentRoom.participants.size + currentRoom.sseClients.size >= 2 && currentRoom.state.stage === "lobby") {
+    if ((currentRoom.participants.size + currentRoom.sseClients.size >= 2 || distinctIds.size >= 1) && currentRoom.state.stage === "lobby") {
       currentRoom.state.stage = "profile_setup";
     }
 
@@ -420,15 +434,27 @@ class DrawRoomServer {
     req.on("close", () => {
       clearInterval(pingTimer);
       currentRoom.sseClients.delete(res);
-      this.broadcast(currentRoom, {
-        type: "PARTNER_LEFT",
-        partnerId: participantId,
-        partnerName: name,
-        remainingCount: currentRoom.participants.size + currentRoom.sseClients.size
-      });
-      if (currentRoom.participants.size === 0 && currentRoom.sseClients.size === 0) {
-        currentRoom.lastActivity = Date.now();
+      if (!currentRoom.disconnectTimeouts) currentRoom.disconnectTimeouts = new Map();
+      if (currentRoom.disconnectTimeouts.has(participantId)) {
+        clearTimeout(currentRoom.disconnectTimeouts.get(participantId));
       }
+      const graceTimer = setTimeout(() => {
+        currentRoom.disconnectTimeouts.delete(participantId);
+        const reconnected = Array.from(currentRoom.participants.values()).some(p => p.id === participantId) ||
+                            Array.from(currentRoom.sseClients).some(c => c._participantId === participantId);
+        if (!reconnected) {
+          this.broadcast(currentRoom, {
+            type: "PARTNER_LEFT",
+            partnerId: participantId,
+            partnerName: name,
+            remainingCount: currentRoom.participants.size + currentRoom.sseClients.size
+          });
+          if (currentRoom.participants.size === 0 && currentRoom.sseClients.size === 0) {
+            currentRoom.lastActivity = Date.now();
+          }
+        }
+      }, 25000);
+      currentRoom.disconnectTimeouts.set(participantId, graceTimer);
     });
   }
 
@@ -586,6 +612,7 @@ class DrawRoomServer {
 
     // 4. Start Match Click (Transitions to drawing stage, timer pauses until user clicks start on draw page)
     if (type === "START_MATCH") {
+      if (currentRoom.state.stage === "drawing") return;
       currentRoom.state.stage = "drawing";
       currentRoom.state.currentRound = 1;
       currentRoom.state.roundHistory = [];
@@ -635,6 +662,7 @@ class DrawRoomServer {
 
     // 6. Next Round (after round review, pauses timer until start clicked on draw page)
     if (type === "NEXT_ROUND") {
+      if (currentRoom.state.stage !== "round_review") return;
       currentRoom.state.currentRound += 1;
       currentRoom.state.stage = "drawing";
       currentRoom.state.strokes = {};
@@ -796,18 +824,35 @@ class DrawRoomServer {
                   currentRoom.participants.delete(prevWs);
                 }
               }
+              for (const sse of currentRoom.sseClients) {
+                if (sse._participantId === participantId) {
+                  try { sse.end(); } catch (e) {}
+                  currentRoom.sseClients.delete(sse);
+                }
+              }
             }
-            const activeCount = currentRoom.participants.size + (currentRoom.sseClients?.size || 0);
-            if (activeCount >= 2 && !currentRoom.participants.has(ws)) {
+
+            if (currentRoom.disconnectTimeouts?.has(participantId)) {
+              clearTimeout(currentRoom.disconnectTimeouts.get(participantId));
+              currentRoom.disconnectTimeouts.delete(participantId);
+            }
+
+            const distinctIds = new Set([
+              ...Array.from(currentRoom.participants.values()).map(p => p.id),
+              ...Array.from(currentRoom.sseClients).map(c => c._participantId)
+            ]);
+            const isExisting = distinctIds.has(participantId) || !!currentRoom.state.profiles?.[participantId];
+
+            if (distinctIds.size >= 2 && !isExisting) {
               ws.send(JSON.stringify({ type: "ROOM_FULL", error: "Room has reached max capacity of 2 partners." }));
               return;
             }
 
-            const role = activeCount === 0 ? "host" : "guest";
-            participantName = sanitizeStr(payload?.name, 24) || (role === "host" ? "Partner 1" : "Partner 2");
+            const role = (currentRoom.participants.size === 0 && currentRoom.sseClients.size === 0) ? "host" : "guest";
+            participantName = sanitizeStr(payload?.name, 24) || currentRoom.state.profiles?.[participantId]?.name || (role === "host" ? "Partner 1" : "Partner 2");
             currentRoom.participants.set(ws, { id: participantId, name: participantName, role });
 
-            if (currentRoom.participants.size + (currentRoom.sseClients?.size || 0) >= 2 && currentRoom.state.stage === "lobby") {
+            if ((currentRoom.participants.size + currentRoom.sseClients.size >= 2 || distinctIds.size >= 1) && currentRoom.state.stage === "lobby") {
               currentRoom.state.stage = "profile_setup";
             }
 
@@ -841,15 +886,27 @@ class DrawRoomServer {
       ws.on("close", () => {
         if (currentRoom) {
           currentRoom.participants.delete(ws);
-          this.broadcast(currentRoom, {
-            type: "PARTNER_LEFT",
-            partnerId: participantId,
-            partnerName: participantName,
-            remainingCount: currentRoom.participants.size + (currentRoom.sseClients?.size || 0)
-          });
-          if (currentRoom.participants.size === 0) {
-            currentRoom.lastActivity = Date.now();
+          if (!currentRoom.disconnectTimeouts) currentRoom.disconnectTimeouts = new Map();
+          if (currentRoom.disconnectTimeouts.has(participantId)) {
+            clearTimeout(currentRoom.disconnectTimeouts.get(participantId));
           }
+          const graceTimer = setTimeout(() => {
+            currentRoom.disconnectTimeouts.delete(participantId);
+            const reconnected = Array.from(currentRoom.participants.values()).some(p => p.id === participantId) ||
+                                Array.from(currentRoom.sseClients).some(c => c._participantId === participantId);
+            if (!reconnected) {
+              this.broadcast(currentRoom, {
+                type: "PARTNER_LEFT",
+                partnerId,
+                partnerName: participantName,
+                remainingCount: currentRoom.participants.size + (currentRoom.sseClients?.size || 0)
+              });
+              if (currentRoom.participants.size === 0 && currentRoom.sseClients.size === 0) {
+                currentRoom.lastActivity = Date.now();
+              }
+            }
+          }, 25000);
+          currentRoom.disconnectTimeouts.set(participantId, graceTimer);
         }
       });
     });

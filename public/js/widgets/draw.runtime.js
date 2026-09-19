@@ -53,15 +53,39 @@
     setTimeout(() => toast.classList.remove("show"), 2500);
   }
 
+  // --- Persistent Participant Storage ---
+  function getOrCreateParticipantId(code) {
+    const key = `draw_pid_${code || "global"}`;
+    let id = null;
+    try {
+      id = sessionStorage.getItem(key) || localStorage.getItem(key);
+      if (!id) {
+        id = "user_" + Math.random().toString(36).slice(2, 9);
+        sessionStorage.setItem(key, id);
+        localStorage.setItem(key, id);
+      }
+    } catch (e) {
+      id = "user_" + Math.random().toString(36).slice(2, 9);
+    }
+    return id;
+  }
+
+  let savedName = "";
+  let savedSex = null;
+  try {
+    savedName = sessionStorage.getItem("draw_name") || "";
+    savedSex = sessionStorage.getItem("draw_sex") || null;
+  } catch (e) {}
+
   // --- App State ---
   const state = {
     roomCode: null,
     isSolo: false,
     role: "host",
-    participantId: "user_" + Math.random().toString(36).slice(2, 9),
-    myName: "",
+    participantId: getOrCreateParticipantId("global"),
+    myName: savedName,
     partnerName: "Partner",
-    mySex: null,
+    mySex: savedSex,
     partnerSex: null,
     myReady: false,
     partnerReady: false,
@@ -238,13 +262,21 @@
 
   function initNetworking(roomCode) {
     state.roomCode = roomCode.toUpperCase().trim();
+    state.participantId = getOrCreateParticipantId(state.roomCode);
     const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${wsProto}//${window.location.host}/draw-ws`;
 
     try {
+      if (state.ws) {
+        try { state.ws.close(); } catch (e) {}
+      }
       state.ws = new WebSocket(wsUrl);
 
       state.ws.onopen = () => {
+        if (state._reconnectTimer) {
+          clearTimeout(state._reconnectTimer);
+          state._reconnectTimer = null;
+        }
         sendMsg("JOIN_ROOM", {
           roomCode: state.roomCode,
           participantId: state.participantId,
@@ -260,7 +292,17 @@
       };
 
       state.ws.onerror = () => setupSseFallback();
-      state.ws.onclose = () => setupSseFallback();
+      state.ws.onclose = () => {
+        setupSseFallback();
+        if (state.roomCode && !state.isSolo && !state._reconnectTimer) {
+          state._reconnectTimer = setTimeout(() => {
+            state._reconnectTimer = null;
+            if (state.roomCode && !state.isSolo && (!state.ws || state.ws.readyState !== WebSocket.OPEN)) {
+              initNetworking(state.roomCode);
+            }
+          }, 2000);
+        }
+      };
     } catch (e) {
       setupSseFallback();
     }
@@ -282,12 +324,23 @@
   function handleIncomingMessage(msg) {
     const { type } = msg;
 
+    if (type === "ROOM_FULL") {
+      showToast("Reconnecting to room... ⏳");
+      if (!state._fullRetryTimer) {
+        state._fullRetryTimer = setTimeout(() => {
+          state._fullRetryTimer = null;
+          if (state.roomCode) initNetworking(state.roomCode);
+        }, 1500);
+      }
+      return;
+    }
+
     if (type === "ROOM_JOINED") {
-      state.role = msg.role;
+      state.role = msg.role || state.role;
       if (msg.participants) {
         const other = msg.participants.find(p => p.id !== state.participantId);
-        if (other) {
-          state.partnerName = other.name || "Partner";
+        if (other && other.name) {
+          state.partnerName = other.name;
           updateBadges();
         }
       }
@@ -295,6 +348,18 @@
       // Hydrate state if reconnecting to active session
       if (msg.state) {
         if (msg.state.profiles) {
+          const pKeys = Object.keys(msg.state.profiles);
+          if (pKeys.length > 0 && !msg.state.profiles[state.participantId]) {
+            const myPrevId = (state.role === "host" ? pKeys[0] : pKeys[1]) || pKeys[0];
+            if (myPrevId && msg.state.profiles[myPrevId]) {
+              state.participantId = myPrevId;
+              try {
+                sessionStorage.setItem(`draw_pid_${state.roomCode}`, myPrevId);
+                localStorage.setItem(`draw_pid_${state.roomCode}`, myPrevId);
+              } catch (e) {}
+            }
+          }
+
           if (msg.state.profiles[state.participantId]) {
             state.myName = msg.state.profiles[state.participantId].name || state.myName;
             state.mySex = msg.state.profiles[state.participantId].sex || state.mySex;
@@ -315,12 +380,24 @@
         if (msg.state.currentRound) state.currentRound = msg.state.currentRound;
         if (msg.state.currentPrompt) state.currentPrompt = msg.state.currentPrompt;
         if (msg.state.timerRemaining !== undefined) state.timerRemaining = msg.state.timerRemaining;
+        if (msg.state.timerRunning !== undefined) state.timerRunning = !!msg.state.timerRunning;
 
         // Restore strokes
         if (msg.state.strokes) {
-          state.myStrokes = msg.state.strokes[state.participantId] || [];
+          const serverMy = msg.state.strokes[state.participantId] || [];
+          if (state.myStrokes.length === 0 || serverMy.length > state.myStrokes.length) {
+            state.myStrokes = serverMy;
+          }
           const partnerId = Object.keys(msg.state.strokes).find(id => id !== state.participantId);
-          state.partnerStrokes = partnerId ? (msg.state.strokes[partnerId] || []) : [];
+          if (partnerId && msg.state.strokes[partnerId]) {
+            const serverPartner = msg.state.strokes[partnerId];
+            if (state.partnerStrokes.length === 0 || serverPartner.length > state.partnerStrokes.length) {
+              state.partnerStrokes = serverPartner;
+            }
+          }
+          if (state.stage === "drawing") {
+            redrawAllStrokes();
+          }
         }
 
         if (msg.state.stage && msg.state.stage !== "lobby") {
@@ -330,9 +407,9 @@
         }
       }
 
-      if (msg.participantCount >= 2) {
+      if (msg.participantCount >= 2 || state.role === "guest") {
         showStage("profile_setup");
-        showToast("Both partners connected! Set up your profiles 💕");
+        showToast("Connected! Set up your profile 💕");
       }
       return;
     }
@@ -860,6 +937,7 @@
 
   // --- Round & Match Completion ---
   function onRoundCompleted(data) {
+    if (isDrawing) endStroke();
     const myImg = el.myCanvas ? el.myCanvas.toDataURL("image/png") : "";
     const partnerImg = el.partnerCanvas ? el.partnerCanvas.toDataURL("image/png") : "";
 
@@ -880,6 +958,7 @@
   }
 
   function onMatchCompleted() {
+    if (isDrawing) endStroke();
     const myImg = el.myCanvas ? el.myCanvas.toDataURL("image/png") : "";
     const partnerImg = el.partnerCanvas ? el.partnerCanvas.toDataURL("image/png") : "";
 
@@ -1203,6 +1282,10 @@
 
       state.myName = name;
       state.myReady = true;
+      try {
+        sessionStorage.setItem("draw_name", name);
+        sessionStorage.setItem("draw_sex", state.mySex);
+      } catch (e) {}
       updateBadges();
 
       if (state.isSolo) {
@@ -1282,6 +1365,9 @@
 
     // Start Drawing Click
     el.btnStartDrawing?.addEventListener("click", () => {
+      if (el.btnStartDrawing.disabled) return;
+      el.btnStartDrawing.disabled = true;
+      setTimeout(() => { if (el.btnStartDrawing) el.btnStartDrawing.disabled = false; }, 2000);
       if (state.isSolo) {
         startSoloMatch();
       } else {
@@ -1347,6 +1433,9 @@
 
     // Next Round
     el.btnNextRound?.addEventListener("click", () => {
+      if (el.btnNextRound.disabled) return;
+      el.btnNextRound.disabled = true;
+      setTimeout(() => { if (el.btnNextRound) el.btnNextRound.disabled = false; }, 2000);
       if (state.isSolo) {
         if (state.currentRound < state.roundsTotal) {
           state.currentRound += 1;
@@ -1381,6 +1470,16 @@
         redrawAllStrokes();
       }
     });
+
+    // Foreground / App Switch Reconnect
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && state.roomCode && !state.isSolo) {
+        const isClosed = !state.ws || state.ws.readyState === WebSocket.CLOSED || state.ws.readyState === WebSocket.CLOSING;
+        if (isClosed) {
+          initNetworking(state.roomCode);
+        }
+      }
+    });
   }
 
   // --- Initialize ---
@@ -1400,6 +1499,10 @@
     if (initialRoom) {
       state.roomCode = initialRoom.toUpperCase().trim();
       if (el.inputJoinCode) el.inputJoinCode.value = state.roomCode;
+      if (el.displayRoomCode) el.displayRoomCode.textContent = state.roomCode;
+      if (el.lobbyInitialView) el.lobbyInitialView.style.display = "none";
+      if (el.lobbyWaitingView) el.lobbyWaitingView.style.display = "block";
+      if (el.waitingStatusText) el.waitingStatusText.textContent = `Connecting to room ${state.roomCode}...`;
       initNetworking(state.roomCode);
     }
   }
