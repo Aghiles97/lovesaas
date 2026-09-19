@@ -125,10 +125,8 @@
     displayRoundTotal: document.getElementById("displayRoundTotal"),
     displayPrompt: document.getElementById("displayPrompt"),
     displayTimer: document.getElementById("displayTimer"),
+    bottomStartWrap: document.getElementById("bottomStartWrap"),
     btnStartRoundTimer: document.getElementById("btnStartRoundTimer"),
-    drawWaitingStartBanner: document.getElementById("drawWaitingStartBanner"),
-    btnBannerStartTimer: document.getElementById("btnBannerStartTimer"),
-    padViewTabs: document.getElementById("padViewTabs"),
     tabPartnerLabel: document.getElementById("tabPartnerLabel"),
     canvasesContainer: document.getElementById("canvasesContainer"),
     myPadCard: document.getElementById("myPadCard"),
@@ -439,7 +437,7 @@
 
     if (type === "ROUND_TIMER_STARTED") {
       state.timerRunning = true;
-      if (el.drawWaitingStartBanner) el.drawWaitingStartBanner.style.display = "none";
+      if (el.bottomStartWrap) el.bottomStartWrap.style.display = "none";
       if (el.btnStartRoundTimer) el.btnStartRoundTimer.style.display = "none";
       showToast("Timer started! Draw! ⏱️");
       return;
@@ -539,17 +537,13 @@
   }
 
   function updateDrawingHeader() {
-    if (el.displayRoundNum) el.displayRoundNum.textContent = `ROUND ${state.currentRound}`;
-    if (el.displayRoundTotal) el.displayRoundTotal.textContent = `OF ${state.roundsTotal}`;
+    if (el.displayRoundNum) el.displayRoundNum.textContent = state.currentRound;
+    if (el.displayRoundTotal) el.displayRoundTotal.textContent = state.roundsTotal;
     if (el.displayPrompt) el.displayPrompt.textContent = state.currentPrompt;
     renderTimer(state.timerRemaining);
-    if (!state.timerRunning) {
-      if (el.drawWaitingStartBanner) el.drawWaitingStartBanner.style.display = "flex";
-      if (el.btnStartRoundTimer) el.btnStartRoundTimer.style.display = "inline-flex";
-    } else {
-      if (el.drawWaitingStartBanner) el.drawWaitingStartBanner.style.display = "none";
-      if (el.btnStartRoundTimer) el.btnStartRoundTimer.style.display = "none";
-    }
+    const showStart = !state.timerRunning;
+    if (el.bottomStartWrap) el.bottomStartWrap.style.display = showStart ? "flex" : "none";
+    if (el.btnStartRoundTimer) el.btnStartRoundTimer.style.display = showStart ? "inline-flex" : "none";
   }
 
   function renderTimer(seconds) {
@@ -956,10 +950,10 @@
 
   function triggerStartRoundTimer() {
     if (state.timerRunning) return;
+    if (el.bottomStartWrap) el.bottomStartWrap.style.display = "none";
+    if (el.btnStartRoundTimer) el.btnStartRoundTimer.style.display = "none";
     if (state.isSolo) {
       state.timerRunning = true;
-      if (el.drawWaitingStartBanner) el.drawWaitingStartBanner.style.display = "none";
-      if (el.btnStartRoundTimer) el.btnStartRoundTimer.style.display = "none";
       showToast("Timer started! Draw! ⏱️");
       if (soloTimer) clearInterval(soloTimer);
       soloTimer = setInterval(() => {
@@ -998,7 +992,6 @@
 
     // Start Round Timer on Draw Page
     el.btnStartRoundTimer?.addEventListener("click", triggerStartRoundTimer);
-    el.btnBannerStartTimer?.addEventListener("click", triggerStartRoundTimer);
     // Start Room
     el.btnStartRoom?.addEventListener("click", () => {
       const code = Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -1171,23 +1164,6 @@
       }
     });
 
-    // Pad View Tabs (Mine vs Partner vs Split)
-    el.padViewTabs?.addEventListener("click", (evt) => {
-      const btn = evt.target.closest(".draw-tab-btn");
-      if (!btn) return;
-      const view = btn.dataset.view;
-
-      document.querySelectorAll(".draw-tab-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      el.canvasesContainer.classList.remove("view-mine", "view-partner", "view-split");
-      el.canvasesContainer.classList.add(`view-${view}`);
-
-      requestAnimationFrame(() => {
-        setupCanvasSize();
-        redrawAllStrokes();
-      });
-    });
 
     // Pointer Events on My Canvas
     if (el.myCanvas) {

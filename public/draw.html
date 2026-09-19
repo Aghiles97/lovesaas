@@ -236,11 +236,10 @@
     <div id="stageDrawing" class="draw-stage">
       <div class="draw-arena-wrap">
 
-        <!-- Top Header Bar (Exact Screenshot 3 Match) -->
+        <!-- Top Header Bar -->
         <header class="draw-arena-header">
           <div class="draw-round-col">
-            <span class="draw-round-line1" id="displayRoundNum">ROUND 1</span>
-            <span class="draw-round-line2" id="displayRoundTotal">OF 3</span>
+            <span class="draw-round-ratio"><span id="displayRoundNum">1</span>/<span id="displayRoundTotal">3</span></span>
           </div>
           <div class="draw-prompt-title">
             <strong class="draw-prompt-tag">DRAW:</strong>
@@ -248,34 +247,10 @@
           </div>
           <div class="draw-timer-wrap">
             <div class="draw-timer-box" id="displayTimer">2:00</div>
-            <button type="button" id="btnStartRoundTimer" class="draw-btn-start-timer" title="Start round countdown">
-              <span>▶ Start</span>
-            </button>
           </div>
         </header>
 
-        <!-- Unstarted Timer Notification Banner -->
-        <div id="drawWaitingStartBanner" class="draw-waiting-start-banner">
-          <span class="draw-pulse-dot"></span>
-          <span id="waitingStartText">Review prompt together! Click <strong>"Start"</strong> when ready to draw with timer.</span>
-          <button type="button" id="btnBannerStartTimer" class="draw-btn-banner-start">Start Timer ▶</button>
-        </div>
-
-        <!-- View Switcher Tabs (Default to Side-by-Side) -->
-        <div class="draw-pad-tabs" id="padViewTabs">
-          <button type="button" class="draw-tab-btn active" data-view="split" id="tabViewSplit">
-            <span>◫ Side-by-Side</span>
-          </button>
-          <button type="button" class="draw-tab-btn" data-view="mine" id="tabViewMine">
-            <span>✏️ My Pad</span>
-          </button>
-          <button type="button" class="draw-tab-btn" data-view="partner" id="tabViewPartner">
-            <span class="draw-live-dot"></span>
-            <span id="tabPartnerLabel">Partner's Pad</span>
-          </button>
-        </div>
-
-        <!-- Canvases (My Pad + Partner Pad - Side by Side by default) -->
+        <!-- Canvases (Side-by-Side by default) -->
         <div class="draw-canvases-grid view-split" id="canvasesContainer">
           <!-- My Pad (Active Drawing Canvas) -->
           <div class="draw-pad-card" id="myPadCard">
@@ -293,8 +268,15 @@
           </div>
         </div>
 
-        <!-- Controls & Tools Toolbar (Exact Screenshot 4 Match) -->
+        <!-- Controls & Tools Toolbar -->
         <div class="draw-toolbar-wrap">
+          <!-- Start Button at Bottom -->
+          <div class="draw-bottom-start-wrap" id="bottomStartWrap">
+            <button type="button" id="btnStartRoundTimer" class="draw-btn-start-bottom" title="Start round countdown">
+              <span>▶ Start</span>
+            </button>
+          </div>
+
           <div class="draw-tools-row">
 
             <!-- Color Palette (Exact 8 colors) -->

@@ -45,7 +45,9 @@ assert(!htmlContent.includes('data-sex="other"'), "draw.html does not contain se
 assert(htmlContent.includes('cute-female'), "draw.html contains cute-female");
 assert(htmlContent.includes('cute-male'), "draw.html contains cute-male");
 assert(htmlContent.includes('id="btnStartRoundTimer"'), "draw.html contains btnStartRoundTimer");
-assert(htmlContent.includes('id="drawWaitingStartBanner"'), "draw.html contains drawWaitingStartBanner");
+assert(!htmlContent.includes('id="drawWaitingStartBanner"'), "draw.html does not contain drawWaitingStartBanner");
+assert(htmlContent.includes('id="bottomStartWrap"'), "draw.html contains bottomStartWrap");
+assert(htmlContent.includes('draw-round-ratio'), "draw.html contains draw-round-ratio");
 assert(htmlContent.includes('id="btnProfileReady"'), "draw.html contains btnProfileReady");
 assert(htmlContent.includes('id="profileWaitingWrap"'), "draw.html contains profileWaitingWrap");
 
@@ -91,8 +93,8 @@ assert(htmlContent.includes('ldr-inline-join-form'), "Inline join form present")
 assert(htmlContent.includes('ldr-join-input'), "Join code input uses ldr-join-input");
 assert(htmlContent.includes('ldr-pill-btn'), "Solo button uses ldr-pill-btn");
 
-// Verify View Switcher Tabs & Solo Practice & Remote Cursor
-assert(htmlContent.includes('id="padViewTabs"'), "padViewTabs present");
+// Verify View Defaults to Side-by-Side & Solo Practice & Remote Cursor
+assert(!htmlContent.includes('id="padViewTabs"'), "padViewTabs removed in favor of default side-by-side");
 assert(htmlContent.includes('id="btnPracticeSolo"'), "btnPracticeSolo present");
 assert(htmlContent.includes('id="drawRemoteCursor"'), "drawRemoteCursor element present");
 assert(htmlContent.includes('id="remoteCursorTag"'), "remoteCursorTag element present");
