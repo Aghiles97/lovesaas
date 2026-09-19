@@ -8,6 +8,7 @@ const auth = require("./auth");
 const r2 = require("./r2");
 const { WIDGET_REGISTRY, PRESETS } = require("../core/widget-registry");
 const { setupPhotoboothWebSocket } = require("./photobooth-room");
+const { setupDrawWebSocket } = require("./draw-room");
 
 const PORT = process.env.SAAS_PORT || 4000;
 const ROOT_DIR = path.join(__dirname, "..");
@@ -1122,6 +1123,11 @@ const server = http.createServer(async (req, res) => {
     return serveFile(res, path.join(ROOT_DIR, "public", "photobooth.html"));
   }
 
+  // Dedicated Standalone Draw route (/draw, /draw/:code)
+  if (pathname === "/draw" || pathname.startsWith("/draw/")) {
+    return serveFile(res, path.join(ROOT_DIR, "public", "draw.html"));
+  }
+
   // Stream media (images, audio, uploads, demo) directly from Cloudflare R2
   const isR2Media = pathname.startsWith("/images/") || pathname.startsWith("/audio/") || pathname.startsWith("/uploads/") || pathname.startsWith("/demo/");
   if (isR2Media && r2.isR2Configured) {
@@ -1246,6 +1252,46 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
+  // GET /api/draw/rooms/:code/events (SSE Realtime Stream)
+  if (pathname.startsWith("/api/draw/rooms/") && pathname.endsWith("/events") && method === "GET") {
+    const parts = pathname.split("/");
+    const code = (parts[parts.length - 2] || "").toUpperCase().trim();
+    const { drawRooms } = require("./draw-room");
+    const participantId = parsedUrl.query?.id || ("p_" + Math.random().toString(36).slice(2, 9));
+    const participantName = parsedUrl.query?.name || "Partner";
+    return drawRooms.registerSseClient(req, res, code, participantId, participantName);
+  }
+
+  // POST /api/draw/rooms/:code/messages (HTTP Message Dispatcher)
+  if (pathname.startsWith("/api/draw/rooms/") && pathname.endsWith("/messages") && method === "POST") {
+    const parts = pathname.split("/");
+    const code = (parts[parts.length - 2] || "").toUpperCase().trim();
+    const { drawRooms } = require("./draw-room");
+    try {
+      const body = await parseJsonBody(req);
+      const room = drawRooms.getOrCreateRoom(code);
+      const senderId = body.senderId || "anon";
+      const senderName = body.senderName || "Partner";
+      drawRooms.handleMessage(room, senderId, senderName, body, senderId);
+      return sendJson(res, 200, { ok: true });
+    } catch (err) {
+      return sendJson(res, 400, { error: err.message || "Invalid JSON" });
+    }
+  }
+
+  // GET /api/draw/rooms/:code
+  if (pathname.startsWith("/api/draw/rooms/") && method === "GET") {
+    const code = pathname.split("/").pop().toUpperCase().trim();
+    const { drawRooms } = require("./draw-room");
+    const room = drawRooms.rooms.get(code);
+    return sendJson(res, 200, {
+      exists: !!room,
+      code,
+      participants: room ? (room.participants.size + (room.sseClients?.size || 0)) : 0,
+      state: room ? room.state : null
+    });
+  }
+
   // POST or GET /api/deploy/webhook (Instant Auto-Deploy Trigger)
   if (pathname === "/api/deploy/webhook" && (method === "POST" || method === "GET")) {
     const token = parsedUrl.query?.token || req.headers["x-deploy-token"];
@@ -1278,6 +1324,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 setupPhotoboothWebSocket(server, "/photobooth-ws");
+setupDrawWebSocket(server, "/draw-ws");
 
 server.listen(PORT, () => {
   console.log(`====================================================`);

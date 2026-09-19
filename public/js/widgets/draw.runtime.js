@@ -1,0 +1,1258 @@
+/**
+ * /draw - Couples Real-Time Drawing Game Runtime
+ * Handles WebSocket/SSE networking, synchronized match stages,
+ * responsive dual-pad canvas drawing, smooth Bézier strokes,
+ * interactive poke reactions, solo mode, and keepsake generation.
+ */
+
+(function () {
+  "use strict";
+
+  // --- Web Audio Synthesizer ---
+  const audioCtx = (typeof window !== "undefined" && (window.AudioContext || window.webkitAudioContext))
+    ? new (window.AudioContext || window.webkitAudioContext)()
+    : null;
+
+  function playPokeSound(emoji) {
+    if (!audioCtx) return;
+    try {
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      const now = audioCtx.currentTime;
+      if (emoji === "💖" || emoji === "⭐") {
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.15);
+      } else if (emoji === "💥") {
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.2);
+      } else {
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(660, now + 0.12);
+      }
+
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc.start(now);
+      osc.stop(now + 0.25);
+    } catch (e) {}
+  }
+
+  // --- Toast Notification ---
+  function showToast(msg) {
+    const toast = document.getElementById("drawToast");
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2500);
+  }
+
+  // --- App State ---
+  const state = {
+    roomCode: null,
+    isSolo: false,
+    role: "host",
+    participantId: "user_" + Math.random().toString(36).slice(2, 9),
+    myName: "",
+    partnerName: "Partner",
+    mySex: null,
+    partnerSex: null,
+    myReady: false,
+    partnerReady: false,
+    stage: "lobby",
+    selectedPack: "memories",
+    roundsTotal: 3,
+    secondsPerDrawing: 120,
+    currentRound: 1,
+    currentPrompt: "the last time we laughed really hard",
+    timerRemaining: 120,
+    timerRunning: false,
+    ws: null,
+    sse: null,
+    currentColor: "#5fa0ff", // Blue default matching Image 4
+    currentSize: 5,
+    selectedPokeEmoji: "👉",
+    currentStroke: null,
+    myStrokes: [],
+    partnerStrokes: [],
+    roundHistory: []
+  };
+
+  // --- DOM Elements ---
+  const el = {
+    stageLobby: document.getElementById("stageLobby"),
+    stageProfile: document.getElementById("stageProfile"),
+    stagePackSelect: document.getElementById("stagePackSelect"),
+    stageMatchSetup: document.getElementById("stageMatchSetup"),
+    stageDrawing: document.getElementById("stageDrawing"),
+    stageRoundReview: document.getElementById("stageRoundReview"),
+    stageMatchComplete: document.getElementById("stageMatchComplete"),
+
+    profileNameInput: document.getElementById("profileNameInput"),
+    profileSexSelector: document.getElementById("profileSexSelector"),
+    btnProfileReady: document.getElementById("btnProfileReady"),
+    profileWaitingWrap: document.getElementById("profileWaitingWrap"),
+    profileWaitingText: document.getElementById("profileWaitingText"),
+
+    btnStartRoom: document.getElementById("btnStartRoom"),
+    btnShowJoinForm: document.getElementById("btnShowJoinForm"),
+    btnPracticeSolo: document.getElementById("btnPracticeSolo"),
+    btnJoinRoomSubmit: document.getElementById("btnJoinRoomSubmit"),
+    btnBackToInitial: document.getElementById("btnBackToInitial"),
+    btnWaitingSkipToSolo: document.getElementById("btnWaitingSkipToSolo"),
+    inputJoinCode: document.getElementById("inputJoinCode"),
+    displayRoomCode: document.getElementById("displayRoomCode"),
+    btnCopyInvite: document.getElementById("btnCopyInvite"),
+    waitingStatusText: document.getElementById("waitingStatusText"),
+    lobbyInitialView: document.getElementById("lobbyInitialView"),
+    lobbyInlineJoinForm: document.getElementById("lobbyInlineJoinForm"),
+    lobbyWaitingView: document.getElementById("lobbyWaitingView"),
+
+    packsGrid: document.getElementById("packsGrid"),
+    btnPackNext: document.getElementById("btnPackNext"),
+
+    roundsSelector: document.getElementById("roundsSelector"),
+    secondsSelector: document.getElementById("secondsSelector"),
+    btnStartDrawing: document.getElementById("btnStartDrawing"),
+
+    displayRoundNum: document.getElementById("displayRoundNum"),
+    displayRoundTotal: document.getElementById("displayRoundTotal"),
+    displayPrompt: document.getElementById("displayPrompt"),
+    displayTimer: document.getElementById("displayTimer"),
+    btnStartRoundTimer: document.getElementById("btnStartRoundTimer"),
+    drawWaitingStartBanner: document.getElementById("drawWaitingStartBanner"),
+    btnBannerStartTimer: document.getElementById("btnBannerStartTimer"),
+    padViewTabs: document.getElementById("padViewTabs"),
+    tabPartnerLabel: document.getElementById("tabPartnerLabel"),
+    canvasesContainer: document.getElementById("canvasesContainer"),
+    myPadCard: document.getElementById("myPadCard"),
+    partnerPadCard: document.getElementById("partnerPadCard"),
+    myPadBadge: document.getElementById("myPadBadge"),
+    partnerPadBadge: document.getElementById("partnerPadBadge"),
+    myCanvas: document.getElementById("myCanvas"),
+    partnerCanvas: document.getElementById("partnerCanvas"),
+    myPokeLayer: document.getElementById("myPokeLayer"),
+    partnerPokeLayer: document.getElementById("partnerPokeLayer"),
+    colorPalette: document.getElementById("colorPalette"),
+    brushSizes: document.getElementById("brushSizes"),
+    btnClearCanvas: document.getElementById("btnClearCanvas"),
+    pokeButtons: document.getElementById("pokeButtons"),
+
+    reviewPromptText: document.getElementById("reviewPromptText"),
+    reviewMyName: document.getElementById("reviewMyName"),
+    reviewPartnerName: document.getElementById("reviewPartnerName"),
+    reviewMyImg: document.getElementById("reviewMyImg"),
+    reviewPartnerImg: document.getElementById("reviewPartnerImg"),
+    btnNextRound: document.getElementById("btnNextRound"),
+
+    recapGallery: document.getElementById("recapGallery"),
+    btnDownloadKeepsake: document.getElementById("btnDownloadKeepsake"),
+    btnPlayAgain: document.getElementById("btnPlayAgain")
+  };
+
+  // --- Stage Switching ---
+  function showStage(stageName) {
+    state.stage = stageName;
+    const stages = [
+      el.stageLobby,
+      el.stageProfile,
+      el.stagePackSelect,
+      el.stageMatchSetup,
+      el.stageDrawing,
+      el.stageRoundReview,
+      el.stageMatchComplete
+    ];
+    stages.forEach(s => s && s.classList.remove("active"));
+
+    const stageMap = {
+      lobby: el.stageLobby,
+      profile_setup: el.stageProfile,
+      pack_select: el.stagePackSelect,
+      match_setup: el.stageMatchSetup,
+      drawing: el.stageDrawing,
+      round_review: el.stageRoundReview,
+      match_complete: el.stageMatchComplete
+    };
+
+    const target = stageMap[stageName];
+    if (target) {
+      target.classList.add("active");
+      if (stageName === "profile_setup") {
+        if (el.profileNameInput && state.myName) {
+          el.profileNameInput.value = state.myName;
+        }
+        if (state.mySex) {
+          document.querySelectorAll("#profileSexSelector .draw-sex-btn").forEach(b => {
+            b.classList.toggle("selected", b.dataset.sex === state.mySex);
+          });
+        }
+        if (!state.myReady) {
+          if (el.btnProfileReady) el.btnProfileReady.style.display = "flex";
+          if (el.profileWaitingWrap) el.profileWaitingWrap.style.display = "none";
+        } else {
+          if (el.btnProfileReady) el.btnProfileReady.style.display = "none";
+          if (el.profileWaitingWrap) el.profileWaitingWrap.style.display = "flex";
+        }
+        if (el.profileWaitingText && state.partnerReady) {
+          el.profileWaitingText.textContent = `${state.partnerName} is ready! ✓`;
+        }
+      } else if (stageName === "drawing") {
+        requestAnimationFrame(() => {
+          setupCanvasSize();
+          redrawAllStrokes();
+        });
+      }
+    }
+  }
+
+  // --- Networking: WebSocket + SSE Fallback ---
+  function sendMsg(type, payload = {}) {
+    if (state.isSolo) return;
+    const data = {
+      type,
+      roomCode: state.roomCode,
+      senderId: state.participantId,
+      senderName: state.myName,
+      payload
+    };
+
+    if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+      try {
+        state.ws.send(JSON.stringify(data));
+        return;
+      } catch (e) {}
+    }
+
+    if (state.roomCode) {
+      fetch(`/api/draw/rooms/${state.roomCode}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      }).catch(() => {});
+    }
+  }
+
+  function initNetworking(roomCode) {
+    state.roomCode = roomCode.toUpperCase().trim();
+    const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${wsProto}//${window.location.host}/draw-ws`;
+
+    try {
+      state.ws = new WebSocket(wsUrl);
+
+      state.ws.onopen = () => {
+        sendMsg("JOIN_ROOM", {
+          roomCode: state.roomCode,
+          participantId: state.participantId,
+          name: state.myName
+        });
+      };
+
+      state.ws.onmessage = (evt) => {
+        try {
+          const msg = JSON.parse(evt.data);
+          handleIncomingMessage(msg);
+        } catch (e) {}
+      };
+
+      state.ws.onerror = () => setupSseFallback();
+      state.ws.onclose = () => setupSseFallback();
+    } catch (e) {
+      setupSseFallback();
+    }
+  }
+
+  function setupSseFallback() {
+    if (state.sse || state.isSolo) return;
+    const url = `/api/draw/rooms/${state.roomCode}/events?id=${encodeURIComponent(state.participantId)}&name=${encodeURIComponent(state.myName)}`;
+    state.sse = new EventSource(url);
+    state.sse.onmessage = (evt) => {
+      try {
+        const msg = JSON.parse(evt.data);
+        handleIncomingMessage(msg);
+      } catch (e) {}
+    };
+  }
+
+  // --- Message Dispatcher & State Hydration ---
+  function handleIncomingMessage(msg) {
+    const { type } = msg;
+
+    if (type === "ROOM_JOINED") {
+      state.role = msg.role;
+      if (msg.participants) {
+        const other = msg.participants.find(p => p.id !== state.participantId);
+        if (other) {
+          state.partnerName = other.name || "Partner";
+          updateBadges();
+        }
+      }
+
+      // Hydrate state if reconnecting to active session
+      if (msg.state) {
+        if (msg.state.profiles) {
+          if (msg.state.profiles[state.participantId]) {
+            state.myName = msg.state.profiles[state.participantId].name || state.myName;
+            state.mySex = msg.state.profiles[state.participantId].sex || state.mySex;
+            state.myReady = !!msg.state.profiles[state.participantId].ready;
+          }
+          const otherId = Object.keys(msg.state.profiles).find(id => id !== state.participantId);
+          if (otherId && msg.state.profiles[otherId]) {
+            state.partnerName = msg.state.profiles[otherId].name || state.partnerName;
+            state.partnerSex = msg.state.profiles[otherId].sex || state.partnerSex;
+            state.partnerReady = !!msg.state.profiles[otherId].ready;
+          }
+          updateBadges();
+        }
+
+        if (msg.state.selectedPack) state.selectedPack = msg.state.selectedPack;
+        if (msg.state.roundsTotal) state.roundsTotal = msg.state.roundsTotal;
+        if (msg.state.secondsPerDrawing) state.secondsPerDrawing = msg.state.secondsPerDrawing;
+        if (msg.state.currentRound) state.currentRound = msg.state.currentRound;
+        if (msg.state.currentPrompt) state.currentPrompt = msg.state.currentPrompt;
+        if (msg.state.timerRemaining !== undefined) state.timerRemaining = msg.state.timerRemaining;
+
+        // Restore strokes
+        if (msg.state.strokes) {
+          state.myStrokes = msg.state.strokes[state.participantId] || [];
+          const partnerId = Object.keys(msg.state.strokes).find(id => id !== state.participantId);
+          state.partnerStrokes = partnerId ? (msg.state.strokes[partnerId] || []) : [];
+        }
+
+        if (msg.state.stage && msg.state.stage !== "lobby") {
+          updateDrawingHeader();
+          showStage(msg.state.stage);
+          return;
+        }
+      }
+
+      if (msg.participantCount >= 2) {
+        showStage("profile_setup");
+        showToast("Both partners connected! Set up your profiles 💕");
+      }
+      return;
+    }
+
+    if (type === "PARTNER_JOINED") {
+      if (msg.partner) {
+        state.partnerName = msg.partner.name || "Partner";
+        updateBadges();
+      }
+      showToast("Partner connected! Set up your profiles 💕");
+      showStage("profile_setup");
+      return;
+    }
+
+    if (type === "PROFILE_UPDATED") {
+      if (msg.participantId !== state.participantId) {
+        state.partnerName = msg.profile?.name || "Partner";
+        state.partnerSex = msg.profile?.sex || "female";
+        state.partnerReady = true;
+        updateBadges();
+        if (el.profileWaitingText) {
+          el.profileWaitingText.textContent = `${state.partnerName} is ready! ✓`;
+        }
+      }
+      return;
+    }
+
+    if (type === "PROFILES_COMPLETED") {
+      if (msg.profiles) {
+        for (const [pid, prof] of Object.entries(msg.profiles)) {
+          if (pid !== state.participantId) {
+            state.partnerName = prof.name || "Partner";
+            state.partnerSex = prof.sex || "female";
+            state.partnerReady = true;
+          } else {
+            state.myName = prof.name || state.myName;
+            state.mySex = prof.sex || state.mySex;
+            state.myReady = true;
+          }
+        }
+      }
+      updateBadges();
+      showStage("pack_select");
+      showToast("Both ready! Pick a prompt pack 🎨");
+      return;
+    }
+
+    if (type === "PARTNER_LEFT") {
+      showToast(`${state.partnerName} disconnected`);
+      return;
+    }
+
+    if (type === "PACK_SELECTED") {
+      state.selectedPack = msg.packId;
+      document.querySelectorAll(".draw-pack-card").forEach(c => {
+        c.classList.toggle("selected", c.dataset.pack === msg.packId);
+      });
+      return;
+    }
+
+    if (type === "STAGE_CHANGED") {
+      showStage(msg.stage);
+      return;
+    }
+
+    if (type === "MATCH_CONFIG_UPDATED") {
+      if (msg.roundsTotal) {
+        state.roundsTotal = msg.roundsTotal;
+        document.querySelectorAll("#roundsSelector .draw-pill-btn").forEach(b => {
+          b.classList.toggle("selected", Number(b.dataset.rounds) === state.roundsTotal);
+        });
+      }
+      if (msg.secondsPerDrawing) {
+        state.secondsPerDrawing = msg.secondsPerDrawing;
+        state.timerRemaining = msg.secondsPerDrawing;
+        document.querySelectorAll("#secondsSelector .draw-pill-btn").forEach(b => {
+          b.classList.toggle("selected", Number(b.dataset.seconds) === state.secondsPerDrawing);
+        });
+      }
+      return;
+    }
+
+    if (type === "MATCH_STARTED" || type === "ROUND_STARTED") {
+      state.currentRound = msg.currentRound;
+      state.roundsTotal = msg.roundsTotal;
+      state.secondsPerDrawing = msg.secondsPerDrawing;
+      state.timerRemaining = msg.secondsPerDrawing;
+      state.currentPrompt = msg.currentPrompt;
+      state.timerRunning = !!msg.timerRunning;
+      state.myStrokes = [];
+      state.partnerStrokes = [];
+
+      updateDrawingHeader();
+      clearLocalCanvas();
+      clearPartnerCanvas();
+      showStage("drawing");
+      showToast(`Round ${state.currentRound} ready! 🎨`);
+      return;
+    }
+
+    if (type === "ROUND_TIMER_STARTED") {
+      state.timerRunning = true;
+      if (el.drawWaitingStartBanner) el.drawWaitingStartBanner.style.display = "none";
+      if (el.btnStartRoundTimer) el.btnStartRoundTimer.style.display = "none";
+      showToast("Timer started! Draw! ⏱️");
+      return;
+    }
+
+    if (type === "TIMER_TICK") {
+      state.timerRemaining = msg.secondsRemaining;
+      renderTimer(msg.secondsRemaining);
+      return;
+    }
+
+    if (type === "REMOTE_DRAW_STROKE") {
+      state.partnerStrokes.push(msg.stroke);
+      drawRemoteStroke(msg.stroke);
+      return;
+    }
+
+    if (type === "REMOTE_DRAW_CLEAR") {
+      state.partnerStrokes = [];
+      clearPartnerCanvas();
+      return;
+    }
+
+    if (type === "POKE_EVENT") {
+      handlePokeEvent(msg);
+      return;
+    }
+
+    if (type === "ROUND_COMPLETED") {
+      onRoundCompleted(msg);
+      return;
+    }
+
+    if (type === "MATCH_COMPLETED") {
+      onMatchCompleted(msg);
+      return;
+    }
+
+    if (type === "MATCH_RESTARTED") {
+      showStage("pack_select");
+      showToast("Match restarted!");
+      return;
+    }
+  }
+
+  function updateBadges() {
+    const myDisplay = state.myName || "tella";
+    const partnerDisplay = state.partnerName || "Partner";
+
+    if (el.myPadBadge) {
+      el.myPadBadge.textContent = myDisplay;
+      el.myPadBadge.classList.remove("pink", "blue", "purple");
+      const mySexClass = state.mySex === "male" ? "blue" : (state.mySex === "other" ? "purple" : "pink");
+      el.myPadBadge.classList.add(mySexClass);
+    }
+    if (el.partnerPadBadge) {
+      el.partnerPadBadge.textContent = partnerDisplay;
+      el.partnerPadBadge.classList.remove("pink", "blue", "purple");
+      const partnerSexClass = state.partnerSex === "male" ? "blue" : (state.partnerSex === "other" ? "purple" : "pink");
+      el.partnerPadBadge.classList.add(partnerSexClass);
+    }
+    if (el.tabPartnerLabel) el.tabPartnerLabel.textContent = `${partnerDisplay}'s Pad`;
+    if (el.reviewMyName) el.reviewMyName.textContent = myDisplay;
+    if (el.reviewPartnerName) el.reviewPartnerName.textContent = partnerDisplay;
+  }
+
+  function updateDrawingHeader() {
+    if (el.displayRoundNum) el.displayRoundNum.textContent = `ROUND ${state.currentRound}`;
+    if (el.displayRoundTotal) el.displayRoundTotal.textContent = `OF ${state.roundsTotal}`;
+    if (el.displayPrompt) el.displayPrompt.textContent = state.currentPrompt;
+    renderTimer(state.timerRemaining);
+    if (!state.timerRunning) {
+      if (el.drawWaitingStartBanner) el.drawWaitingStartBanner.style.display = "flex";
+      if (el.btnStartRoundTimer) el.btnStartRoundTimer.style.display = "inline-flex";
+    } else {
+      if (el.drawWaitingStartBanner) el.drawWaitingStartBanner.style.display = "none";
+      if (el.btnStartRoundTimer) el.btnStartRoundTimer.style.display = "none";
+    }
+  }
+
+  function renderTimer(seconds) {
+    if (!el.displayTimer) return;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    el.displayTimer.textContent = `${m}:${s < 10 ? "0" : ""}${s}`;
+    el.displayTimer.classList.toggle("urgent", seconds <= 15);
+  }
+
+  // --- Smooth Canvas 2D Engine ---
+  let myCtx = null;
+  let partnerCtx = null;
+  let isDrawing = false;
+  let canvasRect = null;
+
+  function setupCanvasSize() {
+    const dpr = window.devicePixelRatio || 1;
+    [el.myCanvas, el.partnerCanvas].forEach(c => {
+      if (!c) return;
+      const rect = c.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        c.width = rect.width * dpr;
+        c.height = rect.height * dpr;
+        const ctx = c.getContext("2d");
+        ctx.scale(dpr, dpr);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+      }
+    });
+
+    myCtx = el.myCanvas ? el.myCanvas.getContext("2d") : null;
+    partnerCtx = el.partnerCanvas ? el.partnerCanvas.getContext("2d") : null;
+  }
+
+  function redrawAllStrokes() {
+    clearLocalCanvas();
+    clearPartnerCanvas();
+    state.myStrokes.forEach(s => renderStroke(myCtx, el.myCanvas, s));
+    state.partnerStrokes.forEach(s => renderStroke(partnerCtx, el.partnerCanvas, s));
+  }
+
+  function renderStroke(ctx, canvas, stroke) {
+    if (!ctx || !canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const points = stroke.points || [];
+    if (points.length === 0) return;
+
+    ctx.strokeStyle = stroke.color || "#18181b";
+    ctx.lineWidth = stroke.size || 5;
+
+    const p0 = points[0];
+    const x0 = p0[0] * rect.width;
+    const y0 = p0[1] * rect.height;
+
+    if (points.length === 1) {
+      ctx.beginPath();
+      ctx.arc(x0, y0, (stroke.size || 5) / 2, 0, Math.PI * 2);
+      ctx.fillStyle = stroke.color || "#18181b";
+      ctx.fill();
+      return;
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    for (let i = 1; i < points.length; i++) {
+      const pPrev = points[i - 1];
+      const pCur = points[i];
+      const xPrev = pPrev[0] * rect.width;
+      const yPrev = pPrev[1] * rect.height;
+      const xCur = pCur[0] * rect.width;
+      const yCur = pCur[1] * rect.height;
+      const midX = (xPrev + xCur) / 2;
+      const midY = (yPrev + yCur) / 2;
+      ctx.quadraticCurveTo(xPrev, yPrev, midX, midY);
+    }
+    const pLast = points[points.length - 1];
+    ctx.lineTo(pLast[0] * rect.width, pLast[1] * rect.height);
+    ctx.stroke();
+  }
+
+  function getCanvasCoords(evt) {
+    if (!canvasRect && el.myCanvas) {
+      canvasRect = el.myCanvas.getBoundingClientRect();
+    }
+    const rect = canvasRect || el.myCanvas.getBoundingClientRect();
+    const clientX = evt.clientX || (evt.touches && evt.touches[0]?.clientX) || 0;
+    const clientY = evt.clientY || (evt.touches && evt.touches[0]?.clientY) || 0;
+    const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
+    const y = Math.max(0, Math.min(rect.height, clientY - rect.top));
+    return {
+      px: x,
+      py: y,
+      nx: x / rect.width,
+      ny: y / rect.height
+    };
+  }
+
+  function startStroke(evt) {
+    evt.preventDefault();
+    canvasRect = el.myCanvas.getBoundingClientRect();
+    const coords = getCanvasCoords(evt);
+    isDrawing = true;
+
+    state.currentStroke = {
+      color: state.currentColor,
+      size: state.currentSize,
+      points: [[coords.nx, coords.ny]]
+    };
+
+    if (myCtx) {
+      myCtx.beginPath();
+      myCtx.strokeStyle = state.currentColor;
+      myCtx.lineWidth = state.currentSize;
+      myCtx.arc(coords.px, coords.py, state.currentSize / 2, 0, Math.PI * 2);
+      myCtx.fillStyle = state.currentColor;
+      myCtx.fill();
+      myCtx.beginPath();
+      myCtx.moveTo(coords.px, coords.py);
+    }
+  }
+
+  function moveStroke(evt) {
+    if (!isDrawing || !state.currentStroke) return;
+    evt.preventDefault();
+    const coords = getCanvasCoords(evt);
+    state.currentStroke.points.push([coords.nx, coords.ny]);
+
+    if (myCtx) {
+      const len = state.currentStroke.points.length;
+      if (len >= 3) {
+        const p0 = state.currentStroke.points[len - 3];
+        const p1 = state.currentStroke.points[len - 2];
+        const p2 = state.currentStroke.points[len - 1];
+        const rect = canvasRect || el.myCanvas.getBoundingClientRect();
+        const midX1 = ((p0[0] + p1[0]) / 2) * rect.width;
+        const midY1 = ((p0[1] + p1[1]) / 2) * rect.height;
+        const midX2 = ((p1[0] + p2[0]) / 2) * rect.width;
+        const midY2 = ((p1[1] + p2[1]) / 2) * rect.height;
+
+        myCtx.beginPath();
+        myCtx.strokeStyle = state.currentColor;
+        myCtx.lineWidth = state.currentSize;
+        myCtx.moveTo(midX1, midY1);
+        myCtx.quadraticCurveTo(p1[0] * rect.width, p1[1] * rect.height, midX2, midY2);
+        myCtx.stroke();
+      } else {
+        myCtx.lineTo(coords.px, coords.py);
+        myCtx.stroke();
+      }
+    }
+  }
+
+  function endStroke() {
+    if (!isDrawing) return;
+    isDrawing = false;
+    canvasRect = null;
+
+    if (state.currentStroke && state.currentStroke.points.length > 0) {
+      state.myStrokes.push(state.currentStroke);
+      sendMsg("DRAW_STROKE", { stroke: state.currentStroke });
+      state.currentStroke = null;
+    }
+  }
+
+  function drawRemoteStroke(stroke) {
+    renderStroke(partnerCtx, el.partnerCanvas, stroke);
+  }
+
+  function clearLocalCanvas() {
+    if (!myCtx || !el.myCanvas) return;
+    const rect = el.myCanvas.getBoundingClientRect();
+    myCtx.clearRect(0, 0, rect.width, rect.height);
+  }
+
+  function clearPartnerCanvas() {
+    if (!partnerCtx || !el.partnerCanvas) return;
+    const rect = el.partnerCanvas.getBoundingClientRect();
+    partnerCtx.clearRect(0, 0, rect.width, rect.height);
+  }
+
+  // --- Poke Reaction Handler ---
+  function triggerPoke(emoji, nx = 0.5, ny = 0.5) {
+    if (state.isSolo) {
+      handlePokeEvent({
+        emoji,
+        x: nx,
+        y: ny,
+        senderId: "solo"
+      });
+      return;
+    }
+    sendMsg("SEND_POKE", { emoji, x: nx, y: ny });
+  }
+
+  function handlePokeEvent(data) {
+    const { emoji, x, y, senderId } = data;
+    playPokeSound(emoji);
+
+    // Screen Shake on Poke
+    const shakeTarget = el.canvasesContainer || el.stageDrawing;
+    if (shakeTarget) {
+      shakeTarget.classList.remove("draw-screen-shaking");
+      void shakeTarget.offsetWidth;
+      shakeTarget.classList.add("draw-screen-shaking");
+      setTimeout(() => shakeTarget.classList.remove("draw-screen-shaking"), 550);
+    }
+
+    const targetLayer = (senderId === state.participantId) ? el.partnerPokeLayer : el.myPokeLayer;
+    const activeTarget = (targetLayer && targetLayer.offsetParent !== null) ? targetLayer : el.myPokeLayer;
+    if (!activeTarget) return;
+
+    const rect = activeTarget.getBoundingClientRect();
+    const posX = x * rect.width;
+    const posY = y * rect.height;
+
+    // Ripple
+    const ripple = document.createElement("div");
+    ripple.className = "poke-ripple";
+    ripple.style.left = posX + "px";
+    ripple.style.top = posY + "px";
+    activeTarget.appendChild(ripple);
+
+    // Particle
+    const particle = document.createElement("div");
+    particle.className = "poke-particle";
+    particle.textContent = emoji || "👉";
+    particle.style.left = posX + "px";
+    particle.style.top = posY + "px";
+    activeTarget.appendChild(particle);
+
+    setTimeout(() => {
+      ripple.remove();
+      particle.remove();
+    }, 1300);
+  }
+
+  // --- Round & Match Completion ---
+  function onRoundCompleted(data) {
+    const myImg = el.myCanvas ? el.myCanvas.toDataURL("image/png") : "";
+    const partnerImg = el.partnerCanvas ? el.partnerCanvas.toDataURL("image/png") : "";
+
+    state.roundHistory.push({
+      round: data.round || state.currentRound,
+      prompt: data.historyItem?.prompt || state.currentPrompt,
+      myImg,
+      partnerImg: partnerImg || myImg
+    });
+
+    if (el.reviewPromptText) {
+      el.reviewPromptText.textContent = `Draw: ${data.historyItem?.prompt || state.currentPrompt}`;
+    }
+    if (el.reviewMyImg) el.reviewMyImg.src = myImg;
+    if (el.reviewPartnerImg) el.reviewPartnerImg.src = partnerImg || myImg;
+
+    showStage("round_review");
+  }
+
+  function onMatchCompleted() {
+    const myImg = el.myCanvas ? el.myCanvas.toDataURL("image/png") : "";
+    const partnerImg = el.partnerCanvas ? el.partnerCanvas.toDataURL("image/png") : "";
+
+    state.roundHistory.push({
+      round: state.currentRound,
+      prompt: state.currentPrompt,
+      myImg,
+      partnerImg: partnerImg || myImg
+    });
+
+    if (el.recapGallery) {
+      el.recapGallery.innerHTML = "";
+      state.roundHistory.forEach(r => {
+        const row = document.createElement("div");
+        row.className = "draw-recap-round-row";
+        row.innerHTML = `
+          <div class="draw-recap-prompt-label">Round ${r.round}: "${r.prompt}"</div>
+          <div class="draw-recap-drawings">
+            <div class="draw-review-card">
+              <div class="draw-review-card-header">
+                <span class="draw-review-drawer-name">${state.myName}</span>
+                <span class="draw-pad-badge pink">Pad 1</span>
+              </div>
+              <div class="draw-review-canvas-box">
+                <img src="${r.myImg}" alt="Drawing 1" />
+              </div>
+            </div>
+            <div class="draw-review-card">
+              <div class="draw-review-card-header">
+                <span class="draw-review-drawer-name">${state.partnerName}</span>
+                <span class="draw-pad-badge blue">Pad 2</span>
+              </div>
+              <div class="draw-review-canvas-box">
+                <img src="${r.partnerImg}" alt="Drawing 2" />
+              </div>
+            </div>
+          </div>
+        `;
+        el.recapGallery.appendChild(row);
+      });
+    }
+
+    showStage("match_complete");
+  }
+
+  // --- Keepsake Artwork Exporter ---
+  function downloadKeepsakeImage() {
+    const offCanvas = document.createElement("canvas");
+    const count = state.roundHistory.length || 1;
+    const cardW = 800;
+    const roundH = 340;
+    const headerH = 120;
+    const footerH = 60;
+    offCanvas.width = cardW;
+    offCanvas.height = headerH + (count * roundH) + footerH;
+
+    const ctx = offCanvas.getContext("2d");
+    ctx.fillStyle = "#f8f9fb";
+    ctx.fillRect(0, 0, offCanvas.width, offCanvas.height);
+
+    ctx.fillStyle = "#18181b";
+    ctx.font = "bold 28px 'Outfit', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Our Drawings Together 💕", cardW / 2, 54);
+
+    ctx.fillStyle = "#71717a";
+    ctx.font = "16px 'Outfit', sans-serif";
+    ctx.fillText(`${state.myName} & ${state.partnerName} · ${new Date().toLocaleDateString()}`, cardW / 2, 84);
+
+    let currentY = headerH;
+    let pending = 0;
+
+    state.roundHistory.forEach((r) => {
+      ctx.fillStyle = "#18181b";
+      ctx.font = "bold 16px 'Outfit', sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(`Round ${r.round}: "${r.prompt}"`, 40, currentY + 24);
+
+      const img1 = new Image();
+      const img2 = new Image();
+      pending += 2;
+
+      const checkDone = () => {
+        if (--pending === 0) {
+          const link = document.createElement("a");
+          link.download = `our-drawings-${Date.now()}.png`;
+          link.href = offCanvas.toDataURL("image/png");
+          link.click();
+        }
+      };
+
+      const padW = 340;
+      const padH = 240;
+      const yBox = currentY + 40;
+
+      img1.onload = () => {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(40, yBox, padW, padH);
+        ctx.strokeStyle = "#18181b";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(40, yBox, padW, padH);
+        ctx.drawImage(img1, 40, yBox, padW, padH);
+        checkDone();
+      };
+      img1.src = r.myImg;
+
+      img2.onload = () => {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(420, yBox, padW, padH);
+        ctx.strokeStyle = "#18181b";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(420, yBox, padW, padH);
+        ctx.drawImage(img2, 420, yBox, padW, padH);
+        checkDone();
+      };
+      img2.src = r.partnerImg;
+
+      currentY += roundH;
+    });
+
+    if (pending === 0) {
+      const link = document.createElement("a");
+      link.download = `our-drawings-${Date.now()}.png`;
+      link.href = offCanvas.toDataURL("image/png");
+      link.click();
+    }
+  }
+
+  // --- Solo Mode Simulator ---
+  let soloTimer = null;
+  function startSoloMatch() {
+    state.isSolo = true;
+    state.timerRunning = false;
+    state.currentRound = 1;
+    state.currentPrompt = "The last time we laughed really hard";
+    state.roundHistory = [];
+    state.timerRemaining = state.secondsPerDrawing;
+    updateBadges();
+    updateDrawingHeader();
+    clearLocalCanvas();
+    showStage("drawing");
+
+    if (soloTimer) { clearInterval(soloTimer); soloTimer = null; }
+  }
+
+  function triggerStartRoundTimer() {
+    if (state.timerRunning) return;
+    if (state.isSolo) {
+      state.timerRunning = true;
+      if (el.drawWaitingStartBanner) el.drawWaitingStartBanner.style.display = "none";
+      if (el.btnStartRoundTimer) el.btnStartRoundTimer.style.display = "none";
+      showToast("Timer started! Draw! ⏱️");
+      if (soloTimer) clearInterval(soloTimer);
+      soloTimer = setInterval(() => {
+        state.timerRemaining -= 1;
+        renderTimer(state.timerRemaining);
+        if (state.timerRemaining <= 0) {
+          clearInterval(soloTimer);
+          onRoundCompleted({ round: state.currentRound, historyItem: { prompt: state.currentPrompt } });
+        }
+      }, 1000);
+      return;
+    }
+    sendMsg("START_ROUND_TIMER");
+  }
+
+  // --- Event Bindings ---
+  function initEvents() {
+    // Start Round Timer on Draw Page
+    el.btnStartRoundTimer?.addEventListener("click", triggerStartRoundTimer);
+    el.btnBannerStartTimer?.addEventListener("click", triggerStartRoundTimer);
+    // Start Room
+    el.btnStartRoom?.addEventListener("click", () => {
+      const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+      state.roomCode = code;
+      if (el.displayRoomCode) el.displayRoomCode.textContent = code;
+
+      if (el.lobbyInitialView) el.lobbyInitialView.style.display = "none";
+      if (el.lobbyWaitingView) el.lobbyWaitingView.style.display = "block";
+
+      initNetworking(code);
+    });
+
+    // Show / Toggle Inline Join Form (Photobooth Parity)
+    el.btnShowJoinForm?.addEventListener("click", () => {
+      const form = el.lobbyInlineJoinForm;
+      if (!form) return;
+      const isHidden = form.style.display === "none" || !form.style.display;
+      form.style.display = isHidden ? "block" : "none";
+      if (isHidden && el.inputJoinCode) {
+        el.inputJoinCode.focus();
+        el.inputJoinCode.select?.();
+      }
+    });
+
+    el.inputJoinCode?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        el.btnJoinRoomSubmit?.click();
+      }
+    });
+
+    // Practice Solo
+    el.btnPracticeSolo?.addEventListener("click", () => {
+      state.isSolo = true;
+      showStage("profile_setup");
+    });
+
+    el.btnWaitingSkipToSolo?.addEventListener("click", () => {
+      state.isSolo = true;
+      showStage("profile_setup");
+    });
+
+    // Join Code Submit
+    el.btnJoinRoomSubmit?.addEventListener("click", () => {
+      const code = el.inputJoinCode?.value?.trim().toUpperCase();
+      if (!code || code.length < 3) {
+        showToast("Please enter a valid room code");
+        return;
+      }
+      initNetworking(code);
+    });
+
+    // Profile Setup: Sex Selection
+    el.profileSexSelector?.addEventListener("click", (evt) => {
+      const btn = evt.target.closest(".draw-sex-btn");
+      if (!btn) return;
+      const sex = btn.dataset.sex;
+      if (!sex) return;
+
+      document.querySelectorAll("#profileSexSelector .draw-sex-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      state.mySex = sex;
+      updateBadges();
+    });
+
+    // Profile Setup: Enter Key on Name
+    el.profileNameInput?.addEventListener("keypress", (evt) => {
+      if (evt.key === "Enter") {
+        el.btnProfileReady?.click();
+      }
+    });
+
+    // Profile Setup: Ready Submit
+    el.btnProfileReady?.addEventListener("click", () => {
+      const name = el.profileNameInput?.value?.trim();
+      if (!name) {
+        showToast("Please enter your name");
+        el.profileNameInput?.focus();
+        return;
+      }
+      if (!state.mySex) {
+        showToast("Please select your sex (♀ / ♂ / ✨)");
+        return;
+      }
+
+      state.myName = name;
+      state.myReady = true;
+      updateBadges();
+
+      if (state.isSolo) {
+        state.partnerName = "Partner";
+        state.partnerSex = state.mySex === "female" ? "male" : "female";
+        updateBadges();
+        showStage("pack_select");
+        showToast("Profile set! Pick a prompt pack 🎨");
+        return;
+      }
+
+      if (el.btnProfileReady) el.btnProfileReady.style.display = "none";
+      if (el.profileWaitingWrap) el.profileWaitingWrap.style.display = "flex";
+
+      sendMsg("SUBMIT_PROFILE", {
+        name: state.myName,
+        sex: state.mySex
+      });
+    });
+
+    // Copy Invite
+    el.btnCopyInvite?.addEventListener("click", () => {
+      const inviteUrl = `${window.location.origin}/draw?room=${state.roomCode}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(inviteUrl).then(() => showToast("Invite link copied! 📋"));
+      } else {
+        showToast(`Room: ${state.roomCode}`);
+      }
+    });
+
+    // Pack Select (Screenshot 1)
+    el.packsGrid?.addEventListener("click", (evt) => {
+      const card = evt.target.closest(".draw-pack-card");
+      if (!card) return;
+      const packId = card.dataset.pack;
+      if (!packId) return;
+
+      document.querySelectorAll(".draw-pack-card").forEach(c => c.classList.remove("selected"));
+      card.classList.add("selected");
+      state.selectedPack = packId;
+
+      sendMsg("SELECT_PACK", { packId });
+    });
+
+    // Next to Match Setup (Screenshot 1 -> 2)
+    el.btnPackNext?.addEventListener("click", () => {
+      sendMsg("SET_STAGE", { stage: "match_setup" });
+      showStage("match_setup");
+    });
+
+    // Rounds
+    el.roundsSelector?.addEventListener("click", (evt) => {
+      const btn = evt.target.closest(".draw-pill-btn");
+      if (!btn) return;
+      const rounds = Number(btn.dataset.rounds);
+      state.roundsTotal = rounds;
+
+      document.querySelectorAll("#roundsSelector .draw-pill-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+
+      sendMsg("SET_MATCH_CONFIG", { roundsTotal: rounds });
+    });
+
+    // Seconds
+    el.secondsSelector?.addEventListener("click", (evt) => {
+      const btn = evt.target.closest(".draw-pill-btn");
+      if (!btn) return;
+      const secs = Number(btn.dataset.seconds);
+      state.secondsPerDrawing = secs;
+      state.timerRemaining = secs;
+
+      document.querySelectorAll("#secondsSelector .draw-pill-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+
+      sendMsg("SET_MATCH_CONFIG", { secondsPerDrawing: secs });
+    });
+
+    // Start Drawing Click
+    el.btnStartDrawing?.addEventListener("click", () => {
+      if (state.isSolo) {
+        startSoloMatch();
+      } else {
+        sendMsg("START_MATCH");
+      }
+    });
+
+    // Pad View Tabs (Mine vs Partner vs Split)
+    el.padViewTabs?.addEventListener("click", (evt) => {
+      const btn = evt.target.closest(".draw-tab-btn");
+      if (!btn) return;
+      const view = btn.dataset.view;
+
+      document.querySelectorAll(".draw-tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      el.canvasesContainer.classList.remove("view-mine", "view-partner", "view-split");
+      el.canvasesContainer.classList.add(`view-${view}`);
+
+      requestAnimationFrame(() => {
+        setupCanvasSize();
+        redrawAllStrokes();
+      });
+    });
+
+    // Pointer Events on My Canvas
+    if (el.myCanvas) {
+      el.myCanvas.addEventListener("pointerdown", startStroke, { passive: false });
+      el.myCanvas.addEventListener("pointermove", moveStroke, { passive: false });
+      window.addEventListener("pointerup", endStroke);
+      window.addEventListener("pointercancel", endStroke);
+    }
+
+    // Tap Partner's Pad to Poke
+    if (el.partnerPadCard) {
+      el.partnerPadCard.addEventListener("click", (evt) => {
+        const rect = el.partnerPadCard.getBoundingClientRect();
+        const nx = (evt.clientX - rect.left) / rect.width;
+        const ny = (evt.clientY - rect.top) / rect.height;
+        triggerPoke(state.selectedPokeEmoji, nx, ny);
+      });
+    }
+
+    // Color Swatches
+    el.colorPalette?.addEventListener("click", (evt) => {
+      const swatch = evt.target.closest(".draw-color-swatch");
+      if (!swatch) return;
+      document.querySelectorAll(".draw-color-swatch").forEach(s => s.classList.remove("selected"));
+      swatch.classList.add("selected");
+      state.currentColor = swatch.dataset.color;
+    });
+
+    // Brush Sizes
+    el.brushSizes?.addEventListener("click", (evt) => {
+      const btn = evt.target.closest(".draw-size-btn");
+      if (!btn) return;
+      document.querySelectorAll(".draw-size-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      state.currentSize = Number(btn.dataset.size);
+    });
+
+    // Clear Button
+    el.btnClearCanvas?.addEventListener("click", () => {
+      state.myStrokes = [];
+      clearLocalCanvas();
+      sendMsg("DRAW_CLEAR");
+    });
+
+    // Poke Buttons
+    el.pokeButtons?.addEventListener("click", (evt) => {
+      const btn = evt.target.closest(".draw-poke-btn");
+      if (!btn) return;
+      document.querySelectorAll(".draw-poke-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+
+      const emoji = btn.dataset.emoji;
+      state.selectedPokeEmoji = emoji;
+      triggerPoke(emoji, 0.5, 0.5);
+    });
+
+    // Next Round
+    el.btnNextRound?.addEventListener("click", () => {
+      if (state.isSolo) {
+        if (state.currentRound < state.roundsTotal) {
+          state.currentRound += 1;
+          state.currentPrompt = "A cute puppy wearing sunglasses";
+          startSoloMatch();
+        } else {
+          onMatchCompleted();
+        }
+      } else {
+        sendMsg("NEXT_ROUND");
+      }
+    });
+
+    // Download Keepsake
+    el.btnDownloadKeepsake?.addEventListener("click", () => {
+      downloadKeepsakeImage();
+    });
+
+    // Play Again
+    el.btnPlayAgain?.addEventListener("click", () => {
+      if (state.isSolo) {
+        showStage("pack_select");
+      } else {
+        sendMsg("RESTART_MATCH");
+      }
+    });
+
+    // Resize
+    window.addEventListener("resize", () => {
+      if (state.stage === "drawing") {
+        setupCanvasSize();
+        redrawAllStrokes();
+      }
+    });
+  }
+
+  // --- Initialize ---
+  function init() {
+    initEvents();
+
+    if (el.canvasesContainer) {
+      el.canvasesContainer.classList.remove("view-mine", "view-partner");
+      el.canvasesContainer.classList.add("view-split");
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomFromQuery = urlParams.get("room") || urlParams.get("code");
+    const pathMatch = window.location.pathname.match(/^\/draw\/([a-zA-Z0-9_-]+)/);
+    const initialRoom = roomFromQuery || (pathMatch ? pathMatch[1] : null);
+
+    if (initialRoom) {
+      state.roomCode = initialRoom.toUpperCase().trim();
+      if (el.inputJoinCode) el.inputJoinCode.value = state.roomCode;
+      if (el.lobbyInlineJoinForm) el.lobbyInlineJoinForm.style.display = "block";
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
