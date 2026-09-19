@@ -99,7 +99,7 @@
       <div class="draw-lobby-card photobooth-style">
         <div class="ldr-welcome-pill"><span>💕 Connected</span></div>
         <h2 class="draw-lobby-title" style="color: #ffffff;">Who's Drawing?</h2>
-        <p class="draw-lobby-desc" style="color: rgba(255, 255, 255, 0.72);">Enter your nickname and select your sex to customize your drawing pad.</p>
+        <p class="draw-lobby-desc" style="color: rgba(255, 255, 255, 0.72);">Enter your nickname and select your gender to customize your drawing pad.</p>
 
         <div class="draw-input-group">
           <label class="draw-input-label" for="profileNameInput" style="color: rgba(255, 255, 255, 0.7);">Your Name</label>
@@ -118,6 +118,11 @@
               <span class="draw-sex-name">Male</span>
             </button>
           </div>
+        </div>
+
+        <div id="profilePartnerStatus" class="draw-partner-ready-banner" style="display: none;">
+          <span class="draw-pulse-dot" style="background: #4ade80;"></span>
+          <span id="profilePartnerStatusText">Partner is ready! ✓</span>
         </div>
 
         <button type="button" id="btnProfileReady" class="draw-btn-primary" style="width: 100%; height: 48px; margin-top: 4px;">

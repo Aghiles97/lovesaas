@@ -125,6 +125,8 @@
     btnProfileReady: document.getElementById("btnProfileReady"),
     profileWaitingWrap: document.getElementById("profileWaitingWrap"),
     profileWaitingText: document.getElementById("profileWaitingText"),
+    profilePartnerStatus: document.getElementById("profilePartnerStatus"),
+    profilePartnerStatusText: document.getElementById("profilePartnerStatusText"),
 
     btnStartRoom: document.getElementById("btnStartRoom"),
     btnShowJoinForm: document.getElementById("btnShowJoinForm"),
@@ -219,16 +221,7 @@
             b.classList.toggle("selected", b.dataset.sex === state.mySex);
           });
         }
-        if (!state.myReady) {
-          if (el.btnProfileReady) el.btnProfileReady.style.display = "flex";
-          if (el.profileWaitingWrap) el.profileWaitingWrap.style.display = "none";
-        } else {
-          if (el.btnProfileReady) el.btnProfileReady.style.display = "none";
-          if (el.profileWaitingWrap) el.profileWaitingWrap.style.display = "flex";
-        }
-        if (el.profileWaitingText && state.partnerReady) {
-          el.profileWaitingText.textContent = `${state.partnerName} is ready! ✓`;
-        }
+        updateProfileReadyUI();
       } else if (stageName === "drawing") {
         requestAnimationFrame(() => {
           setupCanvasSize();
@@ -390,18 +383,6 @@
       // Hydrate state if reconnecting to active session
       if (msg.state) {
         if (msg.state.profiles) {
-          const pKeys = Object.keys(msg.state.profiles);
-          if (pKeys.length > 0 && !msg.state.profiles[state.participantId]) {
-            const myPrevId = (state.role === "host" ? pKeys[0] : pKeys[1]) || pKeys[0];
-            if (myPrevId && msg.state.profiles[myPrevId]) {
-              state.participantId = myPrevId;
-              try {
-                sessionStorage.setItem(`draw_pid_${state.roomCode}`, myPrevId);
-                localStorage.setItem(`draw_pid_${state.roomCode}`, myPrevId);
-              } catch (e) {}
-            }
-          }
-
           if (msg.state.profiles[state.participantId]) {
             state.myName = msg.state.profiles[state.participantId].name || state.myName;
             state.mySex = msg.state.profiles[state.participantId].sex || state.mySex;
@@ -414,6 +395,7 @@
             state.partnerReady = !!msg.state.profiles[otherId].ready;
           }
           updateBadges();
+          updateProfileReadyUI();
         }
 
         if (msg.state.selectedPack) state.selectedPack = msg.state.selectedPack;
@@ -474,10 +456,8 @@
         state.partnerSex = msg.profile?.sex || "female";
         state.partnerReady = true;
         updateBadges();
-        if (el.profileWaitingText) {
-          el.profileWaitingText.textContent = `${state.partnerName} is ready! ✓`;
-        }
       }
+      updateProfileReadyUI();
       const readyCount = msg.profiles ? Object.values(msg.profiles).filter(p => p.ready).length : (state.myReady && state.partnerReady ? 2 : 0);
       if (state.stage === "profile_setup" && (readyCount >= 2 || (state.myReady && state.partnerReady))) {
         showStage("pack_select");
@@ -733,6 +713,32 @@
     if (el.tabPartnerLabel) el.tabPartnerLabel.textContent = `${partnerDisplay}'s Pad`;
     if (el.reviewMyName) el.reviewMyName.textContent = myDisplay;
     if (el.reviewPartnerName) el.reviewPartnerName.textContent = partnerDisplay;
+  }
+
+  function updateProfileReadyUI() {
+    if (state.stage !== "profile_setup") return;
+
+    if (el.profilePartnerStatus && el.profilePartnerStatusText) {
+      if (state.partnerReady && !state.myReady) {
+        el.profilePartnerStatus.style.display = "flex";
+        el.profilePartnerStatusText.textContent = `${state.partnerName} is ready and waiting! ✓`;
+      } else {
+        el.profilePartnerStatus.style.display = "none";
+      }
+    }
+
+    if (!state.myReady) {
+      if (el.btnProfileReady) el.btnProfileReady.style.display = "flex";
+      if (el.profileWaitingWrap) el.profileWaitingWrap.style.display = "none";
+    } else {
+      if (el.btnProfileReady) el.btnProfileReady.style.display = "none";
+      if (el.profileWaitingWrap) el.profileWaitingWrap.style.display = "flex";
+      if (el.profileWaitingText) {
+        el.profileWaitingText.textContent = state.partnerReady
+          ? `Both ready! Starting...`
+          : `Waiting for ${state.partnerName} to finish profile...`;
+      }
+    }
   }
 
   function updateDrawingHeader() {
@@ -1366,7 +1372,7 @@
         return;
       }
       if (!state.mySex) {
-        showToast("Please select your sex (♀ / ♂ / ✨)");
+        showToast("Please select your gender (♀ / ♂)");
         return;
       }
 
@@ -1387,8 +1393,7 @@
         return;
       }
 
-      if (el.btnProfileReady) el.btnProfileReady.style.display = "none";
-      if (el.profileWaitingWrap) el.profileWaitingWrap.style.display = "flex";
+      updateProfileReadyUI();
 
       sendMsg("SUBMIT_PROFILE", {
         name: state.myName,
