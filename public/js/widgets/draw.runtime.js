@@ -1246,6 +1246,12 @@
     if (el.reviewMyImg) el.reviewMyImg.src = existing.myImg;
     if (el.reviewPartnerImg) el.reviewPartnerImg.src = existing.partnerImg || existing.myImg;
 
+    if (el.btnNextRound) {
+      const isFinal = roundNum >= state.roundsTotal;
+      const span = el.btnNextRound.querySelector("span");
+      if (span) span.textContent = isFinal ? "Finish Match 🏆" : "Next Round ▷";
+    }
+
     showStage("round_review");
   }
 

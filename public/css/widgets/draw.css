@@ -1781,6 +1781,7 @@ body.draw-solo-mode #reviewPartnerCard,
 body.draw-solo-mode #profilePartnerStatus,
 body.draw-solo-mode #profileWaitingWrap,
 body.draw-solo-mode .ldr-welcome-pill,
+body.draw-solo-mode .draw-pad-badge,
 body.draw-solo-mode .draw-recap-drawings.solo .draw-review-card:nth-child(2) {
   display: none !important;
 }
