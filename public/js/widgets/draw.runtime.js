@@ -424,6 +424,28 @@
           }
         }
 
+        if (msg.state.roundHistory && Array.isArray(msg.state.roundHistory)) {
+          msg.state.roundHistory.forEach(srvRound => {
+            let existing = state.roundHistory.find(r => r.round === srvRound.round);
+            const srvMy = srvRound.artwork?.[state.participantId] || "";
+            const srvPartner = Object.entries(srvRound.artwork || {}).find(([id]) => id !== state.participantId)?.[1] || "";
+            if (!existing) {
+              state.roundHistory.push({
+                round: srvRound.round,
+                prompt: srvRound.prompt,
+                myImg: srvMy,
+                partnerImg: srvPartner || srvMy
+              });
+            } else {
+              if (srvMy) existing.myImg = srvMy;
+              if (srvPartner) existing.partnerImg = srvPartner;
+            }
+          });
+          if (state.stage === "match_complete") {
+            renderRecapGallery();
+          }
+        }
+
         if (msg.state.stage && msg.state.stage !== "lobby") {
           updateDrawingHeader();
           showStage(msg.state.stage);
@@ -669,6 +691,25 @@
     if (type === "REMOTE_DRAW_CLEAR") {
       state.partnerStrokes = [];
       clearPartnerCanvas();
+      return;
+    }
+
+    if (type === "SYNC_ROUND_ARTWORK") {
+      const roundNum = Number(msg.round);
+      let r = state.roundHistory.find(item => item.round === roundNum);
+      if (!r) {
+        r = { round: roundNum, prompt: state.currentPrompt, myImg: "", partnerImg: msg.image };
+        state.roundHistory.push(r);
+      } else {
+        r.partnerImg = msg.image;
+      }
+
+      if (state.stage === "round_review" && (state.currentRound === roundNum || !state.currentRound)) {
+        if (el.reviewPartnerImg) el.reviewPartnerImg.src = msg.image;
+      }
+      if (state.stage === "match_complete") {
+        renderRecapGallery();
+      }
       return;
     }
 
@@ -1029,69 +1070,116 @@
   // --- Round & Match Completion ---
   function onRoundCompleted(data) {
     if (isDrawing) endStroke();
+    const roundNum = data?.round || state.currentRound;
     const myImg = el.myCanvas ? el.myCanvas.toDataURL("image/png") : "";
     const partnerImg = el.partnerCanvas ? el.partnerCanvas.toDataURL("image/png") : "";
 
-    state.roundHistory.push({
-      round: data.round || state.currentRound,
-      prompt: data.historyItem?.prompt || state.currentPrompt,
-      myImg,
-      partnerImg: partnerImg || myImg
-    });
+    let existing = state.roundHistory.find(r => r.round === roundNum);
+    if (!existing) {
+      existing = {
+        round: roundNum,
+        prompt: data?.historyItem?.prompt || state.currentPrompt,
+        myImg,
+        partnerImg: partnerImg || myImg
+      };
+      state.roundHistory.push(existing);
+    } else {
+      if (myImg) existing.myImg = myImg;
+      if (partnerImg) existing.partnerImg = partnerImg;
+    }
+
+    if (myImg && !state.isSolo) {
+      sendMsg("SUBMIT_ROUND_ARTWORK", { round: roundNum, image: myImg });
+    }
 
     if (el.reviewPromptText) {
-      el.reviewPromptText.textContent = `Draw: ${data.historyItem?.prompt || state.currentPrompt}`;
+      el.reviewPromptText.textContent = `Draw: ${existing.prompt}`;
     }
-    if (el.reviewMyImg) el.reviewMyImg.src = myImg;
-    if (el.reviewPartnerImg) el.reviewPartnerImg.src = partnerImg || myImg;
+    if (el.reviewMyName) el.reviewMyName.textContent = state.myName || "You";
+    if (el.reviewPartnerName) el.reviewPartnerName.textContent = state.partnerName || "Partner";
+    if (el.reviewMyImg) el.reviewMyImg.src = existing.myImg;
+    if (el.reviewPartnerImg) el.reviewPartnerImg.src = existing.partnerImg || existing.myImg;
 
     showStage("round_review");
   }
 
-  function onMatchCompleted() {
+  function renderRecapGallery() {
+    if (!el.recapGallery) return;
+    el.recapGallery.innerHTML = "";
+    state.roundHistory.sort((a, b) => a.round - b.round).forEach(r => {
+      const row = document.createElement("div");
+      row.className = "draw-recap-round-row";
+      row.innerHTML = `
+        <div class="draw-recap-prompt-label">Round ${r.round}: "${r.prompt}"</div>
+        <div class="draw-recap-drawings">
+          <div class="draw-review-card">
+            <div class="draw-review-card-header">
+              <span class="draw-review-drawer-name">${state.myName || "You"}</span>
+              <span class="draw-pad-badge pink">Pad 1</span>
+            </div>
+            <div class="draw-review-canvas-box">
+              <img src="${r.myImg || ""}" alt="Drawing 1" />
+            </div>
+          </div>
+          <div class="draw-review-card">
+            <div class="draw-review-card-header">
+              <span class="draw-review-drawer-name">${state.partnerName || "Partner"}</span>
+              <span class="draw-pad-badge blue">Pad 2</span>
+            </div>
+            <div class="draw-review-canvas-box">
+              <img src="${r.partnerImg || r.myImg || ""}" alt="Drawing 2" />
+            </div>
+          </div>
+        </div>
+      `;
+      el.recapGallery.appendChild(row);
+    });
+  }
+
+  function onMatchCompleted(data) {
     if (isDrawing) endStroke();
+    const roundNum = state.currentRound;
     const myImg = el.myCanvas ? el.myCanvas.toDataURL("image/png") : "";
     const partnerImg = el.partnerCanvas ? el.partnerCanvas.toDataURL("image/png") : "";
 
-    state.roundHistory.push({
-      round: state.currentRound,
-      prompt: state.currentPrompt,
-      myImg,
-      partnerImg: partnerImg || myImg
-    });
-
-    if (el.recapGallery) {
-      el.recapGallery.innerHTML = "";
-      state.roundHistory.forEach(r => {
-        const row = document.createElement("div");
-        row.className = "draw-recap-round-row";
-        row.innerHTML = `
-          <div class="draw-recap-prompt-label">Round ${r.round}: "${r.prompt}"</div>
-          <div class="draw-recap-drawings">
-            <div class="draw-review-card">
-              <div class="draw-review-card-header">
-                <span class="draw-review-drawer-name">${state.myName}</span>
-                <span class="draw-pad-badge pink">Pad 1</span>
-              </div>
-              <div class="draw-review-canvas-box">
-                <img src="${r.myImg}" alt="Drawing 1" />
-              </div>
-            </div>
-            <div class="draw-review-card">
-              <div class="draw-review-card-header">
-                <span class="draw-review-drawer-name">${state.partnerName}</span>
-                <span class="draw-pad-badge blue">Pad 2</span>
-              </div>
-              <div class="draw-review-canvas-box">
-                <img src="${r.partnerImg}" alt="Drawing 2" />
-              </div>
-            </div>
-          </div>
-        `;
-        el.recapGallery.appendChild(row);
+    if (data?.roundHistory && Array.isArray(data.roundHistory)) {
+      data.roundHistory.forEach(srvRound => {
+        let existing = state.roundHistory.find(r => r.round === srvRound.round);
+        const srvMy = srvRound.artwork?.[state.participantId] || "";
+        const srvPartner = Object.entries(srvRound.artwork || {}).find(([id]) => id !== state.participantId)?.[1] || "";
+        if (!existing) {
+          state.roundHistory.push({
+            round: srvRound.round,
+            prompt: srvRound.prompt,
+            myImg: srvMy,
+            partnerImg: srvPartner || srvMy
+          });
+        } else {
+          if (srvMy) existing.myImg = srvMy;
+          if (srvPartner) existing.partnerImg = srvPartner;
+        }
       });
     }
 
+    let existing = state.roundHistory.find(r => r.round === roundNum);
+    if (!existing) {
+      existing = {
+        round: roundNum,
+        prompt: state.currentPrompt,
+        myImg,
+        partnerImg: partnerImg || myImg
+      };
+      state.roundHistory.push(existing);
+    } else {
+      if (myImg) existing.myImg = myImg;
+      if (partnerImg && !existing.partnerImg) existing.partnerImg = partnerImg;
+    }
+
+    if (myImg && !state.isSolo) {
+      sendMsg("SUBMIT_ROUND_ARTWORK", { round: roundNum, image: myImg });
+    }
+
+    renderRecapGallery();
     showStage("match_complete");
   }
 
@@ -1122,50 +1210,49 @@
     let currentY = headerH;
     let pending = 0;
 
-    state.roundHistory.forEach((r) => {
+    const checkDone = () => {
+      if (--pending === 0) {
+        const link = document.createElement("a");
+        link.download = `our-drawings-${Date.now()}.png`;
+        link.href = offCanvas.toDataURL("image/png");
+        link.click();
+      }
+    };
+
+    const padW = 340;
+    const padH = 240;
+
+    state.roundHistory.sort((a, b) => a.round - b.round).forEach((r) => {
       ctx.fillStyle = "#18181b";
       ctx.font = "bold 16px 'Outfit', sans-serif";
       ctx.textAlign = "left";
       ctx.fillText(`Round ${r.round}: "${r.prompt}"`, 40, currentY + 24);
 
+      const yBox = currentY + 40;
       const img1 = new Image();
       const img2 = new Image();
       pending += 2;
 
-      const checkDone = () => {
-        if (--pending === 0) {
-          const link = document.createElement("a");
-          link.download = `our-drawings-${Date.now()}.png`;
-          link.href = offCanvas.toDataURL("image/png");
-          link.click();
+      const drawBox = (img, src, x) => {
+        if (!src) {
+          checkDone();
+          return;
         }
+        img.onload = () => {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(x, yBox, padW, padH);
+          ctx.strokeStyle = "#18181b";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x, yBox, padW, padH);
+          ctx.drawImage(img, x, yBox, padW, padH);
+          checkDone();
+        };
+        img.onerror = () => checkDone();
+        img.src = src;
       };
 
-      const padW = 340;
-      const padH = 240;
-      const yBox = currentY + 40;
-
-      img1.onload = () => {
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(40, yBox, padW, padH);
-        ctx.strokeStyle = "#18181b";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(40, yBox, padW, padH);
-        ctx.drawImage(img1, 40, yBox, padW, padH);
-        checkDone();
-      };
-      img1.src = r.myImg;
-
-      img2.onload = () => {
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(420, yBox, padW, padH);
-        ctx.strokeStyle = "#18181b";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(420, yBox, padW, padH);
-        ctx.drawImage(img2, 420, yBox, padW, padH);
-        checkDone();
-      };
-      img2.src = r.partnerImg;
+      drawBox(img1, r.myImg, 40);
+      drawBox(img2, r.partnerImg || r.myImg, 420);
 
       currentY += roundH;
     });

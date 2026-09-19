@@ -328,10 +328,12 @@ class DrawRoomServer {
   }
 
   onRoundTimeExpired(room) {
+    const roundNum = room.state.currentRound;
     const roundItem = {
-      round: room.state.currentRound,
+      round: roundNum,
       prompt: room.state.currentPrompt,
       pack: room.state.selectedPack,
+      artwork: (room.state.artwork && room.state.artwork[roundNum]) ? { ...room.state.artwork[roundNum] } : {},
       strokes: JSON.parse(JSON.stringify(room.state.strokes || {}))
     };
     if (!Array.isArray(room.state.roundHistory)) room.state.roundHistory = [];
@@ -775,6 +777,33 @@ class DrawRoomServer {
       return;
     }
 
+    if (type === "SUBMIT_ROUND_ARTWORK") {
+      const roundNum = Number(payload?.round) || currentRoom.state.currentRound;
+      const image = typeof payload?.image === "string" ? payload.image : "";
+      if (image && roundNum) {
+        if (!currentRoom.state.artwork) currentRoom.state.artwork = {};
+        if (!currentRoom.state.artwork[roundNum]) currentRoom.state.artwork[roundNum] = {};
+        currentRoom.state.artwork[roundNum][participantId] = image;
+
+        if (Array.isArray(currentRoom.state.roundHistory)) {
+          const item = currentRoom.state.roundHistory.find(r => r.round === roundNum);
+          if (item) {
+            if (!item.artwork) item.artwork = {};
+            item.artwork[participantId] = image;
+          }
+        }
+
+        this.scheduleSave();
+        this.broadcast(currentRoom, {
+          type: "SYNC_ROUND_ARTWORK",
+          round: roundNum,
+          drawerId: participantId,
+          image
+        }, sender);
+      }
+      return;
+    }
+
     // 9. Poke Action
     if (type === "SEND_POKE") {
       const emoji = sanitizeStr(payload?.emoji, 10) || "👉";
@@ -917,7 +946,7 @@ class DrawRoomServer {
             if (!reconnected) {
               this.broadcast(currentRoom, {
                 type: "PARTNER_LEFT",
-                partnerId,
+                partnerId: participantId,
                 partnerName: participantName,
                 remainingCount: currentRoom.participants.size + (currentRoom.sseClients?.size || 0)
               });

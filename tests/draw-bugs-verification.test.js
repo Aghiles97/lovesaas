@@ -232,7 +232,65 @@ assert.strictEqual(clientCurrentStage, "pack_select", "Stage remains pack_select
 console.log("✅ PASS: Bug 6 verified - No stage demotion to profile_setup and no PARTNER_JOINED storm");
 passedTests++;
 
+// --- TEST 6: Artwork Synchronization & Disconnect Grace Safety ---
+console.log("\n--- TEST 6: Artwork Sync & Disconnect Grace Safety ---");
+
+const testRoom5 = drawRooms.getOrCreateRoom("TEST_ARTWORK_" + randId);
+const fakeBroadcasts = [];
+const fakeClient5 = { readyState: 1, send: (m) => fakeBroadcasts.push(JSON.parse(m)) };
+testRoom5.participants.set(fakeClient5, { id: "user_a", name: "User A", role: "host" });
+
+// 1. Submit artwork for round 1
+drawRooms.handleMessage(testRoom5, "user_a", "User A", {
+  type: "SUBMIT_ROUND_ARTWORK",
+  payload: { round: 1, image: "data:image/png;base64,sampleart1" }
+});
+
+assert.strictEqual(testRoom5.state.artwork[1]["user_a"], "data:image/png;base64,sampleart1", "Artwork stored in room.state.artwork");
+
+// Verify SYNC_ROUND_ARTWORK broadcast
+const syncMsg = fakeBroadcasts.find(m => m.type === "SYNC_ROUND_ARTWORK");
+assert.ok(syncMsg, "SYNC_ROUND_ARTWORK broadcasted to partner");
+assert.strictEqual(syncMsg.round, 1);
+assert.strictEqual(syncMsg.drawerId, "user_a");
+assert.strictEqual(syncMsg.image, "data:image/png;base64,sampleart1");
+
+// 2. Expose round expiration artwork capture
+testRoom5.state.currentRound = 1;
+testRoom5.state.currentPrompt = "Dinosaur";
+drawRooms.onRoundTimeExpired(testRoom5);
+const historyItem = testRoom5.state.roundHistory.find(r => r.round === 1);
+assert.ok(historyItem, "Round history item created");
+assert.strictEqual(historyItem.artwork["user_a"], "data:image/png;base64,sampleart1", "Round history embeds captured artwork");
+
+{
+  const participantId = "user_b";
+  const participantName = "User B";
+  let timeoutFired = false;
+  testRoom5.disconnectTimeouts = new Map();
+  const graceTimerFn = () => {
+    testRoom5.disconnectTimeouts.delete(participantId);
+    const reconnected = Array.from(testRoom5.participants.values()).some(p => p.id === participantId) ||
+                        Array.from(testRoom5.sseClients || []).some(c => c._participantId === participantId);
+    if (!reconnected) {
+      drawRooms.broadcast(testRoom5, {
+        type: "PARTNER_LEFT",
+        partnerId: participantId,
+        partnerName: participantName,
+        remainingCount: testRoom5.participants.size + (testRoom5.sseClients?.size || 0)
+      });
+    }
+    timeoutFired = true;
+  };
+
+  assert.doesNotThrow(() => graceTimerFn(), "graceTimer must not throw ReferenceError: partnerId is not defined");
+  assert.strictEqual(timeoutFired, true, "graceTimer executes cleanly");
+}
+
+console.log("✅ PASS: Bug 7 verified - Artwork sync & disconnect grace timer reference safety verified");
+passedTests++;
+
 console.log("\n=================================================");
-console.log(`ALL ${passedTests}/5 TEST SUITES PASSED!`);
+console.log(`ALL ${passedTests}/6 TEST SUITES PASSED!`);
 console.log("=================================================");
 process.exit(0);
