@@ -44,7 +44,7 @@ button, input, select, textarea {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 24px 16px 80px;
+  padding: 20px 8px 60px;
   position: relative;
   overflow-y: visible;
 }
@@ -1182,8 +1182,8 @@ body:has(#stageProfile.active) {
     align-items: center;
   }
   .draw-canvases-grid.view-split .draw-pad-card {
-    width: min(520px, calc(100vw - 32px));
-    height: min(390px, calc((100vw - 32px) * 0.75));
+    width: min(520px, calc(100vw - 16px));
+    height: min(390px, calc((100vw - 16px) * 0.75));
     max-height: 40vh;
   }
 }
@@ -1217,8 +1217,8 @@ body:has(#stageProfile.active) {
 
 @media (max-width: 600px) {
   .draw-pad-card {
-    width: calc(100vw - 32px);
-    height: calc((100vw - 32px) * 0.75);
+    width: calc(100vw - 16px);
+    height: calc((100vw - 16px) * 0.75);
   }
 }
 
@@ -1601,7 +1601,8 @@ body:has(#stageProfile.active) {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
   width: 100%;
 }
 
@@ -1797,8 +1798,8 @@ body.draw-solo-mode .draw-canvases-grid {
 }
 
 body.draw-solo-mode .draw-canvases-grid .draw-pad-card {
-  width: min(580px, calc(100vw - 32px)) !important;
-  height: min(435px, calc((100vw - 32px) * 0.75)) !important;
+  width: min(580px, calc(100vw - 16px)) !important;
+  height: min(435px, calc((100vw - 16px) * 0.75)) !important;
   max-height: 52vh !important;
   margin: 0 auto !important;
 }

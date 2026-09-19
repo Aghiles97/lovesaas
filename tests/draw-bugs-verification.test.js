@@ -470,7 +470,18 @@ assert(jsSrc.includes('classList.toggle("draw-solo-mode"'), "showStage toggles d
 console.log("✅ PASS: Test 10 verified - Solo mode isolation, prompt selection, round progression, and exit controls verified");
 passedTests++;
 
+// --- TEST 11: Button Wrap, Canvas Margin, & Partner Nickname Sync ---
+console.log("\n--- TEST 11: Button Wrap, Canvas Margin, & Partner Nickname Sync ---");
+assert(htmlSrc.includes('class="draw-exit-bottom-wrap"'), "Exit button wrapped on its own line");
+assert(cssSrc.includes("padding: 20px 8px 60px;"), "Draw app horizontal padding reduced to 8px");
+assert(cssSrc.includes("calc(100vw - 16px)"), "Pad card margin width adjusted to 16px");
+assert(jsSrc.includes("state.partnerName = prof.name;"), "Partner profile name synced on round start");
+assert(jsSrc.includes("remoteCursorTag"), "Remote cursor tag element synced");
+
+console.log("✅ PASS: Test 11 verified - Button wrap, canvas margins, and partner nickname sync verified");
+passedTests++;
+
 console.log("\n=================================================");
-console.log(`ALL ${passedTests}/10 TEST SUITES PASSED!`);
+console.log(`ALL ${passedTests}/11 TEST SUITES PASSED!`);
 console.log("=================================================");
 process.exit(0);

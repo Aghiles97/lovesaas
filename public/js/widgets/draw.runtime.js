@@ -348,6 +348,7 @@
           redrawAllStrokes();
         });
       }
+      updateBadges();
     }
   }
 
@@ -503,31 +504,29 @@
 
     if (type === "ROOM_JOINED") {
       state.role = msg.role || state.role;
-      if (msg.participants) {
+      if (msg.state?.profiles) {
+        for (const [pid, prof] of Object.entries(msg.state.profiles)) {
+          if (pid !== state.participantId && prof?.name) {
+            state.partnerName = prof.name;
+            if (prof.sex) state.partnerSex = prof.sex;
+            state.partnerReady = !!prof.ready;
+          } else if (pid === state.participantId && prof?.name) {
+            state.myName = prof.name;
+            if (prof.sex) state.mySex = prof.sex;
+            state.myReady = !!prof.ready;
+          }
+        }
+      } else if (msg.participants) {
         const other = msg.participants.find(p => p.id !== state.participantId);
-        if (other && other.name) {
+        if (other && other.name && !other.name.startsWith("Partner")) {
           state.partnerName = other.name;
-          updateBadges();
         }
       }
 
       // Hydrate state if reconnecting to active session
       if (msg.state) {
-        if (msg.state.profiles) {
-          if (msg.state.profiles[state.participantId]) {
-            state.myName = msg.state.profiles[state.participantId].name || state.myName;
-            state.mySex = msg.state.profiles[state.participantId].sex || state.mySex;
-            state.myReady = !!msg.state.profiles[state.participantId].ready;
-          }
-          const otherId = Object.keys(msg.state.profiles).find(id => id !== state.participantId);
-          if (otherId && msg.state.profiles[otherId]) {
-            state.partnerName = msg.state.profiles[otherId].name || state.partnerName;
-            state.partnerSex = msg.state.profiles[otherId].sex || state.partnerSex;
-            state.partnerReady = !!msg.state.profiles[otherId].ready;
-          }
-          updateBadges();
-          updateProfileReadyUI();
-        }
+        updateBadges();
+        updateProfileReadyUI();
 
         if (msg.state.selectedPack) state.selectedPack = msg.state.selectedPack;
         if (msg.state.roundsTotal) state.roundsTotal = msg.state.roundsTotal;
@@ -685,6 +684,18 @@
     }
 
     if (type === "MATCH_STARTED" || type === "ROUND_STARTED") {
+      if (msg.profiles) {
+        for (const [pid, prof] of Object.entries(msg.profiles)) {
+          if (pid !== state.participantId && prof?.name) {
+            state.partnerName = prof.name;
+            if (prof.sex) state.partnerSex = prof.sex;
+          } else if (pid === state.participantId && prof?.name) {
+            state.myName = prof.name;
+            if (prof.sex) state.mySex = prof.sex;
+          }
+        }
+      }
+      updateBadges();
       state.currentRound = msg.currentRound;
       state.roundsTotal = msg.roundsTotal;
       state.secondsPerDrawing = msg.secondsPerDrawing;
@@ -750,7 +761,7 @@
         }
       }
       const tag = document.getElementById("remoteCursorTag");
-      if (tag) tag.textContent = msg.senderName || state.partnerName || "Partner";
+      if (tag) tag.textContent = (msg.senderName && !msg.senderName.startsWith("Partner")) ? msg.senderName : (state.partnerName || "Partner");
       return;
     }
 
@@ -814,6 +825,10 @@
     }
 
     if (type === "REMOTE_DRAW_STROKE") {
+      if (msg.drawerName && !msg.drawerName.startsWith("Partner") && msg.drawerName !== state.partnerName) {
+        state.partnerName = msg.drawerName;
+        updateBadges();
+      }
       state.partnerStrokes.push(msg.stroke);
       drawRemoteStroke(msg.stroke);
       return;
@@ -900,6 +915,8 @@
     if (el.tabPartnerLabel) el.tabPartnerLabel.textContent = `${partnerDisplay}'s Pad`;
     if (el.reviewMyName) el.reviewMyName.textContent = myDisplay;
     if (el.reviewPartnerName) el.reviewPartnerName.textContent = partnerDisplay;
+    const cursorTag = document.getElementById("remoteCursorTag");
+    if (cursorTag) cursorTag.textContent = partnerDisplay;
   }
 
   function updateProfileReadyUI() {

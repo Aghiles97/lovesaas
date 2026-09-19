@@ -475,6 +475,7 @@ class DrawRoomServer {
   handleMessage(currentRoom, participantId, participantName, data, sender = null) {
     if (!currentRoom) return;
     currentRoom.lastActivity = Date.now();
+    participantName = currentRoom.state.profiles?.[participantId]?.name || data.senderName || participantName;
     const { type, payload } = data;
 
     // 0. Live Remote Cursor Move & Click
@@ -657,7 +658,8 @@ class DrawRoomServer {
         timerRunning: false,
         timerRemaining: currentRoom.state.secondsPerDrawing,
         actorId: participantId,
-        actorName: participantName
+        actorName: participantName,
+        profiles: currentRoom.state.profiles
       });
       return;
     }
@@ -714,7 +716,8 @@ class DrawRoomServer {
         timerRunning: false,
         timerRemaining: currentRoom.state.secondsPerDrawing,
         actorId: participantId,
-        actorName: participantName
+        actorName: participantName,
+        profiles: currentRoom.state.profiles
       });
       return;
     }
@@ -954,6 +957,9 @@ class DrawRoomServer {
             return;
           }
 
+          if (currentRoom.state.profiles?.[participantId]?.name) {
+            participantName = currentRoom.state.profiles[participantId].name;
+          }
           this.handleMessage(currentRoom, participantId, participantName, data, ws);
         } catch (err) {
           console.warn("Draw WS Message Parse Error:", err.message);
