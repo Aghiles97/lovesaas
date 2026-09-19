@@ -87,10 +87,18 @@ function resolveTenantSlug(req, parsedUrl) {
   return "demo";
 }
 
-function parseJsonBody(req) {
+function parseJsonBody(req, maxBytes = 2 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
     let body = "";
-    req.on("data", chunk => { body += chunk; });
+    let received = 0;
+    req.on("data", chunk => {
+      received += chunk.length;
+      if (received > maxBytes) {
+        req.destroy();
+        return reject(new Error("Payload Too Large"));
+      }
+      body += chunk;
+    });
     req.on("end", () => {
       try {
         resolve(body ? JSON.parse(body) : {});

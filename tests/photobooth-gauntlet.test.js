@@ -422,6 +422,17 @@ assert(gate24Runtime.includes('statusText = (msg.participantCount >= 2) ? "Conne
 assert(gate24Css.includes(".ldr-exit-confirm-modal") && gate24Css.includes(".btn-exit-leave"), "CSS styles exit confirmation warning modal");
 assert(gate24Css.includes(".ldr-audio-indicator") && gate24Css.includes("display: none !important"), "CSS hides bulky audio badge for clean green dot mobile ergonomics");
 
+// --- GATE 25: Security Hardening, Room Persistence & Snapshot Hydration ---
+console.log("\n--- GATE 25: Security Hardening, Room Persistence & Snapshot Hydration ---");
+const gate25Server = fs.readFileSync(path.resolve(__dirname, "../server/server.js"), "utf8");
+const gate25Room = fs.readFileSync(path.resolve(__dirname, "../server/photobooth-room.js"), "utf8");
+const gate25Runtime = fs.readFileSync(path.resolve(__dirname, "../public/js/widgets/photobooth.runtime.js"), "utf8");
+
+assert(gate25Server.includes("maxBytes = 2 * 1024 * 1024") && gate25Server.includes("Payload Too Large"), "server.js parseJsonBody enforces 2MB streaming threshold against OOM DoS");
+assert(gate25Room.includes("loadFromDisk()") && gate25Room.includes("scheduleSave()"), "photobooth-room.js implements disk persistence for active rooms");
+assert(gate25Room.includes("currentRoom.state.candidatePhotos[idx] = img"), "photobooth-room.js caches candidate snapshots in room state");
+assert(gate25Runtime.includes("state.candidatePhotos") && gate25Runtime.includes("state.selectedPhotos"), "Runtime hydrations candidate and selected photos on ROOM_JOINED");
+
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");
 if (passedChecks === totalChecks) {

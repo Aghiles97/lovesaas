@@ -394,6 +394,19 @@
             this.session.paintStrokes = [...state.strokes];
             this.session.redrawPaintCanvas();
           }
+          if (Array.isArray(state.candidatePhotos) && state.candidatePhotos.length > 0) {
+            this.session.candidatePhotos = [...state.candidatePhotos];
+            this.session.capturedPhotos = [...state.candidatePhotos];
+            if (this.session.currentLdrStage === "select") {
+              this.session.renderCandidateCards();
+            }
+          }
+          if (Array.isArray(state.selectedPhotos) && state.selectedPhotos.length > 0) {
+            this.session.selectedCandidateIndices = [...state.selectedPhotos];
+            if (this.session.currentLdrStage === "select") {
+              this.session.renderCandidateCards();
+            }
+          }
         }
         const syncBadge = document.getElementById("ldrSyncBadge");
         if (syncBadge) syncBadge.style.display = "inline-flex";

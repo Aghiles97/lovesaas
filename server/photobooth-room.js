@@ -1,3 +1,7 @@
+const fs = require("fs");
+const path = require("path");
+const DATA_FILE = path.join(__dirname, "../data/photobooth_rooms.json");
+
 let WebSocketServer = null;
 try {
   ({ WebSocketServer } = require("ws"));
@@ -11,7 +15,74 @@ const sanitizeStr = (s, len = 80) => String(s || "").replace(/<[^>]*>/g, "").sli
 class PhotoboothRoomServer {
   constructor() {
     this.rooms = new Map();
+    this.loadFromDisk();
     this.cleanupInterval = setInterval(() => this.cleanupExpiredRooms(), 10 * 60 * 1000).unref();
+  }
+
+  loadFromDisk() {
+    try {
+      if (fs.existsSync(DATA_FILE)) {
+        const raw = fs.readFileSync(DATA_FILE, "utf8");
+        const list = JSON.parse(raw);
+        const now = Date.now();
+        const TTL = 3 * 60 * 60 * 1000;
+        if (Array.isArray(list)) {
+          for (const item of list) {
+            if (item?.code && (now - Number(item.lastActivity || 0) < TTL)) {
+              this.rooms.set(item.code, {
+                code: item.code,
+                createdAt: Number(item.createdAt) || now,
+                lastActivity: Number(item.lastActivity) || now,
+                participants: new Map(),
+                sseClients: new Set(),
+                state: {
+                  stage: "lobby",
+                  setupSubStep: 1,
+                  format: "classic_3cut",
+                  style: "style_cyan_stars",
+                  filter: "vintage_90s",
+                  caption: "Together Forever ♡",
+                  timerSeconds: 3,
+                  selectedPhotos: [],
+                  candidatePhotos: [],
+                  retryCount: 0,
+                  maxRetries: 1,
+                  strokes: [],
+                  stickers: [],
+                  overlay: "none",
+                  ...(item.state || {})
+                }
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  scheduleSave() {
+    if (this.saveTimer) return;
+    this.saveTimer = setTimeout(() => {
+      this.saveTimer = null;
+      try {
+        const now = Date.now();
+        const TTL = 3 * 60 * 60 * 1000;
+        const out = [];
+        for (const [code, room] of this.rooms.entries()) {
+          if (now - (room.lastActivity || 0) < TTL) {
+            out.push({
+              code,
+              createdAt: room.createdAt,
+              lastActivity: room.lastActivity,
+              state: room.state
+            });
+          }
+        }
+        const dir = path.dirname(DATA_FILE);
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(DATA_FILE, JSON.stringify(out));
+      } catch (e) {}
+    }, 1000).unref();
   }
 
   getOrCreateRoom(code) {
@@ -32,6 +103,7 @@ class PhotoboothRoomServer {
           caption: "Together Forever ♡",
           timerSeconds: 3,
           selectedPhotos: [],
+          candidatePhotos: [],
           retryCount: 0,
           maxRetries: 1,
           strokes: [],
@@ -39,6 +111,7 @@ class PhotoboothRoomServer {
           overlay: "none"
         }
       });
+      this.scheduleSave();
     }
     const room = this.rooms.get(roomCode);
     if (!room.sseClients) room.sseClients = new Set();
@@ -49,11 +122,14 @@ class PhotoboothRoomServer {
   cleanupExpiredRooms() {
     const now = Date.now();
     const TTL = 3 * 60 * 60 * 1000;
+    let changed = false;
     for (const [code, room] of this.rooms.entries()) {
       if (room.participants.size === 0 && (!room.sseClients || room.sseClients.size === 0) && now - room.lastActivity > TTL) {
         this.rooms.delete(code);
+        changed = true;
       }
     }
+    if (changed) this.scheduleSave();
   }
 
   broadcast(room, data, sender = null) {
@@ -192,9 +268,11 @@ class PhotoboothRoomServer {
       currentRoom.state.filter = "natural";
       currentRoom.state.overlay = "none";
       currentRoom.state.selectedPhotos = [];
+      currentRoom.state.candidatePhotos = [];
       currentRoom.state.strokes = [];
       currentRoom.state.stickers = [];
       currentRoom.state.retryCount = 0;
+      this.scheduleSave();
       this.broadcastAll(currentRoom, {
         type: "NEW_SESSION_SYNC",
         stage: "setup",
@@ -216,42 +294,43 @@ class PhotoboothRoomServer {
           currentRoom.state.filter = "natural";
           currentRoom.state.overlay = "none";
           currentRoom.state.selectedPhotos = [];
+          currentRoom.state.candidatePhotos = [];
           currentRoom.state.strokes = [];
           currentRoom.state.stickers = [];
           currentRoom.state.retryCount = 0;
         }
         currentRoom.state.stage = stage;
+        this.scheduleSave();
         this.broadcastAll(currentRoom, {
           type: "STAGE_CHANGED",
           stage,
-          setupSubStep: currentRoom.state.setupSubStep,
           actorId: participantId,
-          actorName: participantName
+          actorName: participantName,
+          state: currentRoom.state
         });
       }
       return;
     }
 
     if (type === "ACTION_CLICK") {
-      const { action, field, value } = payload || {};
-      if (field && ALLOWED_FIELDS.has(field) && value !== undefined) {
-        if (field === "setupSubStep") {
-          currentRoom.state[field] = Math.min(3, Math.max(1, parseInt(value, 10) || 1));
-        } else if (field === "timerSeconds") {
-          currentRoom.state[field] = Math.max(0, parseInt(value, 10) || 0);
+      const field = payload?.field;
+      const value = payload?.value;
+      if (ALLOWED_FIELDS.has(field) && !["__proto__", "constructor", "prototype"].includes(field)) {
+        if (field === "setupSubStep" || field === "timerSeconds") {
+          currentRoom.state[field] = Number(value) || (field === "timerSeconds" ? 3 : 1);
         } else {
-          currentRoom.state[field] = (typeof value === "string") ? sanitizeStr(value, field === "caption" ? 80 : 32) : value;
+          currentRoom.state[field] = sanitizeStr(value, 40);
         }
+        this.scheduleSave();
+        this.broadcast(currentRoom, {
+          type: "ACTION_APPLIED",
+          action: payload?.action || "UPDATE_FIELD",
+          field,
+          value: currentRoom.state[field],
+          senderId: participantId,
+          senderName: participantName
+        }, sender);
       }
-      this.broadcastAll(currentRoom, {
-        type: "ACTION_APPLIED",
-        action: sanitizeStr(action, 32),
-        field: ALLOWED_FIELDS.has(field) ? field : undefined,
-        value: currentRoom.state[field],
-        winnerId: participantId,
-        winnerName: participantName,
-        timestamp: Date.now()
-      });
       return;
     }
 
@@ -267,6 +346,7 @@ class PhotoboothRoomServer {
     if (type === "BURST_START_REQ") {
       const timerSeconds = (payload?.timerSeconds !== undefined) ? (parseInt(payload.timerSeconds, 10) || 0) : (currentRoom.state.timerSeconds ?? 3);
       currentRoom.state.timerSeconds = timerSeconds;
+      this.scheduleSave();
       this.broadcastAll(currentRoom, {
         type: "BURST_START_SYNC",
         initiatorId: participantId,
@@ -278,11 +358,20 @@ class PhotoboothRoomServer {
     }
 
     if (type === "PHOTO_SNAPSHOT") {
+      const idx = Number(payload?.photoIndex);
+      const img = payload?.imageData;
+      if (!Array.isArray(currentRoom.state.candidatePhotos)) {
+        currentRoom.state.candidatePhotos = [];
+      }
+      if (Number.isInteger(idx) && idx >= 0 && idx < 20 && typeof img === "string" && img.startsWith("data:image/") && img.length < 1500000) {
+        currentRoom.state.candidatePhotos[idx] = img;
+        this.scheduleSave();
+      }
       this.broadcast(currentRoom, {
         type: "REMOTE_PHOTO_SNAPSHOT",
         senderId: participantId,
-        photoIndex: payload?.photoIndex,
-        imageData: payload?.imageData
+        photoIndex: idx,
+        imageData: img
       }, sender);
       return;
     }
@@ -292,6 +381,7 @@ class PhotoboothRoomServer {
       currentRoom.state.selectedPhotos = rawIndices
         .filter(n => Number.isInteger(n) && n >= 0 && n <= 12)
         .slice(0, 9);
+      this.scheduleSave();
       this.broadcastAll(currentRoom, {
         type: "PHOTO_SELECTION_UPDATED",
         selectedIndices: currentRoom.state.selectedPhotos,
@@ -303,6 +393,7 @@ class PhotoboothRoomServer {
     if (type === "REQ_RETRY_BURST") {
       if (currentRoom.state.retryCount < currentRoom.state.maxRetries) {
         currentRoom.state.retryCount += 1;
+        this.scheduleSave();
         this.broadcastAll(currentRoom, {
           type: "RETRY_BURST_APPROVED",
           retryCount: currentRoom.state.retryCount,
@@ -331,6 +422,7 @@ class PhotoboothRoomServer {
         };
         currentRoom.state.strokes.push(safeStroke);
         if (currentRoom.state.strokes.length > 500) currentRoom.state.strokes.shift();
+        this.scheduleSave();
         this.broadcast(currentRoom, {
           type: "REMOTE_PAINT_STROKE",
           stroke: safeStroke,
@@ -342,12 +434,14 @@ class PhotoboothRoomServer {
 
     if (type === "PAINT_CLEAR") {
       currentRoom.state.strokes = [];
+      this.scheduleSave();
       this.broadcastAll(currentRoom, { type: "PAINT_CLEARED" });
       return;
     }
 
     if (type === "PAINT_UNDO") {
       currentRoom.state.strokes.pop();
+      this.scheduleSave();
       this.broadcastAll(currentRoom, {
         type: "PAINT_STATE_RESET",
         strokes: currentRoom.state.strokes
@@ -368,6 +462,7 @@ class PhotoboothRoomServer {
         rot: Math.max(-360, Math.min(360, Number(s.rot) || 0))
       }));
       currentRoom.state.stickers = safeStickers;
+      this.scheduleSave();
       this.broadcast(currentRoom, {
         type: "REMOTE_STICKERS_SYNC",
         stickers: safeStickers,
@@ -379,6 +474,7 @@ class PhotoboothRoomServer {
     if (type === "SET_OVERLAY") {
       const overlay = sanitizeStr(payload?.overlay, 32) || "none";
       currentRoom.state.overlay = overlay;
+      this.scheduleSave();
       this.broadcast(currentRoom, {
         type: "REMOTE_OVERLAY_SYNC",
         overlay,
