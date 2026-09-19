@@ -564,7 +564,29 @@ assert.strictEqual(partnerJoinedMsg.partner.id, p2Id, "Broadcast identifies gues
 console.log("✅ PASS: Test 13 verified - Both sockets in participants map, host receives PARTNER_JOINED, stage advances to profile_setup");
 passedTests++;
 
+// --- TEST 14: Direct Source Checks for Fixes 1, 2, 3, 4 ---
+console.log("\n--- TEST 14: Verification of Fixes 1, 2, 3, 4 in Source Code ---");
+const drawRoomSrc = fs.readFileSync(path.join(__dirname, "../server/draw-room.js"), "utf8");
+const drawRuntimeSrc = fs.readFileSync(path.join(__dirname, "../public/js/widgets/draw.runtime.js"), "utf8");
+
+// Fix 1: ws registration in currentRoom.participants
+assert(drawRoomSrc.includes("currentRoom.participants.set(ws, {"), "Fix 1: ws registered in currentRoom.participants map");
+
+// Fix 2: Always send NEXT_ROUND in multiplayer mode
+assert(!drawRuntimeSrc.includes('if (state.currentRound >= state.roundsTotal) {\n          onMatchCompleted();\n        } else {\n          sendMsg("NEXT_ROUND");'), "Fix 2: Never skip sendMsg NEXT_ROUND on final round");
+
+// Fix 3: No partner artwork mirroring
+assert(!drawRuntimeSrc.includes("partnerImg: srvPartner || srvMy"), "Fix 3: No srvPartner || srvMy fallback in hydration");
+assert(!drawRuntimeSrc.includes("partnerImg: partnerImg || myImg"), "Fix 3: No partnerImg || myImg fallback in round/match complete");
+
+// Fix 4: Tab session isolation
+assert(drawRuntimeSrc.includes("id = sessionStorage.getItem(key);"), "Fix 4: sessionStorage used for per-tab isolation");
+assert(drawRuntimeSrc.includes("try { localStorage.removeItem(key); } catch (_) {}"), "Fix 4: localStorage legacy keys cleaned up");
+
+console.log("✅ PASS: Test 14 verified - Fixes 1, 2, 3, 4 verified cleanly in codebase");
+passedTests++;
+
 console.log("\n=================================================");
-console.log(`ALL ${passedTests}/13 TEST SUITES PASSED!`);
+console.log(`ALL ${passedTests}/14 TEST SUITES PASSED!`);
 console.log("=================================================");
 process.exit(0);

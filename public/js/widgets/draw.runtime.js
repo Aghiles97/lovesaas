@@ -571,7 +571,7 @@
                 round: srvRound.round,
                 prompt: srvRound.prompt,
                 myImg: srvMy,
-                partnerImg: srvPartner || srvMy
+                partnerImg: srvPartner || (state.isSolo ? srvMy : "")
               });
             } else {
               if (srvMy) existing.myImg = srvMy;
@@ -1346,7 +1346,7 @@
         round: roundNum,
         prompt: data?.historyItem?.prompt || state.currentPrompt,
         myImg,
-        partnerImg: partnerImg || myImg
+        partnerImg: partnerImg || (state.isSolo ? myImg : "")
       };
       state.roundHistory.push(existing);
     } else {
@@ -1364,7 +1364,7 @@
     if (el.reviewMyName) el.reviewMyName.textContent = state.myName || "You";
     if (el.reviewPartnerName) el.reviewPartnerName.textContent = state.partnerName || "Partner";
     if (el.reviewMyImg) el.reviewMyImg.src = existing.myImg;
-    if (el.reviewPartnerImg) el.reviewPartnerImg.src = existing.partnerImg || existing.myImg;
+    if (el.reviewPartnerImg) el.reviewPartnerImg.src = existing.partnerImg || (state.isSolo ? existing.myImg : "");
 
     if (el.btnNextRound) {
       const isFinal = roundNum >= state.roundsTotal;
@@ -1400,7 +1400,7 @@
               <span class="draw-pad-badge blue">Pad 2</span>
             </div>
             <div class="draw-review-canvas-box">
-              <img src="${r.partnerImg || r.myImg || ""}" alt="Drawing 2" />
+              <img src="${r.partnerImg || ""}" alt="Drawing 2" />
             </div>
           </div>` : ""}
         </div>
@@ -1425,7 +1425,7 @@
             round: srvRound.round,
             prompt: srvRound.prompt,
             myImg: srvMy,
-            partnerImg: srvPartner || srvMy
+            partnerImg: srvPartner || (state.isSolo ? srvMy : "")
           });
         } else {
           if (srvMy) existing.myImg = srvMy;
@@ -1440,7 +1440,7 @@
         round: roundNum,
         prompt: state.currentPrompt,
         myImg,
-        partnerImg: partnerImg || myImg
+        partnerImg: partnerImg || (state.isSolo ? myImg : "")
       };
       state.roundHistory.push(existing);
     } else {
@@ -1541,7 +1541,7 @@
         drawBox(img1, r.myImg, x1, state.myName || "You");
         const img2 = new Image();
         pending += 1;
-        drawBox(img2, r.partnerImg || r.myImg, x2, state.partnerName || "Partner");
+        drawBox(img2, r.partnerImg || "", x2, state.partnerName || "Partner");
       }
 
       currentY += roundH;
@@ -2019,11 +2019,7 @@
           onMatchCompleted();
         }
       } else {
-        if (state.currentRound >= state.roundsTotal) {
-          onMatchCompleted();
-        } else {
-          sendMsg("NEXT_ROUND");
-        }
+        sendMsg("NEXT_ROUND");
       }
     });
 
