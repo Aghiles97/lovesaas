@@ -91,9 +91,11 @@ assert(htmlContent.includes('ldr-inline-join-form'), "Inline join form present")
 assert(htmlContent.includes('ldr-join-input'), "Join code input uses ldr-join-input");
 assert(htmlContent.includes('ldr-pill-btn'), "Solo button uses ldr-pill-btn");
 
-// Verify View Switcher Tabs & Solo Practice
+// Verify View Switcher Tabs & Solo Practice & Remote Cursor
 assert(htmlContent.includes('id="padViewTabs"'), "padViewTabs present");
 assert(htmlContent.includes('id="btnPracticeSolo"'), "btnPracticeSolo present");
+assert(htmlContent.includes('id="drawRemoteCursor"'), "drawRemoteCursor element present");
+assert(htmlContent.includes('id="remoteCursorTag"'), "remoteCursorTag element present");
 
 console.log("✅ PASS: Gate 1 verified");
 passedGates++;
@@ -240,6 +242,17 @@ assert(pokeMsg, "Poke event broadcasted");
 assert.strictEqual(pokeMsg.emoji, "💖", "Poke emoji matches");
 assert.strictEqual(pokeMsg.senderId, "user_1", "Poke sender matches");
 
+// Test Remote Cursor Move
+drawRooms.handleMessage(testRoom, "user_1", "tella", {
+  type: "CURSOR_MOVE",
+  payload: { x: 0.42, y: 0.78 }
+});
+const cursorMsg = fakeMessages.find(m => m.type === "REMOTE_CURSOR");
+assert(cursorMsg, "Remote cursor event broadcasted");
+assert.strictEqual(cursorMsg.x, 0.42, "Cursor x coordinate matches");
+assert.strictEqual(cursorMsg.y, 0.78, "Cursor y coordinate matches");
+assert.strictEqual(cursorMsg.senderId, "user_1", "Cursor sender matches");
+
 // Clean up timer
 if (testRoom.timerInterval) clearInterval(testRoom.timerInterval);
 
@@ -284,6 +297,9 @@ assert(runtimeContent.includes("startSoloMatch"), "Runtime supports solo testing
 assert(runtimeContent.includes("SUBMIT_PROFILE"), "Runtime sends SUBMIT_PROFILE");
 assert(runtimeContent.includes("PROFILES_COMPLETED"), "Runtime handles PROFILES_COMPLETED");
 assert(runtimeContent.includes("profileSexSelector"), "Runtime handles profileSexSelector");
+assert(cssContent.includes(".draw-remote-cursor"), "CSS defines .draw-remote-cursor");
+assert(runtimeContent.includes("CURSOR_MOVE"), "Runtime sends CURSOR_MOVE");
+assert(runtimeContent.includes("REMOTE_CURSOR"), "Runtime handles REMOTE_CURSOR");
 
 console.log("✅ PASS: Gate 6 verified");
 passedGates++;

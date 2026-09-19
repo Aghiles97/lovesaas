@@ -384,6 +384,8 @@
 
     if (type === "PARTNER_LEFT") {
       showToast(`${state.partnerName} disconnected`);
+      const cursor = document.getElementById("drawRemoteCursor");
+      if (cursor) cursor.style.display = "none";
       return;
     }
 
@@ -440,6 +442,38 @@
       if (el.drawWaitingStartBanner) el.drawWaitingStartBanner.style.display = "none";
       if (el.btnStartRoundTimer) el.btnStartRoundTimer.style.display = "none";
       showToast("Timer started! Draw! ⏱️");
+      return;
+    }
+
+    if (type === "REMOTE_CURSOR") {
+      let cursor = document.getElementById("drawRemoteCursor");
+      if (cursor) {
+        if (cursor.parentElement !== document.body) {
+          document.body.appendChild(cursor);
+        }
+        cursor.style.display = "flex";
+        cursor.style.left = `${msg.x * 100}vw`;
+        cursor.style.top = `${msg.y * 100}vh`;
+      }
+      const tag = document.getElementById("remoteCursorTag");
+      if (tag) tag.textContent = msg.senderName || state.partnerName || "Partner";
+      return;
+    }
+
+    if (type === "REMOTE_CLICK") {
+      const ripple = document.getElementById("remoteClickRipple");
+      if (ripple) {
+        if (typeof msg.x === "number" && typeof msg.y === "number") {
+          const cursor = document.getElementById("drawRemoteCursor");
+          if (cursor) {
+            cursor.style.left = `${msg.x * 100}vw`;
+            cursor.style.top = `${msg.y * 100}vh`;
+          }
+        }
+        ripple.classList.remove("rippling");
+        void ripple.offsetWidth;
+        ripple.classList.add("rippling");
+      }
       return;
     }
 
@@ -943,6 +977,25 @@
 
   // --- Event Bindings ---
   function initEvents() {
+    // Live Cursor Tracking & Broadcasting (Photobooth Parity)
+    let lastCursorSend = 0;
+    window.addEventListener("pointermove", (e) => {
+      if (state.isSolo || !state.roomCode) return;
+      const now = Date.now();
+      if (now - lastCursorSend < 40) return;
+      lastCursorSend = now;
+      const x = Math.max(0, Math.min(1, e.clientX / window.innerWidth));
+      const y = Math.max(0, Math.min(1, e.clientY / window.innerHeight));
+      sendMsg("CURSOR_MOVE", { x, y });
+    }, { passive: true });
+
+    window.addEventListener("pointerdown", (e) => {
+      if (state.isSolo || !state.roomCode) return;
+      const x = Math.max(0, Math.min(1, e.clientX / window.innerWidth));
+      const y = Math.max(0, Math.min(1, e.clientY / window.innerHeight));
+      sendMsg("CURSOR_CLICK", { x, y });
+    }, { passive: true });
+
     // Start Round Timer on Draw Page
     el.btnStartRoundTimer?.addEventListener("click", triggerStartRoundTimer);
     el.btnBannerStartTimer?.addEventListener("click", triggerStartRoundTimer);

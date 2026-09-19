@@ -437,6 +437,33 @@ class DrawRoomServer {
     currentRoom.lastActivity = Date.now();
     const { type, payload } = data;
 
+    // 0. Live Remote Cursor Move & Click
+    if (type === "CURSOR_MOVE") {
+      const x = Math.max(0, Math.min(1, Number(payload?.x) || 0));
+      const y = Math.max(0, Math.min(1, Number(payload?.y) || 0));
+      this.broadcast(currentRoom, {
+        type: "REMOTE_CURSOR",
+        x,
+        y,
+        senderId: participantId,
+        senderName: participantName
+      }, sender);
+      return;
+    }
+
+    if (type === "CURSOR_CLICK") {
+      const x = Math.max(0, Math.min(1, Number(payload?.x) || 0));
+      const y = Math.max(0, Math.min(1, Number(payload?.y) || 0));
+      this.broadcast(currentRoom, {
+        type: "REMOTE_CLICK",
+        x,
+        y,
+        senderId: participantId,
+        senderName: participantName
+      }, sender);
+      return;
+    }
+
     // 1. Submit Name and Sex Profile (Once both join)
     if (type === "SUBMIT_PROFILE") {
       const name = sanitizeStr(payload?.name, 24) || "Partner";

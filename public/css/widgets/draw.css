@@ -1519,3 +1519,60 @@ body:has(#stageProfile.active) {
   transform: translateX(-50%) translateY(0);
   opacity: 1;
 }
+
+/* Remote Partner Cursor (Photobooth Parity) */
+.draw-remote-cursor {
+  position: fixed !important;
+  pointer-events: none !important;
+  z-index: 2147483647 !important;
+  transform: translate(-50%, -50%);
+  transition: left 0.08s linear, top 0.08s linear;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.draw-remote-cursor .remote-cursor-pointer {
+  font-size: 1.4rem;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+  animation: cursorBob 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes cursorBob {
+  from { transform: translateY(0); }
+  to { transform: translateY(-4px); }
+}
+
+.draw-remote-cursor .remote-cursor-tag {
+  background: #ff2d55;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  margin-top: -2px;
+}
+
+.draw-remote-cursor .remote-click-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 32px;
+  height: 32px;
+  margin: -16px 0 0 -16px;
+  border-radius: 50%;
+  border: 2px solid #ff2d55;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.draw-remote-cursor .remote-click-ripple.rippling {
+  animation: cursorRippleAnim 0.6s ease-out forwards;
+}
+
+@keyframes cursorRippleAnim {
+  0% { transform: scale(0.3); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
