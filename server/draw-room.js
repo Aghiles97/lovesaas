@@ -411,7 +411,10 @@ class DrawRoomServer {
 
     currentRoom.sseClients.add(res);
 
-    if ((currentRoom.participants.size + currentRoom.sseClients.size >= 2 || distinctIds.size >= 1 || (currentRoom.hostId && currentRoom.hostId !== participantId)) && currentRoom.state.stage === "lobby") {
+    const otherDistinct = new Set(distinctIds);
+    otherDistinct.delete(participantId);
+
+    if ((currentRoom.participants.size + currentRoom.sseClients.size >= 2 || otherDistinct.size >= 1) && currentRoom.state.stage === "lobby") {
       currentRoom.state.stage = "profile_setup";
     }
 
@@ -548,13 +551,9 @@ class DrawRoomServer {
         profiles: currentRoom.state.profiles
       });
 
-      const distinctIds = new Set([
-        ...Array.from(currentRoom.participants.values()).map(p => p.id),
-        ...Array.from(currentRoom.sseClients).map(c => c._participantId)
-      ]);
       const readyProfiles = Object.values(currentRoom.state.profiles).filter(p => p.ready);
 
-      if (currentRoom.state.stage === "profile_setup" && (readyProfiles.length >= 2 || (readyProfiles.length >= 1 && distinctIds.size <= 1))) {
+      if (currentRoom.state.stage === "profile_setup" && readyProfiles.length >= 2) {
         currentRoom.state.stage = "pack_select";
         this.scheduleSave();
         this.broadcastAll(currentRoom, {
@@ -711,6 +710,7 @@ class DrawRoomServer {
       currentRoom.state.currentRound = 1;
       currentRoom.state.roundHistory = [];
       currentRoom.state.strokes = {};
+      currentRoom.state.artwork = {};
       currentRoom.state.timerRunning = false;
       currentRoom.usedPrompts = new Set();
 
@@ -908,9 +908,10 @@ class DrawRoomServer {
             if (!currentRoom.hostId) currentRoom.hostId = participantId;
             const role = (currentRoom.hostId === participantId) ? "host" : "guest";
             participantName = sanitizeStr(payload?.name, 24) || currentRoom.state.profiles?.[participantId]?.name || (role === "host" ? "Partner 1" : "Partner 2");
-            currentRoom.participants.set(ws, { id: participantId, name: participantName, role });
+            const otherDistinct = new Set(distinctIds);
+            otherDistinct.delete(participantId);
 
-            if ((currentRoom.participants.size + (currentRoom.sseClients?.size || 0) >= 2 || distinctIds.size >= 1 || (currentRoom.hostId && currentRoom.hostId !== participantId)) && currentRoom.state.stage === "lobby") {
+            if ((currentRoom.participants.size + (currentRoom.sseClients?.size || 0) >= 2 || otherDistinct.size >= 1) && currentRoom.state.stage === "lobby") {
               currentRoom.state.stage = "profile_setup";
             }
 

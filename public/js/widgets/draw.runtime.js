@@ -744,6 +744,13 @@
     }
 
     if (type === "MATCH_RESTARTED") {
+      state.roundHistory = [];
+      state.myStrokes = [];
+      state.partnerStrokes = [];
+      state.myRedoStack = [];
+      state.currentRound = 1;
+      clearCanvas(el.myCanvas, ctx.my);
+      clearCanvas(el.partnerCanvas, ctx.partner);
       showStage("pack_select");
       showToast("Match restarted!");
       return;
@@ -1237,7 +1244,7 @@
     const padW = 340;
     const padH = 240;
 
-    state.roundHistory.sort((a, b) => a.round - b.round).forEach((r) => {
+    [...state.roundHistory].sort((a, b) => a.round - b.round).forEach((r) => {
       ctx.fillStyle = "#18181b";
       ctx.font = "bold 16px 'Outfit', sans-serif";
       ctx.textAlign = "left";

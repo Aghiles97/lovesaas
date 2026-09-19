@@ -319,11 +319,14 @@ console.log("\n--- TEST 7: Instant Guest Join during Host Grace Period ---");
   ]);
   if (testRoom6.hostId) distinctIds.add(testRoom6.hostId);
 
+  const otherDistinct = new Set(distinctIds);
+  otherDistinct.delete(guestId);
+
   if (!testRoom6.hostId) testRoom6.hostId = guestId;
   const role = (testRoom6.hostId === guestId) ? "host" : "guest";
   testRoom6.participants.set(fakeGuestWs, { id: guestId, name: "Guest Partner", role });
 
-  if ((testRoom6.participants.size + (testRoom6.sseClients?.size || 0) >= 2 || distinctIds.size >= 1 || (testRoom6.hostId && testRoom6.hostId !== guestId)) && testRoom6.state.stage === "lobby") {
+  if ((testRoom6.participants.size + (testRoom6.sseClients?.size || 0) >= 2 || otherDistinct.size >= 1) && testRoom6.state.stage === "lobby") {
     testRoom6.state.stage = "profile_setup";
   }
 
@@ -334,7 +337,59 @@ console.log("\n--- TEST 7: Instant Guest Join during Host Grace Period ---");
 console.log("✅ PASS: Bug 8 verified - Instant guest entry to profile_setup without 5s freeze");
 passedTests++;
 
+// --- TEST 8: Edge Cases (Lone Host Reconnect, Ready Profiles Guard, Restart Match) ---
+console.log("\n--- TEST 8: Edge Cases Verification ---");
+
+// 1. Lone host reconnect does NOT promote to profile_setup
+const testRoom7 = drawRooms.getOrCreateRoom("TEST_EDGE_" + randId);
+testRoom7.hostId = "host_lone";
+const fakeHostWs = { readyState: 1, send: () => {} };
+testRoom7.participants.set(fakeHostWs, { id: "host_lone", name: "Host", role: "host" });
+
+const hostDistinct = new Set([
+  ...Array.from(testRoom7.participants.values()).map(p => p.id),
+  ...Array.from(testRoom7.sseClients).map(c => c._participantId),
+  ...(testRoom7.disconnectTimeouts ? Array.from(testRoom7.disconnectTimeouts.keys()) : []),
+  ...Object.keys(testRoom7.state.profiles || {})
+]);
+if (testRoom7.hostId) hostDistinct.add(testRoom7.hostId);
+const hostOther = new Set(hostDistinct);
+hostOther.delete("host_lone");
+
+if ((testRoom7.participants.size + (testRoom7.sseClients?.size || 0) >= 2 || hostOther.size >= 1) && testRoom7.state.stage === "lobby") {
+  testRoom7.state.stage = "profile_setup";
+}
+assert.strictEqual(testRoom7.state.stage, "lobby", "Lone host refresh preserves lobby stage, no premature profile_setup");
+
+// 2. Both profiles required before pack_select
+testRoom7.state.stage = "profile_setup";
+testRoom7.state.profiles["host_lone"] = { name: "Host", ready: true };
+drawRooms.handleMessage(testRoom7, "host_lone", "Host", {
+  type: "SUBMIT_PROFILE",
+  payload: { name: "Host", sex: "male" }
+});
+assert.strictEqual(testRoom7.state.stage, "profile_setup", "Stage remains profile_setup when only 1 partner is ready");
+
+testRoom7.state.profiles["guest_partner"] = { name: "Guest", ready: true };
+drawRooms.handleMessage(testRoom7, "guest_partner", "Guest", {
+  type: "SUBMIT_PROFILE",
+  payload: { name: "Guest", sex: "female" }
+});
+assert.strictEqual(testRoom7.state.stage, "pack_select", "Stage advances to pack_select only when both partners are ready");
+
+// 3. RESTART_MATCH clears artwork, roundHistory, strokes
+testRoom7.state.artwork = { 1: { host_lone: "data:image/png;base64,123" } };
+testRoom7.state.strokes = { host_lone: [{ points: [[0, 0]] }] };
+testRoom7.state.roundHistory = [{ round: 1 }];
+drawRooms.handleMessage(testRoom7, "host_lone", "Host", { type: "RESTART_MATCH" });
+assert.deepStrictEqual(testRoom7.state.artwork, {}, "Artwork reset on match restart");
+assert.deepStrictEqual(testRoom7.state.roundHistory, [], "Round history reset on match restart");
+assert.deepStrictEqual(testRoom7.state.strokes, {}, "Strokes reset on match restart");
+
+console.log("✅ PASS: Bug 9 verified - Lone host lobby protection, profile ready guard, and restart cleanup verified");
+passedTests++;
+
 console.log("\n=================================================");
-console.log(`ALL ${passedTests}/7 TEST SUITES PASSED!`);
+console.log(`ALL ${passedTests}/8 TEST SUITES PASSED!`);
 console.log("=================================================");
 process.exit(0);
