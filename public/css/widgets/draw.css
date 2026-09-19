@@ -1610,8 +1610,36 @@ body:has(#stageProfile.active) {
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
+  margin-top: 6px;
+}
+
+.draw-review-actions .draw-btn-start,
+.draw-review-actions .draw-btn-next,
+.draw-review-actions .draw-btn-secondary {
+  margin: 0;
+  height: 48px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#btnDownloadKeepsake,
+#btnPlayAgain {
+  height: 48px;
+  min-width: 165px;
+  padding: 0 24px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 14px;
+  margin: 0;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 #btnDownloadKeepsake {
