@@ -1171,8 +1171,9 @@ body:has(#stageProfile.active) {
 }
 
 .draw-canvases-grid.view-split .draw-pad-card {
+  aspect-ratio: 4 / 3;
   width: min(520px, calc(50vw - 28px));
-  height: min(390px, calc((50vw - 28px) * 0.75));
+  height: auto;
   max-height: 48vh;
 }
 
@@ -1182,8 +1183,9 @@ body:has(#stageProfile.active) {
     align-items: center;
   }
   .draw-canvases-grid.view-split .draw-pad-card {
+    aspect-ratio: 4 / 3;
     width: min(520px, calc(100vw - 16px));
-    height: min(390px, calc((100vw - 16px) * 0.75));
+    height: auto;
     max-height: 40vh;
   }
 }
@@ -1211,14 +1213,17 @@ body:has(#stageProfile.active) {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-  width: var(--draw-canvas-w);
-  height: var(--draw-canvas-h);
+  aspect-ratio: 4 / 3;
+  width: min(533px, calc(100vw - 16px));
+  height: auto;
+  max-height: 48vh;
 }
 
 @media (max-width: 600px) {
   .draw-pad-card {
+    aspect-ratio: 4 / 3;
     width: calc(100vw - 16px);
-    height: calc((100vw - 16px) * 0.75);
+    height: auto;
   }
 }
 
@@ -1798,8 +1803,9 @@ body.draw-solo-mode .draw-canvases-grid {
 }
 
 body.draw-solo-mode .draw-canvases-grid .draw-pad-card {
+  aspect-ratio: 4 / 3 !important;
   width: min(580px, calc(100vw - 16px)) !important;
-  height: min(435px, calc((100vw - 16px) * 0.75)) !important;
+  height: auto !important;
   max-height: 52vh !important;
   margin: 0 auto !important;
 }
@@ -1814,4 +1820,37 @@ body.draw-solo-mode .draw-review-grid {
 
 body.draw-solo-mode .draw-review-grid .draw-review-card {
   width: min(480px, 100%) !important;
+}
+
+/* Play Again Modal */
+.draw-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.draw-modal-overlay.hidden {
+  display: none !important;
+}
+
+.draw-modal-card {
+  background: #ffffff;
+  border: 2px solid #111111;
+  border-radius: 20px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+  max-width: 400px;
+  width: 100%;
+  padding: 26px 22px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
 }

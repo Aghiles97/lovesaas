@@ -438,9 +438,6 @@
           <button type="button" id="btnPlayAgain" class="draw-btn-next">
             <span>Play Again ▷</span>
           </button>
-          <button type="button" id="btnPlaySoloAgain" class="draw-btn-secondary">
-            <span>Play Solo 👤</span>
-          </button>
         </div>
 
         <div class="draw-exit-bottom-wrap" style="text-align: center; margin-top: 14px;">
@@ -449,6 +446,30 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- Play Again Modal for Partner Confirmation -->
+  <div id="modalPlayAgain" class="draw-modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="draw-modal-card">
+      <div style="font-size: 38px;">🎨</div>
+      <h3 id="modalPlayAgainTitle" style="font-size: 20px; font-weight: 700; color: #18181b; margin: 0;">Play Again?</h3>
+      <p id="modalPlayAgainText" style="font-size: 15px; color: #52525b; margin: 0; line-height: 1.4;">
+        Your partner wants to play again! Do you accept?
+      </p>
+      <div id="modalPlayAgainPromptActions" class="draw-modal-actions" style="display: flex; gap: 10px; width: 100%; justify-content: center; margin-top: 8px;">
+        <button type="button" id="btnAcceptPlayAgain" class="draw-btn-start" style="flex: 1; padding: 12px 18px;">
+          <span>Accept 💕</span>
+        </button>
+        <button type="button" id="btnDeclinePlayAgain" class="draw-btn-secondary" style="flex: 1; padding: 12px 18px;">
+          <span>Decline ✕</span>
+        </button>
+      </div>
+      <div id="modalPlayAgainWaiting" style="display: none; width: 100%;">
+        <button type="button" id="btnCancelPlayAgain" class="draw-btn-secondary" style="width: 100%; padding: 10px 16px;">
+          <span>Cancel Request</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Remote Partner Floating Cursor (Figma/Photobooth Parity) -->

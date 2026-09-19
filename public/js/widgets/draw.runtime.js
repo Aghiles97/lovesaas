@@ -299,9 +299,16 @@
     recapGallery: document.getElementById("recapGallery"),
     btnDownloadKeepsake: document.getElementById("btnDownloadKeepsake"),
     btnPlayAgain: document.getElementById("btnPlayAgain"),
-    btnPlaySoloAgain: document.getElementById("btnPlaySoloAgain"),
     btnExitComplete: document.getElementById("btnExitComplete"),
-    btnExitDrawing: document.getElementById("btnExitDrawing")
+    btnExitDrawing: document.getElementById("btnExitDrawing"),
+    modalPlayAgain: document.getElementById("modalPlayAgain"),
+    modalPlayAgainTitle: document.getElementById("modalPlayAgainTitle"),
+    modalPlayAgainText: document.getElementById("modalPlayAgainText"),
+    modalPlayAgainPromptActions: document.getElementById("modalPlayAgainPromptActions"),
+    modalPlayAgainWaiting: document.getElementById("modalPlayAgainWaiting"),
+    btnAcceptPlayAgain: document.getElementById("btnAcceptPlayAgain"),
+    btnDeclinePlayAgain: document.getElementById("btnDeclinePlayAgain"),
+    btnCancelPlayAgain: document.getElementById("btnCancelPlayAgain")
   };
 
   // --- Stage Switching ---
@@ -882,16 +889,41 @@
       return;
     }
 
-    if (type === "MATCH_RESTARTED") {
+    if (type === "PLAY_AGAIN_INVITE") {
+      if (el.modalPlayAgain) {
+        if (el.modalPlayAgainTitle) el.modalPlayAgainTitle.textContent = "Play Again? 🎨";
+        if (el.modalPlayAgainText) el.modalPlayAgainText.textContent = `${msg.requesterName || state.partnerName || "Your partner"} wants to play again! Do you accept?`;
+        if (el.modalPlayAgainPromptActions) el.modalPlayAgainPromptActions.style.display = "flex";
+        if (el.modalPlayAgainWaiting) el.modalPlayAgainWaiting.style.display = "none";
+        el.modalPlayAgain.classList.remove("hidden");
+      }
+      return;
+    }
+
+    if (type === "PLAY_AGAIN_ACCEPTED" || type === "MATCH_RESTARTED") {
+      if (el.modalPlayAgain) el.modalPlayAgain.classList.add("hidden");
       state.roundHistory = [];
       state.myStrokes = [];
       state.partnerStrokes = [];
       state.myRedoStack = [];
       state.currentRound = 1;
-      clearCanvas(el.myCanvas, ctx.my);
-      clearCanvas(el.partnerCanvas, ctx.partner);
+      clearLocalCanvas();
+      clearPartnerCanvas();
       showStage("pack_select");
-      showToast("Match restarted!");
+      showToast("Play again accepted! Pick a prompt pack 🎨");
+      return;
+    }
+
+    if (type === "PLAY_AGAIN_DECLINED") {
+      if (el.modalPlayAgain) el.modalPlayAgain.classList.add("hidden");
+      showToast(`${msg.declinerName || "Partner"} declined to play again.`);
+      exitToMainMenu();
+      return;
+    }
+
+    if (type === "PLAY_AGAIN_CANCELLED") {
+      if (el.modalPlayAgain) el.modalPlayAgain.classList.add("hidden");
+      showToast("Play again request was cancelled.");
       return;
     }
   }
@@ -1230,12 +1262,83 @@
     }, 1300);
   }
 
+  // --- High-Resolution 4:3 Artwork Exporter ---
+  function exportArtworkDataURL(strokes, fallbackCanvas) {
+    const off = document.createElement("canvas");
+    off.width = 1200;
+    off.height = 900;
+    const ctx = off.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, 1200, 900);
+
+    if (strokes && strokes.length > 0) {
+      const scale = 1200 / 534;
+      strokes.forEach(stroke => {
+        const points = stroke.points || [];
+        if (points.length === 0) return;
+
+        ctx.save();
+        if (stroke.isEraser) {
+          ctx.globalCompositeOperation = "destination-out";
+          ctx.strokeStyle = "rgba(0,0,0,1)";
+          ctx.fillStyle = "rgba(0,0,0,1)";
+        } else {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.strokeStyle = stroke.color || "#18181b";
+          ctx.fillStyle = stroke.color || "#18181b";
+        }
+        ctx.lineWidth = Math.max((stroke.size || 5) * scale, 1);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        const p0 = points[0];
+        const x0 = (typeof p0.x === "number" ? p0.x : p0[0]) * 1200;
+        const y0 = (typeof p0.y === "number" ? p0.y : p0[1]) * 900;
+
+        if (points.length === 1) {
+          ctx.beginPath();
+          ctx.arc(x0, y0, ctx.lineWidth / 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(x0, y0);
+          for (let i = 1; i < points.length - 1; i++) {
+            const pPrev = points[i];
+            const pCur = points[i + 1];
+            const xPrev = (typeof pPrev.x === "number" ? pPrev.x : pPrev[0]) * 1200;
+            const yPrev = (typeof pPrev.y === "number" ? pPrev.y : pPrev[1]) * 900;
+            const xCur = (typeof pCur.x === "number" ? pCur.x : pCur[0]) * 1200;
+            const yCur = (typeof pCur.y === "number" ? pCur.y : pCur[1]) * 900;
+            const midX = (xPrev + xCur) / 2;
+            const midY = (yPrev + yCur) / 2;
+            ctx.quadraticCurveTo(xPrev, yPrev, midX, midY);
+          }
+          const pLast = points[points.length - 1];
+          const xLast = (typeof pLast.x === "number" ? pLast.x : pLast[0]) * 1200;
+          const yLast = (typeof pLast.y === "number" ? pLast.y : pLast[1]) * 900;
+          ctx.lineTo(xLast, yLast);
+          ctx.stroke();
+        }
+        ctx.restore();
+      });
+      return off.toDataURL("image/png");
+    }
+
+    if (fallbackCanvas && fallbackCanvas.width > 0 && fallbackCanvas.height > 0) {
+      try {
+        ctx.drawImage(fallbackCanvas, 0, 0, 1200, 900);
+        return off.toDataURL("image/png");
+      } catch (e) {}
+    }
+    return "";
+  }
+
   // --- Round & Match Completion ---
   function onRoundCompleted(data) {
     if (isDrawing) endStroke();
     const roundNum = data?.round || state.currentRound;
-    const myImg = el.myCanvas ? el.myCanvas.toDataURL("image/png") : "";
-    const partnerImg = el.partnerCanvas ? el.partnerCanvas.toDataURL("image/png") : "";
+    const myImg = exportArtworkDataURL(state.myStrokes, el.myCanvas);
+    const partnerImg = exportArtworkDataURL(state.partnerStrokes, el.partnerCanvas);
 
     let existing = state.roundHistory.find(r => r.round === roundNum);
     if (!existing) {
@@ -1309,8 +1412,8 @@
   function onMatchCompleted(data) {
     if (isDrawing) endStroke();
     const roundNum = state.currentRound;
-    const myImg = el.myCanvas ? el.myCanvas.toDataURL("image/png") : "";
-    const partnerImg = el.partnerCanvas ? el.partnerCanvas.toDataURL("image/png") : "";
+    const myImg = exportArtworkDataURL(state.myStrokes, el.myCanvas);
+    const partnerImg = exportArtworkDataURL(state.partnerStrokes, el.partnerCanvas);
 
     if (data?.roundHistory && Array.isArray(data.roundHistory)) {
       data.roundHistory.forEach(srvRound => {
@@ -1353,15 +1456,17 @@
     showStage("match_complete");
   }
 
-  // --- Keepsake Artwork Exporter ---
+  // --- Keepsake Artwork Exporter (High-Res 4:3 Ratio) ---
   function downloadKeepsakeImage() {
     const offCanvas = document.createElement("canvas");
     const count = state.roundHistory.length || 1;
     const isSolo = Boolean(state.isSolo);
-    const cardW = isSolo ? 520 : 800;
-    const roundH = 340;
-    const headerH = 120;
-    const footerH = 60;
+    const cardW = isSolo ? 960 : 1400;
+    const padW = isSolo ? 800 : 580;
+    const padH = Math.round(padW * 0.75);
+    const headerH = 160;
+    const roundH = padH + 80;
+    const footerH = 80;
     offCanvas.width = cardW;
     offCanvas.height = headerH + (count * roundH) + footerH;
 
@@ -1370,13 +1475,13 @@
     ctx.fillRect(0, 0, offCanvas.width, offCanvas.height);
 
     ctx.fillStyle = "#18181b";
-    ctx.font = "bold 28px 'Outfit', sans-serif";
+    ctx.font = "bold 36px 'Outfit', sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(isSolo ? "My Drawings 💕" : "Our Drawings Together 💕", cardW / 2, 54);
+    ctx.fillText(isSolo ? "My Drawings 💕" : "Our Drawings Together 💕", cardW / 2, 68);
 
     ctx.fillStyle = "#71717a";
-    ctx.font = "16px 'Outfit', sans-serif";
-    ctx.fillText(isSolo ? `${state.myName || "Artist"} · ${new Date().toLocaleDateString()}` : `${state.myName} & ${state.partnerName} · ${new Date().toLocaleDateString()}`, cardW / 2, 84);
+    ctx.font = "20px 'Outfit', sans-serif";
+    ctx.fillText(isSolo ? `${state.myName || "Artist"} · ${new Date().toLocaleDateString()}` : `${state.myName} & ${state.partnerName} · ${new Date().toLocaleDateString()}`, cardW / 2, 108);
 
     let currentY = headerH;
     let pending = 0;
@@ -1390,20 +1495,17 @@
       }
     };
 
-    const padW = isSolo ? 440 : 340;
-    const padH = 240;
-
     [...state.roundHistory].sort((a, b) => a.round - b.round).forEach((r) => {
       ctx.fillStyle = "#18181b";
-      ctx.font = "bold 16px 'Outfit', sans-serif";
+      ctx.font = "bold 22px 'Outfit', sans-serif";
       ctx.textAlign = "left";
-      ctx.fillText(`Round ${r.round}: "${r.prompt}"`, 40, currentY + 24);
+      ctx.fillText(`Round ${r.round}: "${r.prompt}"`, 80, currentY + 36);
 
-      const yBox = currentY + 40;
+      const yBox = currentY + 54;
       const img1 = new Image();
       pending += 1;
 
-      const drawBox = (img, src, x) => {
+      const drawBox = (img, src, x, label) => {
         if (!src) {
           checkDone();
           return;
@@ -1412,21 +1514,34 @@
           ctx.fillStyle = "#ffffff";
           ctx.fillRect(x, yBox, padW, padH);
           ctx.strokeStyle = "#18181b";
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 3;
           ctx.strokeRect(x, yBox, padW, padH);
           ctx.drawImage(img, x, yBox, padW, padH);
+
+          if (label) {
+            ctx.fillStyle = "rgba(0,0,0,0.65)";
+            const textW = ctx.measureText(label).width;
+            ctx.fillRect(x + 12, yBox + 12, textW + 24, 28);
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 14px 'Outfit', sans-serif";
+            ctx.textAlign = "left";
+            ctx.fillText(label, x + 24, yBox + 31);
+          }
           checkDone();
         };
         img.onerror = () => checkDone();
         img.src = src;
       };
 
-      drawBox(img1, r.myImg, 40);
-
-      if (!isSolo) {
+      if (isSolo) {
+        drawBox(img1, r.myImg, 80);
+      } else {
+        const x1 = 80;
+        const x2 = cardW - 80 - padW;
+        drawBox(img1, r.myImg, x1, state.myName || "You");
         const img2 = new Image();
         pending += 1;
-        drawBox(img2, r.partnerImg || r.myImg, 420);
+        drawBox(img2, r.partnerImg || r.myImg, x2, state.partnerName || "Partner");
       }
 
       currentY += roundH;
@@ -1913,39 +2028,54 @@
       downloadKeepsakeImage();
     });
 
-    // Play Again (Multiplayer or Solo)
+    // Play Again (Multiplayer with prompt confirmation, or Solo)
     el.btnPlayAgain?.addEventListener("click", () => {
       if (!window.confirm("Are you sure you saved your artwork and want to play again? 💕")) {
         return;
       }
       if (state.isSolo) {
+        state.roundHistory = [];
+        state.myStrokes = [];
+        state.partnerStrokes = [];
+        state.myRedoStack = [];
+        state.currentRound = 1;
+        clearLocalCanvas();
+        clearPartnerCanvas();
         showStage("pack_select");
-      } else {
-        if (state.partnerConnected === false) {
-          if (window.confirm("Your partner disconnected. Would you like to switch to Solo mode?")) {
-            state.isSolo = true;
-            document.body.classList.add("draw-solo-mode");
-            showStage("pack_select");
-            return;
-          }
-        }
-        sendMsg("RESTART_MATCH");
+        showToast("Starting new solo game! Pick a prompt pack 🎨");
+        return;
       }
+
+      if (state.partnerConnected === false) {
+        showToast("Partner disconnected. Returning to menu.");
+        exitToMainMenu();
+        return;
+      }
+
+      if (el.modalPlayAgain) {
+        if (el.modalPlayAgainTitle) el.modalPlayAgainTitle.textContent = "Waiting for Partner...";
+        if (el.modalPlayAgainText) el.modalPlayAgainText.textContent = `Sent invite to ${state.partnerName || "partner"}. Waiting for their response...`;
+        if (el.modalPlayAgainPromptActions) el.modalPlayAgainPromptActions.style.display = "none";
+        if (el.modalPlayAgainWaiting) el.modalPlayAgainWaiting.style.display = "block";
+        el.modalPlayAgain.classList.remove("hidden");
+      }
+      sendMsg("PLAY_AGAIN_REQUEST");
     });
 
-    // Play Solo Again
-    el.btnPlaySoloAgain?.addEventListener("click", () => {
-      if (!window.confirm("Start a new game in Solo mode? 💕")) return;
-      state.isSolo = true;
-      document.body.classList.add("draw-solo-mode");
-      state.roundHistory = [];
-      state.myStrokes = [];
-      state.partnerStrokes = [];
-      state.myRedoStack = [];
-      state.currentRound = 1;
-      clearCanvas(el.myCanvas, ctx.my);
-      clearCanvas(el.partnerCanvas, ctx.partner);
-      showStage("pack_select");
+    el.btnAcceptPlayAgain?.addEventListener("click", () => {
+      if (el.modalPlayAgain) el.modalPlayAgain.classList.add("hidden");
+      sendMsg("PLAY_AGAIN_RESPONSE", { accepted: true });
+    });
+
+    el.btnDeclinePlayAgain?.addEventListener("click", () => {
+      if (el.modalPlayAgain) el.modalPlayAgain.classList.add("hidden");
+      sendMsg("PLAY_AGAIN_RESPONSE", { accepted: false });
+      exitToMainMenu();
+    });
+
+    el.btnCancelPlayAgain?.addEventListener("click", () => {
+      if (el.modalPlayAgain) el.modalPlayAgain.classList.add("hidden");
+      sendMsg("PLAY_AGAIN_CANCEL");
     });
 
     // Exit to Main Menu Buttons

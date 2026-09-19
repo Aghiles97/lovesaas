@@ -452,7 +452,8 @@ const jsSrc = fs.readFileSync(path.join(__dirname, "../public/js/widgets/draw.ru
 assert(htmlSrc.includes('id="btnExitDrawing"'), "Exit button in drawing header exists");
 assert(htmlSrc.includes('id="btnReviewExit"'), "Exit button in round review exists");
 assert(htmlSrc.includes('id="btnExitComplete"'), "Exit button in match complete exists");
-assert(htmlSrc.includes('id="btnPlaySoloAgain"'), "Play solo again button exists");
+assert(!htmlSrc.includes('id="btnPlaySoloAgain"'), "Play solo again button removed as requested");
+assert(htmlSrc.includes('id="modalPlayAgain"'), "Play again confirmation modal exists");
 assert(htmlSrc.includes('btn-exit-setup'), "Exit to menu in setup stages exists");
 
 // 2. CSS Solo Isolation Rules Exist
@@ -481,7 +482,47 @@ assert(jsSrc.includes("remoteCursorTag"), "Remote cursor tag element synced");
 console.log("✅ PASS: Test 11 verified - Button wrap, canvas margins, and partner nickname sync verified");
 passedTests++;
 
+// --- TEST 12: Play Again Partner Prompt & High-Res 4:3 Aspect Ratio ---
+console.log("\n--- TEST 12: Play Again Partner Prompt & High-Res 4:3 Aspect Ratio ---");
+assert(jsSrc.includes("exportArtworkDataURL"), "High-resolution 4:3 artwork exporter exists");
+assert(cssSrc.includes("aspect-ratio: 4 / 3"), "Drawing board pad cards enforce strict 4:3 ratio");
+assert(jsSrc.includes("PLAY_AGAIN_REQUEST"), "Client sends PLAY_AGAIN_REQUEST");
+assert(jsSrc.includes("PLAY_AGAIN_INVITE"), "Client handles PLAY_AGAIN_INVITE");
+assert(jsSrc.includes("PLAY_AGAIN_RESPONSE"), "Client sends PLAY_AGAIN_RESPONSE");
+assert(jsSrc.includes("PLAY_AGAIN_ACCEPTED"), "Client handles PLAY_AGAIN_ACCEPTED");
+assert(jsSrc.includes("PLAY_AGAIN_DECLINED"), "Client handles PLAY_AGAIN_DECLINED");
+
+// Server play again flow verification
+const testRoom12 = drawRooms.getOrCreateRoom("TEST_ROOM_12_" + randId);
+testRoom12.hostId = "host12";
+drawRooms.handleMessage(testRoom12, "host12", "HostUser", { type: "SUBMIT_PROFILE", payload: { name: "HostUser", sex: "male" } });
+drawRooms.handleMessage(testRoom12, "guest1", "PartnerUser", { type: "SUBMIT_PROFILE", payload: { name: "PartnerUser", sex: "female" } });
+
+let fakeMsgs12 = [];
+const mockSender12 = {
+  readyState: 1,
+  send: (data) => fakeMsgs12.push(JSON.parse(data))
+};
+
+// P1 requests play again
+drawRooms.handleMessage(testRoom12, testRoom12.hostId, "HostUser", { type: "PLAY_AGAIN_REQUEST" }, mockSender12);
+assert.strictEqual(testRoom12.playAgainRequester, testRoom12.hostId, "Host stored as playAgainRequester");
+
+// Partner receives invite and accepts
+drawRooms.handleMessage(testRoom12, "guest1", "PartnerUser", { type: "PLAY_AGAIN_RESPONSE", payload: { accepted: true } });
+assert.strictEqual(testRoom12.state.stage, "pack_select", "Room restarted to pack_select on accept");
+assert.strictEqual(testRoom12.state.currentRound, 1, "Round reset to 1");
+
+// Test decline flow
+testRoom12.state.stage = "match_complete";
+drawRooms.handleMessage(testRoom12, testRoom12.hostId, "HostUser", { type: "PLAY_AGAIN_REQUEST" });
+drawRooms.handleMessage(testRoom12, "guest1", "PartnerUser", { type: "PLAY_AGAIN_RESPONSE", payload: { accepted: false } });
+assert.strictEqual(testRoom12.playAgainRequester, null, "playAgainRequester cleared on decline");
+
+console.log("✅ PASS: Test 12 verified - Play Again partner prompt protocol and high-res 4:3 export verified");
+passedTests++;
+
 console.log("\n=================================================");
-console.log(`ALL ${passedTests}/11 TEST SUITES PASSED!`);
+console.log(`ALL ${passedTests}/12 TEST SUITES PASSED!`);
 console.log("=================================================");
 process.exit(0);

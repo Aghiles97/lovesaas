@@ -472,6 +472,27 @@ class DrawRoomServer {
     });
   }
 
+  resetMatchForReplay(currentRoom, participantId, participantName) {
+    if (currentRoom.timerInterval) clearInterval(currentRoom.timerInterval);
+    currentRoom.state.stage = "pack_select";
+    currentRoom.state.currentRound = 1;
+    currentRoom.state.roundHistory = [];
+    currentRoom.state.strokes = {};
+    currentRoom.state.artwork = {};
+    currentRoom.state.timerRunning = false;
+    currentRoom.usedPrompts = new Set();
+    currentRoom.playAgainRequester = null;
+
+    this.scheduleSave();
+    this.broadcastAll(currentRoom, {
+      type: "PLAY_AGAIN_ACCEPTED",
+      stage: "pack_select",
+      actorId: participantId,
+      actorName: participantName,
+      profiles: currentRoom.state.profiles
+    });
+  }
+
   handleMessage(currentRoom, participantId, participantName, data, sender = null) {
     if (!currentRoom) return;
     currentRoom.lastActivity = Date.now();
@@ -722,24 +743,46 @@ class DrawRoomServer {
       return;
     }
 
-    // 6. Play Again / Reset Match
-    if (type === "RESTART_MATCH") {
-      if (currentRoom.timerInterval) clearInterval(currentRoom.timerInterval);
-      currentRoom.state.stage = "pack_select";
-      currentRoom.state.currentRound = 1;
-      currentRoom.state.roundHistory = [];
-      currentRoom.state.strokes = {};
-      currentRoom.state.artwork = {};
-      currentRoom.state.timerRunning = false;
-      currentRoom.usedPrompts = new Set();
+    // 6. Play Again Request & Response
+    if (type === "PLAY_AGAIN_REQUEST") {
+      if (currentRoom.playAgainRequester && currentRoom.playAgainRequester !== participantId) {
+        this.resetMatchForReplay(currentRoom, participantId, participantName);
+        return;
+      }
+      currentRoom.playAgainRequester = participantId;
+      this.broadcast(currentRoom, {
+        type: "PLAY_AGAIN_INVITE",
+        requesterId: participantId,
+        requesterName: participantName
+      }, sender);
+      return;
+    }
 
-      this.scheduleSave();
-      this.broadcastAll(currentRoom, {
-        type: "MATCH_RESTARTED",
-        stage: "pack_select",
-        actorId: participantId,
-        actorName: participantName
-      });
+    if (type === "PLAY_AGAIN_RESPONSE") {
+      const accepted = !!payload?.accepted;
+      currentRoom.playAgainRequester = null;
+      if (accepted) {
+        this.resetMatchForReplay(currentRoom, participantId, participantName);
+      } else {
+        this.broadcastAll(currentRoom, {
+          type: "PLAY_AGAIN_DECLINED",
+          declinerId: participantId,
+          declinerName: participantName
+        });
+      }
+      return;
+    }
+
+    if (type === "PLAY_AGAIN_CANCEL") {
+      currentRoom.playAgainRequester = null;
+      this.broadcast(currentRoom, {
+        type: "PLAY_AGAIN_CANCELLED"
+      }, sender);
+      return;
+    }
+
+    if (type === "RESTART_MATCH") {
+      this.resetMatchForReplay(currentRoom, participantId, participantName);
       return;
     }
 
