@@ -184,8 +184,22 @@
   function getRandomPrompt(packId) {
     const pack = PROMPT_PACKS[packId] || PROMPT_PACKS.animals;
     if (!state.usedSoloPrompts) state.usedSoloPrompts = new Set();
-    const available = pack.prompts.filter(p => !state.usedSoloPrompts.has(p));
-    const pool = available.length > 0 ? available : pack.prompts;
+
+    const used = new Set();
+    if (Array.isArray(state.roundHistory)) {
+      state.roundHistory.forEach(r => {
+        if (r?.prompt) used.add(String(r.prompt).trim().toLowerCase());
+      });
+    }
+    if (state.currentPrompt) {
+      used.add(String(state.currentPrompt).trim().toLowerCase());
+    }
+    for (const p of state.usedSoloPrompts) {
+      if (p) used.add(String(p).trim().toLowerCase());
+    }
+
+    const available = pack.prompts.filter(p => !used.has(String(p).trim().toLowerCase()));
+    const pool = available.length > 0 ? available : pack.prompts.filter(p => String(p).trim().toLowerCase() !== String(state.currentPrompt || "").trim().toLowerCase());
     const chosen = pool[Math.floor(Math.random() * pool.length)];
     state.usedSoloPrompts.add(chosen);
     return chosen;
@@ -1702,12 +1716,12 @@
     document.body.classList.add("draw-solo-mode");
     state.timerRunning = false;
     state.currentRound = roundNum;
-    state.currentPrompt = getRandomPrompt(state.selectedPack);
     if (roundNum === 1) {
       state.roundHistory = [];
       state.usedSoloPrompts = new Set();
-      state.usedSoloPrompts.add(state.currentPrompt);
     }
+    state.currentPrompt = getRandomPrompt(state.selectedPack);
+    state.usedSoloPrompts.add(state.currentPrompt);
     state.myStrokes = [];
     state.partnerStrokes = [];
     state.myRedoStack = [];

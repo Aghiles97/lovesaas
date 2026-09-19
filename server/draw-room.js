@@ -299,10 +299,34 @@ class DrawRoomServer {
   getNextPrompt(room, packId) {
     const pack = PROMPT_PACKS[packId] || PROMPT_PACKS.animals;
     if (!room.usedPrompts) room.usedPrompts = new Set();
-    const available = pack.prompts.filter(p => !room.usedPrompts.has(p));
-    const pool = available.length > 0 ? available : pack.prompts;
+
+    const usedSet = new Set();
+    if (Array.isArray(room.state?.roundHistory)) {
+      room.state.roundHistory.forEach(r => {
+        if (r?.prompt) usedSet.add(String(r.prompt).trim().toLowerCase());
+      });
+    }
+    if (room.state?.currentPrompt) {
+      usedSet.add(String(room.state.currentPrompt).trim().toLowerCase());
+    }
+    for (const p of room.usedPrompts) {
+      if (p) usedSet.add(String(p).trim().toLowerCase());
+    }
+    if (Array.isArray(room.state?.usedPrompts)) {
+      room.state.usedPrompts.forEach(p => {
+        if (p) usedSet.add(String(p).trim().toLowerCase());
+      });
+    }
+
+    const available = pack.prompts.filter(p => !usedSet.has(String(p).trim().toLowerCase()));
+    const pool = available.length > 0 ? available : pack.prompts.filter(p => String(p).trim().toLowerCase() !== String(room.state?.currentPrompt || "").trim().toLowerCase());
     const chosen = pool[Math.floor(Math.random() * pool.length)];
+
     room.usedPrompts.add(chosen);
+    if (!room.state.usedPrompts) room.state.usedPrompts = [];
+    if (!room.state.usedPrompts.includes(chosen)) {
+      room.state.usedPrompts.push(chosen);
+    }
     return chosen;
   }
 
@@ -545,6 +569,7 @@ class DrawRoomServer {
     currentRoom.state.artwork = {};
     currentRoom.state.timerRunning = false;
     currentRoom.usedPrompts = new Set();
+    currentRoom.state.usedPrompts = [];
     currentRoom.playAgainRequester = null;
 
     this.scheduleSave();
@@ -721,6 +746,7 @@ class DrawRoomServer {
       currentRoom.state.strokes = {};
       currentRoom.state.artwork = {};
       currentRoom.usedPrompts = new Set();
+      currentRoom.state.usedPrompts = [];
       currentRoom.state.currentPrompt = this.getNextPrompt(currentRoom, currentRoom.state.selectedPack);
       currentRoom.state.matchStartedAt = Date.now();
       currentRoom.state.timerRunning = false;

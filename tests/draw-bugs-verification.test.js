@@ -697,7 +697,51 @@ assert(runtimeText.includes("stageName === \"match_complete\""), "showStage auto
 console.log("✅ PASS: Test 17 verified - Reconnect nickname recovery, roundHistory remapping, and Keepsake download verified");
 passedTests++;
 
+// --- TEST 18: No Prompt Reuse in Same Game (Multiplayer & Solo) ---
+console.log("\n--- TEST 18: No Prompt Reuse in Same Game ---");
+
+// 1. Verify Multiplayer Prompt Deduplication across all rounds of a match
+const roomCode18 = "RM18_" + (randId % 10000);
+const testRoom18 = drawRooms.getOrCreateRoom(roomCode18);
+testRoom18.hostId = "host_18";
+testRoom18.state.selectedPack = "memories"; // 11 prompts
+testRoom18.state.roundsTotal = 7;
+
+// Start match - Round 1
+drawRooms.handleMessage(testRoom18, "host_18", "HostUser", {
+  type: "START_MATCH",
+  payload: { packId: "memories" }
+});
+
+const chosenPrompts = [testRoom18.state.currentPrompt];
+
+// Simulate progression across 6 more rounds
+for (let r = 1; r < 7; r++) {
+  // End round time
+  testRoom18.state.stage = "round_review";
+  testRoom18.state.roundHistory.push({
+    round: r,
+    prompt: testRoom18.state.currentPrompt
+  });
+
+  // Next round
+  drawRooms.handleMessage(testRoom18, "host_18", "HostUser", { type: "NEXT_ROUND" });
+  assert(!chosenPrompts.includes(testRoom18.state.currentPrompt), `Round ${r + 1} prompt "${testRoom18.state.currentPrompt}" was already used!`);
+  chosenPrompts.push(testRoom18.state.currentPrompt);
+}
+
+assert.strictEqual(new Set(chosenPrompts).size, 7, "All 7 rounds have distinct prompts in multiplayer match");
+
+// 2. Verify source excludes roundHistory in both draw-room.js and draw.runtime.js
+const serverText18 = fs.readFileSync(path.join(__dirname, "../server/draw-room.js"), "utf8");
+assert(serverText18.includes("room.state.roundHistory.forEach"), "draw-room.js checks roundHistory in getNextPrompt");
+const clientText18 = fs.readFileSync(path.join(__dirname, "../public/js/widgets/draw.runtime.js"), "utf8");
+assert(clientText18.includes("state.roundHistory.forEach"), "draw.runtime.js checks roundHistory in getRandomPrompt");
+
+console.log("✅ PASS: Test 18 verified - Zero prompt reuse across rounds in same game");
+passedTests++;
+
 console.log("\n=================================================");
-console.log(`ALL ${passedTests}/17 TEST SUITES PASSED!`);
+console.log(`ALL ${passedTests}/18 TEST SUITES PASSED!`);
 console.log("=================================================");
 process.exit(0);
