@@ -103,6 +103,8 @@
     currentSize: 5,
     selectedPokeEmoji: "👉",
     currentStroke: null,
+    isEraser: false,
+    myRedoStack: [],
     myStrokes: [],
     partnerStrokes: [],
     roundHistory: []
@@ -162,7 +164,10 @@
     myPokeLayer: document.getElementById("myPokeLayer"),
     partnerPokeLayer: document.getElementById("partnerPokeLayer"),
     colorPalette: document.getElementById("colorPalette"),
+    btnToolEraser: document.getElementById("btnToolEraser"),
     brushSizes: document.getElementById("brushSizes"),
+    btnToolUndo: document.getElementById("btnToolUndo"),
+    btnToolRedo: document.getElementById("btnToolRedo"),
     btnClearCanvas: document.getElementById("btnClearCanvas"),
     pokeButtons: document.getElementById("pokeButtons"),
 
@@ -260,8 +265,21 @@
     }
   }
 
+  function syncRoomUrl(code) {
+    if (!code) return;
+    try {
+      sessionStorage.setItem("draw_last_room", code);
+      const url = new URL(window.location.href);
+      if (url.searchParams.get("room") !== code) {
+        url.searchParams.set("room", code);
+        window.history.replaceState({ room: code }, "", url.toString());
+      }
+    } catch (_) {}
+  }
+
   function initNetworking(roomCode) {
     state.roomCode = roomCode.toUpperCase().trim();
+    syncRoomUrl(state.roomCode);
     state.participantId = getOrCreateParticipantId(state.roomCode);
     const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${wsProto}//${window.location.host}/draw-ws`;
@@ -534,6 +552,11 @@
       state.timerRunning = !!msg.timerRunning;
       state.myStrokes = [];
       state.partnerStrokes = [];
+      state.myRedoStack = [];
+      state.isEraser = false;
+      el.btnToolEraser?.classList.remove("selected");
+      const currentSwatch = document.querySelector(`.draw-color-swatch[data-color="${state.currentColor}"]`);
+      if (currentSwatch) currentSwatch.classList.add("selected");
 
       updateDrawingHeader();
       clearLocalCanvas();
@@ -655,6 +678,14 @@
       return;
     }
 
+    if (type === "REMOTE_DRAW_UNDO") {
+      if (state.partnerStrokes && state.partnerStrokes.length > 0) {
+        state.partnerStrokes.pop();
+        redrawAllStrokes();
+      }
+      return;
+    }
+
     if (type === "REMOTE_DRAW_CLEAR") {
       state.partnerStrokes = [];
       clearPartnerCanvas();
@@ -773,7 +804,16 @@
     const points = stroke.points || [];
     if (points.length === 0) return;
 
-    ctx.strokeStyle = stroke.color || "#18181b";
+    ctx.save();
+    if (stroke.isEraser) {
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.strokeStyle = "rgba(0,0,0,1)";
+      ctx.fillStyle = "rgba(0,0,0,1)";
+    } else {
+      ctx.globalCompositeOperation = "source-over";
+      ctx.strokeStyle = stroke.color || "#18181b";
+      ctx.fillStyle = stroke.color || "#18181b";
+    }
     ctx.lineWidth = stroke.size || 5;
 
     const p0 = points[0];
@@ -783,8 +823,8 @@
     if (points.length === 1) {
       ctx.beginPath();
       ctx.arc(x0, y0, (stroke.size || 5) / 2, 0, Math.PI * 2);
-      ctx.fillStyle = stroke.color || "#18181b";
       ctx.fill();
+      ctx.restore();
       return;
     }
 
@@ -804,6 +844,7 @@
     const pLast = points[points.length - 1];
     ctx.lineTo(pLast[0] * rect.width, pLast[1] * rect.height);
     ctx.stroke();
+    ctx.restore();
   }
 
   function getCanvasCoords(evt) {
@@ -833,21 +874,26 @@
     const coords = getCanvasCoords(evt);
     isDrawing = true;
 
+    const strokeSize = state.isEraser ? Math.max(state.currentSize * 2.5, 12) : state.currentSize;
     state.currentStroke = {
-      color: state.currentColor,
-      size: state.currentSize,
+      color: state.isEraser ? "rgba(0,0,0,1)" : state.currentColor,
+      size: strokeSize,
+      isEraser: !!state.isEraser,
       points: [[coords.nx, coords.ny]]
     };
 
     if (myCtx) {
+      myCtx.save();
+      myCtx.globalCompositeOperation = state.isEraser ? "destination-out" : "source-over";
       myCtx.beginPath();
-      myCtx.strokeStyle = state.currentColor;
-      myCtx.lineWidth = state.currentSize;
-      myCtx.arc(coords.px, coords.py, state.currentSize / 2, 0, Math.PI * 2);
-      myCtx.fillStyle = state.currentColor;
+      myCtx.strokeStyle = state.isEraser ? "rgba(0,0,0,1)" : state.currentColor;
+      myCtx.lineWidth = strokeSize;
+      myCtx.arc(coords.px, coords.py, strokeSize / 2, 0, Math.PI * 2);
+      myCtx.fillStyle = state.isEraser ? "rgba(0,0,0,1)" : state.currentColor;
       myCtx.fill();
       myCtx.beginPath();
       myCtx.moveTo(coords.px, coords.py);
+      myCtx.restore();
     }
   }
 
@@ -858,6 +904,8 @@
     state.currentStroke.points.push([coords.nx, coords.ny]);
 
     if (myCtx) {
+      myCtx.save();
+      myCtx.globalCompositeOperation = state.currentStroke.isEraser ? "destination-out" : "source-over";
       const len = state.currentStroke.points.length;
       if (len >= 3) {
         const p0 = state.currentStroke.points[len - 3];
@@ -870,15 +918,18 @@
         const midY2 = ((p1[1] + p2[1]) / 2) * rect.height;
 
         myCtx.beginPath();
-        myCtx.strokeStyle = state.currentColor;
-        myCtx.lineWidth = state.currentSize;
+        myCtx.strokeStyle = state.currentStroke.isEraser ? "rgba(0,0,0,1)" : state.currentColor;
+        myCtx.lineWidth = state.currentStroke.size;
         myCtx.moveTo(midX1, midY1);
         myCtx.quadraticCurveTo(p1[0] * rect.width, p1[1] * rect.height, midX2, midY2);
         myCtx.stroke();
       } else {
         myCtx.lineTo(coords.px, coords.py);
+        myCtx.strokeStyle = state.currentStroke.isEraser ? "rgba(0,0,0,1)" : state.currentColor;
+        myCtx.lineWidth = state.currentStroke.size;
         myCtx.stroke();
       }
+      myCtx.restore();
     }
   }
 
@@ -889,7 +940,10 @@
 
     if (state.currentStroke && state.currentStroke.points.length > 0) {
       state.myStrokes.push(state.currentStroke);
-      sendMsg("DRAW_STROKE", { stroke: state.currentStroke });
+      state.myRedoStack = [];
+      if (!state.isSolo) {
+        sendMsg("DRAW_STROKE", { stroke: state.currentStroke });
+      }
       state.currentStroke = null;
     }
   }
@@ -1126,6 +1180,11 @@
     state.currentRound = 1;
     state.currentPrompt = "The last time we laughed really hard";
     state.roundHistory = [];
+    state.myStrokes = [];
+    state.partnerStrokes = [];
+    state.myRedoStack = [];
+    state.isEraser = false;
+    el.btnToolEraser?.classList.remove("selected");
     state.timerRemaining = state.secondsPerDrawing;
     updateBadges();
     updateDrawingHeader();
@@ -1442,6 +1501,21 @@
       document.querySelectorAll(".draw-color-swatch").forEach(s => s.classList.remove("selected"));
       swatch.classList.add("selected");
       state.currentColor = swatch.dataset.color;
+      state.isEraser = false;
+      el.btnToolEraser?.classList.remove("selected");
+    });
+
+    // Eraser Tool
+    el.btnToolEraser?.addEventListener("click", () => {
+      state.isEraser = !state.isEraser;
+      if (state.isEraser) {
+        el.btnToolEraser.classList.add("selected");
+        document.querySelectorAll(".draw-color-swatch").forEach(s => s.classList.remove("selected"));
+      } else {
+        el.btnToolEraser.classList.remove("selected");
+        const currentSwatch = document.querySelector(`.draw-color-swatch[data-color="${state.currentColor}"]`);
+        if (currentSwatch) currentSwatch.classList.add("selected");
+      }
     });
 
     // Brush Sizes
@@ -1453,11 +1527,37 @@
       state.currentSize = Number(btn.dataset.size);
     });
 
+    // History: Undo
+    el.btnToolUndo?.addEventListener("click", () => {
+      if (!state.myStrokes || state.myStrokes.length === 0) return;
+      const undone = state.myStrokes.pop();
+      if (!state.myRedoStack) state.myRedoStack = [];
+      state.myRedoStack.push(undone);
+      redrawAllStrokes();
+      if (!state.isSolo) {
+        sendMsg("DRAW_UNDO");
+      }
+    });
+
+    // History: Redo
+    el.btnToolRedo?.addEventListener("click", () => {
+      if (!state.myRedoStack || state.myRedoStack.length === 0) return;
+      const redone = state.myRedoStack.pop();
+      state.myStrokes.push(redone);
+      renderStroke(myCtx, el.myCanvas, redone);
+      if (!state.isSolo) {
+        sendMsg("DRAW_STROKE", { stroke: redone });
+      }
+    });
+
     // Clear Button
     el.btnClearCanvas?.addEventListener("click", () => {
       state.myStrokes = [];
+      state.myRedoStack = [];
       clearLocalCanvas();
-      sendMsg("DRAW_CLEAR");
+      if (!state.isSolo) {
+        sendMsg("DRAW_CLEAR");
+      }
     });
 
     // Poke Buttons
@@ -1497,6 +1597,9 @@
 
     // Play Again
     el.btnPlayAgain?.addEventListener("click", () => {
+      if (!window.confirm("Are you sure you saved your artwork and want to play again? 💕")) {
+        return;
+      }
       if (state.isSolo) {
         showStage("pack_select");
       } else {
@@ -1535,10 +1638,20 @@
     const urlParams = new URLSearchParams(window.location.search);
     const roomFromQuery = urlParams.get("room") || urlParams.get("code");
     const pathMatch = window.location.pathname.match(/^\/draw\/([a-zA-Z0-9_-]+)/);
-    const initialRoom = roomFromQuery || (pathMatch ? pathMatch[1] : null);
+    let initialRoom = roomFromQuery || (pathMatch ? pathMatch[1] : null);
+
+    if (!initialRoom) {
+      try {
+        const savedRoom = sessionStorage.getItem("draw_last_room");
+        if (savedRoom && savedRoom.length >= 3 && savedRoom.length <= 10) {
+          initialRoom = savedRoom;
+        }
+      } catch (_) {}
+    }
 
     if (initialRoom) {
       state.roomCode = initialRoom.toUpperCase().trim();
+      syncRoomUrl(state.roomCode);
       if (el.inputJoinCode) el.inputJoinCode.value = state.roomCode;
       if (el.displayRoomCode) el.displayRoomCode.textContent = state.roomCode;
       if (el.lobbyInitialView) el.lobbyInitialView.style.display = "none";

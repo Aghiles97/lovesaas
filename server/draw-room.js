@@ -731,7 +731,8 @@ class DrawRoomServer {
         const safeStroke = {
           color: sanitizeStr(stroke.color, 16) || "#111111",
           size: Math.min(Math.max(Number(stroke.size) || 4, 1), 40),
-          points: stroke.points.slice(0, 400).map(parseCoord)
+          points: stroke.points.slice(0, 400).map(parseCoord),
+          isEraser: !!stroke.isEraser
         };
 
         currentRoom.state.strokes[participantId].push(safeStroke);
@@ -756,6 +757,18 @@ class DrawRoomServer {
       }
       this.broadcast(currentRoom, {
         type: "REMOTE_DRAW_CLEAR",
+        drawerId: participantId,
+        drawerName: participantName
+      }, sender);
+      return;
+    }
+
+    if (type === "DRAW_UNDO") {
+      if (currentRoom.state.strokes?.[participantId]?.length > 0) {
+        currentRoom.state.strokes[participantId].pop();
+      }
+      this.broadcast(currentRoom, {
+        type: "REMOTE_DRAW_UNDO",
         drawerId: participantId,
         drawerName: participantName
       }, sender);

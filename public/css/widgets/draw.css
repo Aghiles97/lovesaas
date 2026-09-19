@@ -1338,6 +1338,37 @@ body:has(#stageProfile.active) {
   border-radius: 50%;
 }
 
+.draw-tool-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
+  color: #52525b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.draw-tool-icon-btn:hover {
+  border-color: #18181b;
+  color: #18181b;
+}
+
+.draw-tool-icon-btn.selected {
+  background: #18181b;
+  color: #ffffff;
+  border-color: #18181b;
+}
+
+.draw-history-btns {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .draw-btn-clear {
   height: 32px;
   padding: 0 16px;

@@ -291,6 +291,15 @@
               <button type="button" class="draw-color-swatch" data-color="#fd6161" style="background-color: #fd6161;" title="Red"></button>
             </div>
 
+            <!-- Eraser Tool -->
+            <button type="button" id="btnToolEraser" class="draw-tool-icon-btn" title="Eraser">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"></path>
+                <path d="M22 21H7"></path>
+                <path d="m5 11 9 9"></path>
+              </svg>
+            </button>
+
             <!-- Brush Sizes (Exact 4 sizes) -->
             <div class="draw-sizes" id="brushSizes">
               <button type="button" class="draw-size-btn" data-size="2" title="Fine">
@@ -304,6 +313,22 @@
               </button>
               <button type="button" class="draw-size-btn" data-size="15" title="Extra Thick">
                 <span class="draw-size-dot" style="width: 14px; height: 14px;"></span>
+              </button>
+            </div>
+
+            <!-- Undo / Redo History -->
+            <div class="draw-history-btns">
+              <button type="button" id="btnToolUndo" class="draw-tool-icon-btn" title="Undo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 7v6h6"></path>
+                  <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+                </svg>
+              </button>
+              <button type="button" id="btnToolRedo" class="draw-tool-icon-btn" title="Redo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 7v6h-6"></path>
+                  <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path>
+                </svg>
               </button>
             </div>
 
