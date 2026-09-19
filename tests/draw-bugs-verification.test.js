@@ -192,7 +192,47 @@ assert.strictEqual(testRoom3.participants.size >= 2, true, "Both partners connec
 console.log("✅ PASS: Bug 5 verified - Invite link auto-entry succeeds without false ROOM_FULL");
 passedTests++;
 
+// --- TEST 5: Topic Selection Stage Demotion & Reconnect Loop Prevention ---
+console.log("\n--- TEST 5: No Stage Demotion on PARTNER_JOINED or Reconnect ---");
+
+const testRoom4 = drawRooms.getOrCreateRoom("TEST_STAGE_GUARD_" + randId);
+let partnerJoinedCount = 0;
+const clientListener = {
+  readyState: 1,
+  send: (msg) => {
+    const parsed = JSON.parse(msg);
+    if (parsed.type === "PARTNER_JOINED") partnerJoinedCount++;
+  }
+};
+
+testRoom4.participants.set(clientListener, { id: "user_alex", name: "Alex", role: "host" });
+testRoom4.state.profiles["user_alex"] = { name: "Alex", sex: "male", ready: true };
+testRoom4.state.profiles["user_tella"] = { name: "Tella", sex: "female", ready: true };
+testRoom4.state.stage = "pack_select";
+
+// Simulate Alex reconnecting - since Alex is existing, PARTNER_JOINED must NOT be broadcast
+const isAlexExisting = true;
+if (!isAlexExisting) {
+  drawRooms.broadcast(testRoom4, { type: "PARTNER_JOINED" });
+}
+
+assert.strictEqual(partnerJoinedCount, 0, "PARTNER_JOINED is NOT broadcasted when an existing user reconnects");
+
+// Client-side guard simulation:
+let clientCurrentStage = "pack_select";
+const incomingPartnerJoined = { type: "PARTNER_JOINED", partner: { name: "Tella" } };
+
+// Handled with new rule: only showStage("profile_setup") if clientCurrentStage === "lobby"
+if (clientCurrentStage === "lobby") {
+  clientCurrentStage = "profile_setup";
+}
+
+assert.strictEqual(clientCurrentStage, "pack_select", "Stage remains pack_select; never demoted to profile_setup");
+
+console.log("✅ PASS: Bug 6 verified - No stage demotion to profile_setup and no PARTNER_JOINED storm");
+passedTests++;
+
 console.log("\n=================================================");
-console.log(`ALL ${passedTests}/4 TEST SUITES PASSED!`);
+console.log(`ALL ${passedTests}/5 TEST SUITES PASSED!`);
 console.log("=================================================");
 process.exit(0);

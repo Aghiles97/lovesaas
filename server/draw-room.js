@@ -420,12 +420,14 @@ class DrawRoomServer {
       ]
     })}\n\n`);
 
-    this.broadcast(currentRoom, {
-      type: "PARTNER_JOINED",
-      partner: { id: participantId, name, role },
-      stage: currentRoom.state.stage,
-      participantCount: currentRoom.participants.size + currentRoom.sseClients.size
-    }, res);
+    if (!isExisting) {
+      this.broadcast(currentRoom, {
+        type: "PARTNER_JOINED",
+        partner: { id: participantId, name, role },
+        stage: currentRoom.state.stage,
+        participantCount: currentRoom.participants.size + currentRoom.sseClients.size
+      }, res);
+    }
 
     const pingTimer = setInterval(() => {
       try { res.write(": ping\n\n"); } catch (e) { clearInterval(pingTimer); }
@@ -870,12 +872,14 @@ class DrawRoomServer {
               participants: Array.from(currentRoom.participants.values())
             }));
 
-            this.broadcast(currentRoom, {
-              type: "PARTNER_JOINED",
-              partner: { id: participantId, name: participantName, role },
-              stage: currentRoom.state.stage,
-              participantCount: currentRoom.participants.size + (currentRoom.sseClients?.size || 0)
-            }, ws);
+            if (!isExisting) {
+              this.broadcast(currentRoom, {
+                type: "PARTNER_JOINED",
+                partner: { id: participantId, name: participantName, role },
+                stage: currentRoom.state.stage,
+                participantCount: currentRoom.participants.size + (currentRoom.sseClients?.size || 0)
+              }, ws);
+            }
 
             return;
           }

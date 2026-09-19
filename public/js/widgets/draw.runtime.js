@@ -268,14 +268,23 @@
 
     try {
       if (state.ws) {
+        state.ws.onclose = null;
+        state.ws.onerror = null;
         try { state.ws.close(); } catch (e) {}
+        state.ws = null;
       }
-      state.ws = new WebSocket(wsUrl);
+      const ws = new WebSocket(wsUrl);
+      state.ws = ws;
 
-      state.ws.onopen = () => {
+      ws.onopen = () => {
+        if (state.ws !== ws) return;
         if (state._reconnectTimer) {
           clearTimeout(state._reconnectTimer);
           state._reconnectTimer = null;
+        }
+        if (state.sse) {
+          try { state.sse.close(); } catch (e) {}
+          state.sse = null;
         }
         sendMsg("JOIN_ROOM", {
           roomCode: state.roomCode,
@@ -284,23 +293,29 @@
         });
       };
 
-      state.ws.onmessage = (evt) => {
+      ws.onmessage = (evt) => {
+        if (state.ws !== ws) return;
         try {
           const msg = JSON.parse(evt.data);
           handleIncomingMessage(msg);
         } catch (e) {}
       };
 
-      state.ws.onerror = () => setupSseFallback();
-      state.ws.onclose = () => {
+      ws.onerror = () => {
+        if (state.ws !== ws) return;
+        setupSseFallback();
+      };
+
+      ws.onclose = () => {
+        if (state.ws !== ws) return;
         setupSseFallback();
         if (state.roomCode && !state.isSolo && !state._reconnectTimer) {
           state._reconnectTimer = setTimeout(() => {
             state._reconnectTimer = null;
-            if (state.roomCode && !state.isSolo && (!state.ws || state.ws.readyState !== WebSocket.OPEN)) {
+            if (state.roomCode && !state.isSolo && (!state.ws || state.ws.readyState === WebSocket.CLOSED)) {
               initNetworking(state.roomCode);
             }
-          }, 2000);
+          }, 3000);
         }
       };
     } catch (e) {
@@ -310,13 +325,22 @@
 
   function setupSseFallback() {
     if (state.sse || state.isSolo) return;
+    if (state.ws && state.ws.readyState === WebSocket.OPEN) return;
     const url = `/api/draw/rooms/${state.roomCode}/events?id=${encodeURIComponent(state.participantId)}&name=${encodeURIComponent(state.myName)}`;
-    state.sse = new EventSource(url);
-    state.sse.onmessage = (evt) => {
+    const sse = new EventSource(url);
+    state.sse = sse;
+    sse.onmessage = (evt) => {
+      if (state.sse !== sse) return;
       try {
         const msg = JSON.parse(evt.data);
         handleIncomingMessage(msg);
       } catch (e) {}
+    };
+    sse.onerror = () => {
+      if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+        try { sse.close(); } catch (e) {}
+        if (state.sse === sse) state.sse = null;
+      }
     };
   }
 
@@ -407,7 +431,7 @@
         }
       }
 
-      if (msg.participantCount >= 2 || state.role === "guest") {
+      if (state.stage === "lobby" && (msg.participantCount >= 2 || state.role === "guest")) {
         showStage("profile_setup");
         showToast("Connected! Set up your profile 💕");
       }
@@ -419,8 +443,10 @@
         state.partnerName = msg.partner.name || "Partner";
         updateBadges();
       }
-      showToast("Partner connected! Set up your profiles 💕");
-      showStage("profile_setup");
+      if (state.stage === "lobby") {
+        showToast("Partner connected! Set up your profiles 💕");
+        showStage("profile_setup");
+      }
       return;
     }
 
