@@ -256,11 +256,9 @@
         <!-- Top Header Bar -->
         <header class="draw-arena-header">
           <div class="draw-round-col">
-            <button type="button" id="btnExitDrawing" class="draw-btn-header-exit" title="Exit to Menu">✕ Exit</button>
             <span class="draw-round-ratio"><span id="displayRoundNum">1</span>/<span id="displayRoundTotal">3</span></span>
           </div>
           <div class="draw-prompt-title">
-            <strong class="draw-prompt-tag">DRAW:</strong>
             <span id="displayPrompt">the last time we laughed really hard</span>
           </div>
           <div class="draw-timer-wrap">
@@ -371,6 +369,11 @@
             <span>draw! ✏️ — tap their pad to poke</span>
           </div>
         </div>
+
+        <!-- Exit Button at Bottom of Drawing Page -->
+        <div class="draw-exit-bottom-wrap">
+          <button type="button" id="btnExitDrawing" class="draw-btn-bottom-exit" title="Exit to Menu">✕ Exit to Menu</button>
+        </div>
       </div>
     </div>
 
@@ -380,7 +383,7 @@
     <div id="stageRoundReview" class="draw-stage">
       <div class="draw-review-wrap">
         <h2 class="draw-review-title">Round Complete!</h2>
-        <div class="draw-review-prompt" id="reviewPromptText">Draw: the last time we laughed really hard</div>
+        <div class="draw-review-prompt" id="reviewPromptText">the last time we laughed really hard</div>
 
         <div class="draw-review-grid">
           <div class="draw-review-card">

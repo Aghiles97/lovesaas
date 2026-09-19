@@ -1239,7 +1239,7 @@
     }
 
     if (el.reviewPromptText) {
-      el.reviewPromptText.textContent = `Draw: ${existing.prompt}`;
+      el.reviewPromptText.textContent = existing.prompt;
     }
     if (el.reviewMyName) el.reviewMyName.textContent = state.myName || "You";
     if (el.reviewPartnerName) el.reviewPartnerName.textContent = state.partnerName || "Partner";
