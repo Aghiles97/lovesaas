@@ -351,7 +351,7 @@
                   </div>
                 </div>
 
-                <button type="button" class="ldr-text-back-btn" id="btnPrimaryBackWebsite">
+                <button type="button" class="ldr-text-back-btn" id="btnPrimaryBackWebsite" style="display:none;">
                   <span>← Back to Website</span>
                 </button>
               </div>
@@ -627,7 +627,7 @@
                     </div>
                   </div>
 
-                  <button type="button" class="ldr-text-back-btn" id="btnLdrBackAll">
+                  <button type="button" class="ldr-text-back-btn" id="btnLdrBackAll" style="display:none;">
                     <span>← Back to Website</span>
                   </button>
                 </div>
@@ -646,17 +646,19 @@
                         <span class="ldr-code-tile">-</span>
                         <span class="ldr-code-tile">-</span>
                         <span class="ldr-code-tile">-</span>
-                        <span class="ldr-code-tile">-</span>
                       </div>
-                      <span id="ldrModalRoomCode" style="display:none;"></span>
+                      <div class="ldr-code-raw-display" id="ldrRoomCodeDisplay">-----</div>
 
                       <div class="ldr-code-actions-row">
-                        <button type="button" class="ldr-tile-btn" id="btnModalCopyInvite">Copy link</button>
-                        <button type="button" class="ldr-tile-btn" id="btnModalShareInvite">share ↗</button>
+                        <button type="button" class="btn btn-primary btn-lg ldr-copy-btn" id="btnCopyInviteLink">
+                          <span>📋 Copy Link</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-lg ldr-new-code-btn" id="btnNewRoomCode">
+                          <span>🔄 New Code</span>
+                        </button>
                       </div>
 
-                      <!-- Waiting pulse before partner connects -->
-                      <div class="ldr-waiting-indicator" id="ldrWaitingStatusWrap">
+                      <div class="ldr-waiting-pulse-status">
                         <span class="ldr-pulse-pink-dot"></span>
                         <span id="ldrLobbyWaitingMsg">Waiting for your partner...</span>
                       </div>
@@ -669,7 +671,43 @@
                   </div>
                 </div>
 
-                <!-- Clean Connected Screen (Screenshot 2 post-join): Code disappears, both see each other live -->
+                <!-- Cute Profile Onboarding Card (reveals after both join, BEFORE cameras open) -->
+                <div class="ldr-profile-card" id="ldrProfileCard" style="display:none;">
+                  <span class="ldr-profile-badge">💕 Couple Identity</span>
+                  <h2 class="ldr-profile-title">Introduce Yourself 💕</h2>
+                  <p class="ldr-profile-sub">Pick your cute avatar &amp; enter your name before the camera turns on!</p>
+
+                  <div class="ldr-sex-picker" id="ldrSexPicker" role="radiogroup" aria-label="Select cute avatar">
+                    <button type="button" class="ldr-sex-btn" data-sex="boy" role="radio" aria-checked="false">
+                      <span class="sex-emoji">👦</span>
+                      <span class="sex-label">Boy</span>
+                    </button>
+                    <button type="button" class="ldr-sex-btn" data-sex="girl" role="radio" aria-checked="false">
+                      <span class="sex-emoji">👧</span>
+                      <span class="sex-label">Girl</span>
+                    </button>
+                    <button type="button" class="ldr-sex-btn" data-sex="cutie" role="radio" aria-checked="false">
+                      <span class="sex-emoji">✨</span>
+                      <span class="sex-label">Cutie</span>
+                    </button>
+                  </div>
+
+                  <div class="ldr-profile-name-wrap">
+                    <label class="ldr-profile-name-label" for="ldrInputMyName">Your Name</label>
+                    <input type="text" id="ldrInputMyName" class="ldr-profile-name-input" maxlength="20" placeholder="e.g., Alex, Honey, Maya..." autocomplete="off">
+                  </div>
+
+                  <button type="button" class="ldr-profile-submit-btn" id="btnSubmitProfile" disabled>
+                    <span>Ready to Reveal Camera 📸 💕</span>
+                  </button>
+
+                  <div class="ldr-profile-waiting-notice" id="ldrProfileWaitingNotice" style="display:none;">
+                    <span class="status-pulse-dot waiting"></span>
+                    <span id="ldrProfileWaitingText">You're all set! Waiting for partner... 💕</span>
+                  </div>
+                </div>
+
+                <!-- Clean Connected Screen (post-profile): Code & Profile disappear, both see each other live -->
                 <div class="ldr-partner-connected-card" id="ldrPartnerConnectedCard" style="display:none;">
                   <div class="ldr-connected-banner">
                     <span class="ldr-connected-tag"><span class="status-pulse-dot connected"></span> Connected</span>
@@ -678,11 +716,11 @@
                   <div class="ldr-dual-preview-row">
                     <div class="ldr-preview-feed-box">
                       <video id="photoboothVideoLobbyPreview" autoplay playsinline muted></video>
-                      <span class="feed-tag">You</span>
+                      <span class="feed-tag" id="ldrFeedTagLocal">You</span>
                     </div>
                     <div class="ldr-preview-feed-box">
                       <video id="ldrVideoFeedLobbyRemote" autoplay playsinline webkit-playsinline muted></video>
-                      <span class="feed-tag">Partner</span>
+                      <span class="feed-tag" id="ldrFeedTagRemote">Partner</span>
                       <div class="remote-placeholder" id="ldrLobbyRemotePlaceholder" style="display:none;">
                         <span class="placeholder-icon">📸</span>
                         <span class="placeholder-txt">Connecting video...</span>

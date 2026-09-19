@@ -424,35 +424,28 @@
         if (msg.participantCount >= 2) {
           const lobbyWaitingWrap = document.getElementById("ldrLobbyWaitingWrap");
           const waitingWrap = document.getElementById("ldrWaitingStatusWrap");
-          const connectedCard = document.getElementById("ldrPartnerConnectedCard");
           if (lobbyWaitingWrap) lobbyWaitingWrap.style.display = "none";
           if (waitingWrap) waitingWrap.style.display = "none";
-          if (connectedCard) connectedCard.style.display = "flex";
-          if (!this.session.mediaStream) {
-            this.session.startCamera();
-          } else {
-            const curStream = this.localStream || this.session?.mediaStream;
-            const localPreview = document.getElementById("photoboothVideoLobbyPreview");
-            if (localPreview && curStream && localPreview.srcObject !== curStream) {
-              localPreview.srcObject = curStream;
-              localPreview.muted = true;
-              localPreview.play().catch(() => {});
-            }
-            this.setupWebRTC(curStream);
-          }
-          this.attachRemoteStreamToUI();
 
-          if (this.watchdogTimer) clearTimeout(this.watchdogTimer);
-          this.watchdogTimer = setTimeout(() => {
-            if (!this.hasEstablishedConnection && !this.manualDisconnect) {
-              if (this.role === "host") {
-                this.isNegotiating = false;
-                this.renegotiate();
-              } else {
-                this.send("WEBRTC_SIGNAL", { signal: { renegotiateReq: true } });
-              }
+          if (state?.profiles) {
+            const myP = state.profiles[this.participantId];
+            const otherP = Object.entries(state.profiles).find(([id]) => id !== this.participantId)?.[1];
+            if (myP) this.session.myProfile = myP;
+            if (otherP) this.session.partnerProfile = otherP;
+          }
+
+          if (this.session.myProfile?.name && this.session.partnerProfile?.name) {
+            this.session.checkProfilesAndRevealCamera();
+          } else {
+            const profileCard = document.getElementById("ldrProfileCard");
+            const connectedCard = document.getElementById("ldrPartnerConnectedCard");
+            if (connectedCard) connectedCard.style.display = "none";
+            if (profileCard) profileCard.style.display = "flex";
+            if (this.session.myProfile?.name) {
+              const notice = document.getElementById("ldrProfileWaitingNotice");
+              if (notice) notice.style.display = "inline-flex";
             }
-          }, 3500);
+          }
         }
 
         if (state?.stage && state.stage !== "welcome" && this.session) {
@@ -473,37 +466,43 @@
 
         const lobbyWaitingWrap = document.getElementById("ldrLobbyWaitingWrap");
         const waitingWrap = document.getElementById("ldrWaitingStatusWrap");
-        const connectedCard = document.getElementById("ldrPartnerConnectedCard");
         if (lobbyWaitingWrap) lobbyWaitingWrap.style.display = "none";
         if (waitingWrap) waitingWrap.style.display = "none";
-        if (connectedCard) connectedCard.style.display = "flex";
-        if (!this.session.mediaStream) {
-          this.session.startCamera();
-        } else {
-          const curStream = this.localStream || this.session?.mediaStream;
-          const localPreview = document.getElementById("photoboothVideoLobbyPreview");
-          if (localPreview && curStream && localPreview.srcObject !== curStream) {
-            localPreview.srcObject = curStream;
-            localPreview.muted = true;
-            localPreview.play().catch(() => {});
-          }
-          this.setupWebRTC(curStream);
-        }
-        this.attachRemoteStreamToUI();
 
-        if (this.watchdogTimer) clearTimeout(this.watchdogTimer);
-        this.watchdogTimer = setTimeout(() => {
-          if (!this.hasEstablishedConnection && !this.manualDisconnect) {
-            if (this.role === "host") {
-              this.isNegotiating = false;
-              this.renegotiate();
-            } else {
-              this.send("WEBRTC_SIGNAL", { signal: { renegotiateReq: true } });
-            }
+        if (this.session.myProfile?.name && this.session.partnerProfile?.name) {
+          this.session.checkProfilesAndRevealCamera();
+        } else {
+          const profileCard = document.getElementById("ldrProfileCard");
+          const connectedCard = document.getElementById("ldrPartnerConnectedCard");
+          if (connectedCard) connectedCard.style.display = "none";
+          if (profileCard) profileCard.style.display = "flex";
+          if (this.session.myProfile?.name) {
+            const notice = document.getElementById("ldrProfileWaitingNotice");
+            if (notice) notice.style.display = "inline-flex";
           }
-        }, 3500);
+        }
 
         this.session.play("sparkle");
+        return;
+      }
+
+      if (type === "PROFILE_UPDATED") {
+        const { participantId, profile, profiles, caption } = msg;
+        if (participantId === this.participantId) {
+          this.session.myProfile = profile;
+        } else {
+          this.session.partnerProfile = profile;
+        }
+        if (profiles) {
+          Object.entries(profiles).forEach(([id, p]) => {
+            if (id === this.participantId) this.session.myProfile = p;
+            else this.session.partnerProfile = p;
+          });
+        }
+        if (caption) {
+          this.session.updatePhraseDisplays(caption);
+        }
+        this.session.checkProfilesAndRevealCamera();
         return;
       }
 
@@ -1085,6 +1084,8 @@
       // LDR & Selection & Paint State
       this.isLdrMode = false;
       this.ldrManager = null;
+      this.myProfile = null;
+      this.partnerProfile = null;
       this.candidatePhotos = [];
       this.selectedCandidateIndices = [];
       this.retryBudget = 1;
@@ -1148,15 +1149,30 @@
       this.setFormat(this.currentFormat);
       this.initPaintEngine();
 
-      if (typeof window !== "undefined" && window.location) {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has("booth_room") || urlParams.has("room")) {
-          const rCode = urlParams.get("booth_room") || urlParams.get("room");
-          if (!window.IS_STANDALONE_PHOTOBOOTH) {
-            window.location.replace(`/photobooth?room=${encodeURIComponent(rCode)}`);
-            return;
+      if (typeof window !== "undefined") {
+        const isStandalone = Boolean(window.IS_STANDALONE_PHOTOBOOTH || (window.location && (window.location.pathname === "/photobooth" || window.location.pathname === "/booth")));
+        if (isStandalone) {
+          document.body.classList.add("is-standalone-photobooth");
+          document.getElementById("btnPrimaryBackWebsite")?.style.removeProperty("display");
+          document.getElementById("btnLdrBackAll")?.style.removeProperty("display");
+        } else {
+          document.body.classList.remove("is-standalone-photobooth");
+          const b1 = document.getElementById("btnPrimaryBackWebsite");
+          if (b1) b1.style.display = "none";
+          const b2 = document.getElementById("btnLdrBackAll");
+          if (b2) b2.style.display = "none";
+        }
+
+        if (window.location) {
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.has("booth_room") || urlParams.has("room")) {
+            const rCode = urlParams.get("booth_room") || urlParams.get("room");
+            if (!window.IS_STANDALONE_PHOTOBOOTH) {
+              window.location.replace(`/photobooth?room=${encodeURIComponent(rCode)}`);
+              return;
+            }
+            this.switchMode("ldr", rCode);
           }
-          this.switchMode("ldr", rCode);
         }
       }
     }
@@ -1299,6 +1315,110 @@
       if (confirmModal) confirmModal.style.display = "none";
     }
 
+    sexEmoji(sex) {
+      if (sex === "boy") return "👦";
+      if (sex === "girl") return "👧";
+      return "✨";
+    }
+
+    bindProfileControls() {
+      const sexBtns = document.querySelectorAll(".ldr-sex-btn");
+      const nameInput = document.getElementById("ldrInputMyName");
+      const submitBtn = document.getElementById("btnSubmitProfile");
+      let selectedSex = null;
+
+      const validate = () => {
+        const hasSex = Boolean(selectedSex);
+        const hasName = Boolean(nameInput && nameInput.value && nameInput.value.trim().length >= 1);
+        if (submitBtn) submitBtn.disabled = !(hasSex && hasName);
+      };
+
+      sexBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+          sexBtns.forEach(b => {
+            b.classList.remove("active");
+            b.setAttribute("aria-checked", "false");
+          });
+          btn.classList.add("active");
+          btn.setAttribute("aria-checked", "true");
+          selectedSex = btn.dataset.sex;
+          this.play("beep", 660, 0.04);
+          this.vibrate(15);
+          validate();
+        });
+      });
+
+      nameInput?.addEventListener("input", validate);
+
+      submitBtn?.addEventListener("click", () => {
+        const name = (nameInput?.value || "").trim();
+        if (!name || !selectedSex) return;
+        this.myProfile = { name, sex: selectedSex };
+        this.play("beep", 880, 0.05);
+        this.vibrate(20);
+
+        if (submitBtn) submitBtn.disabled = true;
+        if (nameInput) nameInput.disabled = true;
+        sexBtns.forEach(b => b.style.pointerEvents = "none");
+
+        const waitingNotice = document.getElementById("ldrProfileWaitingNotice");
+        if (waitingNotice) waitingNotice.style.display = "inline-flex";
+
+        if (this.ldrManager) {
+          this.ldrManager.send("PROFILE_SUBMIT", this.myProfile);
+        }
+
+        this.checkProfilesAndRevealCamera();
+      });
+    }
+
+    checkProfilesAndRevealCamera() {
+      if (!this.myProfile?.name || !this.partnerProfile?.name) return;
+
+      const profileCard = document.getElementById("ldrProfileCard");
+      const connectedCard = document.getElementById("ldrPartnerConnectedCard");
+      if (profileCard) profileCard.style.display = "none";
+      if (connectedCard) connectedCard.style.display = "flex";
+
+      const tagLocal = document.getElementById("ldrFeedTagLocal");
+      const tagRemote = document.getElementById("ldrFeedTagRemote");
+      if (tagLocal) tagLocal.textContent = `${this.sexEmoji(this.myProfile.sex)} ${this.myProfile.name} (You)`;
+      if (tagRemote) tagRemote.textContent = `${this.sexEmoji(this.partnerProfile.sex)} ${this.partnerProfile.name} (Partner)`;
+
+      const coupleCaption = `${this.myProfile.name} & ${this.partnerProfile.name} ♡ Forever`;
+      this.updatePhraseDisplays(coupleCaption);
+
+      if (!this.mediaStream) {
+        this.startCamera();
+      } else {
+        const curStream = this.ldrManager?.localStream || this.mediaStream;
+        const localPreview = document.getElementById("photoboothVideoLobbyPreview");
+        if (localPreview && curStream && localPreview.srcObject !== curStream) {
+          localPreview.srcObject = curStream;
+          localPreview.muted = true;
+          localPreview.play().catch(() => {});
+        }
+        if (curStream && this.ldrManager) {
+          this.ldrManager.setupWebRTC(curStream);
+        }
+      }
+      this.ldrManager?.attachRemoteStreamToUI();
+
+      if (this.ldrManager) {
+        if (this.ldrManager.watchdogTimer) clearTimeout(this.ldrManager.watchdogTimer);
+        this.ldrManager.watchdogTimer = setTimeout(() => {
+          if (!this.ldrManager.hasEstablishedConnection && !this.ldrManager.manualDisconnect) {
+            if (this.ldrManager.role === "host") {
+              this.ldrManager.isNegotiating = false;
+              this.ldrManager.renegotiate();
+            } else {
+              this.ldrManager.send("WEBRTC_SIGNAL", { signal: { renegotiateReq: true } });
+            }
+          }
+        }, 3500);
+      }
+    }
+
     exitToFirstScreen() {
       this.hideExitConfirm();
       if (this.ldrManager) {
@@ -1318,6 +1438,8 @@
       this.paintStrokes = [];
       this.retryCount = 0;
       this.currentFacingMode = "user";
+      this.myProfile = null;
+      this.partnerProfile = null;
 
       if (typeof window !== "undefined" && window.history && window.history.replaceState) {
         const url = new URL(window.location.href);
@@ -1326,10 +1448,18 @@
         window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : ""));
       }
 
+      const isStandalone = typeof window !== "undefined" && (window.IS_STANDALONE_PHOTOBOOTH || (window.location && (window.location.pathname === "/photobooth" || window.location.pathname === "/booth")));
+      if (!isStandalone) {
+        this.closeLdrModal();
+        return;
+      }
+
       const dockedBar = document.getElementById("ldrDockedCallBar");
       if (dockedBar) dockedBar.style.display = "none";
       const connectedCard = document.getElementById("ldrPartnerConnectedCard");
       if (connectedCard) connectedCard.style.display = "none";
+      const profileCard = document.getElementById("ldrProfileCard");
+      if (profileCard) profileCard.style.display = "none";
       const lobbyWaitingWrap = document.getElementById("ldrLobbyWaitingWrap");
       if (lobbyWaitingWrap) lobbyWaitingWrap.style.display = "";
       const waitingWrap = document.getElementById("ldrWaitingStatusWrap");
@@ -1365,6 +1495,13 @@
     }
 
     closeLdrModal() {
+      this.hideExitConfirm();
+      this.myProfile = null;
+      this.partnerProfile = null;
+      const profileCard = document.getElementById("ldrProfileCard");
+      if (profileCard) profileCard.style.display = "none";
+      const connectedCard = document.getElementById("ldrPartnerConnectedCard");
+      if (connectedCard) connectedCard.style.display = "none";
       const modal = document.getElementById("photoboothLdrModal");
       if (modal) {
         modal.classList.remove("is-active");
@@ -1979,6 +2116,7 @@
     }
 
     bindControls() {
+      this.bindProfileControls();
       this.btnModeSolo?.addEventListener("click", () => this.startSoloSession());
       this.btnModeLdr?.addEventListener("click", () => this.openLdrModal());
       document.getElementById("btnLeaveLdrModal")?.addEventListener("click", () => this.handleModalCloseClick());

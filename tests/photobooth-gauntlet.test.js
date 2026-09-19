@@ -447,6 +447,19 @@ const gate27Runtime = fs.readFileSync(path.resolve(__dirname, "../public/js/widg
 assert(gate27Css.includes("#photoboothVideoLobbyPreview") && gate27Css.includes("scaleX(-1)"), "photobooth.css enforces consistent front camera mirroring on lobby preview feed");
 assert(gate27Css.includes("@media (max-height: 500px) and (orientation: landscape)"), "photobooth.css collapses vertical space in Step 5 for mobile landscape orientation");
 assert(gate27Runtime.includes("isMobileTouch") && gate27Runtime.includes("navigator.canShare") && gate27Runtime.includes("exportStrip"), "exportStrip prioritizes native mobile share sheet file export on touch devices");
+// --- GATE 28: Instant Exit, Cute Profile Gating & Standalone-Only Return Link ---
+console.log("\n--- GATE 28: Instant Exit, Cute Profile Gating & Standalone-Only Return Link ---");
+const gate28Template = fs.readFileSync(path.resolve(__dirname, "../core/templates/photobooth.template.js"), "utf8");
+const gate28Css = fs.readFileSync(path.resolve(__dirname, "../public/css/widgets/photobooth.css"), "utf8");
+const gate28Room = fs.readFileSync(path.resolve(__dirname, "../server/photobooth-room.js"), "utf8");
+const gate28Runtime = fs.readFileSync(path.resolve(__dirname, "../public/js/widgets/photobooth.runtime.js"), "utf8");
+
+assert(gate28Runtime.includes("if (!isStandalone) {\n        this.closeLdrModal();\n        return;\n      }"), "exitToFirstScreen immediately closes modal in website without double click");
+assert(gate28Css.includes("body:not(.is-standalone-photobooth) #btnPrimaryBackWebsite") && gate28Css.includes("body:not(.is-standalone-photobooth) #btnLdrBackAll"), "CSS suppresses Back to Website buttons on embedded website gift pages");
+assert(gate28Template.includes('id="ldrProfileCard"') && gate28Template.includes('id="ldrSexPicker"'), "Template contains cute profile onboarding card with sex/avatar picker");
+assert(gate28Template.includes('data-sex="boy"') && gate28Template.includes('data-sex="girl"') && gate28Template.includes('data-sex="cutie"'), "Template defines cute sex selection options (boy, girl, cutie)");
+assert(gate28Room.includes('type === "PROFILE_SUBMIT"') && gate28Room.includes("PROFILE_UPDATED"), "Room server manages PROFILE_SUBMIT and broadcasts PROFILE_UPDATED");
+assert(gate28Runtime.includes("bindProfileControls") && gate28Runtime.includes("checkProfilesAndRevealCamera"), "Runtime gates camera reveal behind couple profile completion");
 
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");

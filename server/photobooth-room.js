@@ -108,7 +108,8 @@ class PhotoboothRoomServer {
           maxRetries: 1,
           strokes: [],
           stickers: [],
-          overlay: "none"
+          overlay: "none",
+          profiles: {}
         }
       });
       this.scheduleSave();
@@ -259,6 +260,26 @@ class PhotoboothRoomServer {
         senderId: participantId,
         senderName: participantName
       }, sender);
+      return;
+    }
+
+    if (type === "PROFILE_SUBMIT") {
+      const name = sanitizeStr(payload?.name, 24) || "Partner";
+      const sex = sanitizeStr(payload?.sex, 16) || "cutie";
+      if (!currentRoom.state.profiles) currentRoom.state.profiles = {};
+      currentRoom.state.profiles[participantId] = { name, sex };
+      const profiles = Object.values(currentRoom.state.profiles);
+      if (profiles.length >= 2 && profiles[0].name && profiles[1].name) {
+        currentRoom.state.caption = `${profiles[0].name} & ${profiles[1].name} ♡ Forever`;
+      }
+      this.scheduleSave();
+      this.broadcastAll(currentRoom, {
+        type: "PROFILE_UPDATED",
+        participantId,
+        profile: { name, sex },
+        profiles: currentRoom.state.profiles,
+        caption: currentRoom.state.caption
+      });
       return;
     }
 

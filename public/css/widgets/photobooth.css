@@ -6387,3 +6387,177 @@
     max-height: calc(100vh - 120px) !important;
   }
 }
+
+/* Standalone vs Embedded Website Navigation */
+body:not(.is-standalone-photobooth) #btnPrimaryBackWebsite,
+body:not(.is-standalone-photobooth) #btnLdrBackAll {
+  display: none !important;
+}
+body.is-standalone-photobooth #btnPrimaryBackWebsite,
+body.is-standalone-photobooth #btnLdrBackAll {
+  display: inline-flex !important;
+}
+
+/* Cute Identity Profile Card */
+.ldr-profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  box-sizing: border-box;
+  animation: profileFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes profileFadeIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.ldr-profile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(255, 45, 85, 0.15);
+  border: 1px solid rgba(255, 45, 85, 0.3);
+  border-radius: 999px;
+  color: #ff2d55;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+}
+.ldr-profile-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 6px 0;
+}
+.ldr-profile-sub {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 18px 0;
+  line-height: 1.4;
+}
+.ldr-sex-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 18px;
+}
+.ldr-sex-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ldr-sex-btn .sex-emoji {
+  font-size: 1.85rem;
+  line-height: 1;
+}
+.ldr-sex-btn .sex-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.ldr-sex-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+.ldr-sex-btn.active[data-sex="boy"] {
+  border-color: #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.2) !important;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.35);
+  transform: scale(1.04);
+}
+.ldr-sex-btn.active[data-sex="girl"] {
+  border-color: #ec4899 !important;
+  background: rgba(236, 72, 153, 0.2) !important;
+  box-shadow: 0 0 16px rgba(236, 72, 153, 0.35);
+  transform: scale(1.04);
+}
+.ldr-sex-btn.active[data-sex="cutie"] {
+  border-color: #a855f7 !important;
+  background: rgba(168, 85, 247, 0.2) !important;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.35);
+  transform: scale(1.04);
+}
+.ldr-profile-name-wrap {
+  width: 100%;
+  margin-bottom: 18px;
+  text-align: left;
+}
+.ldr-profile-name-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 6px;
+}
+.ldr-profile-name-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.ldr-profile-name-input:focus {
+  border-color: #ff2d55;
+  box-shadow: 0 0 12px rgba(255, 45, 85, 0.3);
+}
+.ldr-profile-submit-btn {
+  width: 100%;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ff2d55, #ff375f) !important;
+  color: #fff !important;
+  font-size: 0.96rem;
+  font-weight: 700;
+  border: none !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.ldr-profile-submit-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+}
+.ldr-profile-waiting-notice {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 0.88rem;
+  color: #ff9f0a;
+  font-weight: 600;
+}
