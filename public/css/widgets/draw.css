@@ -1149,9 +1149,9 @@ body:has(#stageProfile.active) {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 30px;
   width: 100%;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 /* View Mode Toggles */
@@ -1167,7 +1167,7 @@ body:has(#stageProfile.active) {
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  gap: 24px;
+  gap: 30px;
 }
 
 .draw-canvases-grid.view-split .draw-pad-card {
@@ -1181,8 +1181,8 @@ body:has(#stageProfile.active) {
   .draw-canvases-grid.view-split {
     flex-direction: column;
     align-items: center;
-    gap: 36px;
-    margin-bottom: 28px;
+    gap: 46px;
+    margin-bottom: 34px;
   }
   .draw-canvases-grid.view-split .draw-pad-card {
     aspect-ratio: 4 / 3;
