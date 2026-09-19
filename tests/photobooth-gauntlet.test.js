@@ -439,6 +439,14 @@ const gate26Runtime = fs.readFileSync(path.resolve(__dirname, "../public/js/widg
 assert(gate26Runtime.includes("turn:openrelay.metered.ca:80") && gate26Runtime.includes("turn:openrelay.metered.ca:443"), "RTCPeerConnection iceServers include TURN relay endpoints for symmetric NAT traversal");
 assert(gate26Runtime.includes("handleIceFailure") && gate26Runtime.includes("restartIce"), "RTCPeerConnection auto-recovers on ICE disconnected or failed state");
 assert(gate26Runtime.includes("visibilitychange") && gate26Runtime.includes("document.visibilityState === \"visible\""), "Runtime implements foreground auto-recovery on visibilitychange for backgrounded tabs");
+// --- GATE 27: UX & Mobile Ergonomics (Feed Mirroring, Share Sheet & Landscape Optimization) ---
+console.log("\n--- GATE 27: UX & Mobile Ergonomics ---");
+const gate27Css = fs.readFileSync(path.resolve(__dirname, "../public/css/widgets/photobooth.css"), "utf8");
+const gate27Runtime = fs.readFileSync(path.resolve(__dirname, "../public/js/widgets/photobooth.runtime.js"), "utf8");
+
+assert(gate27Css.includes("#photoboothVideoLobbyPreview") && gate27Css.includes("scaleX(-1)"), "photobooth.css enforces consistent front camera mirroring on lobby preview feed");
+assert(gate27Css.includes("@media (max-height: 500px) and (orientation: landscape)"), "photobooth.css collapses vertical space in Step 5 for mobile landscape orientation");
+assert(gate27Runtime.includes("isMobileTouch") && gate27Runtime.includes("navigator.canShare") && gate27Runtime.includes("exportStrip"), "exportStrip prioritizes native mobile share sheet file export on touch devices");
 
 console.log("\n=============================================");
 console.log("GAUNTLET SUMMARY: " + passedChecks + "/" + totalChecks + " PASSED");

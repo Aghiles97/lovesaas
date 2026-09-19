@@ -4733,6 +4733,13 @@
   height: 100%;
   object-fit: cover;
 }
+#photoboothVideoLobbyPreview,
+#ldrVideoFeedLocal:not(.facing-environment) {
+  transform: scaleX(-1);
+}
+#photoboothVideoLobbyPreview.facing-environment {
+  transform: scaleX(1);
+}
 .ldr-preview-feed-box .feed-tag {
   position: absolute;
   bottom: 8px;
@@ -6359,4 +6366,24 @@
 .btn-exit-stay:active,
 .btn-exit-leave:active {
   transform: scale(0.96);
+}
+
+/* Mobile Landscape Ergonomics */
+@media (max-height: 500px) and (orientation: landscape) {
+  .ldr-deco-wrap .ldr-stage-header {
+    margin-bottom: 4px !important;
+    padding: 0 !important;
+  }
+  .ldr-deco-wrap .ldr-stage-title {
+    font-size: 0.95rem !important;
+    margin: 2px 0 !important;
+  }
+  .ldr-deco-wrap .ldr-step-badge {
+    font-size: 0.7rem !important;
+    padding: 2px 6px !important;
+  }
+  .ldr-deco-workspace,
+  .ldr-deco-canvas-wrap {
+    max-height: calc(100vh - 120px) !important;
+  }
 }

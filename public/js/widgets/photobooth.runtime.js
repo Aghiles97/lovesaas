@@ -4586,6 +4586,25 @@
       }
       this.vibrate([30, 40, 30]);
       const canvas = await this.generateExportCanvas();
+      const isMobileTouch = typeof navigator !== "undefined" && (navigator.maxTouchPoints > 0 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+      if (isMobileTouch && canvas.toBlob && navigator.canShare) {
+        try {
+          const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
+          if (blob) {
+            const file = new File([blob], "photobooth-strip.png", { type: "image/png" });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({
+                files: [file],
+                title: "Our Love Photo Strip 📸",
+                text: "Here is our photobooth strip!"
+              });
+              return;
+            }
+          }
+        } catch (e) {
+          if (e.name === "AbortError") return;
+        }
+      }
       const link = document.createElement("a");
       link.download = "photobooth-strip.png";
       link.href = canvas.toDataURL("image/png");
