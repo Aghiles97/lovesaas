@@ -434,6 +434,11 @@
           el.profileWaitingText.textContent = `${state.partnerName} is ready! ✓`;
         }
       }
+      const readyCount = msg.profiles ? Object.values(msg.profiles).filter(p => p.ready).length : (state.myReady && state.partnerReady ? 2 : 0);
+      if (state.stage === "profile_setup" && (readyCount >= 2 || (state.myReady && state.partnerReady))) {
+        showStage("pack_select");
+        showToast("Both ready! Pick a prompt pack 🎨");
+      }
       return;
     }
 
@@ -1304,6 +1309,16 @@
         name: state.myName,
         sex: state.mySex
       });
+
+      if (state.partnerReady) {
+        showStage("pack_select");
+        showToast("Both ready! Pick a prompt pack 🎨");
+      }
+    });
+
+    el.profileWaitingWrap?.addEventListener("click", () => {
+      showStage("pack_select");
+      sendMsg("SET_STAGE", { stage: "pack_select" });
     });
 
     // Copy Invite

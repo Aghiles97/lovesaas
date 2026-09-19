@@ -537,10 +537,13 @@ class DrawRoomServer {
         profiles: currentRoom.state.profiles
       });
 
-      const totalParticipants = currentRoom.participants.size + (currentRoom.sseClients?.size || 0);
+      const distinctIds = new Set([
+        ...Array.from(currentRoom.participants.values()).map(p => p.id),
+        ...Array.from(currentRoom.sseClients).map(c => c._participantId)
+      ]);
       const readyProfiles = Object.values(currentRoom.state.profiles).filter(p => p.ready);
 
-      if (currentRoom.state.stage === "profile_setup" && readyProfiles.length >= Math.max(1, totalParticipants)) {
+      if (currentRoom.state.stage === "profile_setup" && (readyProfiles.length >= 2 || (readyProfiles.length >= 1 && distinctIds.size <= 1))) {
         currentRoom.state.stage = "pack_select";
         this.scheduleSave();
         this.broadcastAll(currentRoom, {
