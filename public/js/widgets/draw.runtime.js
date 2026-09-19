@@ -437,8 +437,7 @@
 
     if (type === "ROUND_TIMER_STARTED") {
       state.timerRunning = true;
-      if (el.bottomStartWrap) el.bottomStartWrap.style.display = "none";
-      if (el.btnStartRoundTimer) el.btnStartRoundTimer.style.display = "none";
+      updateDrawingHeader();
       showToast("Timer started! Draw! ⏱️");
       return;
     }
@@ -563,6 +562,7 @@
     const showStart = !state.timerRunning;
     if (el.bottomStartWrap) el.bottomStartWrap.style.display = showStart ? "flex" : "none";
     if (el.btnStartRoundTimer) el.btnStartRoundTimer.style.display = showStart ? "inline-flex" : "none";
+    if (el.canvasesContainer) el.canvasesContainer.classList.toggle("timer-active", state.timerRunning);
   }
 
   function renderTimer(seconds) {
@@ -674,6 +674,10 @@
   }
 
   function startStroke(evt) {
+    if (!state.timerRunning) {
+      showToast("Click 'Start Drawing' below to begin! ⏱️");
+      return;
+    }
     evt.preventDefault();
     canvasRect = el.myCanvas.getBoundingClientRect();
     const coords = getCanvasCoords(evt);
@@ -981,10 +985,9 @@
 
   function triggerStartRoundTimer() {
     if (state.timerRunning) return;
-    if (el.bottomStartWrap) el.bottomStartWrap.style.display = "none";
-    if (el.btnStartRoundTimer) el.btnStartRoundTimer.style.display = "none";
     if (state.isSolo) {
       state.timerRunning = true;
+      updateDrawingHeader();
       showToast("Timer started! Draw! ⏱️");
       if (soloTimer) clearInterval(soloTimer);
       soloTimer = setInterval(() => {
