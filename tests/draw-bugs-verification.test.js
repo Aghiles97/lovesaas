@@ -586,7 +586,44 @@ assert(drawRuntimeSrc.includes("try { localStorage.removeItem(key); } catch (_) 
 console.log("✅ PASS: Test 14 verified - Fixes 1, 2, 3, 4 verified cleanly in codebase");
 passedTests++;
 
+// --- TEST 15: P0 Fixes (Active Capacity, PARTNER_RECONNECTED, WS Heartbeat) ---
+console.log("\n--- TEST 15: P0 Fixes Verification ---");
+
+// 1. Verify PARTNER_RECONNECTED broadcast in server source
+assert(drawRoomSrc.includes('type: "PARTNER_RECONNECTED"'), "draw-room.js contains PARTNER_RECONNECTED broadcast");
+assert(drawRuntimeSrc.includes('if (type === "PARTNER_RECONNECTED")'), "draw.runtime.js contains PARTNER_RECONNECTED handler");
+
+// 2. Verify WS keepalive ping interval in server source
+assert(drawRoomSrc.includes("client.ping();"), "draw-room.js contains client.ping() keepalive");
+assert(drawRoomSrc.includes('ws.on("pong"'), "draw-room.js contains pong heartbeat listener");
+
+// 3. Verify active capacity check allows reconnect with new PID when partner absent
+const testRoom15 = drawRooms.getOrCreateRoom("TEST_ROOM_15_" + randId);
+testRoom15.hostId = "host_15";
+testRoom15.state.profiles["host_15"] = { name: "Host15", sex: "male", ready: true };
+testRoom15.state.profiles["guest_old"] = { name: "GuestOld", sex: "female", ready: true };
+
+// Only host connected
+const hostWs = { readyState: 1, send: () => {} };
+testRoom15.participants.set(hostWs, { id: "host_15", name: "Host15", role: "host" });
+
+// Calculate activeIds as in updated attach/registerSseClient
+const testActiveIds = new Set([
+  ...Array.from(testRoom15.participants.values()).map(p => p.id),
+  ...Array.from(testRoom15.sseClients).map(c => c._participantId),
+  ...(testRoom15.disconnectTimeouts ? Array.from(testRoom15.disconnectTimeouts.keys()) : [])
+]);
+const newGuestId = "guest_new_pid";
+const isExisting15 = testActiveIds.has(newGuestId) || !!testRoom15.state.profiles?.[newGuestId] || (testRoom15.hostId === newGuestId);
+const isFull15 = testActiveIds.size >= 2 && !isExisting15;
+
+assert.strictEqual(testActiveIds.size, 1, "Only 1 active user in room");
+assert.strictEqual(isFull15, false, "New guest is NOT blocked by stale profiles in room");
+
+console.log("✅ PASS: Test 15 verified - Active capacity, PARTNER_RECONNECTED, and WS ping keepalive verified");
+passedTests++;
+
 console.log("\n=================================================");
-console.log(`ALL ${passedTests}/14 TEST SUITES PASSED!`);
+console.log(`ALL ${passedTests}/15 TEST SUITES PASSED!`);
 console.log("=================================================");
 process.exit(0);

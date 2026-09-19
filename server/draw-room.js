@@ -388,16 +388,14 @@ class DrawRoomServer {
       }
     }
 
-    const distinctIds = new Set([
+    const activeIds = new Set([
       ...Array.from(currentRoom.participants.values()).map(p => p.id),
       ...Array.from(currentRoom.sseClients).map(c => c._participantId),
-      ...(currentRoom.disconnectTimeouts ? Array.from(currentRoom.disconnectTimeouts.keys()) : []),
-      ...Object.keys(currentRoom.state.profiles || {})
+      ...(currentRoom.disconnectTimeouts ? Array.from(currentRoom.disconnectTimeouts.keys()) : [])
     ]);
-    if (currentRoom.hostId) distinctIds.add(currentRoom.hostId);
-    const isExisting = distinctIds.has(participantId) || !!currentRoom.state.profiles?.[participantId];
+    const isExisting = activeIds.has(participantId) || !!currentRoom.state.profiles?.[participantId] || (currentRoom.hostId === participantId);
 
-    if (distinctIds.size >= 2 && !isExisting) {
+    if (activeIds.size >= 2 && !isExisting) {
       res.write(`data: ${JSON.stringify({ type: "ROOM_FULL", error: "Room has reached max capacity of 2 partners." })}\n\n`);
       return res.end();
     }
@@ -411,6 +409,10 @@ class DrawRoomServer {
 
     currentRoom.sseClients.add(res);
 
+    const distinctIds = new Set([
+      ...activeIds,
+      ...(currentRoom.hostId ? [currentRoom.hostId] : [])
+    ]);
     const otherDistinct = new Set(distinctIds);
     otherDistinct.delete(participantId);
 
@@ -436,6 +438,15 @@ class DrawRoomServer {
       this.broadcast(currentRoom, {
         type: "PARTNER_JOINED",
         partner: { id: participantId, name, role },
+        stage: currentRoom.state.stage,
+        participantCount: currentRoom.participants.size + currentRoom.sseClients.size
+      }, res);
+    } else {
+      this.broadcast(currentRoom, {
+        type: "PARTNER_RECONNECTED",
+        partner: { id: participantId, name, role },
+        partnerId: participantId,
+        partnerName: name,
         stage: currentRoom.state.stage,
         participantCount: currentRoom.participants.size + currentRoom.sseClients.size
       }, res);
@@ -902,6 +913,20 @@ class DrawRoomServer {
     }
     const wss = new WebSocketServer({ noServer: true, maxPayload: 2 * 1024 * 1024 });
 
+    const pingInterval = setInterval(() => {
+      for (const client of wss.clients) {
+        if (client.isAlive === false) {
+          try { client.terminate(); } catch (e) {}
+          continue;
+        }
+        client.isAlive = false;
+        try { client.ping(); } catch (e) { client.terminate(); }
+      }
+    }, 25000).unref();
+
+    server.on("close", () => clearInterval(pingInterval));
+    wss.on("close", () => clearInterval(pingInterval));
+
     server.on("upgrade", (req, socket, head) => {
       const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
       if (url.pathname === path) {
@@ -912,6 +937,9 @@ class DrawRoomServer {
     });
 
     wss.on("connection", (ws) => {
+      ws.isAlive = true;
+      ws.on("pong", () => { ws.isAlive = true; });
+
       let currentRoom = null;
       let participantId = "user_" + Math.random().toString(36).slice(2, 9);
       let participantName = "Partner";
@@ -953,16 +981,14 @@ class DrawRoomServer {
               currentRoom.disconnectTimeouts.delete(participantId);
             }
 
-            const distinctIds = new Set([
+            const activeIds = new Set([
               ...Array.from(currentRoom.participants.values()).map(p => p.id),
               ...Array.from(currentRoom.sseClients).map(c => c._participantId),
-              ...(currentRoom.disconnectTimeouts ? Array.from(currentRoom.disconnectTimeouts.keys()) : []),
-              ...Object.keys(currentRoom.state.profiles || {})
+              ...(currentRoom.disconnectTimeouts ? Array.from(currentRoom.disconnectTimeouts.keys()) : [])
             ]);
-            if (currentRoom.hostId) distinctIds.add(currentRoom.hostId);
-            const isExisting = distinctIds.has(participantId) || !!currentRoom.state.profiles?.[participantId];
+            const isExisting = activeIds.has(participantId) || !!currentRoom.state.profiles?.[participantId] || (currentRoom.hostId === participantId);
 
-            if (distinctIds.size >= 2 && !isExisting) {
+            if (activeIds.size >= 2 && !isExisting) {
               ws.send(JSON.stringify({ type: "ROOM_FULL", error: "Room has reached max capacity of 2 partners." }));
               return;
             }
@@ -971,6 +997,11 @@ class DrawRoomServer {
             const role = (currentRoom.hostId === participantId) ? "host" : "guest";
             participantName = sanitizeStr(payload?.name, 24) || currentRoom.state.profiles?.[participantId]?.name || (role === "host" ? "Partner 1" : "Partner 2");
             currentRoom.participants.set(ws, { id: participantId, name: participantName, role });
+
+            const distinctIds = new Set([
+              ...activeIds,
+              ...(currentRoom.hostId ? [currentRoom.hostId] : [])
+            ]);
             const otherDistinct = new Set(distinctIds);
             otherDistinct.delete(participantId);
 
@@ -993,6 +1024,15 @@ class DrawRoomServer {
               this.broadcast(currentRoom, {
                 type: "PARTNER_JOINED",
                 partner: { id: participantId, name: participantName, role },
+                stage: currentRoom.state.stage,
+                participantCount: currentRoom.participants.size + (currentRoom.sseClients?.size || 0)
+              }, ws);
+            } else {
+              this.broadcast(currentRoom, {
+                type: "PARTNER_RECONNECTED",
+                partner: { id: participantId, name: participantName, role },
+                partnerId: participantId,
+                partnerName: participantName,
                 stage: currentRoom.state.stage,
                 participantCount: currentRoom.participants.size + (currentRoom.sseClients?.size || 0)
               }, ws);

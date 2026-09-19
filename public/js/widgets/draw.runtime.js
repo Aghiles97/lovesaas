@@ -499,13 +499,9 @@
     const { type } = msg;
 
     if (type === "ROOM_FULL") {
-      showToast("Reconnecting to room... ⏳");
-      if (!state._fullRetryTimer) {
-        state._fullRetryTimer = setTimeout(() => {
-          state._fullRetryTimer = null;
-          if (state.roomCode) initNetworking(state.roomCode);
-        }, 1500);
-      }
+      showToast(msg.error || "Room is full (2 partners maximum) 🚫");
+      state.stage = "lobby";
+      exitToMainMenu();
       return;
     }
 
@@ -652,6 +648,16 @@
       return;
     }
 
+    if (type === "PARTNER_RECONNECTED") {
+      state.partnerConnected = true;
+      if (msg.partnerName && !msg.partnerName.startsWith("Partner")) {
+        state.partnerName = msg.partnerName;
+      }
+      updateBadges();
+      showToast(`${state.partnerName || "Partner"} reconnected! 💕`);
+      return;
+    }
+
     if (type === "PARTNER_LEFT") {
       state.partnerConnected = false;
       showToast(`${state.partnerName} disconnected`);
@@ -733,6 +739,7 @@
     }
 
     if (type === "REMOTE_CURSOR") {
+      state.partnerConnected = true;
       let cursor = document.getElementById("drawRemoteCursor");
       if (cursor) {
         if (cursor.parentElement !== document.body) {
@@ -773,6 +780,7 @@
     }
 
     if (type === "REMOTE_CLICK") {
+      state.partnerConnected = true;
       let cursor = document.getElementById("drawRemoteCursor");
       let posX = `${msg.x * 100}vw`;
       let posY = `${msg.y * 100}vh`;
@@ -832,6 +840,7 @@
     }
 
     if (type === "REMOTE_DRAW_STROKE") {
+      state.partnerConnected = true;
       if (msg.drawerName && !msg.drawerName.startsWith("Partner") && msg.drawerName !== state.partnerName) {
         state.partnerName = msg.drawerName;
         updateBadges();
@@ -875,6 +884,7 @@
     }
 
     if (type === "POKE_EVENT") {
+      if (msg.senderId !== state.participantId) state.partnerConnected = true;
       handlePokeEvent(msg);
       return;
     }
