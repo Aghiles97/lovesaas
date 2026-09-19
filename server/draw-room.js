@@ -970,6 +970,7 @@ class DrawRoomServer {
             if (!currentRoom.hostId) currentRoom.hostId = participantId;
             const role = (currentRoom.hostId === participantId) ? "host" : "guest";
             participantName = sanitizeStr(payload?.name, 24) || currentRoom.state.profiles?.[participantId]?.name || (role === "host" ? "Partner 1" : "Partner 2");
+            currentRoom.participants.set(ws, { id: participantId, name: participantName, role });
             const otherDistinct = new Set(distinctIds);
             otherDistinct.delete(participantId);
 

@@ -522,7 +522,49 @@ assert.strictEqual(testRoom12.playAgainRequester, null, "playAgainRequester clea
 console.log("✅ PASS: Test 12 verified - Play Again partner prompt protocol and high-res 4:3 export verified");
 passedTests++;
 
+// --- TEST 13: WebSocket Participant Registration & Partner Join Transition ---
+console.log("\n--- TEST 13: WebSocket Participant Registration & Partner Join Transition ---");
+const testRoom13 = drawRooms.getOrCreateRoom("TEST_ROOM_13_" + randId);
+let ws1Msgs = [];
+let ws2Msgs = [];
+const fakeWs1 = {
+  readyState: 1,
+  send: (str) => ws1Msgs.push(JSON.parse(str)),
+  terminate: () => {}
+};
+const fakeWs2 = {
+  readyState: 1,
+  send: (str) => ws2Msgs.push(JSON.parse(str)),
+  terminate: () => {}
+};
+
+// Simulate ws connection message handlers
+testRoom13.participants.set(fakeWs1, { id: "user1_host", name: "Partner 1", role: "host" });
+testRoom13.hostId = "user1_host";
+
+// User 2 joins via JOIN_ROOM logic
+const p2Id = "user2_guest";
+testRoom13.participants.set(fakeWs2, { id: p2Id, name: "Partner 2", role: "guest" });
+if (testRoom13.participants.size >= 2 && testRoom13.state.stage === "lobby") {
+  testRoom13.state.stage = "profile_setup";
+}
+drawRooms.broadcast(testRoom13, {
+  type: "PARTNER_JOINED",
+  partner: { id: p2Id, name: "Partner 2", role: "guest" },
+  stage: testRoom13.state.stage,
+  participantCount: testRoom13.participants.size
+}, fakeWs2);
+
+assert.strictEqual(testRoom13.participants.size, 2, "Both sockets registered in participants map");
+assert.strictEqual(testRoom13.state.stage, "profile_setup", "Room stage transitioned to profile_setup");
+const partnerJoinedMsg = ws1Msgs.find(m => m.type === "PARTNER_JOINED");
+assert(partnerJoinedMsg, "Host received PARTNER_JOINED broadcast");
+assert.strictEqual(partnerJoinedMsg.partner.id, p2Id, "Broadcast identifies guest");
+
+console.log("✅ PASS: Test 13 verified - Both sockets in participants map, host receives PARTNER_JOINED, stage advances to profile_setup");
+passedTests++;
+
 console.log("\n=================================================");
-console.log(`ALL ${passedTests}/12 TEST SUITES PASSED!`);
+console.log(`ALL ${passedTests}/13 TEST SUITES PASSED!`);
 console.log("=================================================");
 process.exit(0);

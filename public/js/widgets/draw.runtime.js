@@ -53,16 +53,16 @@
     setTimeout(() => toast.classList.remove("show"), 2500);
   }
 
-  // --- Persistent Participant Storage ---
+  // --- Persistent Participant Storage (Session-Scoped per Tab) ---
   function getOrCreateParticipantId(code) {
     const key = `draw_pid_${code || "global"}`;
     let id = null;
     try {
-      id = sessionStorage.getItem(key) || localStorage.getItem(key);
+      try { localStorage.removeItem(key); } catch (_) {}
+      id = sessionStorage.getItem(key);
       if (!id) {
         id = "user_" + Math.random().toString(36).slice(2, 9);
         sessionStorage.setItem(key, id);
-        localStorage.setItem(key, id);
       }
     } catch (e) {
       id = "user_" + Math.random().toString(36).slice(2, 9);
@@ -1596,9 +1596,11 @@
       state.sse = null;
     }
     localStorage.removeItem("draw_last_room");
+    sessionStorage.removeItem("draw_last_room");
     try {
       const url = new URL(window.location.href);
       url.searchParams.delete("room");
+      url.searchParams.delete("code");
       window.history.replaceState({}, "", url.pathname);
     } catch (e) {}
 
@@ -1763,6 +1765,8 @@
         showToast("Please enter a valid room code");
         return;
       }
+      state.roomCode = code;
+      if (el.displayRoomCode) el.displayRoomCode.textContent = code;
       if (el.lobbyInitialView) el.lobbyInitialView.style.display = "none";
       if (el.lobbyWaitingView) el.lobbyWaitingView.style.display = "block";
       if (el.waitingStatusText) el.waitingStatusText.textContent = `Connecting to room ${code}...`;
@@ -2117,16 +2121,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const roomFromQuery = urlParams.get("room") || urlParams.get("code");
     const pathMatch = window.location.pathname.match(/^\/draw\/([a-zA-Z0-9_-]+)/);
-    let initialRoom = roomFromQuery || (pathMatch ? pathMatch[1] : null);
-
-    if (!initialRoom) {
-      try {
-        const savedRoom = sessionStorage.getItem("draw_last_room");
-        if (savedRoom && savedRoom.length >= 3 && savedRoom.length <= 10) {
-          initialRoom = savedRoom;
-        }
-      } catch (_) {}
-    }
+    const initialRoom = roomFromQuery || (pathMatch ? pathMatch[1] : null);
 
     if (initialRoom) {
       state.roomCode = initialRoom.toUpperCase().trim();
