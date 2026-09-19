@@ -1397,7 +1397,6 @@
           <div class="draw-review-card">
             <div class="draw-review-card-header">
               <span class="draw-review-drawer-name">${state.myName || "You"}</span>
-              <span class="draw-pad-badge pink">${state.isSolo ? "Solo" : "Pad 1"}</span>
             </div>
             <div class="draw-review-canvas-box">
               <img src="${r.myImg || ""}" alt="Drawing 1" />
@@ -1407,7 +1406,6 @@
           <div class="draw-review-card">
             <div class="draw-review-card-header">
               <span class="draw-review-drawer-name">${state.partnerName || "Partner"}</span>
-              <span class="draw-pad-badge blue">Pad 2</span>
             </div>
             <div class="draw-review-canvas-box">
               <img src="${r.partnerImg || ""}" alt="Drawing 2" />
