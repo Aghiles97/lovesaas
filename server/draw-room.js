@@ -328,6 +328,7 @@ class DrawRoomServer extends PartnerRoomEngine {
 
       if (room.state.timerRemaining <= 0) {
         clearInterval(room.timerInterval);
+        room.timerInterval = null;
         room.state.timerRunning = false;
         this.onRoundTimeExpired(room);
       }

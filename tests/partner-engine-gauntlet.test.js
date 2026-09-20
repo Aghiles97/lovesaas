@@ -6,7 +6,10 @@
 
 const assert = require("assert");
 const http = require("http");
+const path = require("path");
+const fs = require("fs");
 const { PartnerRoomEngine, GAME_REGISTRY } = require("../server/core/partner-room-engine");
+const PartnerClient = require("../public/js/core/partner-client");
 
 console.log("\n=================================================");
 console.log("   RUNNING PARTNER ROOM ENGINE GAUNTLET SUITE");
@@ -41,11 +44,17 @@ async function testAsync(title, fn) {
   }
 }
 
+const testDataFile = path.join(__dirname, "../data/test_trivia_rooms.json");
+if (fs.existsSync(testDataFile)) {
+  try { fs.unlinkSync(testDataFile); } catch (_) {}
+}
+
 (async () => {
   // Gate 1: Engine Initialization & Registry
   test("Gate 1: PartnerRoomEngine registers correctly with initial state", () => {
     const engine = PartnerRoomEngine.register({
       gameId: "test_trivia",
+      dataFile: testDataFile,
       initialState: { questionIndex: 0, score: { host: 0, guest: 0 } },
       onAction: (room, { type, payload }, meta) => {
         if (type === "ANSWER_CORRECT") {
@@ -235,6 +244,63 @@ async function testAsync(title, fn) {
     const testServer = http.createServer();
     PartnerRoomEngine.attachAll(testServer);
     assert(testServer.listenerCount("upgrade") > 0);
+  });
+
+  // Gate 10: Full Lifecycle & Synchronous Persistence Flush
+  test("Gate 10: saveToDiskSync flushes rooms synchronously without memory leaks", () => {
+    const engine = PartnerRoomEngine.getGame("test_trivia");
+    const room = engine.getOrCreateRoom("TEST_FLUSH");
+    room.state.score = { player1: 10, player2: 20 };
+    room.timerInterval = setInterval(() => {}, 1000);
+
+    engine.saveToDiskSync();
+    assert(fs.existsSync(engine.dataFile));
+
+    // Expire room and verify timerInterval is cleared
+    engine.ttlMs = 0;
+    engine.cleanupExpiredRooms();
+    assert.strictEqual(engine.rooms.has("TEST_FLUSH"), false);
+    assert.strictEqual(room.timerInterval, null);
+    engine.ttlMs = 3 * 60 * 60 * 1000;
+  });
+
+  // Gate 11: PartnerClient Reconnect and Lifecycle Pipeline
+  test("Gate 11: PartnerClient handles PARTNER_RECONNECTED and maintains participant roster", () => {
+    const client = new PartnerClient({
+      game: "test_trivia",
+      roomCode: "TEST12",
+      name: "Player 1",
+      autoConnect: false
+    });
+
+    let reconnectedReceived = false;
+    let joinedReceived = false;
+    client.on("partner_reconnected", (partner) => {
+      reconnectedReceived = true;
+      assert.strictEqual(partner.name, "Partner 2");
+    });
+    client.on("partner_joined", (partner) => {
+      joinedReceived = true;
+    });
+
+    // Simulate incoming PARTNER_RECONNECTED
+    client._handleIncoming({
+      type: "PARTNER_RECONNECTED",
+      partner: { id: "p2", name: "Partner 2", role: "guest" }
+    });
+
+    assert.strictEqual(reconnectedReceived, true);
+    assert.strictEqual(joinedReceived, true);
+    assert.strictEqual(client.participants.length, 1);
+    assert.strictEqual(client.participants[0].id, "p2");
+
+    // Cleanup client
+    client.disconnect();
+    assert.strictEqual(client.isDestroyed, true);
+
+    if (fs.existsSync(testDataFile)) {
+      try { fs.unlinkSync(testDataFile); } catch (_) {}
+    }
   });
 
   console.log("\n=================================================");

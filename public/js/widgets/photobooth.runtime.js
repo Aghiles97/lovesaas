@@ -454,7 +454,7 @@
         return;
       }
 
-      if (type === "PARTNER_JOINED") {
+      if (type === "PARTNER_JOINED" || type === "PARTNER_RECONNECTED") {
         const badge = document.getElementById("ldrPartnerStatusText");
         const modalBadge = document.getElementById("ldrModalStatusText");
         const dot = document.getElementById("ldrPulseDot");

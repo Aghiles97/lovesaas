@@ -74,6 +74,18 @@ class PartnerRoomEngine {
 
     this.loadFromDisk();
     this.cleanupInterval = setInterval(() => this.cleanupExpiredRooms(), 10 * 60 * 1000).unref();
+
+    if (!PartnerRoomEngine._exitHooksRegistered && typeof process !== "undefined" && typeof process.once === "function") {
+      PartnerRoomEngine._exitHooksRegistered = true;
+      const flushAll = () => {
+        for (const engine of GAME_REGISTRY.values()) {
+          try { engine.saveToDiskSync(); } catch (_) {}
+        }
+      };
+      process.once("beforeExit", flushAll);
+      process.once("SIGINT", () => { flushAll(); process.exit(0); });
+      process.once("SIGTERM", () => { flushAll(); process.exit(0); });
+    }
   }
 
   // --- Static Registry & Dispatchers ---
@@ -222,28 +234,36 @@ class PartnerRoomEngine {
     }
   }
 
+  saveToDiskSync() {
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+      this.saveTimer = null;
+    }
+    try {
+      const now = Date.now();
+      const out = [];
+      for (const [code, room] of this.rooms.entries()) {
+        if (now - (room.lastActivity || 0) < this.ttlMs) {
+          out.push({
+            code,
+            hostId: room.hostId || null,
+            createdAt: room.createdAt,
+            lastActivity: room.lastActivity,
+            state: room.state
+          });
+        }
+      }
+      const dir = path.dirname(this.dataFile);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(this.dataFile, JSON.stringify(out));
+    } catch (e) {}
+  }
+
   scheduleSave() {
     if (this.saveTimer) return;
     this.saveTimer = setTimeout(() => {
       this.saveTimer = null;
-      try {
-        const now = Date.now();
-        const out = [];
-        for (const [code, room] of this.rooms.entries()) {
-          if (now - (room.lastActivity || 0) < this.ttlMs) {
-            out.push({
-              code,
-              hostId: room.hostId || null,
-              createdAt: room.createdAt,
-              lastActivity: room.lastActivity,
-              state: room.state
-            });
-          }
-        }
-        const dir = path.dirname(this.dataFile);
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-        fs.writeFileSync(this.dataFile, JSON.stringify(out));
-      } catch (e) {}
+      this.saveToDiskSync();
     }, 1000).unref();
   }
 
@@ -252,7 +272,7 @@ class PartnerRoomEngine {
     let changed = false;
     for (const [code, room] of this.rooms.entries()) {
       const activeCount = room.participants.size + (room.sseClients?.size || 0);
-      if (activeCount === 0 && (now - room.lastActivity > this.ttlMs)) {
+      if (activeCount === 0 && (now - room.lastActivity >= this.ttlMs)) {
         if (room.disconnectTimeouts) {
           for (const timer of room.disconnectTimeouts.values()) clearTimeout(timer);
         }
@@ -340,6 +360,21 @@ class PartnerRoomEngine {
     const code = String(roomCode || "").toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 64).trim();
     const currentRoom = this.getOrCreateRoom(code);
 
+    if (participantId) {
+      for (const [prevWs, meta] of currentRoom.participants.entries()) {
+        if (meta.id === participantId) {
+          try { prevWs.terminate(); } catch (e) {}
+          currentRoom.participants.delete(prevWs);
+        }
+      }
+      for (const sse of currentRoom.sseClients) {
+        if (sse._participantId === participantId && sse !== res) {
+          try { sse.end(); } catch (e) {}
+          currentRoom.sseClients.delete(sse);
+        }
+      }
+    }
+
     if (currentRoom.disconnectTimeouts?.has(participantId)) {
       clearTimeout(currentRoom.disconnectTimeouts.get(participantId));
       currentRoom.disconnectTimeouts.delete(participantId);
@@ -373,6 +408,10 @@ class PartnerRoomEngine {
 
     if (this.onJoin) this.onJoin(currentRoom, { id: participantId, name, role });
 
+    const rosterMap = new Map();
+    for (const p of currentRoom.participants.values()) rosterMap.set(p.id, { id: p.id, name: p.name, role: p.role });
+    for (const c of currentRoom.sseClients) rosterMap.set(c._participantId, { id: c._participantId, name: c._participantName, role: c._role });
+
     // Send initial snapshot
     res.write(`data: ${JSON.stringify({
       type: "ROOM_JOINED",
@@ -382,10 +421,7 @@ class PartnerRoomEngine {
       participantId,
       participantCount: currentRoom.participants.size + currentRoom.sseClients.size,
       state: currentRoom.state,
-      participants: [
-        ...Array.from(currentRoom.participants.values()),
-        ...Array.from(currentRoom.sseClients).map(c => ({ id: c._participantId, name: c._participantName, role: c._role }))
-      ]
+      participants: Array.from(rosterMap.values())
     })}\n\n`);
 
     if (!isExisting) {
@@ -552,6 +588,10 @@ class PartnerRoomEngine {
 
             if (this.onJoin) this.onJoin(currentRoom, { id: participantId, name: participantName, role });
 
+            const rosterMap = new Map();
+            for (const p of currentRoom.participants.values()) rosterMap.set(p.id, { id: p.id, name: p.name, role: p.role });
+            for (const c of currentRoom.sseClients) rosterMap.set(c._participantId, { id: c._participantId, name: c._participantName, role: c._role });
+
             ws.send(JSON.stringify({
               type: "ROOM_JOINED",
               gameId: this.gameId,
@@ -560,10 +600,7 @@ class PartnerRoomEngine {
               participantId,
               participantCount: currentRoom.participants.size + currentRoom.sseClients.size,
               state: currentRoom.state,
-              participants: [
-                ...Array.from(currentRoom.participants.values()),
-                ...Array.from(currentRoom.sseClients).map(c => ({ id: c._participantId, name: c._participantName, role: c._role }))
-              ]
+              participants: Array.from(rosterMap.values())
             }));
 
             if (!isExisting) {
@@ -658,7 +695,10 @@ class PartnerRoomEngine {
     if (!currentRoom) return;
     currentRoom.lastActivity = Date.now();
     const { type, payload } = data;
-    const participantMeta = Array.from(currentRoom.participants.values()).find(p => p.id === participantId) 
+    const wsMeta = Array.from(currentRoom.participants.values()).find(p => p.id === participantId);
+    const sseMeta = !wsMeta && currentRoom.sseClients ? Array.from(currentRoom.sseClients).find(c => c._participantId === participantId) : null;
+    const participantMeta = wsMeta 
+      || (sseMeta ? { id: participantId, name: sseMeta._participantName, role: sseMeta._role } : null)
       || { id: participantId, name: participantName, role: currentRoom.hostId === participantId ? "host" : "guest" };
 
     // Built-in Primitives: Remote Cursor

@@ -75,6 +75,25 @@
       this._lastCursorSend = 0;
       this._cursorThrottleMs = 40;
 
+      if (typeof window !== "undefined" && typeof document !== "undefined") {
+        this._visibilityHandler = () => {
+          if (document.visibilityState === "visible" && !this.isDestroyed && this.roomCode) {
+            const isWsClosed = !this.ws || this.ws.readyState === WebSocket.CLOSED || this.ws.readyState === WebSocket.CLOSING;
+            const isSseClosed = this.useHttp && (!this.eventSource || this.eventSource.readyState === 2);
+            if (isWsClosed || isSseClosed) {
+              this.connect(this.roomCode, this.name);
+            }
+          }
+        };
+        this._onlineHandler = () => {
+          if (!this.isDestroyed && this.roomCode) {
+            this.connect(this.roomCode, this.name);
+          }
+        };
+        document.addEventListener("visibilitychange", this._visibilityHandler);
+        window.addEventListener("online", this._onlineHandler);
+      }
+
       if (options.autoConnect && this.roomCode) {
         this.connect(this.roomCode, this.name);
       }
@@ -428,6 +447,10 @@
 
     disconnect() {
       this.isDestroyed = true;
+      if (typeof window !== "undefined" && typeof document !== "undefined") {
+        if (this._visibilityHandler) document.removeEventListener("visibilitychange", this._visibilityHandler);
+        if (this._onlineHandler) window.removeEventListener("online", this._onlineHandler);
+      }
       this._cleanupTransports();
       this._emit("disconnected");
     }
