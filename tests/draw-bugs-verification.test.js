@@ -768,7 +768,28 @@ assert(templateText19.includes("draw-how-it-works-showcase"), "draw.template.js 
 console.log("✅ PASS: Test 19 verified - Interactive lobby showcase animation elements & logic verified across standalone /draw and love website templates");
 passedTests++;
 
+// --- TEST 20: Fading Gradient Shadows & Modal-Safe Back to Website ---
+console.log("\n--- TEST 20: Fading Gradient Shadows & Modal-Safe Back to Website ---");
+const cssText20 = fs.readFileSync(path.join(__dirname, "../public/css/widgets/draw.css"), "utf8");
+const jsText20 = fs.readFileSync(path.join(__dirname, "../public/js/widgets/draw.runtime.js"), "utf8");
+const htmlText20 = fs.readFileSync(path.join(__dirname, "../public/draw.html"), "utf8");
+const templateText20 = fs.readFileSync(path.join(__dirname, "../core/templates/draw.template.js"), "utf8");
+
+assert(!cssText20.includes("border-bottom: 4px solid #ff6b8b"), "draw.css removed harsh border-bottom from pink board");
+assert(!cssText20.includes("border-bottom: 4px solid #3b82f6"), "draw.css removed harsh border-bottom from blue board");
+assert(cssText20.includes(".dhiw-board-pink::after"), "draw.css provides gradient fade overlay for pink board");
+assert(cssText20.includes(".dhiw-board-blue::after"), "draw.css provides gradient fade overlay for blue board");
+
+assert(htmlText20.includes('<button type="button" class="ldr-text-back-btn" id="btnBackToWebsite">'), "draw.html uses button element for btnBackToWebsite");
+assert(templateText20.includes('<button type="button" class="ldr-text-back-btn" id="btnBackToWebsite">'), "draw.template.js uses button element for btnBackToWebsite");
+assert(jsText20.includes("handleBackWebsite"), "draw.runtime.js defines handleBackWebsite");
+assert(jsText20.includes("closeDrawModal()"), "draw.runtime.js closes active modal on back to website");
+
+console.log("✅ PASS: Test 20 verified - Fading gradient shadows & modal-safe back to website verified");
+passedTests++;
+
 console.log("\n=================================================");
-console.log(`ALL ${passedTests}/19 TEST SUITES PASSED!`);
+console.log(`ALL ${passedTests}/20 TEST SUITES PASSED!`);
 console.log("=================================================");
 process.exit(0);
+

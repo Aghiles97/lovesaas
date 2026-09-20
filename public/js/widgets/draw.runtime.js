@@ -2310,7 +2310,29 @@
     el.btnExitDrawing?.addEventListener("click", () => exitToMainMenu());
     el.btnReviewExit?.addEventListener("click", () => exitToMainMenu());
     el.btnExitComplete?.addEventListener("click", () => exitToMainMenu(false, Boolean(document.getElementById("drawGameModal"))));
-    el.btnBackToWebsite?.addEventListener("click", () => exitToMainMenu(false, true));
+    const handleBackWebsite = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const modal = document.getElementById("drawGameModal");
+      if (modal) {
+        closeDrawModal();
+        const section = document.getElementById("section-draw");
+        if (section) {
+          section.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        return;
+      }
+      window.location.href = "/";
+    };
+    el.btnBackToWebsite?.addEventListener("click", handleBackWebsite);
+    document.addEventListener("click", (e) => {
+      const target = e.target.closest("#btnBackToWebsite");
+      if (target) {
+        handleBackWebsite(e);
+      }
+    });
     document.querySelectorAll(".btn-exit-setup").forEach(btn => {
       btn.addEventListener("click", () => exitToMainMenu());
     });
