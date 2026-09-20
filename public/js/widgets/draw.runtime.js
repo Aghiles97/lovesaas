@@ -184,7 +184,7 @@
   function getRandomPrompt(packId) {
     const basePack = PROMPT_PACKS[packId] || PROMPT_PACKS.animals;
     const customList = Array.isArray(state.customPrompts?.[packId]) ? state.customPrompts[packId] : [];
-    const allPrompts = [...basePack.prompts, ...customList];
+    const allPrompts = [...customList, ...basePack.prompts];
     if (!state.usedSoloPrompts) state.usedSoloPrompts = new Set();
 
     const used = new Set();
@@ -198,6 +198,13 @@
     }
     for (const p of state.usedSoloPrompts) {
       if (p) used.add(String(p).trim().toLowerCase());
+    }
+
+    const availableCustom = customList.filter(p => !used.has(String(p).trim().toLowerCase()));
+    if (availableCustom.length > 0) {
+      const chosen = availableCustom[Math.floor(Math.random() * availableCustom.length)];
+      state.usedSoloPrompts.add(chosen);
+      return chosen;
     }
 
     const available = allPrompts.filter(p => !used.has(String(p).trim().toLowerCase()));
@@ -1711,7 +1718,7 @@
     if (soloTimer) { clearInterval(soloTimer); soloTimer = null; }
   }
 
-  function exitToMainMenu(skipConfirm = false, closeActiveModal = false) {
+  function exitToMainMenu(skipConfirm = false, closeActiveModal = Boolean(document.getElementById("drawGameModal"))) {
     if (!skipConfirm && state.stage === "drawing" && !window.confirm("Are you sure you want to exit? Current drawing progress will be lost. 🎨")) {
       return;
     }
@@ -1767,6 +1774,10 @@
         modal.style.display = "none";
         document.body.classList.remove("draw-page", "draw-modal-open", "draw-dark-stage", "draw-solo-mode");
         document.body.style.overflow = "";
+        const section = document.getElementById("section-draw");
+        if (section) {
+          section.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
       }
     }
   }
@@ -2328,13 +2339,19 @@
     };
     el.btnBackToWebsite?.addEventListener("click", handleBackWebsite);
     document.addEventListener("click", (e) => {
-      const target = e.target.closest("#btnBackToWebsite");
-      if (target) {
+      if (e.target.closest("#btnBackToWebsite")) {
         handleBackWebsite(e);
+      }
+      if (e.target.closest(".btn-exit-setup, .draw-btn-bottom-exit")) {
+        e.preventDefault();
+        exitToMainMenu();
       }
     });
     document.querySelectorAll(".btn-exit-setup").forEach(btn => {
-      btn.addEventListener("click", () => exitToMainMenu());
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        exitToMainMenu();
+      });
     });
 
     // In-Page Website Widget Launcher Triggers (Photobooth Parity)

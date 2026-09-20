@@ -784,8 +784,10 @@ assert(htmlText20.includes('<button type="button" class="ldr-text-back-btn" id="
 assert(templateText20.includes('<button type="button" class="ldr-text-back-btn" id="btnBackToWebsite">'), "draw.template.js uses button element for btnBackToWebsite");
 assert(jsText20.includes("handleBackWebsite"), "draw.runtime.js defines handleBackWebsite");
 assert(jsText20.includes("closeDrawModal()"), "draw.runtime.js closes active modal on back to website");
+assert(jsText20.includes('closeActiveModal = Boolean(document.getElementById("drawGameModal"))'), "exitToMainMenu automatically closes modal on love websites");
+assert(jsText20.includes('closest(".btn-exit-setup, .draw-btn-bottom-exit")'), "delegated exit click listener registered for all exit buttons");
 
-console.log("✅ PASS: Test 20 verified - Fading gradient shadows & modal-safe back to website verified");
+console.log("✅ PASS: Test 20 verified - Fading gradient shadows & modal-safe back to website & exit-to-menu verified");
 passedTests++;
 
 console.log("\n=================================================");

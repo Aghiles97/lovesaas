@@ -88,6 +88,10 @@
                           <div style="margin-top: 18px;">
                             <button type="button" id="btnWaitingSkipToSolo" class="draw-link-subtle" style="color: rgba(255, 255, 255, 0.7);">Start alone while waiting →</button>
                           </div>
+
+                          <div style="margin-top: 10px; text-align: center;">
+                            <button type="button" class="ldr-text-back-btn btn-exit-setup" id="btnCancelWaiting">← Exit to Menu</button>
+                          </div>
                         </div>
                       </div>
 
@@ -167,42 +171,53 @@
                         <div class="draw-pack-icon-wrap">🐾</div>
                         <div class="draw-pack-name">Animals</div>
                         <div class="draw-pack-desc">Cute critters, big and small.</div>
-                        <div class="draw-pack-meta">16 prompts</div>
+                        <div class="draw-pack-meta" data-pack-meta="animals">16 prompts</div>
                       </div>
 
                       <div class="draw-pack-card" data-pack="food">
                         <div class="draw-pack-icon-wrap">🍜</div>
                         <div class="draw-pack-name">Food & Snacks</div>
                         <div class="draw-pack-desc">Everything you two crave.</div>
-                        <div class="draw-pack-meta">12 prompts</div>
+                        <div class="draw-pack-meta" data-pack-meta="food">12 prompts</div>
                       </div>
 
                       <div class="draw-pack-card" data-pack="random">
                         <div class="draw-pack-icon-wrap">🎲</div>
                         <div class="draw-pack-name">Random Doodles</div>
                         <div class="draw-pack-desc">Anything goes — go wild.</div>
-                        <div class="draw-pack-meta">12 prompts</div>
+                        <div class="draw-pack-meta" data-pack-meta="random">12 prompts</div>
                       </div>
 
                       <div class="draw-pack-card selected" data-pack="memories">
                         <div class="draw-pack-icon-wrap">💖</div>
                         <div class="draw-pack-name">Our Memories</div>
                         <div class="draw-pack-desc">Sweet stuff, just about us.</div>
-                        <div class="draw-pack-meta">11 prompts</div>
+                        <div class="draw-pack-meta" data-pack-meta="memories">11 prompts</div>
                       </div>
 
                       <div class="draw-pack-card" data-pack="draw_me">
                         <div class="draw-pack-icon-wrap">💌</div>
                         <div class="draw-pack-name">Draw Me</div>
                         <div class="draw-pack-desc">Each other, lovingly butchered.</div>
-                        <div class="draw-pack-meta">10 prompts</div>
+                        <div class="draw-pack-meta" data-pack-meta="draw_me">10 prompts</div>
                       </div>
 
                       <div class="draw-pack-card" data-pack="silly">
                         <div class="draw-pack-icon-wrap">🤪</div>
                         <div class="draw-pack-name">Silly & Weird</div>
                         <div class="draw-pack-desc">Low stakes, maximum chaos.</div>
-                        <div class="draw-pack-meta">10 prompts</div>
+                        <div class="draw-pack-meta" data-pack-meta="silly">10 prompts</div>
+                      </div>
+                    </div>
+
+                    <!-- Pack Prompts Preview List -->
+                    <div class="draw-pack-prompts-preview" id="drawPackPromptsPreview">
+                      <div class="draw-pack-prompts-title">
+                        <span id="packPreviewTitle">💖 Our Memories Prompts</span>
+                        <span class="draw-prompts-badge" id="packPreviewCount">11 prompts</span>
+                      </div>
+                      <div class="draw-prompts-pills-list" id="packPromptsPillsList">
+                        <span class="draw-prompt-pill">The last time we laughed really hard</span><span class="draw-prompt-pill">Our very first date together</span><span class="draw-prompt-pill">A cozy lazy Sunday morning in bed</span><span class="draw-prompt-pill">Our favorite trip or travel getaway</span><span class="draw-prompt-pill">The meal we made that was an absolute disaster</span><span class="draw-prompt-pill">The song or moment we danced together</span><span class="draw-prompt-pill">The inside joke only the two of us understand</span><span class="draw-prompt-pill">A place we dreamed about visiting together</span><span class="draw-prompt-pill">The sweetest surprise you ever gave me</span><span class="draw-prompt-pill">Watching the sunset or stars together</span><span class="draw-prompt-pill">How we look when we are both sleepy</span>
                       </div>
                     </div>
 

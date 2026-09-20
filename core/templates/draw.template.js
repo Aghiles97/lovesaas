@@ -6,6 +6,105 @@
 (function() {
   const esc = (s) => (s == null ? "" : String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c])));
 
+  const PROMPTS_MAP = {
+    memories: [
+      "The last time we laughed really hard",
+      "Our very first date together",
+      "A cozy lazy Sunday morning in bed",
+      "Our favorite trip or travel getaway",
+      "The meal we made that was an absolute disaster",
+      "The song or moment we danced together",
+      "The inside joke only the two of us understand",
+      "A place we dreamed about visiting together",
+      "The sweetest surprise you ever gave me",
+      "Watching the sunset or stars together",
+      "How we look when we are both sleepy"
+    ],
+    animals: [
+      "A penguin eating an ice cream cone",
+      "A chonky cat wearing a detective coat",
+      "Two otters holding hands while sleeping",
+      "A golden retriever trying to catch a bubble",
+      "A baby elephant playing in a mud puddle",
+      "A hedgehog wrapped like a warm burrito",
+      "A red panda standing up trying to look scary",
+      "A duck wearing tiny yellow rain boots",
+      "A fluffy llama wearing colorful sunglasses",
+      "A frog sitting under a mushroom umbrella",
+      "A sleepy sloth drinking iced coffee",
+      "A hamster stuffing its cheeks with strawberries",
+      "A bear attempting ballet in a tutu",
+      "A capybara chilling with tiny birds on its head",
+      "A seal doing a happy belly slide",
+      "A corgi doing a high-speed zoomie"
+    ],
+    food: [
+      "Our ultimate midnight snack combo",
+      "A giant steaming bowl of ramen with all toppings",
+      "A cheesy pizza slice surfing on a soda wave",
+      "A tower of fluffy pancakes dripping with syrup",
+      "A boba milk tea with too many pearls",
+      "A fancy taco with a happy mustache",
+      "A cute sushi roll doing a backflip",
+      "An overloaded croissant ice cream sandwich",
+      "A warm chocolate chip cookie straight from the oven",
+      "A hot pot feast boiling with goodness",
+      "Our favorite dessert we always fight over",
+      "A donut astronaut drifting in space"
+    ],
+    draw_me: [
+      "Draw me as a cartoon superhero",
+      "My exact face when I'm hangry",
+      "Draw me right now at this exact moment",
+      "Me wearing a ridiculously fancy royal outfit",
+      "My signature dance move when no one is watching",
+      "Me waking up before my first sip of coffee",
+      "Draw me as an adorable baby animal",
+      "My reaction when you give me an unexpected hug",
+      "Me trying to assemble flat-pack furniture",
+      "The cutest thing about me in your eyes"
+    ],
+    silly: [
+      "A potato with luscious shampoo-commercial hair",
+      "An alien trying to understand human romantic comedy",
+      "A chicken trying to park a sports car",
+      "A drama queen pug having an existential crisis",
+      "A fish trying to ride a bicycle underwater",
+      "A pineapple wearing leather biker gear",
+      "A dinosaur trying to apply eye shadow",
+      "A marshmallow in a panic near a campfire",
+      "A grumpy cat conducting an orchestra",
+      "A pigeon giving a TED talk with supreme confidence"
+    ],
+    random: [
+      "A toaster launching into outer space",
+      "A lonely cactus looking for a hug",
+      "A cloud raining flowers and confetti",
+      "A teapot that serves dreams instead of tea",
+      "A bicycle made entirely of candy canes",
+      "A haunted vending machine dispensing hugs",
+      "A clock running backwards in slow motion",
+      "A lightbulb having a brilliant realization",
+      "A backpack with robotic legs walking itself",
+      "A pair of sneakers dancing alone at midnight",
+      "A cozy campfire roasting marshmallows for stars",
+      "A flying skateboard powered by rainbows"
+    ]
+  };
+
+  const renderPromptsPills = (theme = "memories", customMap = {}) => {
+    const base = PROMPTS_MAP[theme] || PROMPTS_MAP.memories;
+    const custom = Array.isArray(customMap[theme]) ? customMap[theme] : [];
+    let html = "";
+    custom.forEach(p => {
+      html += `<span class="draw-prompt-pill custom-prompt-pill"><span class="custom-star">★ Custom</span> ${esc(p)}</span>`;
+    });
+    base.forEach(p => {
+      html += `<span class="draw-prompt-pill">${esc(p)}</span>`;
+    });
+    return html;
+  };
+
   const renderShowcaseCard = () => `
                 <div class="draw-how-it-works-showcase" id="drawLobbyShowcase" role="region" aria-label="Live drawing preview">
                   <div class="dhiw-prompt-pill" id="dhiwPromptPill">"our first date"</div>
@@ -20,7 +119,7 @@
                   <div class="dhiw-caption">same prompt · two pens, live</div>
                 </div>`;
 
-  const renderDrawApp = (p1 = "", p2 = "") => `
+  const renderDrawApp = (p1 = "", p2 = "", customPrompts = {}) => `
               <div class="draw-app">
                 <!-- Toast Notification -->
                 <div id="drawToast" class="draw-toast" role="status" aria-live="polite"></div>
@@ -96,6 +195,10 @@
                           <div style="margin-top: 18px;">
                             <button type="button" id="btnWaitingSkipToSolo" class="draw-link-subtle" style="color: rgba(255, 255, 255, 0.7);">Start alone while waiting →</button>
                           </div>
+
+                          <div style="margin-top: 10px; text-align: center;">
+                            <button type="button" class="ldr-text-back-btn btn-exit-setup" id="btnCancelWaiting">← Exit to Menu</button>
+                          </div>
                         </div>
                       </div>
 
@@ -163,42 +266,53 @@
                         <div class="draw-pack-icon-wrap">🐾</div>
                         <div class="draw-pack-name">Animals</div>
                         <div class="draw-pack-desc">Cute critters, big and small.</div>
-                        <div class="draw-pack-meta">16 prompts</div>
+                        <div class="draw-pack-meta" data-pack-meta="animals">${16 + (customPrompts.animals?.length || 0)} prompts${customPrompts.animals?.length ? ` (${customPrompts.animals.length} custom)` : ""}</div>
                       </div>
 
                       <div class="draw-pack-card" data-pack="food">
                         <div class="draw-pack-icon-wrap">🍜</div>
                         <div class="draw-pack-name">Food & Snacks</div>
                         <div class="draw-pack-desc">Everything you two crave.</div>
-                        <div class="draw-pack-meta">12 prompts</div>
+                        <div class="draw-pack-meta" data-pack-meta="food">${12 + (customPrompts.food?.length || 0)} prompts${customPrompts.food?.length ? ` (${customPrompts.food.length} custom)` : ""}</div>
                       </div>
 
                       <div class="draw-pack-card" data-pack="random">
                         <div class="draw-pack-icon-wrap">🎲</div>
                         <div class="draw-pack-name">Random Doodles</div>
                         <div class="draw-pack-desc">Anything goes — go wild.</div>
-                        <div class="draw-pack-meta">12 prompts</div>
+                        <div class="draw-pack-meta" data-pack-meta="random">${12 + (customPrompts.random?.length || 0)} prompts${customPrompts.random?.length ? ` (${customPrompts.random.length} custom)` : ""}</div>
                       </div>
 
                       <div class="draw-pack-card selected" data-pack="memories">
                         <div class="draw-pack-icon-wrap">💖</div>
                         <div class="draw-pack-name">Our Memories</div>
                         <div class="draw-pack-desc">Sweet stuff, just about us.</div>
-                        <div class="draw-pack-meta">11 prompts</div>
+                        <div class="draw-pack-meta" data-pack-meta="memories">${11 + (customPrompts.memories?.length || 0)} prompts${customPrompts.memories?.length ? ` (${customPrompts.memories.length} custom)` : ""}</div>
                       </div>
 
                       <div class="draw-pack-card" data-pack="draw_me">
                         <div class="draw-pack-icon-wrap">💌</div>
                         <div class="draw-pack-name">Draw Me</div>
                         <div class="draw-pack-desc">Each other, lovingly butchered.</div>
-                        <div class="draw-pack-meta">10 prompts</div>
+                        <div class="draw-pack-meta" data-pack-meta="draw_me">${10 + (customPrompts.draw_me?.length || 0)} prompts${customPrompts.draw_me?.length ? ` (${customPrompts.draw_me.length} custom)` : ""}</div>
                       </div>
 
                       <div class="draw-pack-card" data-pack="silly">
                         <div class="draw-pack-icon-wrap">🤪</div>
                         <div class="draw-pack-name">Silly & Weird</div>
                         <div class="draw-pack-desc">Low stakes, maximum chaos.</div>
-                        <div class="draw-pack-meta">10 prompts</div>
+                        <div class="draw-pack-meta" data-pack-meta="silly">${10 + (customPrompts.silly?.length || 0)} prompts${customPrompts.silly?.length ? ` (${customPrompts.silly.length} custom)` : ""}</div>
+                      </div>
+                    </div>
+
+                    <!-- Pack Prompts Preview List -->
+                    <div class="draw-pack-prompts-preview" id="drawPackPromptsPreview">
+                      <div class="draw-pack-prompts-title">
+                        <span id="packPreviewTitle">💖 Our Memories Prompts</span>
+                        <span class="draw-prompts-badge" id="packPreviewCount">${11 + (customPrompts.memories?.length || 0)} prompts</span>
+                      </div>
+                      <div class="draw-prompts-pills-list" id="packPromptsPillsList">
+                        ${renderPromptsPills("memories", customPrompts)}
                       </div>
                     </div>
 
@@ -508,9 +622,12 @@ ${renderDrawApp(p1, p2)}
     const desc = d.desc || "Synchronized couple drawing studio — sketch prompts together across the distance.";
 
     const formattedTag = tag.startsWith("💕") ? tag : ("💕 " + tag);
+    const custom = (d.customPrompts && typeof d.customPrompts === "object") ? d.customPrompts : {};
+    const totalCustom = Object.values(custom).reduce((acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0), 0);
+    const totalCount = 72 + totalCustom;
 
     return `
-    <section class="section draw-section" id="section-draw" data-widget-id="draw" data-custom-prompts="${esc(JSON.stringify(d.customPrompts || {}))}">
+    <section class="section draw-section" id="section-draw" data-widget-id="draw" data-custom-prompts="${esc(JSON.stringify(custom))}">
       <div class="container">
         <!-- In-Page Widget Card (Matching Screenshot /draw Lobby Design) -->
         <div class="draw-widget-wrapper">
@@ -565,6 +682,28 @@ ${renderDrawApp(p1, p2)}
                 ${renderShowcaseCard()}
               </div>
             </div>
+
+            <!-- Interactive Prompts Explorer Preview -->
+            <div class="draw-lobby-prompts-showcase" id="drawPromptsShowcase">
+              <div class="draw-prompts-bar-header">
+                <div class="draw-prompts-bar-title">
+                  <span class="draw-prompts-icon">🎨</span>
+                  <span>Prompts to Draw</span>
+                  <span class="draw-prompts-badge" id="drawPromptsTotalBadge">${totalCount} prompts${totalCustom > 0 ? ` (${totalCustom} custom)` : ""}</span>
+                </div>
+                <div class="draw-theme-tabs" id="drawWidgetThemeTabs">
+                  <button type="button" class="draw-theme-tab active" data-theme="memories">💖 Memories${custom.memories?.length ? ` (${custom.memories.length})` : ""}</button>
+                  <button type="button" class="draw-theme-tab" data-theme="animals">🐾 Animals${custom.animals?.length ? ` (${custom.animals.length})` : ""}</button>
+                  <button type="button" class="draw-theme-tab" data-theme="food">🍜 Food${custom.food?.length ? ` (${custom.food.length})` : ""}</button>
+                  <button type="button" class="draw-theme-tab" data-theme="draw_me">💌 Draw Me${custom.draw_me?.length ? ` (${custom.draw_me.length})` : ""}</button>
+                  <button type="button" class="draw-theme-tab" data-theme="silly">🤪 Silly${custom.silly?.length ? ` (${custom.silly.length})` : ""}</button>
+                  <button type="button" class="draw-theme-tab" data-theme="random">🎲 Random${custom.random?.length ? ` (${custom.random.length})` : ""}</button>
+                </div>
+              </div>
+              <div class="draw-prompts-pills-list" id="drawWidgetPromptsList">
+                ${renderPromptsPills("memories", custom)}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -586,7 +725,7 @@ ${renderDrawApp(p1, p2)}
 
             <!-- Modal Content Body containing the full game -->
             <div class="draw-modal-body">
-              ${renderDrawApp(p1, p2)}
+              ${renderDrawApp(p1, p2, custom)}
             </div>
           </div>
         </div>
