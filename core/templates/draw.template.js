@@ -29,7 +29,7 @@
             <div class="ldr-welcome-choices" id="widgetWelcomeChoices">
               <button type="button" class="ldr-menu-card ldr-card-dark" id="btnLaunchDrawStartRoom">
                 <div class="ldr-card-left">
-                  <span class="ldr-card-icon">📸</span>
+                  <span class="ldr-card-icon">🎨</span>
                   <div class="ldr-card-texts">
                     <span class="ldr-card-title">Start a room</span>
                     <span class="ldr-card-sub">with your partner</span>
@@ -58,7 +58,7 @@
 
               <div class="ldr-sub-actions-row">
                 <button type="button" class="ldr-pill-btn" id="btnLaunchDrawSolo">
-                  <span>📷 Solo Booth</span>
+                  <span>🎨 Solo Studio</span>
                 </button>
               </div>
             </div>
@@ -97,7 +97,7 @@
                     <div class="ldr-welcome-choices" id="lobbyInitialView">
                       <button type="button" class="ldr-menu-card ldr-card-dark" id="btnStartRoom">
                         <div class="ldr-card-left">
-                          <span class="ldr-card-icon">📸</span>
+                          <span class="ldr-card-icon">🎨</span>
                           <div class="ldr-card-texts">
                             <span class="ldr-card-title">Start a room</span>
                             <span class="ldr-card-sub">with your partner</span>
@@ -126,7 +126,7 @@
 
                       <div class="ldr-sub-actions-row">
                         <button type="button" class="ldr-pill-btn" id="btnPracticeSolo">
-                          <span>📷 Solo Booth</span>
+                          <span>🎨 Solo Studio</span>
                         </button>
                       </div>
 

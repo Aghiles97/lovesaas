@@ -3,7 +3,9 @@
    ========================================================================== */
 
 body.draw-page,
-body.draw-page * {
+body.draw-page *,
+.draw-game-modal,
+.draw-game-modal * {
   box-sizing: border-box;
 }
 
@@ -36,7 +38,11 @@ body.draw-page {
 .draw-page button,
 .draw-page input,
 .draw-page select,
-.draw-page textarea {
+.draw-page textarea,
+.draw-game-modal button,
+.draw-game-modal input,
+.draw-game-modal select,
+.draw-game-modal textarea {
   font-family: inherit;
 }
 
@@ -98,8 +104,29 @@ body.draw-page {
    Stage 0: Lobby (Photobooth Parity)
    ========================================================================== */
 body.draw-page:has(#stageLobby.active),
-body.draw-page:has(#stageProfile.active) {
-  background: #120c13;
+body.draw-page:has(#stageProfile.active),
+body.draw-page.draw-dark-stage,
+.draw-game-modal.theme-dark-lobby,
+.draw-game-modal:has(#stageLobby.active),
+.draw-game-modal:has(#stageProfile.active) {
+  background: #120c13 !important;
+  background: radial-gradient(ellipse at 50% 20%, #251624 0%, #120d18 60%, #0a070f 100%) !important;
+  color: #ffffff !important;
+}
+
+#stagePackSelect .btn-exit-setup,
+#stageMatchSetup .btn-exit-setup {
+  color: #71717a !important;
+}
+#stagePackSelect .btn-exit-setup:hover,
+#stageMatchSetup .btn-exit-setup:hover {
+  color: #18181b !important;
+}
+#stageProfile .btn-exit-setup {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+#stageProfile .btn-exit-setup:hover {
+  color: #ffffff !important;
 }
 
 .draw-lobby-card {
@@ -186,6 +213,10 @@ body.draw-page:has(#stageProfile.active) {
   transform: translateY(-2px);
   border-color: rgba(255, 77, 136, 0.5);
   box-shadow: 0 8px 28px rgba(255, 77, 136, 0.2);
+}
+
+.ldr-menu-card:active {
+  transform: scale(0.98);
 }
 
 .ldr-card-dark {
@@ -373,6 +404,10 @@ body.draw-page:has(#stageProfile.active) {
   background: rgba(255, 255, 255, 0.05);
 }
 
+.ldr-text-back-btn:active {
+  transform: scale(0.96);
+}
+
 .draw-input-text.dark-style {
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -410,6 +445,12 @@ body.draw-page:has(#stageProfile.active) {
   opacity: 0.95;
   background: rgba(255, 255, 255, 0.15);
   border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-2px);
+}
+
+.photobooth-style .draw-sex-btn:active,
+.draw-sex-btn:active {
+  transform: scale(0.96);
 }
 
 .photobooth-style .draw-sex-btn.cute-female {
@@ -740,6 +781,10 @@ body.draw-page:has(#stageProfile.active) {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
 }
 
+.draw-pack-card:active {
+  transform: scale(0.96);
+}
+
 .draw-pack-card.selected {
   border-color: #18181b;
   box-shadow: 0 0 0 1.5px #18181b, 0 6px 16px rgba(0, 0, 0, 0.06);
@@ -911,6 +956,10 @@ body.draw-page:has(#stageProfile.active) {
   border-color: #71717a;
 }
 
+.draw-pill-btn:active {
+  transform: scale(0.94);
+}
+
 .draw-pill-btn.selected {
   background: #17181c;
   color: #ffffff;
@@ -1001,6 +1050,10 @@ body.draw-page:has(#stageProfile.active) {
   background: #fee2e2;
   border-color: #fca5a5;
   color: #ef4444;
+}
+
+.draw-btn-bottom-exit:active {
+  transform: scale(0.96);
 }
 
 .draw-round-ratio {
@@ -1375,6 +1428,10 @@ body.draw-page:has(#stageProfile.active) {
   transform: scale(1.1);
 }
 
+.draw-color-swatch:active {
+  transform: scale(0.95);
+}
+
 .draw-color-swatch.selected {
   transform: scale(1.12);
   border-color: #ffffff;
@@ -1405,6 +1462,10 @@ body.draw-page:has(#stageProfile.active) {
   border-color: #a1a1aa;
 }
 
+.draw-size-btn:active {
+  transform: scale(0.92);
+}
+
 .draw-size-btn.selected {
   border-color: #18181b;
   box-shadow: 0 0 0 1px #18181b;
@@ -1432,6 +1493,10 @@ body.draw-page:has(#stageProfile.active) {
 .draw-tool-icon-btn:hover {
   border-color: #18181b;
   color: #18181b;
+}
+
+.draw-tool-icon-btn:active {
+  transform: scale(0.92);
 }
 
 .draw-tool-icon-btn.selected {
@@ -1510,6 +1575,10 @@ body.draw-page:has(#stageProfile.active) {
 .draw-poke-btn:hover {
   transform: scale(1.15);
   border-color: #18181b;
+}
+
+.draw-poke-btn:active {
+  transform: scale(0.88);
 }
 
 .draw-poke-btn.selected {
@@ -1827,15 +1896,29 @@ body.draw-solo-mode #profilePartnerStatus,
 body.draw-solo-mode #profileWaitingWrap,
 body.draw-solo-mode .ldr-welcome-pill,
 body.draw-solo-mode .draw-pad-badge,
-body.draw-solo-mode .draw-recap-drawings.solo .draw-review-card:nth-child(2) {
+body.draw-solo-mode .draw-recap-drawings.solo .draw-review-card:nth-child(2),
+.draw-game-modal.draw-solo-mode #partnerPadCard,
+.draw-game-modal.draw-solo-mode .draw-pad-partner,
+.draw-game-modal.draw-solo-mode .draw-poke-bar,
+.draw-game-modal.draw-solo-mode .draw-poke-subtitle,
+.draw-game-modal.draw-solo-mode #myPadBadge,
+.draw-game-modal.draw-solo-mode .partner-pad-tap-hint,
+.draw-game-modal.draw-solo-mode #reviewPartnerCard,
+.draw-game-modal.draw-solo-mode #profilePartnerStatus,
+.draw-game-modal.draw-solo-mode #profileWaitingWrap,
+.draw-game-modal.draw-solo-mode .ldr-welcome-pill,
+.draw-game-modal.draw-solo-mode .draw-pad-badge,
+.draw-game-modal.draw-solo-mode .draw-recap-drawings.solo .draw-review-card:nth-child(2) {
   display: none !important;
 }
 
-body.draw-solo-mode .draw-canvases-grid {
+body.draw-solo-mode .draw-canvases-grid,
+.draw-game-modal.draw-solo-mode .draw-canvases-grid {
   justify-content: center !important;
 }
 
-body.draw-solo-mode .draw-canvases-grid .draw-pad-card {
+body.draw-solo-mode .draw-canvases-grid .draw-pad-card,
+.draw-game-modal.draw-solo-mode .draw-canvases-grid .draw-pad-card {
   aspect-ratio: 4 / 3 !important;
   width: min(580px, calc(100vw - 16px)) !important;
   height: auto !important;
@@ -1843,7 +1926,8 @@ body.draw-solo-mode .draw-canvases-grid .draw-pad-card {
   margin: 0 auto !important;
 }
 
-body.draw-solo-mode .draw-review-grid {
+body.draw-solo-mode .draw-review-grid,
+.draw-game-modal.draw-solo-mode .draw-review-grid {
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
@@ -1851,7 +1935,8 @@ body.draw-solo-mode .draw-review-grid {
   margin: 0 auto !important;
 }
 
-body.draw-solo-mode .draw-review-grid .draw-review-card {
+body.draw-solo-mode .draw-review-grid .draw-review-card,
+.draw-game-modal.draw-solo-mode .draw-review-grid .draw-review-card {
   width: min(480px, 100%) !important;
 }
 
@@ -1990,13 +2075,25 @@ body.draw-solo-mode .draw-review-grid .draw-review-card {
   display: none;
   flex-direction: column !important;
   overflow: hidden !important;
-  background: #0d0a14 !important;
-  background: radial-gradient(ellipse at 50% 20%, #251624 0%, #120d18 60%, #0a070f 100%) !important;
+  background: var(--draw-bg, #f8f9fb) !important;
   margin: 0 !important;
   padding: 0 !important;
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
+  color: var(--draw-text, #18181b) !important;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  -webkit-font-smoothing: antialiased !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.draw-game-modal.theme-dark-lobby,
+.draw-game-modal:has(#stageLobby.active),
+.draw-game-modal:has(#stageProfile.active) {
+  background: #120c13 !important;
+  background: radial-gradient(ellipse at 50% 20%, #251624 0%, #120d18 60%, #0a070f 100%) !important;
   color: #ffffff !important;
 }
 
@@ -2035,14 +2132,22 @@ body.draw-solo-mode .draw-review-grid .draw-review-card {
   align-items: center !important;
   justify-content: space-between !important;
   padding: calc(env(safe-area-inset-top, 14px) + 8px) 24px 10px 24px !important;
-  background: rgba(13, 10, 20, 0.85) !important;
+  background: rgba(248, 249, 251, 0.94) !important;
   backdrop-filter: blur(16px) !important;
   -webkit-backdrop-filter: blur(16px) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-bottom: 1px solid #e4e4e7 !important;
   box-sizing: border-box !important;
   z-index: 50 !important;
   flex-shrink: 0 !important;
   pointer-events: auto !important;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.draw-game-modal.theme-dark-lobby .draw-modal-topbar,
+.draw-game-modal:has(#stageLobby.active) .draw-modal-topbar,
+.draw-game-modal:has(#stageProfile.active) .draw-modal-topbar {
+  background: rgba(13, 10, 20, 0.88) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 .draw-topbar-left {
@@ -2065,7 +2170,14 @@ body.draw-solo-mode .draw-review-grid .draw-review-card {
   font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.2px;
-  color: #fff;
+  color: #18181b;
+  transition: color 0.2s ease;
+}
+
+.draw-game-modal.theme-dark-lobby .draw-topbar-title,
+.draw-game-modal:has(#stageLobby.active) .draw-topbar-title,
+.draw-game-modal:has(#stageProfile.active) .draw-topbar-title {
+  color: #ffffff;
 }
 
 .draw-topbar-right {
@@ -2074,20 +2186,41 @@ body.draw-solo-mode .draw-review-grid .draw-review-card {
 }
 
 .draw-modal-close-btn {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f4f4f5;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #ffffff;
+  color: #18181b;
+  border: 1px solid #e4e4e7;
   padding: 7px 16px;
   border-radius: 9999px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
+
 .draw-modal-close-btn:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #ef4444;
+}
+
+.draw-modal-close-btn:active {
+  transform: scale(0.95);
+}
+
+.draw-game-modal.theme-dark-lobby .draw-modal-close-btn,
+.draw-game-modal:has(#stageLobby.active) .draw-modal-close-btn,
+.draw-game-modal:has(#stageProfile.active) .draw-modal-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4f4f5;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.draw-game-modal.theme-dark-lobby .draw-modal-close-btn:hover,
+.draw-game-modal:has(#stageLobby.active) .draw-modal-close-btn:hover,
+.draw-game-modal:has(#stageProfile.active) .draw-modal-close-btn:hover {
   background: rgba(239, 68, 68, 0.2);
   border-color: rgba(239, 68, 68, 0.4);
   color: #fca5a5;

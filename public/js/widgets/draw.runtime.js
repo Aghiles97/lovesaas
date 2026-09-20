@@ -279,7 +279,19 @@
   // --- Stage Switching ---
   function showStage(stageName) {
     state.stage = stageName;
-    document.body.classList.toggle("draw-solo-mode", Boolean(state.isSolo));
+    const isSolo = Boolean(state.isSolo);
+    const isDark = (stageName === "lobby" || stageName === "profile_setup");
+
+    document.body.classList.toggle("draw-solo-mode", isSolo);
+    document.body.classList.toggle("draw-dark-stage", isDark);
+
+    const modal = document.getElementById("drawGameModal");
+    if (modal) {
+      modal.classList.toggle("theme-dark-lobby", isDark);
+      modal.classList.toggle("theme-light-studio", !isDark);
+      modal.classList.toggle("draw-solo-mode", isSolo);
+      modal.setAttribute("data-stage", stageName);
+    }
 
     if (stageName === "lobby" || state.isSolo || !state.roomCode || !state.partnerConnected) {
       const cursor = document.getElementById("drawRemoteCursor");
@@ -1741,6 +1753,7 @@
       if (modal) {
         modal.classList.remove("is-active");
         modal.style.display = "none";
+        document.body.classList.remove("draw-page", "draw-modal-open", "draw-dark-stage", "draw-solo-mode");
         document.body.style.overflow = "";
       }
     }
@@ -1759,9 +1772,15 @@
       if (modal.parentElement !== document.body) {
         document.body.appendChild(modal);
       }
+      document.body.classList.add("draw-page", "draw-modal-open");
       modal.classList.add("is-active");
       modal.style.display = "flex";
       document.body.style.overflow = "hidden";
+      const isDark = (state.stage === "lobby" || state.stage === "profile_setup" || !state.stage);
+      modal.classList.toggle("theme-dark-lobby", isDark);
+      modal.classList.toggle("theme-light-studio", !isDark);
+      modal.classList.toggle("draw-solo-mode", Boolean(state.isSolo));
+      document.body.classList.toggle("draw-dark-stage", isDark);
     }
     if (mode === "start") {
       el.btnStartRoom?.click();
