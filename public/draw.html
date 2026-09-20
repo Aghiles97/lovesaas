@@ -21,86 +21,93 @@
          Stage 0: Welcome & Room Connect (Photobooth Style)
          ==================================================================== -->
     <div id="stageLobby" class="draw-stage active">
-      <div class="draw-lobby-card photobooth-style">
+      <div class="draw-lobby-card photobooth-style lobby-split-layout">
         <div class="ldr-welcome-pill"><span>💕 Draw for Two · Studio</span></div>
         <h1 class="ldr-welcome-title">Draw for Two</h1>
         <p class="ldr-welcome-sub">Synchronized couple drawing studio — sketch prompts together across the distance.</p>
 
-        <!-- Interactive Live Drawing Showcase (Photobooth Preview) -->
-        <div class="draw-how-it-works-showcase" id="drawLobbyShowcase" role="region" aria-label="Live drawing preview">
-          <div class="dhiw-prompt-pill" id="dhiwPromptPill">"our first date"</div>
-          <div class="dhiw-boards-row">
-            <div class="dhiw-board dhiw-board-pink">
-              <svg class="dhiw-svg dhiw-svg-pink" id="dhiwSvgPink" viewBox="0 0 160 150" aria-hidden="true"></svg>
-            </div>
-            <div class="dhiw-board dhiw-board-blue">
-              <svg class="dhiw-svg dhiw-svg-blue" id="dhiwSvgBlue" viewBox="0 0 160 150" aria-hidden="true"></svg>
-            </div>
-          </div>
-          <div class="dhiw-caption">same prompt · two pens, live</div>
-        </div>
+        <div class="draw-lobby-split-row">
+          <!-- Left Column: Room Creation & Join -->
+          <div class="draw-lobby-col-actions">
+            <!-- Initial Choices matching Photobooth Screenshot -->
+            <div class="ldr-welcome-choices" id="lobbyInitialView">
+              <button type="button" class="ldr-menu-card ldr-card-dark" id="btnStartRoom">
+                <div class="ldr-card-left">
+                  <span class="ldr-card-icon">🎨</span>
+                  <div class="ldr-card-texts">
+                    <span class="ldr-card-title">Start a room</span>
+                    <span class="ldr-card-sub">with your partner</span>
+                  </div>
+                </div>
+                <span class="ldr-card-arrow">→</span>
+              </button>
 
-        <!-- Initial Choices matching Photobooth Screenshot -->
-        <div class="ldr-welcome-choices" id="lobbyInitialView">
-          <button type="button" class="ldr-menu-card ldr-card-dark" id="btnStartRoom">
-            <div class="ldr-card-left">
-              <span class="ldr-card-icon">🎨</span>
-              <div class="ldr-card-texts">
-                <span class="ldr-card-title">Start a room</span>
-                <span class="ldr-card-sub">with your partner</span>
+              <button type="button" class="ldr-menu-card ldr-card-light" id="btnShowJoinForm">
+                <div class="ldr-card-left">
+                  <span class="ldr-card-icon">💌</span>
+                  <div class="ldr-card-texts">
+                    <span class="ldr-card-title">Join a room</span>
+                    <span class="ldr-card-sub">with a code</span>
+                  </div>
+                </div>
+                <span class="ldr-card-arrow">→</span>
+              </button>
+
+              <!-- Inline Join Form: Reveals when clicking "Join a room" -->
+              <div class="ldr-inline-join-form" id="lobbyInlineJoinForm" style="display: none;">
+                <div class="ldr-join-input-group">
+                  <input type="text" id="inputJoinCode" class="ldr-join-input" placeholder="5-LETTER CODE" maxlength="6" autocomplete="off" spellcheck="false" />
+                  <button type="button" class="draw-btn-primary draw-btn-sm" id="btnJoinRoomSubmit"><span>Join ▷</span></button>
+                </div>
+              </div>
+
+              <div class="ldr-sub-actions-row">
+                <button type="button" class="ldr-pill-btn" id="btnPracticeSolo">
+                  <span>🎨 Solo Studio</span>
+                </button>
+              </div>
+
+              <div style="margin-top: 6px;">
+                <a href="/" class="ldr-text-back-btn" id="btnBackToWebsite">← Back to Website</a>
               </div>
             </div>
-            <span class="ldr-card-arrow">→</span>
-          </button>
 
-          <button type="button" class="ldr-menu-card ldr-card-light" id="btnShowJoinForm">
-            <div class="ldr-card-left">
-              <span class="ldr-card-icon">💌</span>
-              <div class="ldr-card-texts">
-                <span class="ldr-card-title">Join a room</span>
-                <span class="ldr-card-sub">with a code</span>
+            <!-- Waiting for Partner Room View -->
+            <div id="lobbyWaitingView" style="display: none;">
+              <div class="draw-input-label" style="color: rgba(255, 255, 255, 0.7); margin-bottom: 12px;">Share This Code With Your Partner</div>
+              <div class="draw-code-pill-row">
+                <span id="displayRoomCode" class="draw-code-box">-----</span>
+              </div>
+
+              <button type="button" id="btnCopyInvite" class="draw-btn-primary" style="width: 100%; height: 48px; margin-bottom: 14px;">
+                <span>🔗 Copy Invite Link ▷</span>
+              </button>
+
+              <div class="draw-waiting-badge">
+                <span class="draw-pulse-dot"></span>
+                <span id="waitingStatusText">Waiting for your partner to join...</span>
+              </div>
+
+              <div style="margin-top: 18px;">
+                <button type="button" id="btnWaitingSkipToSolo" class="draw-link-subtle" style="color: rgba(255, 255, 255, 0.7);">Start alone while waiting →</button>
               </div>
             </div>
-            <span class="ldr-card-arrow">→</span>
-          </button>
+          </div>
 
-          <!-- Inline Join Form: Reveals when clicking "Join a room" -->
-          <div class="ldr-inline-join-form" id="lobbyInlineJoinForm" style="display: none;">
-            <div class="ldr-join-input-group">
-              <input type="text" id="inputJoinCode" class="ldr-join-input" placeholder="5-LETTER CODE" maxlength="6" autocomplete="off" spellcheck="false" />
-              <button type="button" class="draw-btn-primary draw-btn-sm" id="btnJoinRoomSubmit"><span>Join ▷</span></button>
+          <!-- Right Column: Interactive Live Drawing Animation -->
+          <div class="draw-lobby-col-showcase">
+            <div class="draw-how-it-works-showcase" id="drawLobbyShowcase" role="region" aria-label="Live drawing preview">
+              <div class="dhiw-prompt-pill" id="dhiwPromptPill">"our first date"</div>
+              <div class="dhiw-boards-row">
+                <div class="dhiw-board dhiw-board-pink">
+                  <svg class="dhiw-svg dhiw-svg-pink" id="dhiwSvgPink" viewBox="0 0 160 150" aria-hidden="true"></svg>
+                </div>
+                <div class="dhiw-board dhiw-board-blue">
+                  <svg class="dhiw-svg dhiw-svg-blue" id="dhiwSvgBlue" viewBox="0 0 160 150" aria-hidden="true"></svg>
+                </div>
+              </div>
+              <div class="dhiw-caption">same prompt · two pens, live</div>
             </div>
-          </div>
-
-          <div class="ldr-sub-actions-row">
-            <button type="button" class="ldr-pill-btn" id="btnPracticeSolo">
-              <span>🎨 Solo Studio</span>
-            </button>
-          </div>
-
-          <div style="margin-top: 6px;">
-            <a href="/" class="ldr-text-back-btn" id="btnBackToWebsite">← Back to Website</a>
-          </div>
-        </div>
-
-        <!-- Waiting for Partner Room View -->
-        <div id="lobbyWaitingView" style="display: none;">
-          <div class="draw-input-label" style="color: rgba(255, 255, 255, 0.7); margin-bottom: 12px;">Share This Code With Your Partner</div>
-          <div class="draw-code-pill-row">
-            <span id="displayRoomCode" class="draw-code-box">-----</span>
-          </div>
-
-          <button type="button" id="btnCopyInvite" class="draw-btn-primary" style="width: 100%; height: 48px; margin-bottom: 14px;">
-            <span>🔗 Copy Invite Link ▷</span>
-          </button>
-
-          <div class="draw-waiting-badge">
-            <span class="draw-pulse-dot"></span>
-            <span id="waitingStatusText">Waiting for your partner to join...</span>
-          </div>
-
-          <div style="margin-top: 18px;">
-            <button type="button" id="btnWaitingSkipToSolo" class="draw-link-subtle" style="color: rgba(255, 255, 255, 0.7);">Start alone while waiting →</button>
           </div>
         </div>
       </div>
