@@ -741,7 +741,31 @@ assert(clientText18.includes("state.roundHistory.forEach"), "draw.runtime.js che
 console.log("✅ PASS: Test 18 verified - Zero prompt reuse across rounds in same game");
 passedTests++;
 
+// --- TEST 19: Interactive Lobby How-It-Works Doodle Animation Showcase ---
+console.log("\n--- TEST 19: Interactive Lobby Showcase Animation ---");
+const htmlText19 = fs.readFileSync(path.join(__dirname, "../public/draw.html"), "utf8");
+const cssText19 = fs.readFileSync(path.join(__dirname, "../public/css/widgets/draw.css"), "utf8");
+const jsText19 = fs.readFileSync(path.join(__dirname, "../public/js/widgets/draw.runtime.js"), "utf8");
+
+assert(htmlText19.includes('id="drawLobbyShowcase"'), "draw.html contains drawLobbyShowcase");
+assert(htmlText19.includes('id="dhiwPromptPill"'), "draw.html contains dhiwPromptPill");
+assert(htmlText19.includes('id="dhiwSvgPink"'), "draw.html contains dhiwSvgPink");
+assert(htmlText19.includes('id="dhiwSvgBlue"'), "draw.html contains dhiwSvgBlue");
+assert(htmlText19.includes("same prompt · two pens, live"), "draw.html contains 'same prompt · two pens, live' caption");
+
+assert(cssText19.includes(".draw-how-it-works-showcase"), "draw.css defines .draw-how-it-works-showcase");
+assert(cssText19.includes(".dhiw-board-pink"), "draw.css defines .dhiw-board-pink");
+assert(cssText19.includes(".dhiw-board-blue"), "draw.css defines .dhiw-board-blue");
+
+assert(jsText19.includes("LOBBY_SHOWCASE_SCENES"), "draw.runtime.js contains LOBBY_SHOWCASE_SCENES");
+assert(jsText19.includes("initLobbyShowcase"), "draw.runtime.js contains initLobbyShowcase");
+assert(jsText19.includes("startLobbyShowcase"), "draw.runtime.js contains startLobbyShowcase");
+assert(jsText19.includes("stopLobbyShowcase"), "draw.runtime.js contains stopLobbyShowcase");
+
+console.log("✅ PASS: Test 19 verified - Interactive lobby showcase animation elements & logic verified");
+passedTests++;
+
 console.log("\n=================================================");
-console.log(`ALL ${passedTests}/18 TEST SUITES PASSED!`);
+console.log(`ALL ${passedTests}/19 TEST SUITES PASSED!`);
 console.log("=================================================");
 process.exit(0);

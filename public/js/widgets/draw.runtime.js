@@ -182,7 +182,9 @@
   };
 
   function getRandomPrompt(packId) {
-    const pack = PROMPT_PACKS[packId] || PROMPT_PACKS.animals;
+    const basePack = PROMPT_PACKS[packId] || PROMPT_PACKS.animals;
+    const customList = Array.isArray(state.customPrompts?.[packId]) ? state.customPrompts[packId] : [];
+    const allPrompts = [...basePack.prompts, ...customList];
     if (!state.usedSoloPrompts) state.usedSoloPrompts = new Set();
 
     const used = new Set();
@@ -198,9 +200,9 @@
       if (p) used.add(String(p).trim().toLowerCase());
     }
 
-    const available = pack.prompts.filter(p => !used.has(String(p).trim().toLowerCase()));
-    const pool = available.length > 0 ? available : pack.prompts.filter(p => String(p).trim().toLowerCase() !== String(state.currentPrompt || "").trim().toLowerCase());
-    const chosen = pool[Math.floor(Math.random() * pool.length)];
+    const available = allPrompts.filter(p => !used.has(String(p).trim().toLowerCase()));
+    const pool = available.length > 0 ? available : allPrompts.filter(p => String(p).trim().toLowerCase() !== String(state.currentPrompt || "").trim().toLowerCase());
+    const chosen = pool[Math.floor(Math.random() * pool.length)] || allPrompts[0] || basePack.prompts[0];
     state.usedSoloPrompts.add(chosen);
     return chosen;
   }
@@ -208,6 +210,7 @@
   // --- App State ---
   const state = {
     roomCode: null,
+    customPrompts: {},
     isSolo: false,
     role: "host",
     participantId: getOrCreateParticipantId("global"),
@@ -296,6 +299,12 @@
     if (stageName === "lobby" || state.isSolo || !state.roomCode || !state.partnerConnected) {
       const cursor = document.getElementById("drawRemoteCursor");
       if (cursor) cursor.style.display = "none";
+    }
+
+    if (stageName === "lobby") {
+      startLobbyShowcase();
+    } else {
+      stopLobbyShowcase();
     }
 
     const stages = [
@@ -733,6 +742,9 @@
         document.querySelectorAll("#secondsSelector .draw-pill-btn").forEach(b => {
           b.classList.toggle("selected", Number(b.dataset.seconds) === state.secondsPerDrawing);
         });
+      }
+      if (msg.customPrompts && typeof msg.customPrompts === "object") {
+        state.customPrompts = msg.customPrompts;
       }
       return;
     }
@@ -2097,7 +2109,7 @@
       document.querySelectorAll("#roundsSelector .draw-pill-btn").forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
 
-      sendMsg("SET_MATCH_CONFIG", { roundsTotal: rounds });
+      sendMsg("SET_MATCH_CONFIG", { roundsTotal: rounds, customPrompts: state.customPrompts });
     });
 
     // Seconds
@@ -2111,7 +2123,7 @@
       document.querySelectorAll("#secondsSelector .draw-pill-btn").forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
 
-      sendMsg("SET_MATCH_CONFIG", { secondsPerDrawing: secs });
+      sendMsg("SET_MATCH_CONFIG", { secondsPerDrawing: secs, customPrompts: state.customPrompts });
     });
 
     // Start Drawing Click
@@ -2122,7 +2134,7 @@
       if (state.isSolo) {
         startSoloMatch(1);
       } else {
-        sendMsg("START_MATCH", { packId: state.selectedPack });
+        sendMsg("START_MATCH", { packId: state.selectedPack, customPrompts: state.customPrompts });
       }
     });
 
@@ -2361,6 +2373,257 @@
     });
   }
 
+  // --- Lobby Live Drawing Showcase Engine ---
+  const LOBBY_SHOWCASE_SCENES = [
+    {
+      prompt: '"our first date"',
+      left: [
+        "M 50 60 L 50 95 Q 50 115 80 115 Q 110 115 110 95 L 110 60 Z",
+        "M 110 68 Q 128 68 128 85 Q 128 98 108 100",
+        "M 65 48 Q 60 34 68 24",
+        "M 95 48 Q 100 34 92 24",
+        "M 80 34 C 80 27 72 27 72 34 C 72 41 80 47 80 47 C 80 47 88 41 88 34 C 88 27 80 27 80 34 Z",
+        "M 70 85 Q 80 93 90 85"
+      ],
+      right: [
+        "M 45 50 L 66 85 L 66 115 M 54 115 L 78 115 M 40 50 L 76 50",
+        "M 115 50 L 94 85 L 94 115 M 82 115 L 106 115 M 84 50 L 120 50",
+        "M 80 25 L 80 40 M 72 32 L 88 32",
+        "M 75 27 L 85 37 M 85 27 L 75 37"
+      ]
+    },
+    {
+      prompt: '"the cutest pet"',
+      left: [
+        "M 46 62 L 34 32 L 64 46 Q 80 43 96 46 L 126 32 L 114 62 Q 130 92 114 115 Q 80 134 46 115 Q 30 92 46 62 Z",
+        "M 53 74 Q 63 67 73 74",
+        "M 87 74 Q 97 67 107 74",
+        "M 80 83 L 76 89 L 84 89 Z",
+        "M 80 89 Q 73 96 68 92",
+        "M 80 89 Q 87 96 92 92",
+        "M 38 78 L 22 75 M 38 84 L 20 86",
+        "M 122 78 L 138 75 M 122 84 L 140 86"
+      ],
+      right: [
+        "M 55 52 Q 80 42 105 52 Q 125 72 120 100 Q 110 125 80 125 Q 50 125 40 100 Q 35 72 55 52 Z",
+        "M 55 52 Q 30 57 28 85 Q 26 103 45 95",
+        "M 105 52 Q 130 57 132 85 Q 134 103 115 95",
+        "M 62 72 A 4 4 0 1 1 62 71.9",
+        "M 98 72 A 4 4 0 1 1 98 71.9",
+        "M 74 85 Q 80 80 86 85 Q 80 92 74 85 Z",
+        "M 80 90 Q 75 106 80 110 Q 85 106 80 90"
+      ]
+    },
+    {
+      prompt: '"midnight snack"',
+      left: [
+        "M 40 45 Q 80 30 120 45",
+        "M 40 45 L 80 125 L 120 45",
+        "M 66 62 A 5 5 0 1 1 66 61.9",
+        "M 94 66 A 5 5 0 1 1 94 65.9",
+        "M 78 92 A 5 5 0 1 1 78 91.9",
+        "M 65 78 Q 65 92 70 92 Q 75 92 75 80"
+      ],
+      right: [
+        "M 55 85 L 80 135 L 105 85 Z",
+        "M 63 100 L 97 100 M 70 115 L 90 115",
+        "M 55 85 Q 48 70 64 64 Q 56 48 76 44 Q 76 28 86 24 Q 96 34 90 48 Q 104 52 100 68 Q 112 75 105 85 Z",
+        "M 88 22 A 5.5 5.5 0 1 1 88 21.9",
+        "M 88 17 Q 98 8 96 2"
+      ]
+    }
+  ];
+
+  let lobbyShowcaseTimer = null;
+  let lobbyShowcaseAnimFrame = null;
+  let lobbyShowcaseSceneIdx = 0;
+  let lobbyShowcaseRunning = false;
+
+  function initLobbyShowcase() {
+    const showcase = document.getElementById("drawLobbyShowcase");
+    if (!showcase || showcase.dataset.initialized) return;
+    showcase.dataset.initialized = "true";
+
+    showcase.addEventListener("click", (e) => {
+      spawnShowcaseHearts(e);
+      nextLobbyShowcaseScene();
+    });
+
+    startLobbyShowcase();
+  }
+
+  function startLobbyShowcase() {
+    if (lobbyShowcaseRunning) return;
+    const showcase = document.getElementById("drawLobbyShowcase");
+    if (!showcase) return;
+    lobbyShowcaseRunning = true;
+    playLobbyShowcaseScene(lobbyShowcaseSceneIdx);
+  }
+
+  function stopLobbyShowcase() {
+    lobbyShowcaseRunning = false;
+    if (lobbyShowcaseTimer) {
+      clearTimeout(lobbyShowcaseTimer);
+      lobbyShowcaseTimer = null;
+    }
+    if (lobbyShowcaseAnimFrame) {
+      cancelAnimationFrame(lobbyShowcaseAnimFrame);
+      lobbyShowcaseAnimFrame = null;
+    }
+  }
+
+  function nextLobbyShowcaseScene() {
+    if (lobbyShowcaseTimer) clearTimeout(lobbyShowcaseTimer);
+    if (lobbyShowcaseAnimFrame) cancelAnimationFrame(lobbyShowcaseAnimFrame);
+    lobbyShowcaseSceneIdx = (lobbyShowcaseSceneIdx + 1) % LOBBY_SHOWCASE_SCENES.length;
+    playLobbyShowcaseScene(lobbyShowcaseSceneIdx);
+  }
+
+  function spawnShowcaseHearts(e) {
+    const showcase = document.getElementById("drawLobbyShowcase");
+    if (!showcase) return;
+    const rect = showcase.getBoundingClientRect();
+    const x = (e.clientX || (rect.left + rect.width / 2)) - rect.left;
+    const y = (e.clientY || (rect.top + rect.height / 2)) - rect.top;
+    const emojis = ["💖", "✨", "🎨", "💕", "⭐"];
+
+    for (let i = 0; i < 6; i++) {
+      const sp = document.createElement("span");
+      sp.className = "dhiw-sparkle";
+      sp.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      sp.style.left = `${x}px`;
+      sp.style.top = `${y}px`;
+      const angle = (Math.PI * 2 * i) / 6 + (Math.random() * 0.4 - 0.2);
+      const dist = 28 + Math.random() * 32;
+      sp.style.setProperty("--dx", `${Math.cos(angle) * dist}px`);
+      sp.style.setProperty("--dy", `${Math.sin(angle) * dist}px`);
+      showcase.appendChild(sp);
+      setTimeout(() => sp.remove(), 800);
+    }
+  }
+
+  function prepareShowcaseBoard(svg, pathStrings, isPink) {
+    svg.innerHTML = "";
+    const paths = [];
+    let totalLength = 0;
+
+    for (const d of pathStrings) {
+      const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      p.setAttribute("d", d);
+      p.setAttribute("fill", "none");
+      p.setAttribute("stroke", isPink ? "#ff527b" : "#2563eb");
+      p.setAttribute("stroke-width", "4.5");
+      p.setAttribute("stroke-linecap", "round");
+      p.setAttribute("stroke-linejoin", "round");
+      svg.appendChild(p);
+
+      let len = 0;
+      try {
+        len = p.getTotalLength();
+      } catch (_) {
+        len = 100;
+      }
+      p.style.strokeDasharray = `${len} ${len}`;
+      p.style.strokeDashoffset = `${len}`;
+
+      paths.push({ el: p, len, start: totalLength, end: totalLength + len });
+      totalLength += len;
+    }
+
+    const penG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    penG.setAttribute("class", "dhiw-pen-cursor");
+    penG.setAttribute("opacity", "0");
+    const tagText = isPink ? "YOU" : "PARTNER";
+    const tagWidth = isPink ? 30 : 48;
+    const tagX = isPink ? 20 : 29;
+    const color = isPink ? "#ff527b" : "#2563eb";
+
+    penG.innerHTML = `
+      <polygon points="0,0 4,-10 -4,-10" fill="#1e293b" />
+      <rect x="-4" y="-26" width="8" height="16" rx="2" fill="${color}" />
+      <rect x="5" y="-23" width="${tagWidth}" height="14" rx="7" fill="${color}" />
+      <text x="${tagX}" y="-13" font-size="7.5" font-weight="800" font-family="sans-serif" fill="#ffffff" text-anchor="middle">${tagText}</text>
+    `;
+    svg.appendChild(penG);
+
+    return { paths, totalLength, penG };
+  }
+
+  function updateShowcaseProgress(board, t) {
+    if (!board || !board.totalLength) return;
+    const currentDist = Math.min(board.totalLength, t * board.totalLength);
+    let activePoint = null;
+
+    for (const item of board.paths) {
+      if (currentDist <= item.start) {
+        item.el.style.strokeDashoffset = `${item.len}`;
+      } else if (currentDist >= item.end) {
+        item.el.style.strokeDashoffset = "0";
+        try {
+          activePoint = item.el.getPointAtLength(item.len);
+        } catch (_) {}
+      } else {
+        const drawnInThis = currentDist - item.start;
+        item.el.style.strokeDashoffset = `${Math.max(0, item.len - drawnInThis)}`;
+        try {
+          activePoint = item.el.getPointAtLength(drawnInThis);
+        } catch (_) {}
+      }
+    }
+
+    if (activePoint && t < 1) {
+      board.penG.setAttribute("transform", `translate(${activePoint.x}, ${activePoint.y})`);
+      board.penG.setAttribute("opacity", "1");
+    } else {
+      board.penG.setAttribute("opacity", "0");
+    }
+  }
+
+  function playLobbyShowcaseScene(idx) {
+    const pill = document.getElementById("dhiwPromptPill");
+    const svgPink = document.getElementById("dhiwSvgPink");
+    const svgBlue = document.getElementById("dhiwSvgBlue");
+    if (!pill || !svgPink || !svgBlue) return;
+
+    const scene = LOBBY_SHOWCASE_SCENES[idx % LOBBY_SHOWCASE_SCENES.length];
+    pill.style.opacity = "0";
+    pill.style.transform = "scale(0.92)";
+
+    setTimeout(() => {
+      pill.textContent = scene.prompt;
+      pill.style.opacity = "1";
+      pill.style.transform = "scale(1)";
+    }, 120);
+
+    const pinkBoard = prepareShowcaseBoard(svgPink, scene.left, true);
+    const blueBoard = prepareShowcaseBoard(svgBlue, scene.right, false);
+
+    const duration = 2400;
+    const startTime = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+
+    function step(now) {
+      if (!lobbyShowcaseRunning) return;
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      const eased = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+
+      updateShowcaseProgress(pinkBoard, eased);
+      updateShowcaseProgress(blueBoard, eased);
+
+      if (progress < 1) {
+        lobbyShowcaseAnimFrame = requestAnimationFrame(step);
+      } else {
+        updateShowcaseProgress(pinkBoard, 1);
+        updateShowcaseProgress(blueBoard, 1);
+        lobbyShowcaseTimer = setTimeout(() => {
+          if (lobbyShowcaseRunning) nextLobbyShowcaseScene();
+        }, 2200);
+      }
+    }
+
+    lobbyShowcaseAnimFrame = requestAnimationFrame(step);
+  }
+
   // --- Initialize ---
   function init() {
     bindElements();
@@ -2371,6 +2634,8 @@
         el.canvasesContainer.classList.remove("view-mine", "view-partner");
         el.canvasesContainer.classList.add("view-split");
       }
+
+      initLobbyShowcase();
 
       const urlParams = new URLSearchParams(window.location.search);
       const roomFromQuery = urlParams.get("room") || urlParams.get("code") || urlParams.get("draw_room");
@@ -2440,6 +2705,16 @@
           });
         }
       }
+      if (data.customPrompts && typeof data.customPrompts === "object") {
+        state.customPrompts = data.customPrompts;
+      }
+      const secEl = document.getElementById("section-draw");
+      if (secEl && (!data.customPrompts || Object.keys(data.customPrompts).length === 0)) {
+        try {
+          const raw = secEl.getAttribute("data-custom-prompts");
+          if (raw) state.customPrompts = JSON.parse(raw);
+        } catch (_) {}
+      }
     }
 
     renderShowcaseDoodles();
@@ -2464,6 +2739,9 @@
         }
         if (titleEl && config.title) titleEl.textContent = config.title;
         if (descEl && config.desc) descEl.textContent = config.desc;
+      }
+      if (config.customPrompts && typeof config.customPrompts === "object") {
+        state.customPrompts = config.customPrompts;
       }
       if (config.defaultPack && PROMPT_PACKS[config.defaultPack]) {
         state.selectedPack = config.defaultPack;

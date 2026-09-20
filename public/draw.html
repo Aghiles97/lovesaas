@@ -26,6 +26,20 @@
         <h1 class="ldr-welcome-title">Draw for Two</h1>
         <p class="ldr-welcome-sub">Synchronized couple drawing studio — sketch prompts together across the distance.</p>
 
+        <!-- Interactive Live Drawing Showcase (Photobooth Preview) -->
+        <div class="draw-how-it-works-showcase" id="drawLobbyShowcase" role="region" aria-label="Live drawing preview">
+          <div class="dhiw-prompt-pill" id="dhiwPromptPill">"our first date"</div>
+          <div class="dhiw-boards-row">
+            <div class="dhiw-board dhiw-board-pink">
+              <svg class="dhiw-svg" id="dhiwSvgPink" viewBox="0 0 160 150" aria-hidden="true"></svg>
+            </div>
+            <div class="dhiw-board dhiw-board-blue">
+              <svg class="dhiw-svg" id="dhiwSvgBlue" viewBox="0 0 160 150" aria-hidden="true"></svg>
+            </div>
+          </div>
+          <div class="dhiw-caption">same prompt · two pens, live</div>
+        </div>
+
         <!-- Initial Choices matching Photobooth Screenshot -->
         <div class="ldr-welcome-choices" id="lobbyInitialView">
           <button type="button" class="ldr-menu-card ldr-card-dark" id="btnStartRoom">

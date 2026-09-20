@@ -277,7 +277,9 @@ class DrawRoomServer extends PartnerRoomEngine {
   }
 
   getNextPrompt(room, packId) {
-    const pack = PROMPT_PACKS[packId] || PROMPT_PACKS.animals;
+    const basePack = PROMPT_PACKS[packId] || PROMPT_PACKS.animals;
+    const customList = Array.isArray(room.state?.customPrompts?.[packId]) ? room.state.customPrompts[packId] : [];
+    const allPrompts = [...basePack.prompts, ...customList];
     if (!room.usedPrompts) room.usedPrompts = new Set();
 
     const usedSet = new Set();
@@ -298,9 +300,9 @@ class DrawRoomServer extends PartnerRoomEngine {
       });
     }
 
-    const available = pack.prompts.filter(p => !usedSet.has(String(p).trim().toLowerCase()));
-    const pool = available.length > 0 ? available : pack.prompts.filter(p => String(p).trim().toLowerCase() !== String(room.state?.currentPrompt || "").trim().toLowerCase());
-    const chosen = pool[Math.floor(Math.random() * pool.length)];
+    const available = allPrompts.filter(p => !usedSet.has(String(p).trim().toLowerCase()));
+    const pool = available.length > 0 ? available : allPrompts.filter(p => String(p).trim().toLowerCase() !== String(room.state?.currentPrompt || "").trim().toLowerCase());
+    const chosen = pool[Math.floor(Math.random() * pool.length)] || allPrompts[0] || basePack.prompts[0];
 
     room.usedPrompts.add(chosen);
     if (!room.state.usedPrompts) room.state.usedPrompts = [];
@@ -523,20 +525,24 @@ class DrawRoomServer extends PartnerRoomEngine {
     if (type === "SET_MATCH_CONFIG") {
       if (payload?.roundsTotal !== undefined) {
         const rounds = Number(payload.roundsTotal);
-        if ([3, 4, 5, 7].includes(rounds)) currentRoom.state.roundsTotal = rounds;
+        if ([1, 2, 3, 4, 5, 7, 10].includes(rounds)) currentRoom.state.roundsTotal = rounds;
       }
       if (payload?.secondsPerDrawing !== undefined) {
         const secs = Number(payload.secondsPerDrawing);
-        if ([20, 60, 90, 120, 180].includes(secs)) {
+        if ([10, 20, 30, 60, 90, 120, 180].includes(secs)) {
           currentRoom.state.secondsPerDrawing = secs;
           currentRoom.state.timerRemaining = secs;
         }
+      }
+      if (payload?.customPrompts && typeof payload.customPrompts === "object") {
+        currentRoom.state.customPrompts = payload.customPrompts;
       }
       this.scheduleSave();
       this.broadcastAll(currentRoom, {
         type: "MATCH_CONFIG_UPDATED",
         roundsTotal: currentRoom.state.roundsTotal,
         secondsPerDrawing: currentRoom.state.secondsPerDrawing,
+        customPrompts: currentRoom.state.customPrompts,
         actorId: participantId,
         actorName: participantName
       });
@@ -548,6 +554,9 @@ class DrawRoomServer extends PartnerRoomEngine {
       if (currentRoom.state.stage === "drawing") return;
       if (payload?.packId && PROMPT_PACKS[payload.packId]) {
         currentRoom.state.selectedPack = payload.packId;
+      }
+      if (payload?.customPrompts && typeof payload.customPrompts === "object") {
+        currentRoom.state.customPrompts = payload.customPrompts;
       }
       currentRoom.state.stage = "drawing";
       currentRoom.state.currentRound = 1;
