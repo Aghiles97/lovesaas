@@ -30,6 +30,7 @@
     if (dw.defaultSeconds === undefined) dw.defaultSeconds = 120;
     if (dw.allowSolo === undefined) dw.allowSolo = true;
     if (!dw.buttonText) dw.buttonText = "Open Fullscreen Studio ↗";
+    if (!dw.customPrompts || typeof dw.customPrompts !== "object") dw.customPrompts = {};
 
     const post = (msg) => {
       try {
@@ -82,17 +83,22 @@
           <div class="input-group">
             <label>Rounds per Match</label>
             <select id="dw_defaultRounds" class="inspector-select" style="width: 100%;">
+              <option value="1" ${Number(dw.defaultRounds) === 1 ? "selected" : ""}>1 Round</option>
+              <option value="2" ${Number(dw.defaultRounds) === 2 ? "selected" : ""}>2 Rounds</option>
               <option value="3" ${Number(dw.defaultRounds) === 3 ? "selected" : ""}>3 Rounds</option>
               <option value="4" ${Number(dw.defaultRounds) === 4 ? "selected" : ""}>4 Rounds</option>
               <option value="5" ${Number(dw.defaultRounds) === 5 ? "selected" : ""}>5 Rounds</option>
               <option value="7" ${Number(dw.defaultRounds) === 7 ? "selected" : ""}>7 Rounds</option>
+              <option value="10" ${Number(dw.defaultRounds) === 10 ? "selected" : ""}>10 Rounds</option>
             </select>
           </div>
 
           <div class="input-group">
             <label>Time per Round</label>
             <select id="dw_defaultSeconds" class="inspector-select" style="width: 100%;">
+              <option value="10" ${Number(dw.defaultSeconds) === 10 ? "selected" : ""}>10 seconds</option>
               <option value="20" ${Number(dw.defaultSeconds) === 20 ? "selected" : ""}>20 seconds</option>
+              <option value="30" ${Number(dw.defaultSeconds) === 30 ? "selected" : ""}>30 seconds</option>
               <option value="60" ${Number(dw.defaultSeconds) === 60 ? "selected" : ""}>60 seconds</option>
               <option value="90" ${Number(dw.defaultSeconds) === 90 ? "selected" : ""}>90 seconds</option>
               <option value="120" ${Number(dw.defaultSeconds) === 120 ? "selected" : ""}>120 seconds</option>
@@ -115,6 +121,44 @@
 
       <div class="inspector-group">
         <div class="inspector-section-title">
+          <span class="sec-title-icon">✏️</span>
+          <span>Theme Drawing Prompts</span>
+        </div>
+        <p style="font-size: 0.78rem; color: var(--text-muted, #94a3b8); margin-bottom: 10px;">
+          Add custom prompts or questions per theme. You can edit or delete them anytime.
+        </p>
+
+        <div class="input-group">
+          <label>Select Theme Pack</label>
+          <select id="dw_promptThemeSelect" class="inspector-select" style="width: 100%;">
+            <option value="memories">💖 Our Memories (Personal &amp; Romantic)</option>
+            <option value="animals">🐾 Cute Animals (Critters &amp; Pets)</option>
+            <option value="food">🍜 Food &amp; Snacks (Craving Doodles)</option>
+            <option value="draw_me">💌 Draw Me (Lovingly Butchered)</option>
+            <option value="silly">🤪 Silly &amp; Weird (Pure Chaos)</option>
+            <option value="random">🎲 Random Doodles (Anything Goes)</option>
+          </select>
+        </div>
+
+        <div class="input-group" style="margin-top: 8px;">
+          <label>Add New Prompt</label>
+          <div style="display: flex; gap: 6px;">
+            <input type="text" id="dw_newPromptInput" placeholder="e.g. Our first picnic together..." style="flex: 1; border-radius: 6px; padding: 7px 10px; font-size: 0.85rem;" />
+            <button type="button" id="dw_btnAddPrompt" class="btn btn-primary" style="padding: 7px 12px; font-size: 0.82rem; white-space: nowrap;">+ Add</button>
+          </div>
+        </div>
+
+        <div style="margin-top: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted, #94a3b8); font-weight: 600;">Custom Prompts (<span id="dw_promptCount">0</span>)</span>
+          </div>
+          <div id="dw_customPromptsList" style="display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto;">
+          </div>
+        </div>
+      </div>
+
+      <div class="inspector-group">
+        <div class="inspector-section-title">
           <span class="sec-title-icon">🚀</span>
           <span>Live Studio Testing</span>
         </div>
@@ -130,7 +174,6 @@
       </div>
     `;
 
-    // Event listeners
     const triggerUpdate = () => {
       dw.tag = container.querySelector("#dw_tag").value.trim();
       dw.title = container.querySelector("#dw_title").value.trim();
@@ -148,10 +191,95 @@
       debouncedAutoSaveLayout();
     };
 
-    container.querySelectorAll("input, textarea, select").forEach(input => {
+    container.querySelectorAll("#dw_tag, #dw_title, #dw_desc, #dw_defaultPack, #dw_defaultRounds, #dw_defaultSeconds, #dw_allowSolo").forEach(input => {
       input.addEventListener("input", triggerUpdate);
       input.addEventListener("change", triggerUpdate);
     });
+
+    let activeTheme = "memories";
+    const promptThemeSelect = container.querySelector("#dw_promptThemeSelect");
+    const newPromptInput = container.querySelector("#dw_newPromptInput");
+    const btnAddPrompt = container.querySelector("#dw_btnAddPrompt");
+    const customPromptsList = container.querySelector("#dw_customPromptsList");
+    const promptCount = container.querySelector("#dw_promptCount");
+
+    const renderCustomPrompts = () => {
+      const list = Array.isArray(dw.customPrompts[activeTheme]) ? dw.customPrompts[activeTheme] : [];
+      if (promptCount) promptCount.textContent = list.length;
+      if (!customPromptsList) return;
+
+      if (list.length === 0) {
+        customPromptsList.innerHTML = `
+          <div style="font-size: 0.78rem; color: var(--text-muted, #94a3b8); padding: 8px 10px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); border-radius: 6px; text-align: center;">
+            No custom prompts added for this theme yet. Built-in prompts will be used.
+          </div>
+        `;
+        return;
+      }
+
+      customPromptsList.innerHTML = list.map((prompt, idx) => `
+        <div class="custom-prompt-item" style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 4px 6px;">
+          <span style="font-size: 0.72rem; color: var(--text-muted, #94a3b8); min-width: 18px; text-align: right;">${idx + 1}.</span>
+          <input type="text" class="dw-prompt-edit-input" data-idx="${idx}" value="${esc(prompt)}" style="flex: 1; background: transparent; border: none; color: inherit; font-size: 0.82rem; padding: 3px 4px; outline: none;" />
+          <button type="button" class="btn-sm dw-btn-delete-prompt" data-idx="${idx}" title="Delete prompt" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 2px 6px; font-size: 0.85rem; line-height: 1;">✕</button>
+        </div>
+      `).join("");
+
+      customPromptsList.querySelectorAll(".dw-prompt-edit-input").forEach(input => {
+        input.addEventListener("change", (e) => {
+          const idx = parseInt(e.target.dataset.idx, 10);
+          if (Array.isArray(dw.customPrompts[activeTheme]) && dw.customPrompts[activeTheme][idx] !== undefined) {
+            dw.customPrompts[activeTheme][idx] = e.target.value.trim();
+            triggerUpdate();
+          }
+        });
+      });
+
+      customPromptsList.querySelectorAll(".dw-btn-delete-prompt").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const idx = parseInt(btn.dataset.idx, 10);
+          if (Array.isArray(dw.customPrompts[activeTheme])) {
+            dw.customPrompts[activeTheme].splice(idx, 1);
+            renderCustomPrompts();
+            triggerUpdate();
+          }
+        });
+      });
+    };
+
+    const addCurrentPrompt = () => {
+      const val = (newPromptInput.value || "").trim();
+      if (!val) return;
+      if (!Array.isArray(dw.customPrompts[activeTheme])) {
+        dw.customPrompts[activeTheme] = [];
+      }
+      dw.customPrompts[activeTheme].push(val);
+      newPromptInput.value = "";
+      renderCustomPrompts();
+      triggerUpdate();
+    };
+
+    if (promptThemeSelect) {
+      promptThemeSelect.addEventListener("change", (e) => {
+        activeTheme = e.target.value;
+        renderCustomPrompts();
+      });
+    }
+
+    if (btnAddPrompt) {
+      btnAddPrompt.addEventListener("click", addCurrentPrompt);
+    }
+
+    if (newPromptInput) {
+      newPromptInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addCurrentPrompt();
+        }
+      });
+    }
+
+    renderCustomPrompts();
 
     const btnTestPoke = container.querySelector("#btnTestDrawPoke");
     if (btnTestPoke) {

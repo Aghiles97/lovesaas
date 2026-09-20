@@ -2440,13 +2440,17 @@
   let lobbyShowcaseRunning = false;
 
   function initLobbyShowcase() {
-    const showcase = document.getElementById("drawLobbyShowcase");
-    if (!showcase || showcase.dataset.initialized) return;
-    showcase.dataset.initialized = "true";
+    const showcases = document.querySelectorAll(".draw-how-it-works-showcase");
+    if (!showcases.length) return;
 
-    showcase.addEventListener("click", (e) => {
-      spawnShowcaseHearts(e);
-      nextLobbyShowcaseScene();
+    showcases.forEach(showcase => {
+      if (showcase.dataset.initialized) return;
+      showcase.dataset.initialized = "true";
+
+      showcase.addEventListener("click", (e) => {
+        spawnShowcaseHearts(showcase, e);
+        nextLobbyShowcaseScene();
+      });
     });
 
     startLobbyShowcase();
@@ -2454,13 +2458,19 @@
 
   function startLobbyShowcase() {
     if (lobbyShowcaseRunning) return;
-    const showcase = document.getElementById("drawLobbyShowcase");
-    if (!showcase) return;
+    const showcases = document.querySelectorAll(".draw-how-it-works-showcase");
+    if (!showcases.length) return;
     lobbyShowcaseRunning = true;
     playLobbyShowcaseScene(lobbyShowcaseSceneIdx);
   }
 
   function stopLobbyShowcase() {
+    const modal = document.getElementById("drawGameModal");
+    const isModalOpen = modal && modal.classList.contains("open");
+    const hasInPageWidget = Boolean(document.getElementById("drawWidgetLobbyCard"));
+    // Keep in-page website showcase running if modal is closed
+    if (!isModalOpen && hasInPageWidget) return;
+
     lobbyShowcaseRunning = false;
     if (lobbyShowcaseTimer) {
       clearTimeout(lobbyShowcaseTimer);
@@ -2479,12 +2489,11 @@
     playLobbyShowcaseScene(lobbyShowcaseSceneIdx);
   }
 
-  function spawnShowcaseHearts(e) {
-    const showcase = document.getElementById("drawLobbyShowcase");
+  function spawnShowcaseHearts(showcase, e) {
     if (!showcase) return;
     const rect = showcase.getBoundingClientRect();
-    const x = (e.clientX || (rect.left + rect.width / 2)) - rect.left;
-    const y = (e.clientY || (rect.top + rect.height / 2)) - rect.top;
+    const x = (e && e.clientX ? e.clientX : rect.left + rect.width / 2) - rect.left;
+    const y = (e && e.clientY ? e.clientY : rect.top + rect.height / 2) - rect.top;
     const emojis = ["💖", "✨", "🎨", "💕", "⭐"];
 
     for (let i = 0; i < 6; i++) {
@@ -2580,23 +2589,36 @@
   }
 
   function playLobbyShowcaseScene(idx) {
-    const pill = document.getElementById("dhiwPromptPill");
-    const svgPink = document.getElementById("dhiwSvgPink");
-    const svgBlue = document.getElementById("dhiwSvgBlue");
-    if (!pill || !svgPink || !svgBlue) return;
+    const showcases = document.querySelectorAll(".draw-how-it-works-showcase");
+    if (!showcases.length) return;
 
     const scene = LOBBY_SHOWCASE_SCENES[idx % LOBBY_SHOWCASE_SCENES.length];
-    pill.style.opacity = "0";
-    pill.style.transform = "scale(0.92)";
+    const activePairs = [];
 
-    setTimeout(() => {
-      pill.textContent = scene.prompt;
-      pill.style.opacity = "1";
-      pill.style.transform = "scale(1)";
-    }, 120);
+    showcases.forEach(showcase => {
+      const pill = showcase.querySelector(".dhiw-prompt-pill");
+      const svgPink = showcase.querySelector(".dhiw-svg-pink") || showcase.querySelector(".dhiw-board-pink svg") || showcase.querySelector("#dhiwSvgPink");
+      const svgBlue = showcase.querySelector(".dhiw-svg-blue") || showcase.querySelector(".dhiw-board-blue svg") || showcase.querySelector("#dhiwSvgBlue");
 
-    const pinkBoard = prepareShowcaseBoard(svgPink, scene.left, true);
-    const blueBoard = prepareShowcaseBoard(svgBlue, scene.right, false);
+      if (pill) {
+        pill.style.opacity = "0";
+        pill.style.transform = "scale(0.92)";
+        setTimeout(() => {
+          pill.textContent = scene.prompt;
+          pill.style.opacity = "1";
+          pill.style.transform = "scale(1)";
+        }, 120);
+      }
+
+      if (svgPink && svgBlue) {
+        activePairs.push({
+          pink: prepareShowcaseBoard(svgPink, scene.left, true),
+          blue: prepareShowcaseBoard(svgBlue, scene.right, false)
+        });
+      }
+    });
+
+    if (!activePairs.length) return;
 
     const duration = 2400;
     const startTime = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
@@ -2607,14 +2629,18 @@
       const progress = Math.min(1, elapsed / duration);
       const eased = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
 
-      updateShowcaseProgress(pinkBoard, eased);
-      updateShowcaseProgress(blueBoard, eased);
+      activePairs.forEach(pair => {
+        updateShowcaseProgress(pair.pink, eased);
+        updateShowcaseProgress(pair.blue, eased);
+      });
 
       if (progress < 1) {
         lobbyShowcaseAnimFrame = requestAnimationFrame(step);
       } else {
-        updateShowcaseProgress(pinkBoard, 1);
-        updateShowcaseProgress(blueBoard, 1);
+        activePairs.forEach(pair => {
+          updateShowcaseProgress(pair.pink, 1);
+          updateShowcaseProgress(pair.blue, 1);
+        });
         lobbyShowcaseTimer = setTimeout(() => {
           if (lobbyShowcaseRunning) nextLobbyShowcaseScene();
         }, 2200);
@@ -2661,6 +2687,7 @@
   // --- In-Page Website Widget Engine ---
   function setupDrawWidget(data = {}, hero = {}) {
     bindElements();
+    initLobbyShowcase();
     if (!el.stageLobby) return;
 
     if (hero && typeof hero === "object") {

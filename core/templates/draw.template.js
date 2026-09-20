@@ -17,7 +17,7 @@
     const formattedTag = tag.startsWith("💕") ? tag : ("💕 " + tag);
 
     return `
-    <section class="section draw-section" id="section-draw" data-widget-id="draw">
+    <section class="section draw-section" id="section-draw" data-widget-id="draw" data-custom-prompts="${esc(JSON.stringify(d.customPrompts || {}))}">
       <div class="container">
         <!-- In-Page Widget Card (Matching Screenshot /draw Lobby Design) -->
         <div class="draw-widget-wrapper">
@@ -25,6 +25,20 @@
             <div class="ldr-welcome-pill"><span>${esc(formattedTag)}</span></div>
             <h2 class="ldr-welcome-title">${esc(title)}</h2>
             <p class="ldr-welcome-sub">${esc(desc)}</p>
+
+            <!-- Interactive Live Drawing Showcase (Photobooth Preview) -->
+            <div class="draw-how-it-works-showcase" role="region" aria-label="Live drawing preview">
+              <div class="dhiw-prompt-pill">"our first date"</div>
+              <div class="dhiw-boards-row">
+                <div class="dhiw-board dhiw-board-pink">
+                  <svg class="dhiw-svg dhiw-svg-pink" viewBox="0 0 160 150" aria-hidden="true"></svg>
+                </div>
+                <div class="dhiw-board dhiw-board-blue">
+                  <svg class="dhiw-svg dhiw-svg-blue" viewBox="0 0 160 150" aria-hidden="true"></svg>
+                </div>
+              </div>
+              <div class="dhiw-caption">same prompt · two pens, live</div>
+            </div>
 
             <div class="ldr-welcome-choices" id="widgetWelcomeChoices">
               <button type="button" class="ldr-menu-card ldr-card-dark" id="btnLaunchDrawStartRoom">
@@ -93,6 +107,20 @@
                     <div class="ldr-welcome-pill"><span>💕 Draw for Two · Studio</span></div>
                     <h1 class="ldr-welcome-title">Draw for Two</h1>
                     <p class="ldr-welcome-sub">Synchronized couple drawing studio — sketch prompts together across the distance.</p>
+
+                    <!-- Interactive Live Drawing Showcase (Photobooth Preview) -->
+                    <div class="draw-how-it-works-showcase" role="region" aria-label="Live drawing preview">
+                      <div class="dhiw-prompt-pill">"our first date"</div>
+                      <div class="dhiw-boards-row">
+                        <div class="dhiw-board dhiw-board-pink">
+                          <svg class="dhiw-svg dhiw-svg-pink" viewBox="0 0 160 150" aria-hidden="true"></svg>
+                        </div>
+                        <div class="dhiw-board dhiw-board-blue">
+                          <svg class="dhiw-svg dhiw-svg-blue" viewBox="0 0 160 150" aria-hidden="true"></svg>
+                        </div>
+                      </div>
+                      <div class="dhiw-caption">same prompt · two pens, live</div>
+                    </div>
 
                     <div class="ldr-welcome-choices" id="lobbyInitialView">
                       <button type="button" class="ldr-menu-card ldr-card-dark" id="btnStartRoom">
@@ -270,17 +298,22 @@
                     <div class="draw-config-group">
                       <div class="draw-config-label">ROUNDS</div>
                       <div class="draw-pills-row" id="roundsSelector">
+                        <button type="button" class="draw-pill-btn" data-rounds="1">1</button>
+                        <button type="button" class="draw-pill-btn" data-rounds="2">2</button>
                         <button type="button" class="draw-pill-btn selected" data-rounds="3">3</button>
                         <button type="button" class="draw-pill-btn" data-rounds="4">4</button>
                         <button type="button" class="draw-pill-btn" data-rounds="5">5</button>
                         <button type="button" class="draw-pill-btn" data-rounds="7">7</button>
+                        <button type="button" class="draw-pill-btn" data-rounds="10">10</button>
                       </div>
                     </div>
 
                     <div class="draw-config-group">
                       <div class="draw-config-label">SECONDS PER DRAWING</div>
                       <div class="draw-pills-row" id="secondsSelector">
+                        <button type="button" class="draw-pill-btn" data-seconds="10">10s</button>
                         <button type="button" class="draw-pill-btn" data-seconds="20">20s</button>
+                        <button type="button" class="draw-pill-btn" data-seconds="30">30s</button>
                         <button type="button" class="draw-pill-btn" data-seconds="60">60s</button>
                         <button type="button" class="draw-pill-btn" data-seconds="90">90s</button>
                         <button type="button" class="draw-pill-btn selected" data-seconds="120">120s</button>

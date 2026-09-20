@@ -762,7 +762,10 @@ assert(jsText19.includes("initLobbyShowcase"), "draw.runtime.js contains initLob
 assert(jsText19.includes("startLobbyShowcase"), "draw.runtime.js contains startLobbyShowcase");
 assert(jsText19.includes("stopLobbyShowcase"), "draw.runtime.js contains stopLobbyShowcase");
 
-console.log("✅ PASS: Test 19 verified - Interactive lobby showcase animation elements & logic verified");
+const templateText19 = fs.readFileSync(path.join(__dirname, "../core/templates/draw.template.js"), "utf8");
+assert(templateText19.includes("draw-how-it-works-showcase"), "draw.template.js contains draw-how-it-works-showcase for love websites");
+
+console.log("✅ PASS: Test 19 verified - Interactive lobby showcase animation elements & logic verified across standalone /draw and love website templates");
 passedTests++;
 
 console.log("\n=================================================");
