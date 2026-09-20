@@ -9,6 +9,7 @@ const r2 = require("./r2");
 const { WIDGET_REGISTRY, PRESETS } = require("../core/widget-registry");
 const { setupPhotoboothWebSocket } = require("./photobooth-room");
 const { setupDrawWebSocket } = require("./draw-room");
+const { PartnerRoomEngine } = require("./core/partner-room-engine");
 
 const PORT = process.env.SAAS_PORT || 4000;
 const ROOT_DIR = path.join(__dirname, "..");
@@ -1292,6 +1293,12 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
+  // Unified Partner Games API Routes (/api/games/:gameId/rooms/...)
+  if (pathname.startsWith("/api/games/")) {
+    const handled = await PartnerRoomEngine.handleHttpRoute(req, res, pathname, method, parsedUrl, parseJsonBody, sendJson);
+    if (handled) return;
+  }
+
   // POST or GET /api/deploy/webhook (Instant Auto-Deploy Trigger)
   if (pathname === "/api/deploy/webhook" && (method === "POST" || method === "GET")) {
     const token = parsedUrl.query?.token || req.headers["x-deploy-token"];
@@ -1325,6 +1332,7 @@ const server = http.createServer(async (req, res) => {
 
 setupPhotoboothWebSocket(server, "/photobooth-ws");
 setupDrawWebSocket(server, "/draw-ws");
+PartnerRoomEngine.attachAll(server);
 
 server.listen(PORT, () => {
   console.log(`====================================================`);
