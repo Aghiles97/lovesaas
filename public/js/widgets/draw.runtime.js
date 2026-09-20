@@ -240,90 +240,41 @@
   };
 
   // --- DOM Elements ---
-  const el = {
-    stageLobby: document.getElementById("stageLobby"),
-    stageProfile: document.getElementById("stageProfile"),
-    stagePackSelect: document.getElementById("stagePackSelect"),
-    stageMatchSetup: document.getElementById("stageMatchSetup"),
-    stageDrawing: document.getElementById("stageDrawing"),
-    stageRoundReview: document.getElementById("stageRoundReview"),
-    stageMatchComplete: document.getElementById("stageMatchComplete"),
-
-    profileNameInput: document.getElementById("profileNameInput"),
-    profileSexSelector: document.getElementById("profileSexSelector"),
-    btnProfileReady: document.getElementById("btnProfileReady"),
-    profileWaitingWrap: document.getElementById("profileWaitingWrap"),
-    profileWaitingText: document.getElementById("profileWaitingText"),
-    profilePartnerStatus: document.getElementById("profilePartnerStatus"),
-    profilePartnerStatusText: document.getElementById("profilePartnerStatusText"),
-
-    btnStartRoom: document.getElementById("btnStartRoom"),
-    btnShowJoinForm: document.getElementById("btnShowJoinForm"),
-    btnPracticeSolo: document.getElementById("btnPracticeSolo"),
-    btnJoinRoomSubmit: document.getElementById("btnJoinRoomSubmit"),
-    btnBackToInitial: document.getElementById("btnBackToInitial"),
-    btnWaitingSkipToSolo: document.getElementById("btnWaitingSkipToSolo"),
-    inputJoinCode: document.getElementById("inputJoinCode"),
-    displayRoomCode: document.getElementById("displayRoomCode"),
-    btnCopyInvite: document.getElementById("btnCopyInvite"),
-    waitingStatusText: document.getElementById("waitingStatusText"),
-    lobbyInitialView: document.getElementById("lobbyInitialView"),
-    lobbyInlineJoinForm: document.getElementById("lobbyInlineJoinForm"),
-    lobbyWaitingView: document.getElementById("lobbyWaitingView"),
-
-    packsGrid: document.getElementById("packsGrid"),
-    btnPackNext: document.getElementById("btnPackNext"),
-
-    roundsSelector: document.getElementById("roundsSelector"),
-    secondsSelector: document.getElementById("secondsSelector"),
-    btnStartDrawing: document.getElementById("btnStartDrawing"),
-
-    displayRoundNum: document.getElementById("displayRoundNum"),
-    displayRoundTotal: document.getElementById("displayRoundTotal"),
-    displayPrompt: document.getElementById("displayPrompt"),
-    displayTimer: document.getElementById("displayTimer"),
-    bottomStartWrap: document.getElementById("bottomStartWrap"),
-    btnStartRoundTimer: document.getElementById("btnStartRoundTimer"),
-    tabPartnerLabel: document.getElementById("tabPartnerLabel"),
-    canvasesContainer: document.getElementById("canvasesContainer"),
-    myPadCard: document.getElementById("myPadCard"),
-    partnerPadCard: document.getElementById("partnerPadCard"),
-    myPadBadge: document.getElementById("myPadBadge"),
-    partnerPadBadge: document.getElementById("partnerPadBadge"),
-    myCanvas: document.getElementById("myCanvas"),
-    partnerCanvas: document.getElementById("partnerCanvas"),
-    myPokeLayer: document.getElementById("myPokeLayer"),
-    partnerPokeLayer: document.getElementById("partnerPokeLayer"),
-    colorPalette: document.getElementById("colorPalette"),
-    btnToolEraser: document.getElementById("btnToolEraser"),
-    brushSizes: document.getElementById("brushSizes"),
-    btnToolUndo: document.getElementById("btnToolUndo"),
-    btnToolRedo: document.getElementById("btnToolRedo"),
-    btnClearCanvas: document.getElementById("btnClearCanvas"),
-    pokeButtons: document.getElementById("pokeButtons"),
-
-    reviewPromptText: document.getElementById("reviewPromptText"),
-    reviewMyName: document.getElementById("reviewMyName"),
-    reviewPartnerName: document.getElementById("reviewPartnerName"),
-    reviewMyImg: document.getElementById("reviewMyImg"),
-    reviewPartnerImg: document.getElementById("reviewPartnerImg"),
-    btnNextRound: document.getElementById("btnNextRound"),
-    btnReviewExit: document.getElementById("btnReviewExit"),
-
-    recapGallery: document.getElementById("recapGallery"),
-    btnDownloadKeepsake: document.getElementById("btnDownloadKeepsake"),
-    btnPlayAgain: document.getElementById("btnPlayAgain"),
-    btnExitComplete: document.getElementById("btnExitComplete"),
-    btnExitDrawing: document.getElementById("btnExitDrawing"),
-    modalPlayAgain: document.getElementById("modalPlayAgain"),
-    modalPlayAgainTitle: document.getElementById("modalPlayAgainTitle"),
-    modalPlayAgainText: document.getElementById("modalPlayAgainText"),
-    modalPlayAgainPromptActions: document.getElementById("modalPlayAgainPromptActions"),
-    modalPlayAgainWaiting: document.getElementById("modalPlayAgainWaiting"),
-    btnAcceptPlayAgain: document.getElementById("btnAcceptPlayAgain"),
-    btnDeclinePlayAgain: document.getElementById("btnDeclinePlayAgain"),
-    btnCancelPlayAgain: document.getElementById("btnCancelPlayAgain")
-  };
+  const el = {};
+  function bindElements() {
+    const ids = [
+      "stageLobby", "stageProfile", "stagePackSelect", "stageMatchSetup",
+      "stageDrawing", "stageRoundReview", "stageMatchComplete",
+      "profileNameInput", "profileSexSelector", "btnProfileReady",
+      "profileWaitingWrap", "profileWaitingText", "profilePartnerStatus",
+      "profilePartnerStatusText", "btnStartRoom", "btnShowJoinForm",
+      "btnPracticeSolo", "btnJoinRoomSubmit", "btnBackToInitial",
+      "btnWaitingSkipToSolo", "inputJoinCode", "displayRoomCode",
+      "btnCopyInvite", "waitingStatusText", "lobbyInitialView",
+      "lobbyInlineJoinForm", "lobbyWaitingView", "packsGrid", "btnPackNext",
+      "roundsSelector", "secondsSelector", "btnStartDrawing",
+      "displayRoundNum", "displayRoundTotal", "displayPrompt", "displayTimer",
+      "bottomStartWrap", "btnStartRoundTimer", "tabPartnerLabel",
+      "canvasesContainer", "myPadCard", "partnerPadCard", "myPadBadge",
+      "partnerPadBadge", "myCanvas", "partnerCanvas", "myPokeLayer",
+      "partnerPokeLayer", "colorPalette", "btnToolEraser", "brushSizes",
+      "btnToolUndo", "btnToolRedo", "btnClearCanvas", "pokeButtons",
+      "reviewPromptText", "reviewMyName", "reviewPartnerName",
+      "reviewMyImg", "reviewPartnerImg", "btnNextRound", "btnReviewExit",
+      "recapGallery", "btnDownloadKeepsake", "btnPlayAgain",
+      "btnExitComplete", "btnExitDrawing", "modalPlayAgain",
+      "modalPlayAgainTitle", "modalPlayAgainText", "modalPlayAgainPromptActions",
+      "modalPlayAgainWaiting", "btnAcceptPlayAgain", "btnDeclinePlayAgain",
+      "btnCancelPlayAgain", "drawRemoteCursor", "remoteCursorTag",
+      "remoteClickRipple", "drawToast", "btnBackToWebsite",
+      "btnLaunchDrawStartRoom", "btnLaunchDrawJoinRoom", "btnLaunchDrawSolo",
+      "btnCloseDrawModal", "drawGameModal"
+    ];
+    for (const id of ids) {
+      el[id] = document.getElementById(id);
+    }
+  }
+  bindElements();
 
   // --- Stage Switching ---
   function showStage(stageName) {
@@ -1736,8 +1687,8 @@
     if (soloTimer) { clearInterval(soloTimer); soloTimer = null; }
   }
 
-  function exitToMainMenu() {
-    if (state.stage === "drawing" && !window.confirm("Are you sure you want to exit? Current drawing progress will be lost. 🎨")) {
+  function exitToMainMenu(skipConfirm = false, closeActiveModal = false) {
+    if (!skipConfirm && state.stage === "drawing" && !window.confirm("Are you sure you want to exit? Current drawing progress will be lost. 🎨")) {
       return;
     }
     if (soloTimer) {
@@ -1758,7 +1709,8 @@
       const url = new URL(window.location.href);
       url.searchParams.delete("room");
       url.searchParams.delete("code");
-      window.history.replaceState({}, "", url.pathname);
+      url.searchParams.delete("draw_room");
+      window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : ""));
     } catch (e) {}
 
     const cursor = document.getElementById("drawRemoteCursor");
@@ -1783,6 +1735,89 @@
     if (el.lobbyWaitingView) el.lobbyWaitingView.style.display = "none";
 
     showStage("lobby");
+
+    if (closeActiveModal) {
+      const modal = document.getElementById("drawGameModal");
+      if (modal) {
+        modal.classList.remove("is-active");
+        modal.style.display = "none";
+        document.body.style.overflow = "";
+      }
+    }
+  }
+
+  function closeDrawModal() {
+    if (state.stage === "drawing" && !window.confirm("Are you sure you want to close the game? Drawing progress will be lost. 🎨")) {
+      return;
+    }
+    exitToMainMenu(true, true);
+  }
+
+  function openDrawModal(mode = "welcome") {
+    const modal = document.getElementById("drawGameModal");
+    if (modal) {
+      if (modal.parentElement !== document.body) {
+        document.body.appendChild(modal);
+      }
+      modal.classList.add("is-active");
+      modal.style.display = "flex";
+      document.body.style.overflow = "hidden";
+    }
+    if (mode === "start") {
+      el.btnStartRoom?.click();
+    } else if (mode === "join") {
+      if (el.lobbyInlineJoinForm && (el.lobbyInlineJoinForm.style.display === "none" || !el.lobbyInlineJoinForm.style.display)) {
+        el.btnShowJoinForm?.click();
+      }
+      setTimeout(() => el.inputJoinCode?.focus(), 150);
+    } else if (mode === "solo") {
+      el.btnPracticeSolo?.click();
+    }
+  }
+
+  function renderShowcaseDoodles() {
+    const c1 = document.getElementById("drawWidgetCanvas1");
+    const c2 = document.getElementById("drawWidgetCanvas2");
+    if (c1 && c1.getContext) {
+      const ctx1 = c1.getContext("2d");
+      ctx1.clearRect(0, 0, c1.width, c1.height);
+      ctx1.strokeStyle = "#f7789e";
+      ctx1.lineWidth = 4;
+      ctx1.lineCap = "round";
+      ctx1.lineJoin = "round";
+      ctx1.beginPath();
+      ctx1.moveTo(140, 75);
+      ctx1.bezierCurveTo(140, 50, 95, 45, 95, 80);
+      ctx1.bezierCurveTo(95, 110, 140, 140, 140, 160);
+      ctx1.bezierCurveTo(140, 140, 185, 110, 185, 80);
+      ctx1.bezierCurveTo(185, 45, 140, 50, 140, 75);
+      ctx1.fillStyle = "rgba(247, 120, 158, 0.15)";
+      ctx1.fill();
+      ctx1.stroke();
+    }
+    if (c2 && c2.getContext) {
+      const ctx2 = c2.getContext("2d");
+      ctx2.clearRect(0, 0, c2.width, c2.height);
+      ctx2.strokeStyle = "#5fa0ff";
+      ctx2.lineWidth = 4;
+      ctx2.lineCap = "round";
+      ctx2.lineJoin = "round";
+      ctx2.beginPath();
+      ctx2.moveTo(140, 50);
+      ctx2.lineTo(152, 85);
+      ctx2.lineTo(190, 85);
+      ctx2.lineTo(160, 107);
+      ctx2.lineTo(172, 145);
+      ctx2.lineTo(140, 122);
+      ctx2.lineTo(108, 145);
+      ctx2.lineTo(120, 107);
+      ctx2.lineTo(90, 85);
+      ctx2.lineTo(128, 85);
+      ctx2.closePath();
+      ctx2.fillStyle = "rgba(95, 160, 255, 0.15)";
+      ctx2.fill();
+      ctx2.stroke();
+    }
   }
 
   function triggerStartRoundTimer() {
@@ -2241,12 +2276,52 @@
     });
 
     // Exit to Main Menu Buttons
-    el.btnExitDrawing?.addEventListener("click", exitToMainMenu);
-    el.btnReviewExit?.addEventListener("click", exitToMainMenu);
-    el.btnExitComplete?.addEventListener("click", exitToMainMenu);
+    el.btnExitDrawing?.addEventListener("click", () => exitToMainMenu());
+    el.btnReviewExit?.addEventListener("click", () => exitToMainMenu());
+    el.btnExitComplete?.addEventListener("click", () => exitToMainMenu(false, Boolean(document.getElementById("drawGameModal"))));
+    el.btnBackToWebsite?.addEventListener("click", () => exitToMainMenu(false, true));
     document.querySelectorAll(".btn-exit-setup").forEach(btn => {
-      btn.addEventListener("click", exitToMainMenu);
+      btn.addEventListener("click", () => exitToMainMenu());
     });
+
+    // In-Page Website Widget Launcher Triggers (Photobooth Parity)
+    const handleWidgetStart = () => openDrawModal("start");
+    const handleWidgetJoinToggle = () => {
+      const form = document.getElementById("widgetInlineJoinForm");
+      if (!form) {
+        openDrawModal("join");
+        return;
+      }
+      const isHidden = form.style.display === "none" || !form.style.display;
+      form.style.display = isHidden ? "block" : "none";
+      if (isHidden) {
+        const inp = document.getElementById("widgetInputJoinCode");
+        inp?.focus();
+        inp?.select?.();
+      }
+    };
+    const handleWidgetJoinSubmit = () => {
+      const inp = document.getElementById("widgetInputJoinCode");
+      const code = inp?.value?.trim().toUpperCase();
+      if (!code || code.length < 3) {
+        openDrawModal("join");
+        return;
+      }
+      openDrawModal("join");
+      if (el.inputJoinCode) el.inputJoinCode.value = code;
+      state.roomCode = code;
+      el.btnJoinRoomSubmit?.click();
+    };
+    const handleWidgetSolo = () => openDrawModal("solo");
+
+    document.getElementById("btnLaunchDrawStartRoom")?.addEventListener("click", handleWidgetStart);
+    document.getElementById("btnLaunchDrawJoinRoom")?.addEventListener("click", handleWidgetJoinToggle);
+    document.getElementById("btnWidgetJoinSubmit")?.addEventListener("click", handleWidgetJoinSubmit);
+    document.getElementById("widgetInputJoinCode")?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleWidgetJoinSubmit();
+    });
+    document.getElementById("btnLaunchDrawSolo")?.addEventListener("click", handleWidgetSolo);
+    document.getElementById("btnCloseDrawModal")?.addEventListener("click", closeDrawModal);
 
     // Resize
     window.addEventListener("resize", () => {
@@ -2269,6 +2344,7 @@
 
   // --- Initialize ---
   function init() {
+    bindElements();
     if (el.stageLobby) {
       initEvents();
 
@@ -2278,11 +2354,14 @@
       }
 
       const urlParams = new URLSearchParams(window.location.search);
-      const roomFromQuery = urlParams.get("room") || urlParams.get("code");
+      const roomFromQuery = urlParams.get("room") || urlParams.get("code") || urlParams.get("draw_room");
       const pathMatch = window.location.pathname.match(/^\/draw\/([a-zA-Z0-9_-]+)/);
       const initialRoom = roomFromQuery || (pathMatch ? pathMatch[1] : null);
 
       if (initialRoom) {
+        if (document.getElementById("drawGameModal")) {
+          openDrawModal();
+        }
         state.roomCode = initialRoom.toUpperCase().trim();
         syncRoomUrl(state.roomCode);
         if (el.inputJoinCode) el.inputJoinCode.value = state.roomCode;
@@ -2293,163 +2372,63 @@
         initNetworking(state.roomCode);
       }
     }
-
-    if (document.getElementById("section-draw") || document.querySelector(".draw-section")) {
-      setupDrawWidget();
-    }
   }
 
   // --- In-Page Website Widget Engine ---
   function setupDrawWidget(data = {}, hero = {}) {
-    const sec = document.getElementById("section-draw") || document.querySelector(".draw-section");
-    if (!sec) return;
+    bindElements();
+    if (!el.stageLobby) return;
 
-    const btnStartRoom = sec.querySelector("#btnDrawWidgetStartRoom");
-    const btnJoinRoom = sec.querySelector("#btnDrawWidgetJoinRoom");
-    const btnSolo = sec.querySelector("#btnDrawWidgetSolo");
-    const inlineJoin = sec.querySelector("#drawWidgetInlineJoinForm");
-    const inputJoin = sec.querySelector("#drawWidgetInputJoinCode");
-    const btnSubmitJoin = sec.querySelector("#btnDrawWidgetSubmitJoin");
-    const waitingView = sec.querySelector("#drawWidgetWaitingView");
-    const initialView = sec.querySelector("#drawWidgetInitialView");
-    const roomCodeEl = sec.querySelector("#drawWidgetRoomCode");
-    const btnCopyLink = sec.querySelector("#btnDrawWidgetCopyLink");
-    const btnLaunchFullscreen = sec.querySelector("#btnDrawWidgetLaunchFullscreen");
-    const pokeBtns = sec.querySelectorAll(".widget-poke-btn");
-
-    // Mini doodle canvas preview
-    const c1 = sec.querySelector("#drawWidgetCanvas1");
-    const c2 = sec.querySelector("#drawWidgetCanvas2");
-    if (c1 && !c1._doodled) {
-      c1._doodled = true;
-      const ctx1 = c1.getContext("2d");
-      ctx1.strokeStyle = "#f7789e";
-      ctx1.lineWidth = 3;
-      ctx1.lineCap = "round";
-      ctx1.beginPath();
-      // Draw a cute heart
-      ctx1.moveTo(140, 70);
-      ctx1.bezierCurveTo(140, 50, 110, 40, 100, 65);
-      ctx1.bezierCurveTo(90, 95, 125, 120, 140, 140);
-      ctx1.bezierCurveTo(155, 120, 190, 95, 180, 65);
-      ctx1.bezierCurveTo(170, 40, 140, 50, 140, 70);
-      ctx1.stroke();
-    }
-    if (c2 && !c2._doodled) {
-      c2._doodled = true;
-      const ctx2 = c2.getContext("2d");
-      ctx2.strokeStyle = "#5fa0ff";
-      ctx2.lineWidth = 3;
-      ctx2.lineCap = "round";
-      ctx2.beginPath();
-      // Draw a cute smiley / star
-      ctx2.arc(140, 90, 35, 0, Math.PI * 2);
-      ctx2.stroke();
-      ctx2.beginPath();
-      ctx2.arc(128, 82, 3, 0, Math.PI * 2);
-      ctx2.arc(152, 82, 3, 0, Math.PI * 2);
-      ctx2.fillStyle = "#5fa0ff";
-      ctx2.fill();
-      ctx2.beginPath();
-      ctx2.arc(140, 95, 16, 0.2 * Math.PI, 0.8 * Math.PI);
-      ctx2.stroke();
+    if (hero && typeof hero === "object") {
+      if (hero.partner1 && !state.myName) {
+        state.myName = hero.partner1;
+        if (el.profileNameInput) el.profileNameInput.value = state.myName;
+        if (el.myPadBadge) el.myPadBadge.textContent = state.myName;
+        if (el.reviewMyName) el.reviewMyName.textContent = state.myName;
+      }
+      if (hero.partner2) {
+        state.partnerName = hero.partner2;
+        if (el.partnerPadBadge) el.partnerPadBadge.textContent = state.partnerName;
+        if (el.remoteCursorTag) el.remoteCursorTag.textContent = state.partnerName;
+        if (el.reviewPartnerName) el.reviewPartnerName.textContent = state.partnerName;
+      }
     }
 
-    if (btnStartRoom && !btnStartRoom._bound) {
-      btnStartRoom._bound = true;
-      btnStartRoom.addEventListener("click", async () => {
-        try {
-          btnStartRoom.disabled = true;
-          const res = await fetch("/api/draw/room", { credentials: "same-origin" });
-          const json = await res.json();
-          if (json && json.code) {
-            if (roomCodeEl) roomCodeEl.textContent = json.code;
-            if (btnLaunchFullscreen) btnLaunchFullscreen.href = `/draw?room=${encodeURIComponent(json.code)}`;
-            if (initialView) initialView.style.display = "none";
-            if (waitingView) waitingView.style.display = "block";
-          } else {
-            window.location.href = "/draw";
-          }
-        } catch (e) {
-          window.location.href = "/draw";
-        } finally {
-          btnStartRoom.disabled = false;
-        }
-      });
-    }
-
-    if (btnJoinRoom && !btnJoinRoom._bound) {
-      btnJoinRoom._bound = true;
-      btnJoinRoom.addEventListener("click", () => {
-        if (inlineJoin) {
-          inlineJoin.style.display = inlineJoin.style.display === "none" ? "block" : "none";
-          if (inlineJoin.style.display === "block" && inputJoin) inputJoin.focus();
-        }
-      });
-    }
-
-    if (btnSubmitJoin && !btnSubmitJoin._bound) {
-      btnSubmitJoin._bound = true;
-      btnSubmitJoin.addEventListener("click", () => {
-        const code = (inputJoin?.value || "").trim().toUpperCase();
-        if (code) {
-          window.location.href = `/draw?room=${encodeURIComponent(code)}`;
-        }
-      });
-    }
-
-    if (btnSolo && !btnSolo._bound) {
-      btnSolo._bound = true;
-      btnSolo.addEventListener("click", () => {
-        window.location.href = "/draw?solo=1";
-      });
-    }
-
-    if (btnCopyLink && !btnCopyLink._bound) {
-      btnCopyLink._bound = true;
-      btnCopyLink.addEventListener("click", async () => {
-        const code = roomCodeEl?.textContent || "";
-        const url = `${window.location.origin}/draw?room=${encodeURIComponent(code)}`;
-        try {
-          await navigator.clipboard.writeText(url);
-          const orig = btnCopyLink.innerHTML;
-          btnCopyLink.innerHTML = "<span>✓ Copied Link!</span>";
-          setTimeout(() => { btnCopyLink.innerHTML = orig; }, 2000);
-        } catch (e) {
-          prompt("Copy your room link:", url);
-        }
-      });
-    }
-
-    pokeBtns.forEach(btn => {
-      if (btn._bound) return;
-      btn._bound = true;
-      btn.addEventListener("click", () => {
-        const emoji = btn.dataset.emoji || "💖";
-        playPokeSound(emoji);
-        btn.style.transform = "scale(1.35)";
-        setTimeout(() => { btn.style.transform = ""; }, 200);
-
-        // Burst floating emoji on pad 2
-        const pad2 = sec.querySelector(".pad-right");
-        if (pad2) {
-          const floater = document.createElement("span");
-          floater.textContent = emoji;
-          floater.style.cssText = "position: absolute; font-size: 28px; pointer-events: none; z-index: 50; transition: all 0.8s ease-out;";
-          floater.style.left = `${30 + Math.random() * 40}%`;
-          floater.style.top = `${40 + Math.random() * 20}%`;
-          pad2.style.position = "relative";
-          pad2.appendChild(floater);
-          requestAnimationFrame(() => {
-            floater.style.transform = "translateY(-50px) scale(1.4)";
-            floater.style.opacity = "0";
+    if (data && typeof data === "object") {
+      if (data.defaultPack && PROMPT_PACKS[data.defaultPack]) {
+        state.selectedPack = data.defaultPack;
+        if (el.packsGrid) {
+          el.packsGrid.querySelectorAll(".draw-pack-card").forEach(c => {
+            c.classList.toggle("selected", c.dataset.pack === data.defaultPack);
           });
-          setTimeout(() => floater.remove(), 850);
         }
-      });
-    });
+      }
+      if (data.defaultRounds && el.roundsSelector) {
+        const r = parseInt(data.defaultRounds, 10);
+        if (!isNaN(r)) {
+          state.roundsTotal = r;
+          el.roundsSelector.querySelectorAll(".draw-pill-btn").forEach(b => {
+            b.classList.toggle("selected", parseInt(b.dataset.rounds, 10) === r);
+          });
+        }
+      }
+      if (data.defaultSeconds && el.secondsSelector) {
+        const s = parseInt(data.defaultSeconds, 10);
+        if (!isNaN(s)) {
+          state.secondsPerDrawing = s;
+          el.secondsSelector.querySelectorAll(".draw-pill-btn").forEach(b => {
+            b.classList.toggle("selected", parseInt(b.dataset.seconds, 10) === s);
+          });
+        }
+      }
+    }
+
+    renderShowcaseDoodles();
+    init();
   }
   window.setupDrawWidget = setupDrawWidget;
+  window.openDrawModal = openDrawModal;
+  window.closeDrawModal = closeDrawModal;
 
   // Listen for builder messages
   window.addEventListener("message", (e) => {
@@ -2458,25 +2437,61 @@
     if (type === "DRAW_UPDATE_CONFIG" && config) {
       const sec = document.getElementById("section-draw");
       if (sec) {
-        const tagEl = sec.querySelector(".section-tag");
-        const titleEl = sec.querySelector(".section-title");
-        const descEl = sec.querySelector(".section-desc");
-        const linkEl = sec.querySelector("#btnDrawFullscreenLink span");
-        if (tagEl && config.tag) tagEl.textContent = config.tag;
+        const tagEl = sec.querySelector(".section-tag") || sec.querySelector(".ldr-welcome-pill span");
+        const titleEl = sec.querySelector(".section-title") || sec.querySelector(".ldr-welcome-title");
+        const descEl = sec.querySelector(".section-desc") || sec.querySelector(".ldr-welcome-sub");
+        if (tagEl && config.tag) {
+          tagEl.textContent = config.tag.startsWith("💕") ? config.tag : ("💕 " + config.tag);
+        }
         if (titleEl && config.title) titleEl.textContent = config.title;
         if (descEl && config.desc) descEl.textContent = config.desc;
-        if (linkEl && config.buttonText) linkEl.textContent = config.buttonText;
+      }
+      if (config.defaultPack && PROMPT_PACKS[config.defaultPack]) {
+        state.selectedPack = config.defaultPack;
+        if (el.packsGrid) {
+          el.packsGrid.querySelectorAll(".draw-pack-card").forEach(c => {
+            c.classList.toggle("selected", c.dataset.pack === config.defaultPack);
+          });
+        }
+      }
+      if (config.defaultRounds && el.roundsSelector) {
+        const r = parseInt(config.defaultRounds, 10);
+        if (!isNaN(r)) {
+          state.roundsTotal = r;
+          el.roundsSelector.querySelectorAll(".draw-pill-btn").forEach(b => {
+            b.classList.toggle("selected", parseInt(b.dataset.rounds, 10) === r);
+          });
+        }
+      }
+      if (config.defaultSeconds && el.secondsSelector) {
+        const s = parseInt(config.defaultSeconds, 10);
+        if (!isNaN(s)) {
+          state.secondsPerDrawing = s;
+          el.secondsSelector.querySelectorAll(".draw-pill-btn").forEach(b => {
+            b.classList.toggle("selected", parseInt(b.dataset.seconds, 10) === s);
+          });
+        }
       }
     } else if (type === "DRAW_TEST_POKE") {
-      const pokeBtn = document.querySelector(".widget-poke-btn");
+      const pokeBtn = document.querySelector(".draw-poke-btn");
       if (pokeBtn) pokeBtn.click();
     }
   });
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
+  if (typeof document !== "undefined") {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => {
+        init();
+        if (document.getElementById("section-draw") || document.querySelector(".draw-section")) {
+          setupDrawWidget(window.DRAW_DATA || {});
+        }
+      });
+    } else {
+      init();
+      if (document.getElementById("section-draw") || document.querySelector(".draw-section")) {
+        setupDrawWidget(window.DRAW_DATA || {});
+      }
+    }
   }
 })();
 

@@ -183,6 +183,7 @@ class PartnerRoomEngine {
     if (!WebSocketServer) return;
 
     server.on("upgrade", (req, socket, head) => {
+      socket.on("error", () => {});
       const parsedUrl = new URL(req.url, `http://${req.headers.host || "localhost"}`);
       const pathname = parsedUrl.pathname;
 
@@ -193,9 +194,13 @@ class PartnerRoomEngine {
       if (engine) {
         const wss = engine.initWebSocketServer(server);
         if (wss) {
-          wss.handleUpgrade(req, socket, head, (ws) => {
-            wss.emit("connection", ws, req);
-          });
+          try {
+            wss.handleUpgrade(req, socket, head, (ws) => {
+              wss.emit("connection", ws, req);
+            });
+          } catch (_) {
+            try { socket.destroy(); } catch (e) {}
+          }
         }
       }
     });
@@ -468,7 +473,7 @@ class PartnerRoomEngine {
           const activeCount = currentRoom.participants.size + currentRoom.sseClients.size;
           this.broadcast(currentRoom, {
             type: "PARTNER_LEFT",
-            partnerId,
+            partnerId: participantId,
             partnerName: name,
             remainingCount: activeCount
           });
@@ -514,6 +519,9 @@ class PartnerRoomEngine {
     this.wss.on("connection", (ws) => {
       ws.isAlive = true;
       ws.on("pong", () => { ws.isAlive = true; });
+      ws.on("error", (err) => {
+        console.warn(`⚠️ [${this.gameId}] WS client error:`, err?.message || err);
+      });
 
       let currentRoom = null;
       let participantId = "user_" + Math.random().toString(36).slice(2, 9);
@@ -522,6 +530,7 @@ class PartnerRoomEngine {
       let windowStart = Date.now();
 
       ws.on("message", (raw) => {
+        ws.isAlive = true;
         try {
           // Rate-limit guard: max 100 msgs/second
           const now = Date.now();
@@ -653,7 +662,7 @@ class PartnerRoomEngine {
             const activeCount = currentRoom.participants.size + currentRoom.sseClients.size;
             this.broadcast(currentRoom, {
               type: "PARTNER_LEFT",
-              partnerId,
+              partnerId: participantId,
               partnerName: participantName,
               remainingCount: activeCount
             });
@@ -678,11 +687,16 @@ class PartnerRoomEngine {
     const wsPath = customPath || `/ws/games/${this.gameId}`;
 
     server.on("upgrade", (req, socket, head) => {
+      socket.on("error", () => {});
       const parsedUrl = new URL(req.url, `http://${req.headers.host || "localhost"}`);
       if (parsedUrl.pathname === wsPath) {
-        wss.handleUpgrade(req, socket, head, (clientWs) => {
-          wss.emit("connection", clientWs, req);
-        });
+        try {
+          wss.handleUpgrade(req, socket, head, (clientWs) => {
+            wss.emit("connection", clientWs, req);
+          });
+        } catch (_) {
+          try { socket.destroy(); } catch (e) {}
+        }
       }
     });
 

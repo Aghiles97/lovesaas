@@ -14,6 +14,13 @@ const { PartnerRoomEngine } = require("./core/partner-room-engine");
 const PORT = process.env.SAAS_PORT || 4000;
 const ROOT_DIR = path.join(__dirname, "..");
 
+process.on("uncaughtException", (err) => {
+  console.error("💥 [Process:uncaughtException]", err);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("💥 [Process:unhandledRejection]", reason);
+});
+
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -1328,6 +1335,13 @@ const server = http.createServer(async (req, res) => {
 
   res.writeHead(404, { "Content-Type": "text/plain" });
   res.end("Not Found");
+});
+
+server.on("clientError", (err, socket) => {
+  if (err.code === "ECONNRESET" || !socket.writable) return;
+  try {
+    socket.end("HTTP/1.1 400 Bad Request\r\n\r\n");
+  } catch (_) {}
 });
 
 setupPhotoboothWebSocket(server, "/photobooth-ws");

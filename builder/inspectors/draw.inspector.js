@@ -58,11 +58,6 @@
           <label>Description Subtitle</label>
           <textarea id="dw_desc" rows="2" style="width: 100%; border-radius: 8px; padding: 8px 10px; font-size: 0.85rem;" placeholder="Sketch prompts together...">${esc(dw.desc)}</textarea>
         </div>
-
-        <div class="input-group">
-          <label>Fullscreen Button Label</label>
-          <input type="text" id="dw_buttonText" value="${esc(dw.buttonText)}" placeholder="Open Fullscreen Studio ↗">
-        </div>
       </div>
 
       <div class="inspector-group">
@@ -139,7 +134,6 @@
       dw.tag = container.querySelector("#dw_tag").value.trim();
       dw.title = container.querySelector("#dw_title").value.trim();
       dw.desc = container.querySelector("#dw_desc").value.trim();
-      dw.buttonText = container.querySelector("#dw_buttonText").value.trim();
       dw.defaultPack = container.querySelector("#dw_defaultPack").value;
       dw.defaultRounds = parseInt(container.querySelector("#dw_defaultRounds").value, 10);
       dw.defaultSeconds = parseInt(container.querySelector("#dw_defaultSeconds").value, 10);
