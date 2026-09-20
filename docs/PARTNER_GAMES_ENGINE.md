@@ -188,15 +188,18 @@ In your server's `onAction(room, action, meta)` hook, return one of these:
 
 ---
 
-## 6. Frontend Standalone & Love Website Template Parity Contract
+## 6. Frontend Standalone & Love Website Single Source of Truth (SSoT) Architecture
 
-> **CRITICAL RULE FOR ALL GAME FRONTENDS:**
-> Every multiplayer game has TWO presentation targets:
-> 1. **Standalone Page**: `public/<game>.html` (e.g. `public/draw.html`, `public/photobooth.html`) accessed directly via `/<game>`.
-> 2. **Love Website Widget Template**: `core/templates/<game>.template.js` (rendered inline into couple websites & modal popups).
->
-> **Mandatory Parity Rule**:
-> Any HTML/CSS/JS structural update applied to `public/<game>.html` MUST simultaneously be applied to `core/templates/<game>.template.js` (in both in-page widget card & modal stage).
->
-> **Automated Parity Enforcement**:
-> `tests/<game>-gauntlet.test.js` Gate 1 enforces automated cross-file parity across all 50+ critical UI markers (stages, cards, controls, animation showcases). CI will immediately block deployment if any marker is out of sync.
+> **SINGLE SOURCE OF TRUTH (SSoT) FOR GAME FRONTENDS:**
+> To eliminate duplicate maintenance and prevent markup drift between standalone pages (`/<game>`) and couple website modals:
+> 1. **Canonical Template Generator (`core/templates/<game>.template.js`)**:
+>    - `renderShowcaseCard()`: Canonical markup for preview animations.
+>    - `renderDrawApp(p1, p2)`: Canonical markup for all stages, modals, and floating partner cursors.
+>    - `renderStandalonePage(p1, p2)`: Canonical full HTML boilerplate embedding `renderDrawApp()`.
+>    - `syncStandaloneFile()`: Node.js hook that keeps `public/<game>.html` byte-identical to `renderStandalonePage()`.
+> 2. **Dynamic Server Route (`server/server.js`)**:
+>    - Dedicated route (`/<game>`, `/<game>/:code`) dynamically calls `require("./core/templates/<game>.template.js").renderStandalonePage()`.
+> 3. **Sync Automation & Parity Guard**:
+>    - `npm run sync:templates` (`scripts/sync-templates.js`) synchronously rebuilds static files.
+>    - `tests/<game>-gauntlet.test.js` Gate 1 enforces byte-identity between `public/<game>.html` and `renderStandalonePage()` output.
+

@@ -1133,6 +1133,15 @@ const server = http.createServer(async (req, res) => {
 
   // Dedicated Standalone Draw route (/draw, /draw/:code)
   if (pathname === "/draw" || pathname.startsWith("/draw/")) {
+    const drawTemplate = require(path.join(ROOT_DIR, "core", "templates", "draw.template.js"));
+    const html = drawTemplate.renderStandalonePage ? drawTemplate.renderStandalonePage() : null;
+    if (html) {
+      res.writeHead(200, {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-cache"
+      });
+      return res.end(html);
+    }
     return serveFile(res, path.join(ROOT_DIR, "public", "draw.html"));
   }
 

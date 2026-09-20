@@ -1,109 +1,26 @@
 /**
  * /core/templates/draw.template.js
- * Template for Draw for Two 💕 (Synchronized Couple Drawing Studio)
- * Showcase card with launcher triggers + Photobooth-style Fullscreen Focus Modal
+ * Single Source of Truth (SSoT) for Draw for Two 💕 (Synchronized Couple Drawing Studio)
+ * Powers BOTH in-page widget cards & fullscreen modal on love websites AND the standalone /draw page.
  */
 (function() {
   const esc = (s) => (s == null ? "" : String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c])));
 
-  const renderTemplate = (data = {}, rootData = {}) => {
-    const d = (data && typeof data === "object") ? data : {};
-    const p1 = d.partner1 || rootData.partner1 || "Alex";
-    const p2 = d.partner2 || rootData.partner2 || "Sam";
-    const tag = d.tag || "Draw for Two · Studio";
-    const title = d.title || "Draw for Two";
-    const desc = d.desc || "Synchronized couple drawing studio — sketch prompts together across the distance.";
-
-    const formattedTag = tag.startsWith("💕") ? tag : ("💕 " + tag);
-
-    return `
-    <section class="section draw-section" id="section-draw" data-widget-id="draw" data-custom-prompts="${esc(JSON.stringify(d.customPrompts || {}))}">
-      <div class="container">
-        <!-- In-Page Widget Card (Matching Screenshot /draw Lobby Design) -->
-        <div class="draw-widget-wrapper">
-          <div class="draw-lobby-card photobooth-style lobby-split-layout" id="drawWidgetLobbyCard">
-            <div class="ldr-welcome-pill"><span>${esc(formattedTag)}</span></div>
-            <h2 class="ldr-welcome-title">${esc(title)}</h2>
-            <p class="ldr-welcome-sub">${esc(desc)}</p>
-
-            <div class="draw-lobby-split-row">
-              <!-- Left Column: Room Creation & Join -->
-              <div class="draw-lobby-col-actions">
-                <div class="ldr-welcome-choices" id="widgetWelcomeChoices">
-                  <button type="button" class="ldr-menu-card ldr-card-dark" id="btnLaunchDrawStartRoom">
-                    <div class="ldr-card-left">
-                      <span class="ldr-card-icon">🎨</span>
-                      <div class="ldr-card-texts">
-                        <span class="ldr-card-title">Start a room</span>
-                        <span class="ldr-card-sub">with your partner</span>
-                      </div>
-                    </div>
-                    <span class="ldr-card-arrow">→</span>
-                  </button>
-
-                  <button type="button" class="ldr-menu-card ldr-card-light" id="btnLaunchDrawJoinRoom">
-                    <div class="ldr-card-left">
-                      <span class="ldr-card-icon">💌</span>
-                      <div class="ldr-card-texts">
-                        <span class="ldr-card-title">Join a room</span>
-                        <span class="ldr-card-sub">with a code</span>
-                      </div>
-                    </div>
-                    <span class="ldr-card-arrow">→</span>
-                  </button>
-
-                  <div class="ldr-inline-join-form" id="widgetInlineJoinForm" style="display: none;">
-                    <div class="ldr-join-input-group">
-                      <input type="text" id="widgetInputJoinCode" class="ldr-join-input" placeholder="5-LETTER CODE" maxlength="6" autocomplete="off" spellcheck="false" />
-                      <button type="button" class="draw-btn-primary draw-btn-sm" id="btnWidgetJoinSubmit"><span>Join ▷</span></button>
-                    </div>
-                  </div>
-
-                  <div class="ldr-sub-actions-row">
-                    <button type="button" class="ldr-pill-btn" id="btnLaunchDrawSolo">
-                      <span>🎨 Solo Studio</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Right Column: Interactive Live Drawing Animation -->
-              <div class="draw-lobby-col-showcase">
-                <div class="draw-how-it-works-showcase" role="region" aria-label="Live drawing preview">
-                  <div class="dhiw-prompt-pill">"our first date"</div>
+  const renderShowcaseCard = () => `
+                <div class="draw-how-it-works-showcase" id="drawLobbyShowcase" role="region" aria-label="Live drawing preview">
+                  <div class="dhiw-prompt-pill" id="dhiwPromptPill">"our first date"</div>
                   <div class="dhiw-boards-row">
                     <div class="dhiw-board dhiw-board-pink">
-                      <svg class="dhiw-svg dhiw-svg-pink" viewBox="0 0 160 150" aria-hidden="true"></svg>
+                      <svg class="dhiw-svg dhiw-svg-pink" id="dhiwSvgPink" viewBox="0 0 160 150" aria-hidden="true"></svg>
                     </div>
                     <div class="dhiw-board dhiw-board-blue">
-                      <svg class="dhiw-svg dhiw-svg-blue" viewBox="0 0 160 150" aria-hidden="true"></svg>
+                      <svg class="dhiw-svg dhiw-svg-blue" id="dhiwSvgBlue" viewBox="0 0 160 150" aria-hidden="true"></svg>
                     </div>
                   </div>
                   <div class="dhiw-caption">same prompt · two pens, live</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+                </div>`;
 
-        <!-- Synchronized Fullscreen Focus Modal Flow (Photobooth Parity) -->
-        <div class="draw-game-modal" id="drawGameModal" style="display:none;" role="dialog" aria-modal="true" aria-label="Draw for Two Studio">
-          <div class="draw-game-modal-dialog">
-            <!-- Modal Header Bar -->
-            <div class="draw-modal-topbar">
-              <div class="draw-topbar-left">
-                <span class="draw-pulse-dot" style="background:#4ade80;"></span>
-                <span class="draw-topbar-title">Draw for Two 💕</span>
-              </div>
-              <div class="draw-topbar-right">
-                <button type="button" class="draw-modal-close-btn" id="btnCloseDrawModal" aria-label="Close Drawing Game">
-                  <span>✕ Close</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Modal Content Body containing the full game -->
-            <div class="draw-modal-body">
+  const renderDrawApp = (p1 = "", p2 = "") => `
               <div class="draw-app">
                 <!-- Toast Notification -->
                 <div id="drawToast" class="draw-toast" role="status" aria-live="polite"></div>
@@ -160,6 +77,7 @@
                           </div>
                         </div>
 
+                        <!-- Waiting for Partner Room View -->
                         <div id="lobbyWaitingView" style="display: none;">
                           <div class="draw-input-label" style="color: rgba(255, 255, 255, 0.7); margin-bottom: 12px;">Share This Code With Your Partner</div>
                           <div class="draw-code-pill-row">
@@ -183,18 +101,7 @@
 
                       <!-- Right Column: Interactive Live Drawing Animation -->
                       <div class="draw-lobby-col-showcase">
-                        <div class="draw-how-it-works-showcase" role="region" aria-label="Live drawing preview">
-                          <div class="dhiw-prompt-pill">"our first date"</div>
-                          <div class="dhiw-boards-row">
-                            <div class="dhiw-board dhiw-board-pink">
-                              <svg class="dhiw-svg dhiw-svg-pink" viewBox="0 0 160 150" aria-hidden="true"></svg>
-                            </div>
-                            <div class="dhiw-board dhiw-board-blue">
-                              <svg class="dhiw-svg dhiw-svg-blue" viewBox="0 0 160 150" aria-hidden="true"></svg>
-                            </div>
-                          </div>
-                          <div class="dhiw-caption">same prompt · two pens, live</div>
-                        </div>
+                        ${renderShowcaseCard()}
                       </div>
                     </div>
                   </div>
@@ -209,7 +116,7 @@
 
                     <div class="draw-input-group">
                       <label class="draw-input-label" for="profileNameInput" style="color: rgba(255, 255, 255, 0.7);">Your Name</label>
-                      <input type="text" id="profileNameInput" class="draw-input-text dark-style" placeholder="Enter your name..." maxlength="20" autocomplete="off" value="${esc(p1)}" />
+                      <input type="text" id="profileNameInput" class="draw-input-text dark-style" placeholder="Enter your name..." maxlength="20" autocomplete="off" ${p1 ? `value="${esc(p1)}"` : ""} />
                     </div>
 
                     <div class="draw-config-group" style="margin-bottom: 22px;">
@@ -363,13 +270,13 @@
 
                     <div class="draw-canvases-grid view-split" id="canvasesContainer">
                       <div class="draw-pad-card" id="myPadCard">
-                        <div class="draw-pad-badge pink" id="myPadBadge">${esc(p1)}</div>
+                        <div class="draw-pad-badge pink" id="myPadBadge">${esc(p1 || "You")}</div>
                         <canvas id="myCanvas" class="draw-canvas"></canvas>
                         <div class="draw-poke-layer" id="myPokeLayer"></div>
                       </div>
 
                       <div class="draw-pad-card draw-pad-partner" id="partnerPadCard" title="Tap their pad to poke!">
-                        <div class="draw-pad-badge blue" id="partnerPadBadge">${esc(p2)}</div>
+                        <div class="draw-pad-badge blue" id="partnerPadBadge">${esc(p2 || "Partner")}</div>
                         <canvas id="partnerCanvas" class="draw-canvas"></canvas>
                         <div class="draw-poke-layer" id="partnerPokeLayer"></div>
                         <div class="partner-pad-tap-hint">Tap here to poke! 👉</div>
@@ -468,7 +375,7 @@
                     <div class="draw-review-grid">
                       <div class="draw-review-card">
                         <div class="draw-review-card-header">
-                          <span class="draw-review-drawer-name" id="reviewMyName">${esc(p1)}</span>
+                          <span class="draw-review-drawer-name" id="reviewMyName">${esc(p1 || "You")}</span>
                         </div>
                         <div class="draw-review-canvas-box">
                           <img id="reviewMyImg" alt="Your drawing" />
@@ -477,7 +384,7 @@
 
                       <div class="draw-review-card" id="reviewPartnerCard">
                         <div class="draw-review-card-header">
-                          <span class="draw-review-drawer-name" id="reviewPartnerName">${esc(p2)}</span>
+                          <span class="draw-review-drawer-name" id="reviewPartnerName">${esc(p2 || "Partner")}</span>
                         </div>
                         <div class="draw-review-canvas-box">
                           <img id="reviewPartnerImg" alt="Partner's drawing" />
@@ -553,9 +460,133 @@
                     <path d="M2 2L9.5 21.5L13.5 13.5L21.5 9.5L2 2Z" fill="#ff2d55" stroke="#ffffff" stroke-width="2" stroke-linejoin="round"/>
                   </svg>
                 </div>
-                <div class="remote-cursor-tag" id="remoteCursorTag">${esc(p2)}</div>
+                <div class="remote-cursor-tag" id="remoteCursorTag">${esc(p2 || "Partner")}</div>
                 <div class="remote-click-ripple" id="remoteClickRipple"></div>
+              </div>`;
+
+  const renderStandalonePage = (p1 = "", p2 = "Partner") => `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Draw for Two 💕</title>
+  <meta name="description" content="A real-time couple drawing game. Pick prompts, set the match, and sketch together across distance.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/css/widgets/draw.css">
+</head>
+<body class="draw-page">
+${renderDrawApp(p1, p2)}
+
+  <script src="/public/js/widgets/draw.runtime.js"></script>
+</body>
+</html>
+`;
+
+  const syncStandaloneFile = () => {
+    if (typeof require !== "undefined" && typeof module !== "undefined") {
+      try {
+        const fs = require("fs");
+        const path = require("path");
+        const target = path.resolve(__dirname, "../../public/draw.html");
+        const content = renderStandalonePage();
+        if (!fs.existsSync(target) || fs.readFileSync(target, "utf8") !== content) {
+          fs.writeFileSync(target, content, "utf8");
+        }
+      } catch (_) {}
+    }
+  };
+
+  const renderTemplate = (data = {}, rootData = {}) => {
+    const d = (data && typeof data === "object") ? data : {};
+    const p1 = d.partner1 || rootData.partner1 || "Alex";
+    const p2 = d.partner2 || rootData.partner2 || "Sam";
+    const tag = d.tag || "Draw for Two · Studio";
+    const title = d.title || "Draw for Two";
+    const desc = d.desc || "Synchronized couple drawing studio — sketch prompts together across the distance.";
+
+    const formattedTag = tag.startsWith("💕") ? tag : ("💕 " + tag);
+
+    return `
+    <section class="section draw-section" id="section-draw" data-widget-id="draw" data-custom-prompts="${esc(JSON.stringify(d.customPrompts || {}))}">
+      <div class="container">
+        <!-- In-Page Widget Card (Matching Screenshot /draw Lobby Design) -->
+        <div class="draw-widget-wrapper">
+          <div class="draw-lobby-card photobooth-style lobby-split-layout" id="drawWidgetLobbyCard">
+            <div class="ldr-welcome-pill"><span>${esc(formattedTag)}</span></div>
+            <h2 class="ldr-welcome-title">${esc(title)}</h2>
+            <p class="ldr-welcome-sub">${esc(desc)}</p>
+
+            <div class="draw-lobby-split-row">
+              <!-- Left Column: Room Creation & Join -->
+              <div class="draw-lobby-col-actions">
+                <div class="ldr-welcome-choices" id="widgetWelcomeChoices">
+                  <button type="button" class="ldr-menu-card ldr-card-dark" id="btnLaunchDrawStartRoom">
+                    <div class="ldr-card-left">
+                      <span class="ldr-card-icon">🎨</span>
+                      <div class="ldr-card-texts">
+                        <span class="ldr-card-title">Start a room</span>
+                        <span class="ldr-card-sub">with your partner</span>
+                      </div>
+                    </div>
+                    <span class="ldr-card-arrow">→</span>
+                  </button>
+
+                  <button type="button" class="ldr-menu-card ldr-card-light" id="btnLaunchDrawJoinRoom">
+                    <div class="ldr-card-left">
+                      <span class="ldr-card-icon">💌</span>
+                      <div class="ldr-card-texts">
+                        <span class="ldr-card-title">Join a room</span>
+                        <span class="ldr-card-sub">with a code</span>
+                      </div>
+                    </div>
+                    <span class="ldr-card-arrow">→</span>
+                  </button>
+
+                  <div class="ldr-inline-join-form" id="widgetInlineJoinForm" style="display: none;">
+                    <div class="ldr-join-input-group">
+                      <input type="text" id="widgetInputJoinCode" class="ldr-join-input" placeholder="5-LETTER CODE" maxlength="6" autocomplete="off" spellcheck="false" />
+                      <button type="button" class="draw-btn-primary draw-btn-sm" id="btnWidgetJoinSubmit"><span>Join ▷</span></button>
+                    </div>
+                  </div>
+
+                  <div class="ldr-sub-actions-row">
+                    <button type="button" class="ldr-pill-btn" id="btnLaunchDrawSolo">
+                      <span>🎨 Solo Studio</span>
+                    </button>
+                  </div>
+                </div>
               </div>
+
+              <!-- Right Column: Interactive Live Drawing Animation -->
+              <div class="draw-lobby-col-showcase">
+                ${renderShowcaseCard()}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Synchronized Fullscreen Focus Modal Flow (Photobooth Parity) -->
+        <div class="draw-game-modal" id="drawGameModal" style="display:none;" role="dialog" aria-modal="true" aria-label="Draw for Two Studio">
+          <div class="draw-game-modal-dialog">
+            <!-- Modal Header Bar -->
+            <div class="draw-modal-topbar">
+              <div class="draw-topbar-left">
+                <span class="draw-pulse-dot" style="background:#4ade80;"></span>
+                <span class="draw-topbar-title">Draw for Two 💕</span>
+              </div>
+              <div class="draw-topbar-right">
+                <button type="button" class="draw-modal-close-btn" id="btnCloseDrawModal" aria-label="Close Drawing Game">
+                  <span>✕ Close</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Modal Content Body containing the full game -->
+            <div class="draw-modal-body">
+              ${renderDrawApp(p1, p2)}
             </div>
           </div>
         </div>
@@ -563,8 +594,14 @@
     </section>`;
   };
 
+  renderTemplate.renderShowcaseCard = renderShowcaseCard;
+  renderTemplate.renderDrawApp = renderDrawApp;
+  renderTemplate.renderStandalonePage = renderStandalonePage;
+  renderTemplate.syncStandaloneFile = syncStandaloneFile;
+
   if (typeof module !== "undefined" && module.exports) {
     module.exports = renderTemplate;
+    syncStandaloneFile();
   }
   if (typeof window !== "undefined") {
     window.WIDGET_TEMPLATES = window.WIDGET_TEMPLATES || {};

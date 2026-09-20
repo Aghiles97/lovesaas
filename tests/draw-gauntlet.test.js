@@ -125,7 +125,14 @@ PARITY_MARKERS.forEach(marker => {
   assert(templateContent.includes(marker), `[Parity Guard] Missing in core/templates/draw.template.js: "${marker}"`);
 });
 
-console.log("✅ PASS: Gate 1 verified (including Standalone ⟷ Template Parity Guard)");
+// --- SSoT Architecture Guard ---
+const drawTemplateModule = require(templatePath);
+assert(typeof drawTemplateModule.renderStandalonePage === "function", "draw.template.js exports renderStandalonePage()");
+assert(typeof drawTemplateModule.renderDrawApp === "function", "draw.template.js exports renderDrawApp()");
+assert(typeof drawTemplateModule.renderShowcaseCard === "function", "draw.template.js exports renderShowcaseCard()");
+assert.strictEqual(htmlContent.trim(), drawTemplateModule.renderStandalonePage().trim(), "public/draw.html is byte-identical to renderStandalonePage() SSoT output");
+
+console.log("✅ PASS: Gate 1 verified (including Standalone ⟷ Template SSoT Byte-Identity Guard)");
 passedGates++;
 
 // --- GATE 2: Server Routing & API Endpoints ---

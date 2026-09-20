@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server/server.js",
     "dev": "node --watch server/server.js",
+    "sync:templates": "node scripts/sync-templates.js",
     "deploy": "git push origin main && ssh -o BatchMode=yes -p 45022 terusjay@101.50.1.90 '/home/terusjay/bin/update-lovesaas.sh --force'"
   },
   "dependencies": {
