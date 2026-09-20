@@ -52,7 +52,7 @@
               <div class="ldr-inline-join-form" id="widgetInlineJoinForm" style="display: none;">
                 <div class="ldr-join-input-group">
                   <input type="text" id="widgetInputJoinCode" class="ldr-join-input" placeholder="5-LETTER CODE" maxlength="6" autocomplete="off" spellcheck="false" />
-                  <button type="button" class="btn-primary" id="btnWidgetJoinSubmit"><span>Join ▷</span></button>
+                  <button type="button" class="draw-btn-primary draw-btn-sm" id="btnWidgetJoinSubmit"><span>Join ▷</span></button>
                 </div>
               </div>
 

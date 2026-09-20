@@ -2245,7 +2245,7 @@ body.draw-solo-mode .draw-review-grid .draw-review-card,
   max-width: 1200px;
   margin: 0 auto;
   min-height: auto;
-  padding: 24px 16px 60px;
+  padding: 20px 8px 60px;
 }
 
 @media (max-width: 720px) {
