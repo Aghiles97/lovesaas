@@ -58,6 +58,7 @@ class PartnerRoomEngine {
     this.gameId = options.gameId.toLowerCase().trim();
     this.maxParticipants = options.maxParticipants || 2;
     this.ttlMs = options.ttlMs || 3 * 60 * 60 * 1000;
+    this.gracePeriodMs = options.gracePeriodMs ?? 25000;
     this.dataFile = options.dataFile || path.join(__dirname, `../../data/${this.gameId}_rooms.json`);
     this.getInitialState = typeof options.initialState === "function" 
       ? options.initialState 
@@ -265,8 +266,8 @@ class PartnerRoomEngine {
   // --- Room Management & Broadcasting ---
 
   getOrCreateRoom(code) {
-    const roomCode = String(code || "").toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 64).trim();
-    if (!roomCode) throw new Error("Invalid room code");
+    const defaultCode = (this.gameId || "ROOM").toUpperCase();
+    const roomCode = String(code || defaultCode).toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 64).trim() || defaultCode;
 
     if (!this.rooms.has(roomCode)) {
       this.rooms.set(roomCode, {
@@ -335,6 +336,11 @@ class PartnerRoomEngine {
     const code = String(roomCode || "").toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 64).trim();
     const currentRoom = this.getOrCreateRoom(code);
 
+    if (currentRoom.disconnectTimeouts?.has(participantId)) {
+      clearTimeout(currentRoom.disconnectTimeouts.get(participantId));
+      currentRoom.disconnectTimeouts.delete(participantId);
+    }
+
     const activeIds = new Set([
       ...Array.from(currentRoom.participants.values()).map(p => p.id),
       ...Array.from(currentRoom.sseClients).map(c => c._participantId),
@@ -360,6 +366,8 @@ class PartnerRoomEngine {
     res._role = role;
 
     currentRoom.sseClients.add(res);
+
+    if (this.onJoin) this.onJoin(currentRoom, { id: participantId, name, role });
 
     // Send initial snapshot
     res.write(`data: ${JSON.stringify({
@@ -394,8 +402,6 @@ class PartnerRoomEngine {
       }, res);
     }
 
-    if (this.onJoin) this.onJoin(currentRoom, { id: participantId, name, role });
-
     const pingTimer = setInterval(() => {
       try { res.write(": ping\n\n"); } catch (e) { clearInterval(pingTimer); }
     }, 15000);
@@ -403,15 +409,38 @@ class PartnerRoomEngine {
     req.on("close", () => {
       clearInterval(pingTimer);
       currentRoom.sseClients.delete(res);
-      this.broadcast(currentRoom, {
-        type: "PARTNER_LEFT",
-        partnerId: participantId,
-        partnerName: name,
-        remainingCount: currentRoom.participants.size + currentRoom.sseClients.size
-      });
-      if (this.onLeave) this.onLeave(currentRoom, participantId);
-      currentRoom.lastActivity = Date.now();
-      this.scheduleSave();
+
+      const stillConnected = Array.from(currentRoom.participants.values()).some(p => p.id === participantId) ||
+                             Array.from(currentRoom.sseClients).some(c => c._participantId === participantId);
+      if (stillConnected) return;
+
+      if (!currentRoom.disconnectTimeouts) currentRoom.disconnectTimeouts = new Map();
+      if (currentRoom.disconnectTimeouts.has(participantId)) {
+        clearTimeout(currentRoom.disconnectTimeouts.get(participantId));
+      }
+
+      const graceTimer = setTimeout(() => {
+        if (!currentRoom.disconnectTimeouts) return;
+        currentRoom.disconnectTimeouts.delete(participantId);
+        const reconnected = Array.from(currentRoom.participants.values()).some(p => p.id === participantId) ||
+                            Array.from(currentRoom.sseClients).some(c => c._participantId === participantId);
+        if (!reconnected) {
+          const activeCount = currentRoom.participants.size + currentRoom.sseClients.size;
+          this.broadcast(currentRoom, {
+            type: "PARTNER_LEFT",
+            partnerId,
+            partnerName: name,
+            remainingCount: activeCount
+          });
+          if (this.onLeave) this.onLeave(currentRoom, participantId);
+          if (activeCount === 0) {
+            currentRoom.lastActivity = Date.now();
+          }
+          this.scheduleSave();
+        }
+      }, this.gracePeriodMs).unref();
+
+      currentRoom.disconnectTimeouts.set(participantId, graceTimer);
     });
   }
 
@@ -517,6 +546,8 @@ class PartnerRoomEngine {
               joinedAt: Date.now()
             });
 
+            if (this.onJoin) this.onJoin(currentRoom, { id: participantId, name: participantName, role });
+
             ws.send(JSON.stringify({
               type: "ROOM_JOINED",
               gameId: this.gameId,
@@ -549,7 +580,6 @@ class PartnerRoomEngine {
               }, ws);
             }
 
-            if (this.onJoin) this.onJoin(currentRoom, { id: participantId, name: participantName, role });
             this.scheduleSave();
             return;
           }
@@ -592,7 +622,7 @@ class PartnerRoomEngine {
             }
             this.scheduleSave();
           }
-        }, 15000).unref();
+        }, this.gracePeriodMs).unref();
 
         currentRoom.disconnectTimeouts.set(participantId, graceTimer);
       });
