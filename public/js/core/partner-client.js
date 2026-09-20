@@ -291,6 +291,14 @@
           this._emit("partner_joined", msg.partner);
           break;
 
+        case "PARTNER_RECONNECTED":
+          const reconnectedPartner = msg.partner || { id: msg.partnerId, name: msg.partnerName, role: msg.role };
+          this.participants = this.participants.filter(p => p.id !== reconnectedPartner.id);
+          this.participants.push(reconnectedPartner);
+          this._emit("partner_reconnected", reconnectedPartner);
+          this._emit("partner_joined", reconnectedPartner);
+          break;
+
         case "PARTNER_LEFT":
           this.participants = this.participants.filter(p => p.id !== msg.partnerId);
           this._emit("partner_left", {

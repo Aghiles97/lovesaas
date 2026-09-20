@@ -256,6 +256,10 @@ class PartnerRoomEngine {
         if (room.disconnectTimeouts) {
           for (const timer of room.disconnectTimeouts.values()) clearTimeout(timer);
         }
+        if (room.timerInterval) {
+          clearInterval(room.timerInterval);
+          room.timerInterval = null;
+        }
         this.rooms.delete(code);
         changed = true;
       }
