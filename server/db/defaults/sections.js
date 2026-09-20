@@ -1257,7 +1257,8 @@ const DEFAULT_SECTIONS_DATA = {
     defaultPack: "memories",
     defaultRounds: 3,
     defaultSeconds: 120,
-    allowSolo: true
+    allowSolo: true,
+    customPrompts: {}
   }
 };
 
