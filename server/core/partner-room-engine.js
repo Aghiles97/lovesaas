@@ -63,6 +63,7 @@ class PartnerRoomEngine {
       ? options.initialState 
       : () => JSON.parse(JSON.stringify(options.initialState || {}));
     this.onAction = options.onAction || null;
+    this.beforeJoin = options.beforeJoin || null;
     this.onJoin = options.onJoin || null;
     this.onLeave = options.onLeave || null;
 
@@ -264,7 +265,7 @@ class PartnerRoomEngine {
   // --- Room Management & Broadcasting ---
 
   getOrCreateRoom(code) {
-    const roomCode = String(code || "").toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 16).trim();
+    const roomCode = String(code || "").toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 64).trim();
     if (!roomCode) throw new Error("Invalid room code");
 
     if (!this.rooms.has(roomCode)) {
@@ -331,27 +332,28 @@ class PartnerRoomEngine {
       "Access-Control-Allow-Origin": "*"
     });
 
-    const code = String(roomCode || "").toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 16).trim();
+    const code = String(roomCode || "").toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 64).trim();
     const currentRoom = this.getOrCreateRoom(code);
 
-    // Check if re-connecting participant
-    let isExisting = false;
-    for (const c of currentRoom.sseClients) {
-      if (c._participantId === participantId) isExisting = true;
-    }
-    for (const meta of currentRoom.participants.values()) {
-      if (meta.id === participantId) isExisting = true;
-    }
+    const activeIds = new Set([
+      ...Array.from(currentRoom.participants.values()).map(p => p.id),
+      ...Array.from(currentRoom.sseClients).map(c => c._participantId),
+      ...(currentRoom.disconnectTimeouts ? Array.from(currentRoom.disconnectTimeouts.keys()) : [])
+    ]);
+    const isExisting = activeIds.has(participantId) || !!currentRoom.state?.profiles?.[participantId] || (currentRoom.hostId === participantId);
 
-    const totalCount = currentRoom.participants.size + currentRoom.sseClients.size;
-    if (totalCount >= this.maxParticipants && !isExisting) {
+    if (activeIds.size >= this.maxParticipants && !isExisting) {
       res.write(`data: ${JSON.stringify({ type: "ROOM_FULL", error: `Room has reached max capacity of ${this.maxParticipants} partners.` })}\n\n`);
       return res.end();
     }
 
     if (!currentRoom.hostId) currentRoom.hostId = participantId;
     const role = (currentRoom.hostId === participantId) ? "host" : "guest";
-    const name = sanitizeStr(participantName, 24) || (role === "host" ? "Partner 1" : "Partner 2");
+    let name = sanitizeStr(participantName, 24) || (role === "host" ? "Partner 1" : "Partner 2");
+    if (this.beforeJoin) {
+      const customName = this.beforeJoin(currentRoom, { name: participantName }, participantId, role);
+      if (customName) name = customName;
+    }
 
     res._participantId = participantId;
     res._participantName = name;
@@ -374,11 +376,23 @@ class PartnerRoomEngine {
       ]
     })}\n\n`);
 
-    this.broadcast(currentRoom, {
-      type: "PARTNER_JOINED",
-      partner: { id: participantId, name, role },
-      participantCount: currentRoom.participants.size + currentRoom.sseClients.size
-    }, res);
+    if (!isExisting) {
+      this.broadcast(currentRoom, {
+        type: "PARTNER_JOINED",
+        partner: { id: participantId, name, role },
+        stage: currentRoom.state?.stage,
+        participantCount: currentRoom.participants.size + currentRoom.sseClients.size
+      }, res);
+    } else {
+      this.broadcast(currentRoom, {
+        type: "PARTNER_RECONNECTED",
+        partner: { id: participantId, name, role },
+        partnerId: participantId,
+        partnerName: name,
+        stage: currentRoom.state?.stage,
+        participantCount: currentRoom.participants.size + currentRoom.sseClients.size
+      }, res);
+    }
 
     if (this.onJoin) this.onJoin(currentRoom, { id: participantId, name, role });
 
@@ -449,7 +463,7 @@ class PartnerRoomEngine {
           const { type, roomCode, payload } = data;
 
           if (type === "JOIN_ROOM") {
-            const code = (roomCode || payload?.roomCode || "").toString().toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 16).trim();
+            const code = (roomCode || payload?.roomCode || "").toString().toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 64).trim();
             if (!code) return;
 
             currentRoom = this.getOrCreateRoom(code);
@@ -478,9 +492,10 @@ class PartnerRoomEngine {
 
             const activeIds = new Set([
               ...Array.from(currentRoom.participants.values()).map(p => p.id),
-              ...Array.from(currentRoom.sseClients).map(c => c._participantId)
+              ...Array.from(currentRoom.sseClients).map(c => c._participantId),
+              ...(currentRoom.disconnectTimeouts ? Array.from(currentRoom.disconnectTimeouts.keys()) : [])
             ]);
-            const isExisting = activeIds.has(participantId) || (currentRoom.hostId === participantId);
+            const isExisting = activeIds.has(participantId) || !!currentRoom.state.profiles?.[participantId] || (currentRoom.hostId === participantId);
 
             if (activeIds.size >= this.maxParticipants && !isExisting) {
               ws.send(JSON.stringify({ type: "ROOM_FULL", error: `Room has reached max capacity of ${this.maxParticipants} partners.` }));
@@ -490,6 +505,10 @@ class PartnerRoomEngine {
             if (!currentRoom.hostId) currentRoom.hostId = participantId;
             const role = (currentRoom.hostId === participantId) ? "host" : "guest";
             participantName = sanitizeStr(payload?.name, 24) || (role === "host" ? "Partner 1" : "Partner 2");
+            if (this.beforeJoin) {
+              const customName = this.beforeJoin(currentRoom, payload, participantId, role);
+              if (customName) participantName = customName;
+            }
 
             currentRoom.participants.set(ws, {
               id: participantId,
@@ -512,11 +531,23 @@ class PartnerRoomEngine {
               ]
             }));
 
-            this.broadcast(currentRoom, {
-              type: "PARTNER_JOINED",
-              partner: { id: participantId, name: participantName, role },
-              participantCount: currentRoom.participants.size + currentRoom.sseClients.size
-            }, ws);
+            if (!isExisting) {
+              this.broadcast(currentRoom, {
+                type: "PARTNER_JOINED",
+                partner: { id: participantId, name: participantName, role },
+                stage: currentRoom.state?.stage,
+                participantCount: currentRoom.participants.size + currentRoom.sseClients.size
+              }, ws);
+            } else {
+              this.broadcast(currentRoom, {
+                type: "PARTNER_RECONNECTED",
+                partner: { id: participantId, name: participantName, role },
+                partnerId: participantId,
+                partnerName: participantName,
+                stage: currentRoom.state?.stage,
+                participantCount: currentRoom.participants.size + currentRoom.sseClients.size
+              }, ws);
+            }
 
             if (this.onJoin) this.onJoin(currentRoom, { id: participantId, name: participantName, role });
             this.scheduleSave();
