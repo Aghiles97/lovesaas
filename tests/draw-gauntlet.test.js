@@ -67,6 +67,7 @@ assert(htmlContent.includes('data-rounds="4"'), "Rounds 4 option present");
 assert(htmlContent.includes('data-rounds="5"'), "Rounds 5 option present");
 assert(htmlContent.includes('data-rounds="7"'), "Rounds 7 option present");
 assert(htmlContent.includes('id="secondsSelector"'), "Seconds selector present");
+assert(htmlContent.includes('data-seconds="20"'), "Seconds 20s option present");
 assert(htmlContent.includes('data-seconds="60"'), "Seconds 60s option present");
 assert(htmlContent.includes('data-seconds="90"'), "Seconds 90s option present");
 assert(htmlContent.includes('data-seconds="120"'), "Seconds 120s option present");

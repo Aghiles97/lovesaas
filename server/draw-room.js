@@ -527,7 +527,7 @@ class DrawRoomServer extends PartnerRoomEngine {
       }
       if (payload?.secondsPerDrawing !== undefined) {
         const secs = Number(payload.secondsPerDrawing);
-        if ([60, 90, 120, 180].includes(secs)) {
+        if ([20, 60, 90, 120, 180].includes(secs)) {
           currentRoom.state.secondsPerDrawing = secs;
           currentRoom.state.timerRemaining = secs;
         }

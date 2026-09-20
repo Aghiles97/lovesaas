@@ -92,6 +92,7 @@
           <div class="input-group">
             <label>Time per Round</label>
             <select id="dw_defaultSeconds" class="inspector-select" style="width: 100%;">
+              <option value="20" ${Number(dw.defaultSeconds) === 20 ? "selected" : ""}>20 seconds</option>
               <option value="60" ${Number(dw.defaultSeconds) === 60 ? "selected" : ""}>60 seconds</option>
               <option value="90" ${Number(dw.defaultSeconds) === 90 ? "selected" : ""}>90 seconds</option>
               <option value="120" ${Number(dw.defaultSeconds) === 120 ? "selected" : ""}>120 seconds</option>
