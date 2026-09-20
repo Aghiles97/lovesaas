@@ -100,7 +100,32 @@ assert(htmlContent.includes('id="btnPracticeSolo"'), "btnPracticeSolo present");
 assert(htmlContent.includes('id="drawRemoteCursor"'), "drawRemoteCursor element present");
 assert(htmlContent.includes('id="remoteCursorTag"'), "remoteCursorTag element present");
 
-console.log("✅ PASS: Gate 1 verified");
+// --- Template Parity Guard: public/draw.html <-> core/templates/draw.template.js ---
+const templatePath = path.resolve(__dirname, "../core/templates/draw.template.js");
+assert(fs.existsSync(templatePath), "core/templates/draw.template.js must exist");
+const templateContent = fs.readFileSync(templatePath, "utf8");
+
+const PARITY_MARKERS = [
+  "stageLobby", "stageProfile", "stagePackSelect", "stageMatchSetup",
+  "stageDrawing", "stageRoundReview", "stageMatchComplete",
+  "lobby-split-layout", "draw-lobby-split-row", "draw-lobby-col-actions", "draw-lobby-col-showcase",
+  "draw-how-it-works-showcase", "dhiw-prompt-pill", "dhiw-boards-row", "dhiw-board-pink", "dhiw-board-blue",
+  "same prompt · two pens, live", "btnStartRoom", "btnShowJoinForm", "inputJoinCode", "btnJoinRoomSubmit",
+  "btnPracticeSolo", "displayRoomCode", "btnCopyInvite", "waitingStatusText",
+  "profileNameInput", "profileSexSelector", 'data-sex="female"', 'data-sex="male"',
+  "btnProfileReady", "profileWaitingWrap", 'data-pack="animals"', 'data-pack="food"',
+  'data-pack="random"', 'data-pack="memories"', 'data-pack="draw_me"', 'data-pack="silly"',
+  "btnPackNext", "roundsSelector", "secondsSelector", "btnStartDrawing",
+  "myCanvas", "partnerCanvas", "displayTimer", "displayPrompt", "displayRoundNum", "displayRoundTotal",
+  "colorPalette", "brushSizes", "btnClearCanvas", "pokeButtons", "drawRemoteCursor", "remoteCursorTag"
+];
+
+PARITY_MARKERS.forEach(marker => {
+  assert(htmlContent.includes(marker), `[Parity Guard] Missing in public/draw.html: "${marker}"`);
+  assert(templateContent.includes(marker), `[Parity Guard] Missing in core/templates/draw.template.js: "${marker}"`);
+});
+
+console.log("✅ PASS: Gate 1 verified (including Standalone ⟷ Template Parity Guard)");
 passedGates++;
 
 // --- GATE 2: Server Routing & API Endpoints ---

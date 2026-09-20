@@ -185,3 +185,18 @@ In your server's `onAction(room, action, meta)` hook, return one of these:
 * `server/draw-room.js` and `server/photobooth-room.js` are currently standalone and tested with 100% pass rates in `tests/draw-gauntlet.test.js` and `tests/photobooth-gauntlet.test.js`.
 * They continue running untouched on their existing routes (`/draw-ws`, `/photobooth-ws`, `/api/draw/...`, `/api/photobooth/...`).
 * Any new game should be built on `PartnerRoomEngine` using `/ws/games/:game` and `/api/games/:game/...`.
+
+---
+
+## 6. Frontend Standalone & Love Website Template Parity Contract
+
+> **CRITICAL RULE FOR ALL GAME FRONTENDS:**
+> Every multiplayer game has TWO presentation targets:
+> 1. **Standalone Page**: `public/<game>.html` (e.g. `public/draw.html`, `public/photobooth.html`) accessed directly via `/<game>`.
+> 2. **Love Website Widget Template**: `core/templates/<game>.template.js` (rendered inline into couple websites & modal popups).
+>
+> **Mandatory Parity Rule**:
+> Any HTML/CSS/JS structural update applied to `public/<game>.html` MUST simultaneously be applied to `core/templates/<game>.template.js` (in both in-page widget card & modal stage).
+>
+> **Automated Parity Enforcement**:
+> `tests/<game>-gauntlet.test.js` Gate 1 enforces automated cross-file parity across all 50+ critical UI markers (stages, cards, controls, animation showcases). CI will immediately block deployment if any marker is out of sync.
