@@ -2269,29 +2269,209 @@
 
   // --- Initialize ---
   function init() {
-    initEvents();
+    if (el.stageLobby) {
+      initEvents();
 
-    if (el.canvasesContainer) {
-      el.canvasesContainer.classList.remove("view-mine", "view-partner");
-      el.canvasesContainer.classList.add("view-split");
+      if (el.canvasesContainer) {
+        el.canvasesContainer.classList.remove("view-mine", "view-partner");
+        el.canvasesContainer.classList.add("view-split");
+      }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const roomFromQuery = urlParams.get("room") || urlParams.get("code");
+      const pathMatch = window.location.pathname.match(/^\/draw\/([a-zA-Z0-9_-]+)/);
+      const initialRoom = roomFromQuery || (pathMatch ? pathMatch[1] : null);
+
+      if (initialRoom) {
+        state.roomCode = initialRoom.toUpperCase().trim();
+        syncRoomUrl(state.roomCode);
+        if (el.inputJoinCode) el.inputJoinCode.value = state.roomCode;
+        if (el.displayRoomCode) el.displayRoomCode.textContent = state.roomCode;
+        if (el.lobbyInitialView) el.lobbyInitialView.style.display = "none";
+        if (el.lobbyWaitingView) el.lobbyWaitingView.style.display = "block";
+        if (el.waitingStatusText) el.waitingStatusText.textContent = `Connecting to room ${state.roomCode}...`;
+        initNetworking(state.roomCode);
+      }
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomFromQuery = urlParams.get("room") || urlParams.get("code");
-    const pathMatch = window.location.pathname.match(/^\/draw\/([a-zA-Z0-9_-]+)/);
-    const initialRoom = roomFromQuery || (pathMatch ? pathMatch[1] : null);
-
-    if (initialRoom) {
-      state.roomCode = initialRoom.toUpperCase().trim();
-      syncRoomUrl(state.roomCode);
-      if (el.inputJoinCode) el.inputJoinCode.value = state.roomCode;
-      if (el.displayRoomCode) el.displayRoomCode.textContent = state.roomCode;
-      if (el.lobbyInitialView) el.lobbyInitialView.style.display = "none";
-      if (el.lobbyWaitingView) el.lobbyWaitingView.style.display = "block";
-      if (el.waitingStatusText) el.waitingStatusText.textContent = `Connecting to room ${state.roomCode}...`;
-      initNetworking(state.roomCode);
+    if (document.getElementById("section-draw") || document.querySelector(".draw-section")) {
+      setupDrawWidget();
     }
   }
+
+  // --- In-Page Website Widget Engine ---
+  function setupDrawWidget(data = {}, hero = {}) {
+    const sec = document.getElementById("section-draw") || document.querySelector(".draw-section");
+    if (!sec) return;
+
+    const btnStartRoom = sec.querySelector("#btnDrawWidgetStartRoom");
+    const btnJoinRoom = sec.querySelector("#btnDrawWidgetJoinRoom");
+    const btnSolo = sec.querySelector("#btnDrawWidgetSolo");
+    const inlineJoin = sec.querySelector("#drawWidgetInlineJoinForm");
+    const inputJoin = sec.querySelector("#drawWidgetInputJoinCode");
+    const btnSubmitJoin = sec.querySelector("#btnDrawWidgetSubmitJoin");
+    const waitingView = sec.querySelector("#drawWidgetWaitingView");
+    const initialView = sec.querySelector("#drawWidgetInitialView");
+    const roomCodeEl = sec.querySelector("#drawWidgetRoomCode");
+    const btnCopyLink = sec.querySelector("#btnDrawWidgetCopyLink");
+    const btnLaunchFullscreen = sec.querySelector("#btnDrawWidgetLaunchFullscreen");
+    const pokeBtns = sec.querySelectorAll(".widget-poke-btn");
+
+    // Mini doodle canvas preview
+    const c1 = sec.querySelector("#drawWidgetCanvas1");
+    const c2 = sec.querySelector("#drawWidgetCanvas2");
+    if (c1 && !c1._doodled) {
+      c1._doodled = true;
+      const ctx1 = c1.getContext("2d");
+      ctx1.strokeStyle = "#f7789e";
+      ctx1.lineWidth = 3;
+      ctx1.lineCap = "round";
+      ctx1.beginPath();
+      // Draw a cute heart
+      ctx1.moveTo(140, 70);
+      ctx1.bezierCurveTo(140, 50, 110, 40, 100, 65);
+      ctx1.bezierCurveTo(90, 95, 125, 120, 140, 140);
+      ctx1.bezierCurveTo(155, 120, 190, 95, 180, 65);
+      ctx1.bezierCurveTo(170, 40, 140, 50, 140, 70);
+      ctx1.stroke();
+    }
+    if (c2 && !c2._doodled) {
+      c2._doodled = true;
+      const ctx2 = c2.getContext("2d");
+      ctx2.strokeStyle = "#5fa0ff";
+      ctx2.lineWidth = 3;
+      ctx2.lineCap = "round";
+      ctx2.beginPath();
+      // Draw a cute smiley / star
+      ctx2.arc(140, 90, 35, 0, Math.PI * 2);
+      ctx2.stroke();
+      ctx2.beginPath();
+      ctx2.arc(128, 82, 3, 0, Math.PI * 2);
+      ctx2.arc(152, 82, 3, 0, Math.PI * 2);
+      ctx2.fillStyle = "#5fa0ff";
+      ctx2.fill();
+      ctx2.beginPath();
+      ctx2.arc(140, 95, 16, 0.2 * Math.PI, 0.8 * Math.PI);
+      ctx2.stroke();
+    }
+
+    if (btnStartRoom && !btnStartRoom._bound) {
+      btnStartRoom._bound = true;
+      btnStartRoom.addEventListener("click", async () => {
+        try {
+          btnStartRoom.disabled = true;
+          const res = await fetch("/api/draw/room", { credentials: "same-origin" });
+          const json = await res.json();
+          if (json && json.code) {
+            if (roomCodeEl) roomCodeEl.textContent = json.code;
+            if (btnLaunchFullscreen) btnLaunchFullscreen.href = `/draw?room=${encodeURIComponent(json.code)}`;
+            if (initialView) initialView.style.display = "none";
+            if (waitingView) waitingView.style.display = "block";
+          } else {
+            window.location.href = "/draw";
+          }
+        } catch (e) {
+          window.location.href = "/draw";
+        } finally {
+          btnStartRoom.disabled = false;
+        }
+      });
+    }
+
+    if (btnJoinRoom && !btnJoinRoom._bound) {
+      btnJoinRoom._bound = true;
+      btnJoinRoom.addEventListener("click", () => {
+        if (inlineJoin) {
+          inlineJoin.style.display = inlineJoin.style.display === "none" ? "block" : "none";
+          if (inlineJoin.style.display === "block" && inputJoin) inputJoin.focus();
+        }
+      });
+    }
+
+    if (btnSubmitJoin && !btnSubmitJoin._bound) {
+      btnSubmitJoin._bound = true;
+      btnSubmitJoin.addEventListener("click", () => {
+        const code = (inputJoin?.value || "").trim().toUpperCase();
+        if (code) {
+          window.location.href = `/draw?room=${encodeURIComponent(code)}`;
+        }
+      });
+    }
+
+    if (btnSolo && !btnSolo._bound) {
+      btnSolo._bound = true;
+      btnSolo.addEventListener("click", () => {
+        window.location.href = "/draw?solo=1";
+      });
+    }
+
+    if (btnCopyLink && !btnCopyLink._bound) {
+      btnCopyLink._bound = true;
+      btnCopyLink.addEventListener("click", async () => {
+        const code = roomCodeEl?.textContent || "";
+        const url = `${window.location.origin}/draw?room=${encodeURIComponent(code)}`;
+        try {
+          await navigator.clipboard.writeText(url);
+          const orig = btnCopyLink.innerHTML;
+          btnCopyLink.innerHTML = "<span>✓ Copied Link!</span>";
+          setTimeout(() => { btnCopyLink.innerHTML = orig; }, 2000);
+        } catch (e) {
+          prompt("Copy your room link:", url);
+        }
+      });
+    }
+
+    pokeBtns.forEach(btn => {
+      if (btn._bound) return;
+      btn._bound = true;
+      btn.addEventListener("click", () => {
+        const emoji = btn.dataset.emoji || "💖";
+        playPokeSound(emoji);
+        btn.style.transform = "scale(1.35)";
+        setTimeout(() => { btn.style.transform = ""; }, 200);
+
+        // Burst floating emoji on pad 2
+        const pad2 = sec.querySelector(".pad-right");
+        if (pad2) {
+          const floater = document.createElement("span");
+          floater.textContent = emoji;
+          floater.style.cssText = "position: absolute; font-size: 28px; pointer-events: none; z-index: 50; transition: all 0.8s ease-out;";
+          floater.style.left = `${30 + Math.random() * 40}%`;
+          floater.style.top = `${40 + Math.random() * 20}%`;
+          pad2.style.position = "relative";
+          pad2.appendChild(floater);
+          requestAnimationFrame(() => {
+            floater.style.transform = "translateY(-50px) scale(1.4)";
+            floater.style.opacity = "0";
+          });
+          setTimeout(() => floater.remove(), 850);
+        }
+      });
+    });
+  }
+  window.setupDrawWidget = setupDrawWidget;
+
+  // Listen for builder messages
+  window.addEventListener("message", (e) => {
+    if (!e.data || typeof e.data !== "object") return;
+    const { type, config, emoji } = e.data;
+    if (type === "DRAW_UPDATE_CONFIG" && config) {
+      const sec = document.getElementById("section-draw");
+      if (sec) {
+        const tagEl = sec.querySelector(".section-tag");
+        const titleEl = sec.querySelector(".section-title");
+        const descEl = sec.querySelector(".section-desc");
+        const linkEl = sec.querySelector("#btnDrawFullscreenLink span");
+        if (tagEl && config.tag) tagEl.textContent = config.tag;
+        if (titleEl && config.title) titleEl.textContent = config.title;
+        if (descEl && config.desc) descEl.textContent = config.desc;
+        if (linkEl && config.buttonText) linkEl.textContent = config.buttonText;
+      }
+    } else if (type === "DRAW_TEST_POKE") {
+      const pokeBtn = document.querySelector(".widget-poke-btn");
+      if (pokeBtn) pokeBtn.click();
+    }
+  });
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
@@ -2299,3 +2479,4 @@
     init();
   }
 })();
+

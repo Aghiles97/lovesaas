@@ -208,6 +208,19 @@ const WIDGET_REGISTRY = {
     runtime: "/public/js/widgets/photobooth.runtime.js",
     initFn: "setupPhotobooth"
   },
+  draw: {
+    id: "draw",
+    title: "Draw for Two 💕",
+    icon: "🎨",
+    desc: "Synchronized dual drawing studio — sketch cute prompts together and poke each other across the distance.",
+    category: "games",
+    defaultEnabled: true,
+    css: "/public/css/widgets/draw.css",
+    template: "/core/templates/draw.template.js",
+    inspector: "/builder/inspectors/draw.inspector.js",
+    runtime: "/public/js/widgets/draw.runtime.js",
+    initFn: "setupDrawWidget"
+  },
   letter: {
     id: "letter",
     title: "Wax-Sealed Love Letter",
@@ -521,8 +534,8 @@ const PRESETS = {
   },
   playful: {
     name: "Playful & Interactive",
-    desc: "High energy games: Hero → Lof-O-Meter → Reasons → Truth/Dare → Spinner → Coupons → Quiz → Scrapbook → Crossword → Photo Puzzle → Photobooth → Playful.",
-    widgets: ["hero", "love_meter", "reasons", "truth_dare", "spinner", "coupons", "quiz", "scrapbook_game", "love_crossword", "puzzle_photo", "photobooth", "playful"]
+    desc: "High energy games: Hero → Lof-O-Meter → Reasons → Truth/Dare → Spinner → Coupons → Quiz → Scrapbook → Crossword → Photo Puzzle → Photobooth → Draw for Two → Playful.",
+    widgets: ["hero", "love_meter", "reasons", "truth_dare", "spinner", "coupons", "quiz", "scrapbook_game", "love_crossword", "puzzle_photo", "photobooth", "draw", "playful"]
   },
   complete: {
     name: "The Full Experience (All Modules)",
@@ -555,6 +568,7 @@ const PRESETS = {
       "love_crossword",
       "puzzle_photo",
       "photobooth",
+      "draw",
       "letter",
       "valentine_scratch",
       "forgiveness_meter",

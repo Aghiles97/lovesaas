@@ -1952,6 +1952,7 @@ const WIDGET_CATEGORIES = {
   love_crossword: 'Love Crossword',
   puzzle_photo: 'Photo Puzzle',
   photobooth: 'Photobooth',
+  draw: 'Draw for Two',
 };
 
 const WIDGET_LABELS = {
@@ -1965,6 +1966,7 @@ const WIDGET_LABELS = {
   love_crossword: 'Love Crossword',
   puzzle_photo: 'Photo Puzzle',
   photobooth: 'Photobooth',
+  draw: 'Draw for Two',
 };
 if (typeof window !== 'undefined') window.WIDGET_LABELS = WIDGET_LABELS;
 

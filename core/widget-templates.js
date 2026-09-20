@@ -48,7 +48,8 @@ if (typeof module !== "undefined" && module.exports) {
     scrapbook_game: require("./templates/scrapbook_game.template.js"),
     love_crossword: require("./templates/love_crossword.template.js"),
     puzzle_photo: require("./templates/puzzle_photo.template.js"),
-    photobooth: require("./templates/photobooth.template.js")
+    photobooth: require("./templates/photobooth.template.js"),
+    draw: require("./templates/draw.template.js")
   };
   module.exports = { WIDGET_TEMPLATES };
 }

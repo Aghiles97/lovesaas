@@ -1249,6 +1249,16 @@ const DEFAULT_SECTIONS_DATA = {
       "/public/images/landing-v2/avatar-couple-3.jpg",
       "/public/images/puzzle-couple.jpg"
     ]
+  },
+  draw: {
+    tag: "Draw for Two 💕",
+    title: "Our Couple Drawing Studio",
+    desc: "Synchronized dual drawing studio — sketch cute prompts together and poke each other across the distance.",
+    buttonText: "Open Fullscreen Studio ↗",
+    defaultPack: "memories",
+    defaultRounds: 3,
+    defaultSeconds: 120,
+    allowSolo: true
   }
 };
 

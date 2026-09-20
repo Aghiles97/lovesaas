@@ -292,6 +292,9 @@ class DynamicRenderer {
     if (sectionsData.photobooth) {
       window.PHOTOBOOTH_DATA = sectionsData.photobooth;
     }
+    if (sectionsData.draw) {
+      window.DRAW_DATA = sectionsData.draw;
+    }
 
     if (isSameLayout) {
       const activeId = config.activeWidgetId || config.modifiedWidgetId;
@@ -696,6 +699,9 @@ class DynamicRenderer {
       },
       photobooth: () => {
         if (typeof setupPhotobooth === "function") try { setupPhotobooth(sectionsData.photobooth, hero); } catch (e) {}
+      },
+      draw: () => {
+        if (typeof setupDrawWidget === "function") try { setupDrawWidget(sectionsData.draw, hero); } catch (e) {}
       },
       hero: () => {
         if (typeof setupQuintillionObserver === "function") try { setupQuintillionObserver(); } catch (e) {}

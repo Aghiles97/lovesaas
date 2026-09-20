@@ -1643,6 +1643,107 @@
     </svg>
   `);
 
+  // 36. DRAW FOR TWO (COUPLE DRAWING STUDIO)
+  PREVIEWS.draw = svgToUri(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" width="100%" height="100%">
+      <defs>
+        <linearGradient id="dwBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#1e1528"/>
+          <stop offset="50%" stop-color="#140e1b"/>
+          <stop offset="100%" stop-color="#0b080f"/>
+        </linearGradient>
+        <linearGradient id="dwPink" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#f7789e"/>
+          <stop offset="100%" stop-color="#ff5470"/>
+        </linearGradient>
+        <linearGradient id="dwBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#5fa0ff"/>
+          <stop offset="100%" stop-color="#3b82f6"/>
+        </linearGradient>
+      </defs>
+
+      <rect width="800" height="480" fill="url(#dwBg)"/>
+
+      <!-- Header -->
+      <g transform="translate(400, 45)" text-anchor="middle">
+        <rect x="-130" y="-18" width="260" height="28" rx="14" fill="rgba(247,120,158,0.15)" stroke="rgba(247,120,158,0.4)"/>
+        <text y="0" fill="#f7789e" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" letter-spacing="1">🎨 SYNCHRONIZED DRAWING STUDIO</text>
+        <text y="38" fill="#ffffff" font-family="'Playfair Display', Georgia, serif" font-size="24" font-weight="700">Draw for Two 💕</text>
+        <text y="60" fill="rgba(255,255,255,0.6)" font-family="-apple-system, sans-serif" font-size="12">Sketch prompts together across the distance in real-time</text>
+      </g>
+
+      <!-- Dual Drawing Pads -->
+      <g transform="translate(60, 130)">
+        <!-- Left Pad: You (Alex) -->
+        <g transform="translate(0, 0)">
+          <rect width="310" height="230" rx="16" fill="#ffffff" stroke="#f7789e" stroke-width="2" filter="drop-shadow(0 8px 24px rgba(247,120,158,0.2))"/>
+          <!-- Pad Header -->
+          <rect x="14" y="12" width="70" height="22" rx="6" fill="rgba(247,120,158,0.15)"/>
+          <text x="49" y="27" fill="#e11d48" font-family="-apple-system, sans-serif" font-size="11" font-weight="800" text-anchor="middle">ALEX ♀</text>
+          <text x="290" y="27" fill="#71717a" font-family="-apple-system, sans-serif" font-size="11" text-anchor="end">Drawing... ✏️</text>
+
+          <!-- Inner Canvas -->
+          <rect x="14" y="42" width="282" height="135" rx="10" fill="#fafafa" stroke="#e4e4e7"/>
+          <!-- Cute Doodled Heart & Flower -->
+          <path d="M140 85 C140 70 120 65 110 80 C100 100 130 115 140 130 C150 115 180 100 170 80 C160 65 140 70 140 85 Z" fill="none" stroke="#f7789e" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="210" cy="100" r="8" fill="#ffd23f"/>
+          <text x="140" y="162" fill="#71717a" font-family="-apple-system, sans-serif" font-size="11" text-anchor="middle">"Thinking of you" 🌸</text>
+
+          <!-- Palette Swatches -->
+          <g transform="translate(16, 192)">
+            <circle cx="10" cy="12" r="8" fill="#f7789e"/>
+            <circle cx="32" cy="12" r="8" fill="#5fa0ff"/>
+            <circle cx="54" cy="12" r="8" fill="#18181b"/>
+            <circle cx="76" cy="12" r="8" fill="#28c76f"/>
+            <circle cx="98" cy="12" r="8" fill="#ffd23f"/>
+            <circle cx="120" cy="12" r="8" fill="#9b5de5"/>
+          </g>
+        </g>
+
+        <!-- Center Heart Connector -->
+        <g transform="translate(340, 90)">
+          <circle cx="0" cy="0" r="22" fill="url(#dwPink)" filter="drop-shadow(0 4px 12px rgba(247,120,158,0.5))"/>
+          <text x="0" y="6" font-size="18" text-anchor="middle">💕</text>
+          <text x="0" y="36" fill="#a1a1aa" font-family="-apple-system, sans-serif" font-size="9" font-weight="800" letter-spacing="1" text-anchor="middle">SYNC</text>
+        </g>
+
+        <!-- Right Pad: Partner (Sam) -->
+        <g transform="translate(370, 0)">
+          <rect width="310" height="230" rx="16" fill="#ffffff" stroke="#5fa0ff" stroke-width="2" filter="drop-shadow(0 8px 24px rgba(95,160,255,0.2))"/>
+          <!-- Pad Header -->
+          <rect x="14" y="12" width="70" height="22" rx="6" fill="rgba(95,160,255,0.15)"/>
+          <text x="49" y="27" fill="#2563eb" font-family="-apple-system, sans-serif" font-size="11" font-weight="800" text-anchor="middle">SAM ♂</text>
+          <text x="290" y="27" fill="#71717a" font-family="-apple-system, sans-serif" font-size="11" text-anchor="end">Drawing... ✏️</text>
+
+          <!-- Inner Canvas -->
+          <rect x="14" y="42" width="282" height="135" rx="10" fill="#fafafa" stroke="#e4e4e7"/>
+          <!-- Cute Doodled Star & Cat Face -->
+          <circle cx="155" cy="95" r="25" fill="none" stroke="#5fa0ff" stroke-width="3"/>
+          <circle cx="146" cy="90" r="3" fill="#5fa0ff"/>
+          <circle cx="164" cy="90" r="3" fill="#5fa0ff"/>
+          <path d="M150 102 Q155 106 160 102" fill="none" stroke="#5fa0ff" stroke-width="2" stroke-linecap="round"/>
+          <text x="155" y="162" fill="#71717a" font-family="-apple-system, sans-serif" font-size="11" text-anchor="middle">"Forever &amp; Always" ⭐</text>
+
+          <!-- Poke Reactions -->
+          <g transform="translate(170, 192)">
+            <text x="0" y="16" font-size="16">👉</text>
+            <text x="24" y="16" font-size="16">💖</text>
+            <text x="48" y="16" font-size="16">😂</text>
+            <text x="72" y="16" font-size="16">🌀</text>
+            <text x="96" y="16" font-size="16">💥</text>
+            <text x="120" y="16" font-size="16">⭐</text>
+          </g>
+        </g>
+      </g>
+
+      <!-- Bottom Launch Actions -->
+      <g transform="translate(400, 420)" text-anchor="middle">
+        <rect x="-140" y="-18" width="280" height="36" rx="18" fill="url(#dwPink)"/>
+        <text y="5" fill="#ffffff" font-family="-apple-system, sans-serif" font-size="13" font-weight="700">🚀 START ROOM &amp; DRAW TOGETHER</text>
+      </g>
+    </svg>
+  `);
+
   window.WIDGET_PREVIEWS = PREVIEWS;
   window.getWidgetPreviewImage = function(widgetId) {
     return PREVIEWS[widgetId] || null;
