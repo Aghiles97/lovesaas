@@ -1571,7 +1571,8 @@ body.hide-floating-player .floating-controls {
   display: flex;
   flex-direction: column;
   text-align: left;
-  line-height: 1.2;
+  line-height: 1.25;
+  min-width: 0;
 }
 
 .song-title {
@@ -1579,6 +1580,9 @@ body.hide-floating-player .floating-controls {
   font-weight: 700;
   color: var(--text-main);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }
 
 .song-artist {
@@ -1586,14 +1590,43 @@ body.hide-floating-player .floating-controls {
   font-weight: 600;
   color: var(--primary);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
 }
 
-.music-play-btn {
-  padding: 6px 12px !important;
-  font-size: 0.8rem !important;
+.music-player-widget .music-play-btn {
+  width: auto !important;
+  height: 28px !important;
+  min-width: 0 !important;
+  min-height: 28px !important;
+  padding: 4px 10px !important;
+  font-size: 0.76rem !important;
+  font-weight: 600 !important;
   background: var(--primary-light) !important;
   color: var(--primary) !important;
   border: 1px solid rgba(255, 84, 112, 0.3) !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+}
+
+.music-player-widget .music-play-btn .btn-icon {
+  font-size: 0.75rem;
+  line-height: 1;
+  display: inline-flex;
+}
+
+.music-player-widget .music-play-btn .btn-text {
+  font-size: 0.75rem;
+  line-height: 1;
 }
 
 .float-btn {
@@ -1670,13 +1703,19 @@ body.hide-floating-player .floating-controls {
   align-items: center;
 }
 
-.volume-btn {
-  padding: 6px 8px !important;
-  font-size: 0.85rem !important;
+.music-player-widget .volume-btn {
+  padding: 0 !important;
+  font-size: 0.82rem !important;
   border-radius: 50% !important;
-  width: 32px;
-  height: 32px;
-  justify-content: center;
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  box-shadow: none !important;
 }
 
 .volume-slider-popover {

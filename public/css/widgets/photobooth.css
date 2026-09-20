@@ -1767,7 +1767,7 @@
   z-index: 100;
   white-space: nowrap;
 }
-.float-btn {
+.sticker-float-bar .float-btn {
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -1782,13 +1782,13 @@
   cursor: pointer;
   transition: all 0.15s ease;
 }
-.float-btn:hover {
+.sticker-float-bar .float-btn:hover {
   background: #ff758c;
   color: #fff;
   border-color: #ff758c;
   transform: scale(1.15);
 }
-.float-btn-del:hover {
+.sticker-float-bar .float-btn-del:hover {
   background: #ff4757;
   border-color: #ff4757;
 }
